@@ -1,5 +1,5 @@
 {
-  "routes": [
+  "rewrites": [
     { "src": "/assets/(.*)", "dest": "/assets/$1" },
     { "src": "/favicon.ico", "dest": "/favicon.ico" },
     { "src": "/(.*)", "dest": "/" }
