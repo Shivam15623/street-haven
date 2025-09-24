@@ -37,7 +37,7 @@ const DeleteHrUpdate: React.FC<DeleteHrUpdateProps> = ({
     <ModalWrapper
       show={show}
       title="Delete HR Update"
-      size="md"
+      size="lg"
       headerClassName="text-xl p-0 pb-20 text-street-dark"
       className="p-20 p-sm-24 p-md-32 gap-16"
       bodyClassName="p-0 d-flex flex-column gap-16"
