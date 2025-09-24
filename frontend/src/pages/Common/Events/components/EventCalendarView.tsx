@@ -1,5 +1,5 @@
 import FullCalendar from "@fullcalendar/react";
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -27,9 +27,12 @@ const EventCalendarView = () => {
   };
 
   const { startDate, endDate } = getMonthRange(currentDate);
-  const { data, isLoading } = useFetchEventsCalendarQuery({ startDate, endDate });
+  const { data, isLoading } = useFetchEventsCalendarQuery({
+    startDate,
+    endDate,
+  });
 
-  const calendarRef = useRef(null);
+  const calendarRef = useRef<FullCalendar | null>(null);
 
   const handleMonthYearSelect = (date: Date) => {
     const api = calendarRef.current?.getApi();
@@ -63,7 +66,10 @@ const EventCalendarView = () => {
 
         {/* Loader Overlay */}
         {isLoading && (
-          <div className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75" style={{ zIndex: 10 }}>
+          <div
+            className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75"
+            style={{ zIndex: 10 }}
+          >
             <Spinner animation="border" variant="primary" />
           </div>
         )}
@@ -89,7 +95,10 @@ const EventCalendarView = () => {
             });
 
             return (
-              <div className="p-0 rounded-md text-break text-wrap" style={{ maxWidth: "100%" }}>
+              <div
+                className="p-0 rounded-md text-break text-wrap"
+                style={{ maxWidth: "100%" }}
+              >
                 <p className="fw-normal text-xxs text-street-base mb-0 ">
                   {start} - {end}
                 </p>
@@ -119,13 +128,18 @@ const EventCalendarView = () => {
               0
             );
 
-            const inMonth = info.date >= startOfMonth && info.date <= endOfMonth;
+            const inMonth =
+              info.date >= startOfMonth && info.date <= endOfMonth;
 
             if (inMonth) {
               const row = info.el.closest("tr");
-              if (row) {
-                const rowIndex = Array.from(row.parentNode.children).indexOf(row);
-                info.el.classList.add(rowIndex % 2 === 0 ? "week-even" : "week-odd");
+              if (row && row.parentNode) {
+                const rowIndex = Array.from(row.parentNode.children).indexOf(
+                  row
+                );
+                info.el.classList.add(
+                  rowIndex % 2 === 0 ? "week-even" : "week-odd"
+                );
               }
             }
           }}

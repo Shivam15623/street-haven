@@ -1,34 +1,31 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "react-bootstrap";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
 import { Document, Page, pdfjs } from "react-pdf";
 import "pdfjs-dist/web/pdf_viewer.css";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker?url";
 import type { hrUpdateData } from "../../../../interfaces/hrUpdatesInterface";
+
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+
 type Props = {
   update: hrUpdateData;
 };
+
 const HrUpdatesView = ({ update }: Props) => {
   const [showModal, setShowModal] = useState(false);
-  const [numPages, setNumPages] = useState<number | null>(null);
   const { attachment } = update;
-  console.log("attachment", attachment[0]);
 
-  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-    setNumPages(numPages);
-  };
   return (
     <>
       <Button
         className="btn btn-street-outline-primary d-flex align-items-center w-43-px px-8 py-8 px-sm-10 radius-12"
-        onClick={() => {
-          setShowModal(true);
-        }}
+        onClick={() => setShowModal(true)}
       >
         <Icon icon="solar:eye-linear" className="text-lg sm:text-xl" />
       </Button>
+
       <ModalWrapper
         title={update.title}
         size="xl"
@@ -38,13 +35,10 @@ const HrUpdatesView = ({ update }: Props) => {
         headerClassName="text-xl p-0 pb-20 text-street-dark"
         className="p-20 p-sm-24 p-md-32 gap-16 gap-sm-20"
         bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
-        footerClassName="pt-16 pt-sm-20 px-0 pb-0 "
+        footerClassName="pt-16 pt-sm-20 px-0 pb-0"
         footer={
           <div className="d-flex flex-row justify-content-end">
-            <Button
-              className="btn btn-street-primary btn-street-lg p-8 d-flex flex-row align-items-center justify-content-between gap-1 px-sm-24 px-md-32 radius-12 text-xxs sm:text-xs"
-              // onClick={onDownload}
-            >
+            <Button className="btn btn-street-primary btn-street-lg p-8 d-flex flex-row align-items-center justify-content-between gap-1 px-sm-24 px-md-32 radius-12 text-xxs sm:text-xs">
               <Icon icon="jam:download" className="text-xl" />
               Download
             </Button>
@@ -60,10 +54,7 @@ const HrUpdatesView = ({ update }: Props) => {
             overflow: "auto",
           }}
         >
-          <Document
-            file="/alarm-report.pdf"
-            onLoadSuccess={onDocumentLoadSuccess}
-          >
+          <Document file="/alarm-report.pdf">
             <Page
               pageNumber={1}
               width={Math.min(window.innerWidth * 0.8, 450)}

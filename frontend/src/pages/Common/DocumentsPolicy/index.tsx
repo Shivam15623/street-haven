@@ -12,7 +12,7 @@ const ProgramManuals = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
-  const [type, setType] = useState<string | undefined>(undefined);
+
   const pageSize = 10;
 
   const { isAdmin } = useHasPermission();
@@ -22,7 +22,7 @@ const ProgramManuals = () => {
     page,
     limit: pageSize,
     search,
-    type,
+    type:undefined,
     sortBy: "createdAt",
     order: "desc",
   });

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -13,18 +13,14 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 // -----------------------------
 // Custom Tree Node
 // -----------------------------
-const TreeNode = ({ data }: any) => {
-  console.log(data.width);
+interface TreeNodeData {
+  label: string;
+  width?: number;
+}
+
+const TreeNode = ({ data }: { data: TreeNodeData }) => {
   return (
-    <div
-      style={{
-        borderRadius: "8px",
-        background: "transparent",
-        fontWeight: 600,
-        textAlign: "left",
-        width: data.width || "auto", // use dynamic width
-      }}
-    >
+    <div style={{ width: data.width || "auto" }}>
       <div className="d-flex flex-row gap-2 align-items-center">
         <div className="p-2 position-relative">
           <Handle
@@ -42,11 +38,7 @@ const TreeNode = ({ data }: any) => {
           <Handle
             type="source"
             position={Position.Bottom}
-            style={{
-              opacity: 0,
-              position: "absolute",
-              left: "50%",
-            }}
+            style={{ opacity: 0, position: "absolute", left: "50%" }}
             isConnectable={false}
           />
         </div>
@@ -144,7 +136,6 @@ const layoutTree = (
     childrenMap[edge.source].push(edge.target);
   });
 
-  const startX = 0;
   const startY = 0;
 
   const levelIndent = (containerWidth - 30) / 7;
@@ -214,9 +205,8 @@ function Flow() {
           nodes={nodes}
           edges={initialEdges}
           nodeTypes={nodeTypes}
-          nodesDraggable={false} // can't drag nodes
-          connectable={false} // can't create new connections
-          edgesEditable={false} // can't edit edges
+          nodesDraggable={false}
+          nodesConnectable={false} // instead of connectable
           panOnDrag={false}
           zoomOnScroll={false}
           zoomOnPinch={false}

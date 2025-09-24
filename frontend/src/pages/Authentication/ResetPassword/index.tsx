@@ -20,7 +20,7 @@ const resetPasswordSchema = Yup.object({
     .matches(/\d/, "Must contain at least one number")
     .matches(/[@$!%*?&#]/, "Must contain at least one special character"),
   confirmPassword: Yup.string()
-    .oneOf([Yup.ref("newPassword"), null], "Passwords must match")
+    .oneOf([Yup.ref("newPassword")], "Passwords must match")
     .required("Confirm Password is required"),
 });
 type ResetPasswordValues = Yup.InferType<typeof resetPasswordSchema>;

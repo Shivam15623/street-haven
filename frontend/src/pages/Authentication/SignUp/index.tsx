@@ -1,4 +1,4 @@
-import React from "react";
+
 import AuthWrapper from "../../../components/Authentication/AuthWrapper";
 import AuthFormWrapper from "../../../components/Authentication/AuthFormWrapper";
 import SignupForm from "./components/SignupForm";

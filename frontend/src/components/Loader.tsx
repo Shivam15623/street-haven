@@ -1,4 +1,4 @@
-import React from "react";
+
 import { Spinner, Container } from "react-bootstrap";
 
 export default function Loader() {

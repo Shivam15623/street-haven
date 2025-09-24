@@ -1,4 +1,3 @@
-import React from "react";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import { Form, Col, Row } from "react-bootstrap";
@@ -13,7 +12,7 @@ const ChangePasswordSchema = Yup.object({
     .min(6, "Password must be at least 6 characters")
     .required("New password is required"),
   confirmPassword: Yup.string()
-    .oneOf([Yup.ref("newPassword"), null], "Passwords must match")
+    .oneOf([Yup.ref("newPassword")], "Passwords must match")
     .required("Confirm password is required"),
 });
 

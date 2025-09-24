@@ -1,17 +1,19 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import React, { useEffect, useRef, useState } from "react";
 import { Form } from "react-bootstrap";
-import { useField, useFormikContext } from "formik";
+import { useFormikContext } from "formik";
 import { Link } from "react-router-dom";
 
 interface ImageUploadProps {
   name: string; // Formik field name
   label?: string;
 }
-
+interface ImageUploadFormValues {
+  [key: string]: File | null;
+}
 const ImageUpload: React.FC<ImageUploadProps> = ({ name, label }) => {
-  const { setFieldValue, touched, errors } = useFormikContext<any>();
-  const [field] = useField<File | null>(name);
+  const { setFieldValue, touched, errors } =
+    useFormikContext<ImageUploadFormValues>();
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -56,7 +58,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ name, label }) => {
 
   return (
     <Form.Group controlId={name}>
-      {label && <Form.Label className="fw-medium mb-10 text-street-dark">{label}</Form.Label>}
+      {label && (
+        <Form.Label className="fw-medium mb-10 text-street-dark">
+          {label}
+        </Form.Label>
+      )}
 
       <div className="upload-image-wrapper d-flex align-items-center gap-3">
         {imagePreview ? (
@@ -98,7 +104,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ name, label }) => {
             onDrop={handleDrop}
           >
             {isDragging ? (
-              <p className="fw-normal text-sm img-upload-text">Drop file here</p>
+              <p className="fw-normal text-sm img-upload-text">
+                Drop file here
+              </p>
             ) : (
               <p className="fw-normal text-sm img-upload-text">
                 Drag & drop or{" "}
@@ -107,8 +115,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ name, label }) => {
                 </Link>
               </p>
             )}
-
-           
           </label>
         )}
 
