@@ -8,7 +8,7 @@ export interface ModalWrapperProps {
   title?: string;
   subtitle?: string;
   children: React.ReactNode;
-  size?: "sm"| "lg" | "xl";
+  size?: "sm" | "lg" | "xl";
   footer?: React.ReactNode;
   backdrop?: boolean | "static";
   keyboard?: boolean;
@@ -63,10 +63,12 @@ const ModalWrapper: React.FC<ModalWrapperProps> = ({
           </div>
 
           {/* Custom Close Button */}
-          
-         
-            <Icon icon="mdi:close" className="text-lg sm:text-xxl" onClick={onHide} />
-         
+
+          <Icon
+            icon="mdi:close"
+            className="text-lg sm:text-xxl"
+            onClick={onHide}
+          />
         </Modal.Header>
       )}
 
