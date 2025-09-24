@@ -8,7 +8,7 @@ export interface ModalWrapperProps {
   title?: string;
   subtitle?: string;
   children: React.ReactNode;
-  size?: "sm"|"md" | "lg" | "xl";
+  size?: "sm"| "lg" | "xl";
   footer?: React.ReactNode;
   backdrop?: boolean | "static";
   keyboard?: boolean;
