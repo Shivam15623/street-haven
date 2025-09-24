@@ -14,7 +14,7 @@ const requestSchema = Yup.object({
     .oneOf(["IT Help Desk", "Property Maintenance"])
     .required("Category is required"),
   location: Yup.string().required("location is required"),
-  photo: Yup.mixed().nullable(),
+ photo: Yup.mixed<File>().nullable()
 });
 type requestticketValue = Yup.InferType<typeof requestSchema>;
 const RequestForm = () => {
@@ -53,7 +53,7 @@ const RequestForm = () => {
             priority: "Low",
             category: "IT Help Desk",
             location: "",
-            photo: null,
+            photo: undefined,
           }}
           validationSchema={requestSchema}
           onSubmit={handlecreateTicket}

@@ -14,8 +14,8 @@ export type CustomNodeProps = {
   id: string;
   data: CustomNodeData;
   onToggle?: (id: string) => void;
-  fixedHeight: number;
-  fixedWidth: number; // ✅ Add width
+  fixedHeight?: number;
+  fixedWidth?: number; // ✅ Add width
 };
 
 // 👇 forwardRef so Flow can attach refs
@@ -26,7 +26,10 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
       <div
         ref={ref}
         className="p-8 p-lg-12 gap-10 d-flex flex-column radius-8 org-node shadow-sm relative"
-        style={{ minHeight: fixedHeight ? `${fixedHeight}px` : "auto", width: `${fixedWidth}px` }} // ✅ Sync width style={{ minHeight: `${fixedHeight}px` }}
+        style={{
+          minHeight: fixedHeight ? `${fixedHeight}px` : "auto",
+          width: `${fixedWidth}px`,
+        }} // ✅ Sync width style={{ minHeight: `${fixedHeight}px` }}
       >
         <Handle
           type="target"
@@ -72,7 +75,7 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
           </p>
         </div>
 
-        {id !== "1" && data?.supervises?.length > 0 && (
+        {id !== "1" && data.supervises && data?.supervises?.length > 0 && (
           <Handle
             type="source" // source handle
             position={Position.Bottom}

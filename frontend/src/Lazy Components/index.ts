@@ -27,7 +27,7 @@ export const LazyProgramManuals = React.lazy(
 );
 
 export const LazyHelpDesk = React.lazy(
-  () => import("../pages/Common/HelpDesk")
+  () => import("../pages/Common/ItNFacility")
 );
 export const LazyFormReports = React.lazy(
   () => import("../pages/Common/FormsNreports")

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Col, Row, Form, Button, Spinner } from "react-bootstrap";
+import { Col, Row, Form,Spinner } from "react-bootstrap";
 import { Formik, Form as FormikForm } from "formik";
 import * as Yup from "yup";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
@@ -28,30 +28,33 @@ interface TicketCardProps {
   ticket: TicketData;
 }
 
-const TicketEdit: React.FC<TicketCardProps> = ({ticket}) => {
+const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
   const [showModal, setShowModal] = useState(false);
-  const [editTicket,{isLoading}]=useEditTicketMutation()
+  const [editTicket, { isLoading }] = useEditTicketMutation();
 
-  const initialValues = {
+  const initialValues: TicketValues = {
     requestTitle: ticket.req_title,
-    requester: ticket.createdBy.firstname+" "+ticket.createdBy.lastname,
-    assignee: ticket.assignedTo ? ticket.assignedTo.firstname+" "+ticket.assignedTo.lastname : "Unassigned",
+    requester: ticket.createdBy.firstname + " " + ticket.createdBy.lastname,
+    assignee: ticket.assignedTo
+      ? ticket.assignedTo.firstname + " " + ticket.assignedTo.lastname
+      : "Unassigned",
     status: ticket.status,
     id: ticket._id,
     description: ticket.description,
     priority: ticket.priority,
     category: ticket.category,
-    location: ticket.location,
-    attachment: ticket.photo?.fileUrl,
+    location: ticket.location ?? "", // default to empty string
+    attachment: ticket.photo?.fileUrl ?? "", // default to empty string
   };
-  const handleEdit = async(values:TicketValues) => {
+
+  const handleEdit = async (values: TicketValues) => {
     try {
-      const res=await editTicket(values).unwrap()
-      if(res.success){
-        showSuccess(res.message)
+      const res = await editTicket(values).unwrap();
+      if (res.success) {
+        showSuccess(res.message);
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   };
 

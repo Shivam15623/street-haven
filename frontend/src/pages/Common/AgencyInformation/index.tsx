@@ -1,4 +1,3 @@
-import React from "react";
 import StreetTab from "../../../components/StreetTab";
 import CollectiveAgreementTab from "./component/CollectiveAgreementTab";
 import OrganizationalChartTab from "./component/OrganizationalChartTab";

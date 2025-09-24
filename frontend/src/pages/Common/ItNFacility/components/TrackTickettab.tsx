@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import TicketCard from "./TicketCard";
 import { TicketCountCard } from "./TicketCountCard";
 import type { TicketFetchQuery } from "../../../../interfaces/Ticket";
@@ -18,10 +18,7 @@ const TrackTickettab = () => {
   });
 
   // Fetch tickets with filter
-  const {
-    data: ticketData,
-    isLoading,
-  } = useFetchTicketsQuery(filter);
+  const { data: ticketData, isLoading } = useFetchTicketsQuery(filter);
 
   // Pagination calculation
   const total = ticketData?.data?.paggination?.total ?? 0;
@@ -65,7 +62,11 @@ const TrackTickettab = () => {
               variant="progress"
               icon="lucide:clock"
               onClick={() =>
-                setFilter((prev) => ({ ...prev, status: "In Progress", page: 1 }))
+                setFilter((prev) => ({
+                  ...prev,
+                  status: "In Progress",
+                  page: 1,
+                }))
               }
               active={filter.status === "In Progress"}
             />
@@ -85,7 +86,11 @@ const TrackTickettab = () => {
               icon="solar:eye-linear"
               variant="review"
               onClick={() =>
-                setFilter((prev) => ({ ...prev, status: "Under Review", page: 1 }))
+                setFilter((prev) => ({
+                  ...prev,
+                  status: "Under Review",
+                  page: 1,
+                }))
               }
               active={filter.status === "Under Review"}
             />

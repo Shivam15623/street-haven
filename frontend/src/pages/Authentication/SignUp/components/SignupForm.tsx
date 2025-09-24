@@ -38,12 +38,12 @@ const signupSchema = Yup.object({
 });
 const SignupForm = () => {
   const { Formik } = formik;
-  const [signup,{isLoading}]=useRegisterEmployeeMutation()
+  const [signup, { isLoading }] = useRegisterEmployeeMutation();
   const handleSignup = async (values: SignupValues) => {
     try {
-      const res=await signup(values).unwrap()
-      if(res.success){
-        showSuccess(res.message)
+      const res = await signup(values).unwrap();
+      if (res.success) {
+        showSuccess(res.message);
       }
     } catch (error) {
       console.error("Signup failed:", error);
@@ -63,6 +63,7 @@ const SignupForm = () => {
         }}
         validationSchema={signupSchema}
         onSubmit={handleSignup}
+        disabled={isLoading}
       >
         {({ handleSubmit, handleChange, values, touched, errors }) => (
           <Form
@@ -194,12 +195,11 @@ const SignupForm = () => {
                     className="d-flex flex-column gap-1"
                   >
                     <Form.Label className="fw-normal m-0">Password</Form.Label>
-                     <PasswordInput
+                    <PasswordInput
                       name="password"
                       value={values.password}
                       className="h-50-px"
                       onChange={handleChange}
-                      
                       style={{
                         backgroundColor: "#F2F0EC",
                         borderColor: "#E2E8F0",
@@ -222,9 +222,11 @@ const SignupForm = () => {
               <Col>
                 <Button
                   type="submit"
-                  className="btn btn-street-primary text-xs btn-sm px-12 py-11 w-100 text-white bg-street-primary fw-medium radius-12 "
+                  className="btn btn-street-primary text-xs btn-sm px-12 py-11 w-100 text-white bg-street-primary fw-medium radius-12"
+                  disabled={isLoading} // disable while loading
                 >
-                  Sign Up
+                  {isLoading ? "Signing Up..." : "Sign Up"}{" "}
+                  {/* Show loading text */}
                 </Button>
               </Col>
             </Row>

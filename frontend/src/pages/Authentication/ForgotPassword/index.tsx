@@ -1,4 +1,3 @@
-import React from "react";
 import AuthWrapper from "../../../components/Authentication/AuthWrapper";
 import AuthFormWrapper from "../../../components/Authentication/AuthFormWrapper";
 import { Link } from "react-router-dom";
@@ -46,6 +45,7 @@ const ForgotPassword = () => {
             }}
             validationSchema={forgotPasswordSchema}
             onSubmit={forgotpassword}
+            disabled={isLoading} // disable input while loading
           >
             {({
               handleSubmit,
@@ -79,6 +79,7 @@ const ForgotPassword = () => {
                           value={values.email}
                           onChange={handleChange}
                           onBlur={handleBlur}
+                          disabled={isLoading} // disable input while loading
                           className=" h-50-px "
                           style={{
                             backgroundColor: "#F2F0EC",
@@ -96,9 +97,11 @@ const ForgotPassword = () => {
                 </div>
                 <Button
                   type="submit"
-                  className="btn btn-street-primary text-xs btn-sm px-12 py-11 w-100 text-white fw-medium radius-12 "
+                  className="btn btn-street-primary text-xs btn-sm px-12 py-11 w-100 text-white fw-medium radius-12"
+                  disabled={isLoading} // disable while loading
                 >
-                  Sign In
+                  {isLoading ? "Submitting..." : "Submit"}{" "}
+                  {/* show loading text */}
                 </Button>
               </Form>
             )}

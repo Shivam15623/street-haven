@@ -40,9 +40,14 @@ const HrUpdatesFormSchema = (isEdit: boolean) =>
         return value.size <= 16 * 1024 * 1024;
       }),
   });
+interface HrUpdateValue {
+  title: string;
+  description: string;
+  attachment: File | null;
+}
 
 // ✅ FormData builder
-const buildFormData = (values) => {
+const buildFormData = (values: HrUpdateValue) => {
   const formData = new FormData();
   formData.append("title", values.title);
   formData.append("description", values.description);

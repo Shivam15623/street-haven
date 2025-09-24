@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import  { useState } from "react";
+import { useState } from "react";
 import { Button } from "react-bootstrap";
 
 import { pdfjs } from "react-pdf";
@@ -7,25 +7,21 @@ import "pdfjs-dist/web/pdf_viewer.css";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker?url";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
 import { Document, Page } from "react-pdf";
+
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+
 const CollectiveAgreementDetail = () => {
   const [showModal, setShowModal] = useState(false);
-  const [numPages, setNumPages] = useState<number | null>(null);
 
-  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-    setNumPages(numPages);
-  };
   return (
     <>
       <Button
         className="btn btn-street-outline-primary d-flex align-items-center w-43-px px-8 py-8 px-sm-10 radius-12"
-        onClick={() => {
-          console.log("vvvvv");
-          setShowModal(true);
-        }}
+        onClick={() => setShowModal(true)}
       >
         <Icon icon="solar:eye-linear" className="text-lg sm:text-xl" />
       </Button>
+
       <ModalWrapper
         title="Collective Bargaining Agreement 2024-2027"
         size="xl"
@@ -38,10 +34,7 @@ const CollectiveAgreementDetail = () => {
         footerClassName="pt-16 pt-sm-20 px-0 pb-0 "
         footer={
           <div className="d-flex flex-row justify-content-end">
-            <Button
-              className="btn btn-street-primary btn-street-lg p-8 d-flex flex-row align-items-center justify-content-between gap-1 px-sm-24 px-md-32 radius-12 text-xxs sm:text-xs"
-              // onClick={onDownload}
-            >
+            <Button className="btn btn-street-primary btn-street-lg p-8 d-flex flex-row align-items-center justify-content-between gap-1 px-sm-24 px-md-32 radius-12 text-xxs sm:text-xs">
               <Icon icon="jam:download" className="text-xl" />
               Download
             </Button>
@@ -57,10 +50,7 @@ const CollectiveAgreementDetail = () => {
             overflow: "auto",
           }}
         >
-          <Document
-            file="/alarm-report.pdf"
-            onLoadSuccess={onDocumentLoadSuccess}
-          >
+          <Document file="/alarm-report.pdf">
             <Page
               pageNumber={1}
               width={Math.min(window.innerWidth * 0.8, 450)}

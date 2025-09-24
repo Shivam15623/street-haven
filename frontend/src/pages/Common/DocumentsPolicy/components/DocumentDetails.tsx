@@ -30,10 +30,18 @@ const DocumentDetails = ({ attachment }: Props) => {
     const link = document.createElement("a");
     link.href = url;
     link.target = "_blank";
-    link.download = filename; // forces download with given name
+    link.download = filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const nextPage = () => {
+    if (numPages && pageNumber < numPages) setPageNumber(pageNumber + 1);
+  };
+
+  const prevPage = () => {
+    if (pageNumber > 1) setPageNumber(pageNumber - 1);
   };
 
   return (
@@ -47,9 +55,7 @@ const DocumentDetails = ({ attachment }: Props) => {
 
       <ModalWrapper
         title={attachment.fileName}
-        subtitle={`${attachment.fileName} • ${
-          numPages || attachment.totalPages
-        } pages`}
+        subtitle={`${attachment.fileName} • ${numPages || attachment.totalPages} pages`}
         size="xl"
         show={showModal}
         onHide={() => setShowModal(false)}
@@ -58,10 +64,32 @@ const DocumentDetails = ({ attachment }: Props) => {
         bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
         footerClassName="pt-16 pt-sm-20 px-0 pb-0"
         footer={
-          <div className="d-flex justify-content-end align-items-center w-100">
+          <div className="d-flex justify-content-between align-items-center w-100">
+            {/* Page Navigation */}
+            <div className="d-flex gap-2 align-items-center">
+              <Button
+                className="btn btn-street-outline-primary"
+                onClick={prevPage}
+                disabled={pageNumber === 1}
+              >
+                <Icon icon="ic:round-chevron-left" />
+              </Button>
+              <span>
+                Page {pageNumber} of {numPages || attachment.totalPages}
+              </span>
+              <Button
+                className="btn btn-street-outline-primary"
+                onClick={nextPage}
+                disabled={numPages ? pageNumber === numPages : pageNumber === attachment.totalPages}
+              >
+                <Icon icon="ic:round-chevron-right" />
+              </Button>
+            </div>
+
+            {/* Download */}
             <Button
-              className="btn btn-street-primary btn-street-lg d-flex align-items-center radius-12 justify-content-center text-sm gap-1 gap-1"
-              onClick={()=>handleDownload(attachment.fileUrl, attachment.fileName)}
+              className="btn btn-street-primary btn-street-lg d-flex align-items-center radius-12 justify-content-center text-sm gap-1"
+              onClick={() => handleDownload(attachment.fileUrl, attachment.fileName)}
             >
               <Icon icon="jam:download" className="text-lg" />
               Download
@@ -69,34 +97,22 @@ const DocumentDetails = ({ attachment }: Props) => {
           </div>
         }
       >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-           
-          }}
-        >
+        <div style={{ display: "flex", justifyContent: "center" }}>
           <Document
             file={attachment.fileUrl}
             onLoadSuccess={onDocumentLoadSuccess}
             loading={<p>Loading PDF...</p>}
             error={<p>Failed to load PDF</p>}
-            
           >
-            {Array.from(
-              new Array(numPages || attachment.totalPages),
-              (_, index) => (
-                <Page
-                  key={`page_${index + 1}`}
-                  pageNumber={index + 1}
-                  width={Math.min(window.innerWidth * 0.8, 453)}
-                  height={640}
-                  renderAnnotationLayer={false}
-                  renderTextLayer={false}
-                  className={"mb-4"}
-                />
-              )
-            )}
+            <Page
+              key={`page_${pageNumber}`}
+              pageNumber={pageNumber}
+              width={Math.min(window.innerWidth * 0.8, 453)}
+              height={640}
+              renderAnnotationLayer={false}
+              renderTextLayer={false}
+              className={"mb-4"}
+            />
           </Document>
         </div>
       </ModalWrapper>
