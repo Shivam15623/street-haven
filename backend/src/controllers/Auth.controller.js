@@ -7,7 +7,7 @@ import generateTokens from "../utills/GenerateTokens.js";
 import jwt from "jsonwebtoken";
 export const RegisterEmployee = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, password, phone } = req.body;
- 
+
   const ExistingUser = await User.findOne({
     $or: [{ email: email }, { phoneNo: phone }],
   });
@@ -37,7 +37,7 @@ export const RegisterEmployee = asyncHandler(async (req, res) => {
 });
 export const RegisterAdmin = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, password, phone } = req.body;
- 
+
   const ExistingUser = await User.findOne({
     $or: [{ email: email }, { phoneNo: phone }],
   });
@@ -111,18 +111,19 @@ export const Login = asyncHandler(async (req, res) => {
     slug: findUser.slug,
     profilePic: findUser.profilePic,
   };
+  const isProduction = process.env.NODE_ENV === "production";
 
   const accessOptions = {
     httpOnly: true,
-    secure: false, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: "lax", // must be 'None' for cross-site cookies
+    secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
+    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   };
 
   const refreshOptions = {
     httpOnly: true,
-    secure: false, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: "lax", // must be 'None' for cross-site cookies
+    secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
+    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   };
 
@@ -213,18 +214,19 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
       profilePic: findUser.profilePic,
     };
 
-    // Cookie options (same as silentAuth)
+    const isProduction = process.env.NODE_ENV === "production";
+
     const accessOptions = {
       httpOnly: true,
-      secure: false, // must be true in production/HTTPS
-      sameSite: "lax", // use 'None' if cross-site
+      secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
+      sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     };
 
     const refreshOptions = {
       httpOnly: true,
-      secure: false, // must be true in production/HTTPS
-      sameSite: "lax", // use 'None' if cross-site
+      secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
+      sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     };
 
@@ -275,17 +277,19 @@ export const silentAuth = asyncHandler(async (req, res) => {
     slug: finduser.slug,
     profilePic: finduser.profilePic,
   };
+  const isProduction = process.env.NODE_ENV === "production";
+
   const accessOptions = {
     httpOnly: true,
-    secure: false, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: "lax", // must be 'None' for cross-site cookies
+    secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
+    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   };
 
   const refreshOptions = {
     httpOnly: true,
-    secure: false, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: "lax", // must be 'None' for cross-site cookies
+    secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
+    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   };
   // if (process.env.Deploy_env === "development") {
