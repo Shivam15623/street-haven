@@ -1,4 +1,3 @@
-import React from "react";
 import CollectiveAgreementDetail from "./CollectiveAgreementDetail";
 import { Icon } from "@iconify/react/dist/iconify.js";
 

@@ -1,4 +1,4 @@
-import React from "react";
+
 import StreetTab from "../../../components/StreetTab";
 import SettingsTab from "./component/SettingsTab";
 import PersonalInfoTab from "./component/PersonalInfoTab";

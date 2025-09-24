@@ -61,16 +61,23 @@ const TownhallMinutesFormSchema = (isEdit: boolean) =>
         return value.size <= 16 * 1024 * 1024;
       }),
   });
+interface TownHallMinuteValues {
+  title: string;
+  attendees: number;
+  keyTopicsDiscussed: string[];
+  keyHighlights: string[];
+  meetingDate: string;
+  attachment: File | null;
+  newHighlight: string;
+  newTopic: string;
+}
 
 // ✅ FormData builder
-const buildFormData = (values) => {
+const buildFormData = (values: TownHallMinuteValues) => {
   const formData = new FormData();
   formData.append("title", values.title);
   formData.append("attendees", values.attendees.toString());
-  formData.append(
-    "meetingDate",
-    new Date(values.meetingDate)
-  );
+  formData.append("meetingDate", new Date(values.meetingDate).toISOString());
   if (values.attachment) formData.append("attachment", values.attachment);
 
   values.keyHighlights.forEach((highlight: string, index: number) => {

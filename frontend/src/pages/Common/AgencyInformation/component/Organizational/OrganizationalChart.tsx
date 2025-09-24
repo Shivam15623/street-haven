@@ -471,7 +471,7 @@ const DEFAULT_NODE_HEIGHT = 120;
 // -----------------------------
 // Helpers
 // -----------------------------
-function useContainerWidth(ref: React.RefObject<HTMLElement>) {
+function useContainerWidth(ref: React.RefObject<HTMLElement | null>) {
   const [width, setWidth] = useState(0);
   useLayoutEffect(() => {
     const el = ref.current;
@@ -625,7 +625,7 @@ function layoutDagre(
   layoutedNodes = layoutedNodes.map((n) => {
     if (n.hidden) return n;
     let newX = n.position.x + finalOffsetX;
-    let newY = n.position.y;
+    const newY = n.position.y;
 
     if (n.id === ROOT_ID) newX = (containerWidth - nodeWidth) / 2;
 
@@ -690,23 +690,22 @@ function Flow() {
     });
   }, []);
 
-  const nodeTypes = useMemo(
-    () => ({
-      custom: (props: CustomNodeProps) => (
-        <MemoCustomNode
-          {...props}
-          ref={(el) => {
-            nodeRefs.current[props.id] = el;
-          }}
-          onToggle={handleToggle}
-          fixedHeight={maxNodeHeight}
-          fixedWidth={(width - 100) / 4 || 340}
-        />
-      ),
-    }),
-    [handleToggle, maxNodeHeight, width]
-  );
-
+ const nodeTypes = useMemo(
+  () => ({
+    custom: (props:CustomNodeProps) => (
+      <MemoCustomNode
+        {...props}
+        ref={(el) => {
+          nodeRefs.current[props.id] = el;
+        }}
+        onToggle={handleToggle}
+        fixedHeight={maxNodeHeight}
+        fixedWidth={(width - 100) / 4 || 340}
+      />
+    ),
+  }),
+  [handleToggle, maxNodeHeight, width]
+);
   const { nodes, edges, contentHeight } = useMemo(() => {
     const visibleIds = computeVisibleIds(expanded);
     const nodeWidth = (width - 100) / 4 || 340;

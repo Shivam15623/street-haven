@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import React, { useState } from "react";
+import  { useState } from "react";
 import HRUpdateCard from "./HRUpdateCard";
 import { useViewhrUpdatesQuery } from "../../../../services/hrUpdatesApi";
 import ActionsHrUpdates from "./ActionsHrUpdates";

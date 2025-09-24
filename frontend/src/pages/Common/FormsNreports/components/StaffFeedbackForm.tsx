@@ -71,7 +71,7 @@ const StaffFeedbackForm: React.FC = () => {
             time: "",
             location: "",
             description: "",
-            witnesses: [],
+            witnesses: [] as string[],
             actionsTaken: "",
             reporterName: "",
             category: "Other",
@@ -100,7 +100,9 @@ const StaffFeedbackForm: React.FC = () => {
                 {/* Date + Time */}
                 <div className="d-flex flex-column flex-md-row gap-20">
                   <Form.Group controlId="date" className="flex-grow-1">
-                    <Form.Label className="mb-2 text-xs xs:text-sm fw-medium text-street-dark">Date of Incident</Form.Label>
+                    <Form.Label className="mb-2 text-xs xs:text-sm fw-medium text-street-dark">
+                      Date of Incident
+                    </Form.Label>
                     <Form.Control
                       type="date"
                       name="date"
@@ -114,7 +116,9 @@ const StaffFeedbackForm: React.FC = () => {
                   </Form.Group>
 
                   <Form.Group controlId="time" className="flex-grow-1">
-                    <Form.Label className="mb-2 text-xs xs:text-sm fw-medium text-street-dark">Time of Incident</Form.Label>
+                    <Form.Label className="mb-2 text-xs xs:text-sm fw-medium text-street-dark">
+                      Time of Incident
+                    </Form.Label>
                     <Form.Control
                       type="time"
                       name="time"
@@ -130,7 +134,9 @@ const StaffFeedbackForm: React.FC = () => {
 
                 {/* Location */}
                 <Form.Group controlId="location">
-                  <Form.Label className="mb-2 text-xs xs:text-sm fw-medium text-street-dark">Location</Form.Label>
+                  <Form.Label className="mb-2 text-xs xs:text-sm fw-medium text-street-dark">
+                    Location
+                  </Form.Label>
                   <Form.Control
                     type="text"
                     name="location"
@@ -145,7 +151,9 @@ const StaffFeedbackForm: React.FC = () => {
 
                 {/* Category */}
                 <Form.Group controlId="category">
-                  <Form.Label className="mb-2 text-xs xs:text-sm fw-medium text-street-dark">Category</Form.Label>
+                  <Form.Label className="mb-2 text-xs xs:text-sm fw-medium text-street-dark">
+                    Category
+                  </Form.Label>
                   <Form.Select
                     name="category"
                     value={values.category}
@@ -164,7 +172,9 @@ const StaffFeedbackForm: React.FC = () => {
 
                 {/* Description */}
                 <Form.Group controlId="description">
-                  <Form.Label className="mb-2 text-xs xs:text-sm fw-medium text-street-dark">Detailed Description</Form.Label>
+                  <Form.Label className="mb-2 text-xs xs:text-sm fw-medium text-street-dark">
+                    Detailed Description
+                  </Form.Label>
                   <Form.Control
                     as="textarea"
                     rows={3}
@@ -181,7 +191,9 @@ const StaffFeedbackForm: React.FC = () => {
 
                 {/* Witnesses */}
                 <Form.Group controlId="witnesses">
-                  <Form.Label className="mb-2 text-xs xs:text-sm fw-medium text-street-dark">Witnesses</Form.Label>
+                  <Form.Label className="mb-2 text-xs xs:text-sm fw-medium text-street-dark">
+                    Witnesses
+                  </Form.Label>
                   <FieldArray name="witnesses">
                     {({ push, remove }) => (
                       <>
@@ -189,16 +201,18 @@ const StaffFeedbackForm: React.FC = () => {
                           <Form.Control
                             type="text"
                             placeholder="Add a witness"
-                            value={values.newWitness}
+                            value={values.newWitness ?? ""}
                             onChange={(e) =>
                               setFieldValue("newWitness", e.target.value)
                             }
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {
                                 e.preventDefault();
+                                // ensure witnesses array exists
+                                const witnessesArray = values.witnesses ?? [];
                                 if (
                                   values.newWitness &&
-                                  !values.witnesses.includes(values.newWitness)
+                                  !witnessesArray.includes(values.newWitness)
                                 ) {
                                   push(values.newWitness);
                                   setFieldValue("newWitness", "");
@@ -207,8 +221,9 @@ const StaffFeedbackForm: React.FC = () => {
                             }}
                           />
                         </div>
+
                         <div className="d-flex gap-2 flex-wrap mb-2">
-                          {values.witnesses.map((w, i) => (
+                          {(values.witnesses ?? []).map((w, i) => (
                             <Badge key={i} variant="primary-soft">
                               {w}{" "}
                               <span
@@ -227,7 +242,9 @@ const StaffFeedbackForm: React.FC = () => {
 
                 {/* Actions Taken */}
                 <Form.Group controlId="actionsTaken">
-                  <Form.Label className="mb-2 text-xs xs:text-sm fw-medium text-street-dark">Actions Taken</Form.Label>
+                  <Form.Label className="mb-2 text-xs xs:text-sm fw-medium text-street-dark">
+                    Actions Taken
+                  </Form.Label>
                   <Form.Control
                     as="textarea"
                     rows={2}
@@ -236,7 +253,10 @@ const StaffFeedbackForm: React.FC = () => {
                     onChange={handleChange}
                     isInvalid={!!errors.actionsTaken && touched.actionsTaken}
                   />
-                  <div>{values.actionsTaken.length}/500 characters</div>
+                  <div>
+                    {values.actionsTaken ? values.actionsTaken.length : 0}/500
+                    characters
+                  </div>
                   <Form.Control.Feedback type="invalid">
                     {errors.actionsTaken}
                   </Form.Control.Feedback>
@@ -244,7 +264,9 @@ const StaffFeedbackForm: React.FC = () => {
 
                 {/* Reporter Name */}
                 <Form.Group controlId="reporterName">
-                  <Form.Label className="mb-2 text-xs xs:text-sm fw-medium text-street-dark">Reporter Name</Form.Label>
+                  <Form.Label className="mb-2 text-xs xs:text-sm fw-medium text-street-dark">
+                    Reporter Name
+                  </Form.Label>
                   <Form.Control
                     type="text"
                     name="reporterName"

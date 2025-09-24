@@ -61,14 +61,14 @@ const IncidentreportForm: React.FC = () => {
         ...values,
         date: fullDateTime, // full ISO timestamp
       };
-  
+
       const res = await createIncidentReport(payload).unwrap();
       if (res.success) {
         showSuccess(res.message);
         resetForm();
       }
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
   };
   return (
@@ -87,7 +87,7 @@ const IncidentreportForm: React.FC = () => {
             time: "",
             location: "",
             description: "",
-            witnesses: [],
+            witnesses: [] as string[],
             actionsTaken: "",
             reporterName: "",
             newWitness: "",
@@ -203,36 +203,34 @@ const IncidentreportForm: React.FC = () => {
                           <Form.Control
                             type="text"
                             placeholder="Add a witness"
-                            value={values.newWitness}
+                            value={values.newWitness ?? ""}
                             onChange={(e) =>
                               setFieldValue("newWitness", e.target.value)
-                            } // ✅ fix
+                            }
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {
                                 e.preventDefault();
+                                // ensure witnesses array exists
+                                const witnessesArray = values.witnesses ?? [];
                                 if (
                                   values.newWitness &&
-                                  values.witnesses.length < 3 &&
-                                  !values.witnesses.includes(values.newWitness)
+                                  !witnessesArray.includes(values.newWitness)
                                 ) {
-                                  push(values.newWitness); // ✅ works now
+                                  push(values.newWitness);
                                   setFieldValue("newWitness", "");
                                 }
                               }
                             }}
                           />
                         </div>
+
                         <div className="d-flex gap-2 flex-wrap mb-2">
-                          {values.witnesses.map((w, index) => (
-                            <Badge
-                              key={index}
-                              variant="primary-soft"
-                              className="px-2 py-1"
-                            >
+                          {(values.witnesses ?? []).map((w, i) => (
+                            <Badge key={i} variant="primary-soft">
                               {w}{" "}
                               <span
                                 style={{ cursor: "pointer" }}
-                                onClick={() => remove(index)}
+                                onClick={() => remove(i)}
                               >
                                 ×
                               </span>

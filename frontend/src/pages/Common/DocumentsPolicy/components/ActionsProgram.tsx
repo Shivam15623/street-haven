@@ -33,8 +33,16 @@ const programManualSchema = (isEdit: boolean) =>
         return value.size <= 16 * 1024 * 1024;
       }),
   });
+  type ProgramManualFormValues = {
+  title: string;
+  description: string;
+  type: string;
+  tags: string[];
+  attachment: File | null;
+  newTag: string;
+};
 // 🔹 Helper: build FormData
-const buildFormData = (values) => {
+const buildFormData = (values:ProgramManualFormValues) => {
   const formData = new FormData();
   formData.append("title", values.title);
   formData.append("description", values.description);

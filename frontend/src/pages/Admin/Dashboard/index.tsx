@@ -1,4 +1,3 @@
-import React from "react";
 import { Col, Row } from "react-bootstrap";
 import DashboardCard from "../../Employee/Dashboard/components/DashboardCard";
 import RecentActivity from "../../Employee/Dashboard/components/RecentActivity";
