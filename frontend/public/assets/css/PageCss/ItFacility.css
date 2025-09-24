@@ -1,0 +1,171 @@
+/* Ticket Count Card  */
+
+.request-form-card {
+  transition: background-color 0.3s ease;
+}
+
+.request-form-card:hover .card-body {
+  border: 1px solid var(--street-primary-base);
+}
+/* Base card styles */
+.ticket-card {
+  border-radius: 12px;
+  background-color: #ffffff; /* Light mode */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+[data-theme="dark"] .ticket-card {
+  background-color: var(--street-card); /* Dark mode */
+}
+
+/* Ticket label + number */
+.ticket-card h4 {
+  font-weight: 700;
+  margin-bottom: 0;
+}
+
+.ticket-card p {
+  margin-bottom: 0;
+  opacity: 0.85;
+}
+
+/* Icon wrapper base */
+.ticket-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* -------- Light Mode Variants -------- */
+[data-theme="light"] .ticket-icon.open {
+  background: #f8717133;
+  color: #dc2626;
+}
+
+[data-theme="light"] .ticket-icon.progress {
+  background: #facc1533;
+  color: #ca8a04;
+}
+
+[data-theme="light"] .ticket-icon.completed {
+  background: #bbf7d080;
+  color: #009634;
+}
+
+[data-theme="light"] .ticket-icon.review {
+  background: #0160a666;
+  color: var(--street-primary, #0160a6);
+}
+
+[data-theme="light"] .ticket-icon.total {
+  background: #f4f4f4;
+  color: #555555;
+}
+
+/* -------- Dark Mode Variants -------- */
+[data-theme="dark"] .ticket-icon.open {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171; /* Softer red on dark */
+}
+
+[data-theme="dark"] .ticket-icon.progress {
+  background: rgba(250, 204, 21, 0.15);
+  color: #facc15;
+}
+
+[data-theme="dark"] .ticket-icon.completed {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+[data-theme="dark"] .ticket-icon.review {
+  background: rgba(1, 96, 166, 0.2);
+  color: var(--street-primary, #3b82f6);
+}
+
+[data-theme="dark"] .ticket-icon.total {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e5e7eb;
+}
+/* -------- Light Mode Active Border -------- */
+.active-count-card {
+  border-width: 1px;
+  border-radius: 12px;
+
+  /* Override per variant */
+}
+[data-theme="light"] .active-count-card.open {
+  border-color: #dc2626;
+}
+[data-theme="light"] .active-count-card.progress {
+  border-color: #ca8a04;
+}
+[data-theme="light"] .active-count-card.completed {
+  border-color: #009634;
+}
+[data-theme="light"] .active-count-card.review {
+  border-color: var(--street-primary, #0160a6);
+}
+[data-theme="light"] .active-count-card.total {
+  border-color: #555555;
+}
+
+/* -------- Dark Mode Active Border -------- */
+[data-theme="dark"] .active-count-card.open {
+  border-color: #f87171;
+}
+
+[data-theme="dark"] .active-count-card.progress {
+  border-color: #facc15;
+}
+
+[data-theme="dark"] .active-count-card.completed {
+  border-color: #34d399;
+}
+
+[data-theme="dark"] .active-count-card.review {
+  border-color: var(--street-primary, #3b82f6);
+}
+
+[data-theme="dark"] .active-count-card.total {
+  border-color: #e5e7eb;
+}
+.ticketcardbtn {
+  width: 80px;
+  height: auto;
+}
+@media (min-width: 668px) {
+  .ticketcardbtn {
+    width: 85px;
+    height: 40px;
+  }
+}
+@media (min-width: 1200px) {
+  .ticketcardbtn {
+    width: 100px;
+    height: 40px;
+  }
+}
+@media (min-width: 1400px) {
+  .ticketcardbtn {
+    width: 130px;
+    height: 40px;
+  }
+}
+.req-icon {
+  background-color: var(--street-primary-base-10);
+  color: var(--street-primary-base);
+}
+[data-theme="dark"] .req-icon {
+  background-color: rgba(36, 47, 59, 1);
+  color: #ffff;
+}
+
+.help-blur{
+  background-color: rgba(1, 96, 166, 0.06)
+}
+

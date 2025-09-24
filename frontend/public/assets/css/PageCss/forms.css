@@ -1,0 +1,48 @@
+/* Card wrapper */
+.incident-card {
+  transition: all 0.25s ease-in-out;
+  border-radius: 0.5rem; /* just to ensure smooth scaling */
+}
+
+.incident-card:hover {
+  transform: translateY(-4px); /* lift effect */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  background-color: rgba(0, 0, 0, 0.02); /* subtle bg */
+  cursor: pointer;
+}
+
+/* Icon container */
+.incident-card .icon-box {
+  transition: background-color 0.25s ease, transform 0.25s ease;
+}
+
+.incident-card:hover .icon-box {
+  transform: scale(1.08);
+}
+
+.report-form-card {
+  transition: background-color 0.3s ease;
+}
+.form-icon {
+  background-color: var(--street-primary-base-10);
+  color: var(--street-primary-base);
+}
+[data-theme="dark"] .form-icon {
+  background-color: rgba(36, 47, 59, 1);
+  color: #ffff;
+}
+.form-sub-toggle{
+  background-color: #f4f4f4;
+}
+[data-theme="dark"] .form-sub-toggle {
+  background-color: rgba(15, 28, 42, 1);
+}
+.report-form-card:hover .card-body {
+  border: 1px solid var(--street-primary-base);
+}
+.functional_image {
+  width: 277px;
+  height: 93px;
+  object-fit: contain;
+  opacity: 1;
+}

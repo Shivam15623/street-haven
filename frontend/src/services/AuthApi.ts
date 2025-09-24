@@ -1,0 +1,86 @@
+import { api } from "../redux/ApiSlice";
+import type { ApiGeneralResponse } from "../interfaces/Response";
+import { setLoggedIn, setLoggedOut } from "../redux/AuthSlice";
+import type {
+  ForgotPasswordcredential,
+  LoginCredentials,
+  LoginResponse,
+  RequestResetPasswordcredential,
+  SignupCredentials,
+} from "../interfaces/AuthInterfaces";
+
+export const authApi = api.injectEndpoints({
+  endpoints: (builder) => ({
+    login: builder.mutation<LoginResponse, LoginCredentials>({
+      query: (credentials) => ({
+        url: "/auth/login",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
+    registerEmployee: builder.mutation<ApiGeneralResponse, SignupCredentials>({
+      query: (credentials) => ({
+        url: "/auth/register/employee",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
+    logout: builder.mutation<ApiGeneralResponse, void>({
+      query: () => ({
+        url: "/auth/logout",
+        method: "POST",
+      }),
+    }),
+    forgotPassword: builder.mutation<
+      ApiGeneralResponse,
+      RequestResetPasswordcredential
+    >({
+      query: (credentials) => ({
+        url: "/auth/forgot-password",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
+    resetPassword: builder.mutation<
+      ApiGeneralResponse,
+      ForgotPasswordcredential
+    >({
+      query: (credentials) => ({
+        url: "/auth/reset-password",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
+    silentAuth: builder.query<LoginResponse, void>({
+      query: () => ({
+        url: "/auth/silent-auth",
+        method: "GET",
+      }),
+      onQueryStarted: async (_arg, { dispatch, queryFulfilled }) => {
+        try {
+          const { data } = await queryFulfilled;
+
+          if (data?.data.accessToken) {
+            dispatch(
+              setLoggedIn({
+                accessToken: data.data.accessToken,
+                UserData: data.data.user,
+              })
+            );
+          }
+        } catch {
+          dispatch(setLoggedOut());
+        }
+      },
+    }),
+  }),
+});
+
+export const {
+  useLoginMutation,
+  useRegisterEmployeeMutation,
+  useSilentAuthQuery,
+  useLogoutMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
+} = authApi;

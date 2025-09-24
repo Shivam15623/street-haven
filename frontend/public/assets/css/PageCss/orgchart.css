@@ -1,0 +1,19 @@
+.org-icon {
+  background-color: var(--street-primary-base-10);
+  color: var(--street-primary-base);
+}
+[data-theme="dark"] .org-icon {
+  background-color: rgba(36, 47, 59, 1);
+  color: #ffff;
+}
+.collective-icon {
+  background-color: var(--street-primary-base-10);
+  color: var(--street-primary-base);
+}
+[data-theme="dark"] .collective-icon {
+  background-color: rgba(36, 47, 59, 1);
+  color: #ffff;
+}
+.org-node {
+  border: 1.5px solid rgba(1, 96, 166, 0.5);
+}
