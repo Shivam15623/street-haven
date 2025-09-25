@@ -4,15 +4,17 @@ import RecentActivity from "../../Employee/Dashboard/components/RecentActivity";
 import UpcomingEvents from "../../Employee/Dashboard/components/UpcomingEvents";
 import dayjs from "dayjs";
 import "@assets/css/PageCss/dashboard.css";
+import { selectAuth } from "../../../redux/AuthSlice";
+import { useSelector } from "react-redux";
 const AdminDashboard = () => {
   const today = dayjs().format("dddd, MMMM D, YYYY");
-
+  const { user } = useSelector(selectAuth);
   return (
     <div className="d-flex flex-column gap-4 ">
       <div className="d-flex flex-row justify-content-between">
         <div className="d-flex flex-column gap-1 gap-sm-2">
           <div className="fw-semibold text-lg xs:text-xl sm:text-xxl text-street-dark">
-            Welcome Back,Jane!
+            Welcome Back,{user?.firstName}!
           </div>
           <div className="text-street-base text-xs xs:text-sm sm:text-md fw-normal">
             Here's what's happening at Street Haven today.
