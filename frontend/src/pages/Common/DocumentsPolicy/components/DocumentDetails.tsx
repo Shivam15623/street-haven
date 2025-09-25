@@ -9,6 +9,7 @@ import "pdfjs-dist/web/pdf_viewer.css";
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 type Props = {
+  title:string
   attachment: {
     fileName: string;
     fileUrl: string;
@@ -17,7 +18,7 @@ type Props = {
   };
 };
 
-const DocumentDetails = ({ attachment }: Props) => {
+const DocumentDetails = ({ attachment,title }: Props) => {
   const [showModal, setShowModal] = useState(false);
   const [numPages, setNumPages] = useState<number | null>(null);
 
@@ -25,14 +26,25 @@ const DocumentDetails = ({ attachment }: Props) => {
     setNumPages(numPages);
   };
 
-  const handleDownload = (url: string, filename: string) => {
-    const link = document.createElement("a");
-    link.href = url;
-    link.target = "_blank";
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch file");
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(blobUrl); // Free memory
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
   };
 
   return (
@@ -45,8 +57,10 @@ const DocumentDetails = ({ attachment }: Props) => {
       </Button>
 
       <ModalWrapper
-        title={attachment.fileName}
-        subtitle={`${attachment.fileName} • ${numPages || attachment.totalPages} pages`}
+        title={title}
+        subtitle={`${attachment.fileName} • ${
+          numPages || attachment.totalPages
+        } pages`}
         size="xl"
         show={showModal}
         onHide={() => setShowModal(false)}
@@ -58,7 +72,9 @@ const DocumentDetails = ({ attachment }: Props) => {
           <div className="d-flex justify-content-end w-100">
             <Button
               className="btn btn-street-primary btn-street-lg d-flex align-items-center radius-12 justify-content-center text-sm gap-1"
-              onClick={() => handleDownload(attachment.fileUrl, attachment.fileName)}
+              onClick={() =>
+                handleDownload(attachment.fileUrl, attachment.fileName)
+              }
             >
               <Icon icon="jam:download" className="text-lg" />
               Download
@@ -81,16 +97,19 @@ const DocumentDetails = ({ attachment }: Props) => {
             loading={<p>Loading PDF...</p>}
             error={<p>Failed to load PDF</p>}
           >
-            {Array.from(new Array(numPages || attachment.totalPages), (_, index) => (
-              <Page
-                key={`page_${index + 1}`}
-                pageNumber={index + 1}
-                width={Math.min(window.innerWidth * 0.8, 453)}
-                renderAnnotationLayer={false}
-                renderTextLayer={false}
-                className={"mb-4"}
-              />
-            ))}
+            {Array.from(
+              new Array(numPages || attachment.totalPages),
+              (_, index) => (
+                <Page
+                  key={`page_${index + 1}`}
+                  pageNumber={index + 1}
+                  width={Math.min(window.innerWidth * 0.8, 453)}
+                  renderAnnotationLayer={false}
+                  renderTextLayer={false}
+                  className={"mb-4"}
+                />
+              )
+            )}
           </Document>
         </div>
       </ModalWrapper>
