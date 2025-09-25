@@ -30,14 +30,25 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
   const { title, description, tags, type, updatedAt, attachment } = Pdocument;
   const [showEditModal, setShowEditModal] = useState(false);
   const { isAdmin } = useHasPermission();
-  const handleDownload = (url: string, filename: string) => {
-    const link = document.createElement("a");
-    link.href = url;
-    link.target = "_blank";
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch file");
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(blobUrl); // Free memory
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
   };
 
   return (
@@ -82,7 +93,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
               Updated: {updatedAt}
             </div>
             <div className="d-flex flex-row gap-8 gap-sm-12">
-              <DocumentDetails attachment={attachment} />
+              <DocumentDetails title={title} attachment={attachment} />
               <button
                 className="btn btn-street-primary btn-street-lg p-8 d-flex flex-row align-items-center justify-content-between gap-1 px-sm-24 px-md-32 radius-12 text-xxs sm:text-xs"
                 onClick={() =>
