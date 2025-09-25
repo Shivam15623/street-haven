@@ -5,6 +5,7 @@ import ModalWrapper from "../../../../components/child/ModalWrapper";
 import { Document, Page, pdfjs } from "react-pdf";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker?url";
 import "pdfjs-dist/web/pdf_viewer.css";
+
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 type Props = {
@@ -19,11 +20,9 @@ type Props = {
 const DocumentDetails = ({ attachment }: Props) => {
   const [showModal, setShowModal] = useState(false);
   const [numPages, setNumPages] = useState<number | null>(null);
-  const [pageNumber, setPageNumber] = useState(1);
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
-    setPageNumber(1);
   };
 
   const handleDownload = (url: string, filename: string) => {
@@ -34,14 +33,6 @@ const DocumentDetails = ({ attachment }: Props) => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  const nextPage = () => {
-    if (numPages && pageNumber < numPages) setPageNumber(pageNumber + 1);
-  };
-
-  const prevPage = () => {
-    if (pageNumber > 1) setPageNumber(pageNumber - 1);
   };
 
   return (
@@ -64,29 +55,7 @@ const DocumentDetails = ({ attachment }: Props) => {
         bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
         footerClassName="pt-16 pt-sm-20 px-0 pb-0"
         footer={
-          <div className="d-flex justify-content-between align-items-center w-100">
-            {/* Page Navigation */}
-            <div className="d-flex gap-2 align-items-center">
-              <Button
-                className="btn btn-street-outline-primary"
-                onClick={prevPage}
-                disabled={pageNumber === 1}
-              >
-                <Icon icon="ic:round-chevron-left" />
-              </Button>
-              <span>
-                Page {pageNumber} of {numPages || attachment.totalPages}
-              </span>
-              <Button
-                className="btn btn-street-outline-primary"
-                onClick={nextPage}
-                disabled={numPages ? pageNumber === numPages : pageNumber === attachment.totalPages}
-              >
-                <Icon icon="ic:round-chevron-right" />
-              </Button>
-            </div>
-
-            {/* Download */}
+          <div className="d-flex justify-content-end w-100">
             <Button
               className="btn btn-street-primary btn-street-lg d-flex align-items-center radius-12 justify-content-center text-sm gap-1"
               onClick={() => handleDownload(attachment.fileUrl, attachment.fileName)}
@@ -97,22 +66,31 @@ const DocumentDetails = ({ attachment }: Props) => {
           </div>
         }
       >
-        <div style={{ display: "flex", justifyContent: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            overflowY: "auto",
+            maxHeight: "80vh",
+          }}
+        >
           <Document
             file={attachment.fileUrl}
             onLoadSuccess={onDocumentLoadSuccess}
             loading={<p>Loading PDF...</p>}
             error={<p>Failed to load PDF</p>}
           >
-            <Page
-              key={`page_${pageNumber}`}
-              pageNumber={pageNumber}
-              width={Math.min(window.innerWidth * 0.8, 453)}
-              height={640}
-              renderAnnotationLayer={false}
-              renderTextLayer={false}
-              className={"mb-4"}
-            />
+            {Array.from(new Array(numPages || attachment.totalPages), (_, index) => (
+              <Page
+                key={`page_${index + 1}`}
+                pageNumber={index + 1}
+                width={Math.min(window.innerWidth * 0.8, 453)}
+                renderAnnotationLayer={false}
+                renderTextLayer={false}
+                className={"mb-4"}
+              />
+            ))}
           </Document>
         </div>
       </ModalWrapper>
