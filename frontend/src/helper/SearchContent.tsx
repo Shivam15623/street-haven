@@ -25,9 +25,9 @@ const SearchContent = () => {
   const handleClear = () => setQuery("");
 
   return (
-    <div className="position-relative w-full max-w-xl">
+    <div className="position-relative search-ContentContainer w-full ">
       {/* Search bar */}
-      <div className="search-Content d-flex align-items-center gap-2">
+      <div className={`search-Content  d-flex align-items-center gap-2 ${debouncedQuery?"queryborder":""}`}>
         <Icon icon="ion:search-outline" className="contentIcon" />
         <input
           type="text"
@@ -43,14 +43,9 @@ const SearchContent = () => {
           />
         )}
       </div>
+    
       {debouncedQuery && results?.data && (
-        <div className="position-absolute search-Results top-100 left-0 w-100 mt-1 bg-white border rounded shadow-lg overflow-y-auto">
-          {/* Sticky Header */}
-          <div className="position-sticky top-0 bg-white px-4 py-2 border-bottom border-gray-200 z-10">
-            <span className="fw-semibold text-street-primary">
-              Search Results
-            </span>
-          </div>
+        <div className="position-absolute search-Results top-100 left-0 w-100   shadow-none overflow-y-auto">
           {/* Loading state */}
           {isLoading && (
             <div className="d-flex justify-content-center align-items-center py-4">
@@ -61,9 +56,9 @@ const SearchContent = () => {
           )}
           {/* Events */}
           {results.data.events?.length > 0 && (
-            <div className="px-4 py-3 border-bottom border-gray-100">
+            <div className=" d-flex flex-column gap-2 py-3 border-bottom border-gray-100">
               <div className="fw-semibold d-flex flex-row justify-content-between align-items-center text-street-primary mb-2">
-                <div className="d-flex align-items-center gap-2">
+                <div className="d-flex text-lg align-items-center gap-2">
                   <Icon
                     icon="ion:calendar-outline"
                     className="text-street-primary"
@@ -77,17 +72,17 @@ const SearchContent = () => {
                   {results.data.events?.length}
                 </span>
               </div>
-              <div id="eventsContainer">
+              <div id="eventsContainer" className="ps-3">
                 {results.data.events.map((e) => (
-                  <div className="py-2 d-flex justify-content-between align-items-center hover-item cursor-pointer rounded px-2">
-                    <div className="d-flex flex-column ">
-                      <span className="fw-medium text-street-dark">
+                  <div className="py-2 px-2 d-flex justify-content-between align-items-center hover-item cursor-pointer rounded ">
+                    <div className="resultDetails ">
+                      <span className="fw-medium text-md text-street-dark">
                         {e.title}
                       </span>
                       <span className="text-xs text-street-base">
                         {dayjs(e.eventDate).format("DD MMM YYYY")}
                       </span>
-                      <span className="text-xxs text-street-base">
+                      <span className="text-xs text-street-base">
                         {dayjs(e.startTime).format("hh:mm A")} -{" "}
                         {dayjs(e.endTime).format("hh:mm A")}
                       </span>
@@ -101,9 +96,9 @@ const SearchContent = () => {
 
           {/* HR Updates */}
           {results.data.hrUpdates?.length > 0 && (
-            <div className="px-4 py-3 border-bottom border-gray-100">
+            <div className=" d-flex flex-column gap-2 py-3 border-bottom border-gray-100">
               <div className="fw-semibold d-flex flex-row justify-content-between align-items-center text-street-primary mb-2">
-                <div className="d-flex align-items-center gap-2">
+                <div className="d-flex text-lg align-items-center gap-2">
                   <Icon
                     icon="ion:person-outline"
                     className="text-street-primary"
@@ -117,14 +112,14 @@ const SearchContent = () => {
                   {results.data.hrUpdates?.length}
                 </span>
               </div>
-              <div id="hrUpdatesContainer">
+              <div id="hrUpdatesContainer" className="ps-3">
                 {results.data.hrUpdates.map((hr) => (
                   <div
-                    className="py-2 d-flex justify-content-between align-items-center hover-item cursor-pointer rounded px-2"
+                    className="py-2 px-2 d-flex justify-content-between align-items-center hover-item cursor-pointer rounded "
                     key={hr.title}
                   >
-                    <div className="d-flex flex-column">
-                      <span className="fw-medium text-street-dark">
+                    <div className="resultDetails">
+                      <span className="fw-medium text-md text-street-dark">
                         {hr.title}
                       </span>
                       <span className="text-xs text-street-base">
@@ -140,9 +135,9 @@ const SearchContent = () => {
 
           {/* Meeting Minutes */}
           {results.data.meetingMinutes?.length > 0 && (
-            <div className="px-4 py-3 border-bottom border-gray-100">
+            <div className=" d-flex flex-column gap-2 py-3 border-bottom border-gray-100">
               <div className="fw-semibold d-flex flex-row justify-content-between align-items-center text-street-primary mb-2">
-                <div className="d-flex align-items-center gap-2">
+                <div className="d-flex text-lg align-items-center gap-2">
                   <Icon
                     icon="ion:document-text-outline"
                     className="text-street-primary"
@@ -156,11 +151,11 @@ const SearchContent = () => {
                   {results.data.meetingMinutes?.length}
                 </span>
               </div>
-              <div id="meetingMinutesContainer">
+              <div id="meetingMinutesContainer" className="ps-3">
                 {results.data.meetingMinutes.map((tm) => (
-                  <div className="py-2 d-flex justify-content-between align-items-center hover-item cursor-pointer rounded px-2">
-                    <div className="d-flex flex-column">
-                      <span className="fw-medium text-street-dark">
+                  <div className="py-2 px-2 d-flex justify-content-between align-items-center hover-item cursor-pointer rounded ">
+                    <div className="resultDetails">
+                      <span className=" text-md fw-medium text-street-dark">
                         {tm.title}
                       </span>
                       <span className="text-xs text-street-base">
@@ -176,9 +171,9 @@ const SearchContent = () => {
 
           {/* Program Manuals */}
           {results.data.programManuals?.length > 0 && (
-            <div className="px-4 py-3">
+            <div className=" d-flex flex-column gap-2 py-3">
               <div className="fw-semibold d-flex flex-row justify-content-between align-items-center text-street-primary mb-2">
-                <div className="d-flex align-items-center gap-2">
+                <div className="d-flex text-lg align-items-center gap-2">
                   <Icon
                     icon="ion:book-outline"
                     className="text-street-primary"
@@ -192,17 +187,17 @@ const SearchContent = () => {
                   {results.data.programManuals?.length}
                 </span>
               </div>
-              <div id="programManualsContainer">
+              <div id="programManualsContainer" className="ps-3">
                 {results.data.programManuals.map((pm) => (
-                  <div className="py-2 d-flex justify-content-between align-items-center hover-item cursor-pointer rounded px-2">
-                    <div className="d-flex flex-column">
-                      <span className="fw-medium text-street-dark">
+                  <div className="py-2 px-2 d-flex justify-content-between align-items-center hover-item cursor-pointer rounded ">
+                    <div className="resultDetails">
+                      <span className="fw-medium text-md text-street-dark">
                         {pm.title}
                       </span>
                       <span className="text-xs text-street-base">
                         {pm.description}
                       </span>
-                      <span className="text-xxs text-street-base">
+                      <span className="text-xs text-street-base">
                         {dayjs(pm.createdAt).format("DD MMM YYYY")}
                       </span>
                     </div>
