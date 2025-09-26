@@ -1,9 +1,12 @@
+import HRupdate from "../model/hrupdate.js";
+import MeetingMinutes from "../model/meetingminutes.js";
+import ProgramManual from "../model/programManuals.js";
 import User from "../model/user.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import { uploadOnCloudinary } from "../utills/cloudinary.js";
-
+import Event from "./../model/event.js";
 export const editUserDetails = asyncHandler(async (req, res) => {
   const { _id: userId } = req.user;
   const findUser = await User.findById(userId);
