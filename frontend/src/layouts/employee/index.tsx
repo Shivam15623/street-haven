@@ -12,6 +12,7 @@ import Events from "../../assets/icons/sidebaricons/EventsIcon.svg?react";
 import FormIcon from "../../assets/icons/sidebaricons/formIcon.svg?react";
 import ItNFacility from "../../assets/icons/sidebaricons/ItNfacility.svg?react";
 import ProgramIcon from "../../assets/icons/sidebaricons/ProgramManual.svg?react";
+import SearchContent from "../../helper/SearchContent.tsx";
 const menuItems = [
   {
     label: "Dashboard",
@@ -181,14 +182,7 @@ const EmployeeLayout = () => {
               >
                 <Icon icon="heroicons:bars-3-solid" className="icon" />
               </button>
-              <form className="navbar-search">
-                <input type="text" name="search" placeholder="Search here..." />
-                <Icon
-                  icon="ion:search-outline"
-                  className="icon"
-                 
-                />
-              </form>
+              <SearchContent/>
             </div>
 
             <div className="d-flex flex-wrap align-items-center gap-3">
