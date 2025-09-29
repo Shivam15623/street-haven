@@ -30,10 +30,10 @@ export const editUserDetails = asyncHandler(async (req, res) => {
 
     // ✅ Upload new profile pic
     const uploadedPic = await uploadOnCloudinary(req.file.path);
-    if (!uploadedPic.url) {
+    if (!uploadedPic.secure_url) {
       throw new ApiError(500, "Error while uploading profile picture");
     }
-    updates.profilePic = uploadedPic.url;
+    updates.profilePic = uploadedPic.secure_url;
   } else {
     // Only check equality when NO profile picture update
     const isSame =
