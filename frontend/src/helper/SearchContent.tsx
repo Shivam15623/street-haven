@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useSearchAllContentQuery } from "../services/searchApi";
 import { useDebounce } from "../hooks/useDebounce";
 import dayjs from "dayjs";
+import { useNavigate } from "react-router-dom";
 interface StatusBadgeProps {
   status: "new" | "update";
 }
@@ -27,7 +28,11 @@ const SearchContent = () => {
   return (
     <div className="position-relative search-ContentContainer w-full ">
       {/* Search bar */}
-      <div className={`search-Content  d-flex align-items-center gap-2 ${debouncedQuery?"queryborder":""}`}>
+      <div
+        className={`search-Content  d-flex align-items-center gap-2 ${
+          debouncedQuery ? "queryborder" : ""
+        }`}
+      >
         <Icon icon="ion:search-outline" className="contentIcon" />
         <input
           type="text"
@@ -43,7 +48,6 @@ const SearchContent = () => {
           />
         )}
       </div>
-    
       {debouncedQuery && results?.data && (
         <div className="position-absolute search-Results top-100 left-0 w-100   shadow-none overflow-y-auto">
           {/* Loading state */}
