@@ -40,6 +40,7 @@ export interface EventUpcomingQuery {
   sortBy?: string;
   order?: "asc" | "desc";
 }
+export type EventCalendarResponse=ApiResponse<EventUpcomingData[]>
 export type EventUpcomingResponse = ApiResponse<{
   events: EventUpcomingData[];
   paggination: {

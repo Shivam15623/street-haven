@@ -1,5 +1,6 @@
 import type {
   EventCalendarCredentials,
+  EventCalendarResponse,
   EventCredentials,
   EventUpcomingQuery,
   EventUpcomingResponse,
@@ -44,7 +45,7 @@ export const EventApi = api.injectEndpoints({
       providesTags: ["Event"],
     }),
     fetchEventsCalendar: builder.query<
-      EventUpcomingResponse,
+      EventCalendarResponse,
       EventCalendarCredentials
     >({
       query: (credentials) => ({
