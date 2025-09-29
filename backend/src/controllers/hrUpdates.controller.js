@@ -110,18 +110,22 @@ export const viewhrUpdate = asyncHandler(async (req, res) => {
     page = 1,
     limit = 10,
     search = "",
+    slug = "",
     sortBy = "createdAt",
     order = "desc",
   } = req.query;
   const query = {};
 
   // If search query exists → search in title, description, and tags
-  if (search) {
+  if (slug) {
+    query.slug = slug; // exact match
+  } else if (search) {
     query.$or = [
       { title: { $regex: search, $options: "i" } },
       { description: { $regex: search, $options: "i" } },
     ];
   }
+
   const hrupdates = await HRupdate.find(query)
     .populate("createdBy", "firstname lastname email")
     .sort({ [sortBy]: order === "asc" ? 1 : -1 })

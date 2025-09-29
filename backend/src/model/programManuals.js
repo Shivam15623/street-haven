@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { customAlphabet } from "nanoid";
+import slugify from "slugify";
 
 const attachmentSchema = new mongoose.Schema({
   fileName: { type: String, required: true },
@@ -13,6 +15,11 @@ const programManualSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+    },
+    slug: {
+      type: String,
+      unique: true, // ensures unique in DB
+      index: true,
     },
     description: {
       type: String,
@@ -38,6 +45,20 @@ const programManualSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
+const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 5);
+programManualSchema.pre("save", function (next) {
+  console.log("try")
+  if (!this.slug || this.isNew) {
+    // Use slugify to convert title to URL-friendly string
+    const baseSlug = slugify(this.title, {
+      lower: true,
+      strict: true,
+      trim: true,
+    });
+    // Append Nano ID to ensure uniqueness
+    this.slug = `${baseSlug}-${nanoid()}`;
+  }
+  next();
+});
 const ProgramManual = mongoose.model("ProgramManual", programManualSchema);
 export default ProgramManual;

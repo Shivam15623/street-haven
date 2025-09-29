@@ -154,13 +154,14 @@ export const deleteMeetingMinutes = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200,"Meeting minutes deleted successfully"));
+    .json(new ApiResponse(200, "Meeting minutes deleted successfully"));
 });
 export const getMeetingMinutes = asyncHandler(async (req, res) => {
   const {
     page = 1,
     limit = 10,
     search = "",
+    slug = "",
     sortBy = "meetingDate",
     order = "desc",
   } = req.query;
@@ -168,7 +169,9 @@ export const getMeetingMinutes = asyncHandler(async (req, res) => {
   const query = {};
 
   // Search in title, keyHighlights, topics, attendees
-  if (search) {
+  if (slug) {
+    query.slug = slug; // exact match
+  } else if (search) {
     query.$or = [
       { title: { $regex: search, $options: "i" } },
       { keyHighlights: { $regex: search, $options: "i" } },

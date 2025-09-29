@@ -1,11 +1,17 @@
 import mongoose from "mongoose";
-
+import slugify from "slugify";
+import { customAlphabet } from "nanoid";
 const eventSchema = new mongoose.Schema(
   {
     title: {
       type: String,
       required: [true, "Event title is required"],
       trim: true,
+    },
+    slug: {
+      type: String,
+      unique: true, // ensures unique in DB
+      index: true,
     },
     description: {
       type: String,
@@ -72,9 +78,21 @@ const eventSchema = new mongoose.Schema(
     timestamps: true, // adds createdAt & updatedAt automatically
   }
 );
-
+const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 5);
 // 🔹 Pre-save hook: keep totalRegistered in sync
 eventSchema.pre("save", function (next) {
+  // Generate slug only if not set
+  if (!this.slug || this.isNew) {
+    // Use slugify to convert title to URL-friendly string
+    const baseSlug = slugify(this.title, {
+      lower: true,
+      strict: true,
+      trim: true,
+    });
+    // Append Nano ID to ensure uniqueness
+    this.slug = `${baseSlug}-${nanoid()}`;
+  }
+
   this.totalRegistered = this.registeredUsers.length;
   next();
 });

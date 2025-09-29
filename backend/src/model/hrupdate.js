@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { customAlphabet } from "nanoid";
+import slugify from "slugify";
 
 const attachmentSchema = new mongoose.Schema({
   fileName: {
@@ -31,6 +33,11 @@ const HRupdateSchema = new mongoose.Schema(
       trim: true,
       maxlength: [200, "Title cannot exceed 200 characters"],
     },
+    slug: {
+      type: String,
+      unique: true, // ensures unique in DB
+      index: true,
+    },
     description: {
       type: String,
       trim: true,
@@ -38,7 +45,7 @@ const HRupdateSchema = new mongoose.Schema(
     },
     attachment: {
       type: attachmentSchema, // ✅ allows multiple attachments
-      required:[true,"Attachment is required"]
+      required: [true, "Attachment is required"],
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -50,6 +57,20 @@ const HRupdateSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 5);
+HRupdateSchema.pre("save", function (next) {
+  if (!this.slug || this.isNew) {
+    // Use slugify to convert title to URL-friendly string
+    const baseSlug = slugify(this.title, {
+      lower: true,
+      strict: true,
+      trim: true,
+    });
+    // Append Nano ID to ensure uniqueness
+    this.slug = `${baseSlug}-${nanoid()}`;
+  }
+  next();
+});
 
 const HRupdate = mongoose.model("HRupdate", HRupdateSchema);
 

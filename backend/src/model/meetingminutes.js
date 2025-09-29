@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { customAlphabet } from "nanoid";
+import slugify from "slugify";
 
 const attachmentSchema = new mongoose.Schema({
   fileName: { type: String, required: true }, // original file name
@@ -13,6 +15,11 @@ const meetingMinutesSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+    },
+    slug: {
+      type: String,
+      unique: true, // ensures unique in DB
+      index: true,
     },
     meetingDate: {
       type: Date,
@@ -40,6 +47,19 @@ const meetingMinutesSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
+const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 5);
+meetingMinutesSchema.pre("save", function (next) {
+  if (!this.slug || this.isNew) {
+    // Use slugify to convert title to URL-friendly string
+    const baseSlug = slugify(this.title, {
+      lower: true,
+      strict: true,
+      trim: true,
+    });
+    // Append Nano ID to ensure uniqueness
+    this.slug = `${baseSlug}-${nanoid()}`;
+  }
+  next();
+});
 const MeetingMinutes = mongoose.model("MeetingMinutes", meetingMinutesSchema);
 export default MeetingMinutes;
