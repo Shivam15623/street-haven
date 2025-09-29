@@ -25,7 +25,7 @@ export const createhrUpdate = asyncHandler(async (req, res) => {
 
   const attachmentData = {
     fileName: uploadedFile.original_filename || "manual",
-    fileUrl: uploadedFile.url,
+    fileUrl: uploadedFile.secure_url,
     size: uploadedFile.bytes, // Cloudinary gives bytes
     totalPages: totalPages,
   };
@@ -68,7 +68,7 @@ export const edithrUpdate = asyncHandler(async (req, res) => {
 
     hrupdate.attachment = {
       fileName: uploadedFile.original_filename || "manual",
-      fileUrl: uploadedFile.url,
+      fileUrl: uploadedFile.secure_url,
       size: uploadedFile.bytes,
       totalPages,
     };

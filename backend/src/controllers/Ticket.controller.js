@@ -25,7 +25,7 @@ export const createTicket = asyncHandler(async (req, res) => {
   if (uploadedFile?.url) {
     payload.photo = {
       fileName: uploadedFile.original_filename || "photo",
-      fileUrl: uploadedFile.url,
+      fileUrl: uploadedFile.secure_url,
     };
   }
 

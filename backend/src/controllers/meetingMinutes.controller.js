@@ -23,7 +23,7 @@ export const addMeetingMinutes = asyncHandler(async (req, res) => {
 
   const attachmentData = {
     fileName: uploadedFile.original_filename || "manual",
-    fileUrl: uploadedFile.url,
+    fileUrl: uploadedFile.secure_url,
     size: uploadedFile.bytes, // Cloudinary gives bytes
     totalPages: totalPages,
   };
@@ -90,7 +90,7 @@ export const editMeetingMinutes = asyncHandler(async (req, res) => {
 
     const newAttachment = {
       fileName: uploadedFile.original_filename || "meeting-minutes",
-      fileUrl: uploadedFile.url,
+      fileUrl: uploadedFile.secure_url,
       size: uploadedFile.bytes,
       totalPages: totalPages,
     };
