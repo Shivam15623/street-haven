@@ -15,63 +15,39 @@ export const searchAllContent = asyncHandler(async (req, res) => {
   const [events, hrUpdates, meetingMinutes, programManuals] = await Promise.all(
     [
       Event.find({ title: regex, eventDate: { $gte: today } })
-        .select("title eventDate startTime endTime createdAt updatedAt")
+        .select("title slug")
         .limit(10),
       HRupdate.find({ $or: [{ title: regex }, { description: regex }] })
-        .select("title createdAt updatedAt")
+        .select("title slug")
         .limit(10),
-      MeetingMinutes.find({ title: regex })
-        .select("title meetingDate createdAt updatedAt")
-        .limit(10),
-      ProgramManual.find({ title: regex })
-        .select("title description createdAt updatedAt")
-        .limit(10),
+      MeetingMinutes.find({ title: regex }).select("title slug").limit(10),
+      ProgramManual.find({ title: regex }).select("title slug").limit(10),
     ]
   );
 
-    if (
+  if (
     events.length === 0 &&
     hrUpdates.length === 0 &&
     meetingMinutes.length === 0 &&
     programManuals.length === 0
   ) {
-    return res
-      .status(200)
-      .json(new ApiResponse(200, "No results found", {
-        isEmpty:true,
+    return res.status(200).json(
+      new ApiResponse(200, "No results found", {
+        isEmpty: true,
         events: [],
         hrUpdates: [],
         meetingMinutes: [],
         programManuals: [],
-      }));
+      })
+    );
   }
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const markStatus = (items) =>
-    items.map((item) => {
-      let status = null;
-      if (item.createdAt && item.createdAt >= sevenDaysAgo) status = "new";
-      else if (
-        item.updatedAt &&
-        item.updatedAt > item.createdAt &&
-        item.updatedAt >= sevenDaysAgo
-      )
-        status = "updated";
-
-      return { ...item._doc, status };
-    });
-
-  const eventsWithStatus = markStatus(events);
-  const hrUpdatesWithStatus = markStatus(hrUpdates);
-  const meetingMinutesWithStatus = markStatus(meetingMinutes);
-  const programManualsWithStatus = markStatus(programManuals);
   return res.status(200).json(
     new ApiResponse(200, "Search content fetched Successfully", {
-      events: eventsWithStatus,
-      hrUpdates: hrUpdatesWithStatus,
-      meetingMinutes: meetingMinutesWithStatus,
-      programManuals: programManualsWithStatus,
+      events: events,
+      hrUpdates: hrUpdates,
+      meetingMinutes: meetingMinutes,
+      programManuals: programManuals,
     })
   );
 });

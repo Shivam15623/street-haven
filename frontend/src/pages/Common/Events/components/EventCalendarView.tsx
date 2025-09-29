@@ -111,7 +111,7 @@ const EventCalendarView = () => {
           dayCellClassNames={"p-1 p-sm-8"}
           firstDay={1}
           fixedWeekCount={false}
-          events={data?.data?.map((event) => ({
+          events={data?.data.map((event) => ({
             title: event.title,
             start: event.startTime,
             end: event.endTime,

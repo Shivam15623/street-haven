@@ -59,35 +59,67 @@ export const editEvent = asyncHandler(async (req, res) => {
 });
 export const GetUpcomingEvents = asyncHandler(async (req, res) => {
   const { _id: userId } = req.user;
+
+  const {
+    page = 1,
+    limit = 10,
+    search = "",
+    slug = "",
+    sortBy = "eventDate",
+    order = "asc",
+  } = req.query;
+
+  const query = {};
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const upcomingEvents = await Event.find({
-    eventDate: { $gte: today },
-  })
-    .sort({ eventDate: 1 })
-    .populate("createdBy", "firstname lastname");
+  // Only upcoming events
+  query.eventDate = { $gte: today };
 
-  // Map through events to add `isRegistered`
+  // Slug overrides search
+  if (slug) {
+    query.slug = slug;
+  } else if (search) {
+    query.$or = [
+      { title: { $regex: search, $options: "i" } },
+      { description: { $regex: search, $options: "i" } },
+      { location: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  const upcomingEvents = await Event.find(query)
+    .populate("createdBy", "firstname lastname")
+    .sort({ [sortBy]: order === "asc" ? 1 : -1 })
+    .skip((Number(page) - 1) * Number(limit))
+    .limit(Number(limit));
+
+  const totalEvents = await Event.countDocuments(query);
+
+  // Add `isRegistered` for current user
   const eventsWithRegistration = upcomingEvents.map((event) => {
     const isRegistered = event.registeredUsers
       ? event.registeredUsers.includes(userId)
-      : false; // if registrations field exists in Event
+      : false;
     return {
       ...event.toObject(),
       isRegistered,
     };
   });
-  res
-    .status(200)
-    .json(
-      new ApiResponse(
-        201,
-        "All Upcoming Events Fetched Successfully",
-        eventsWithRegistration
-      )
-    );
+
+  res.status(200).json(
+    new ApiResponse(200, "Upcoming Events fetched successfully", {
+      events: eventsWithRegistration,
+      paggination: {
+        total: totalEvents,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(totalEvents / Number(limit)),
+      },
+    })
+  );
 });
+
 export const EventsCalendar = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.body;
   if (!startDate || !endDate) {

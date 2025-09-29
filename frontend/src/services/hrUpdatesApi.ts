@@ -11,19 +11,20 @@ const hrUpdateApi = api.injectEndpoints({
       query: ({
         page = 1,
         limit = 10,
+        slug = "",
         search = "",
         sortBy = "createdAt",
         order = "desc",
       }) => ({
         url: "/hr-updates/view",
-        params: { page, limit, search, sortBy, order },
+        params: { page, limit, search, sortBy, slug, order },
       }),
       providesTags: ["HrUpdates"],
     }),
     createhrUpdates: builder.mutation({
       query: (credentials) => ({
         url: "/hr-updates/create",
-        method:"POST",
+        method: "POST",
         body: credentials,
       }),
       invalidatesTags: ["HrUpdates"],
@@ -34,7 +35,7 @@ const hrUpdateApi = api.injectEndpoints({
     >({
       query: ({ id, data }) => ({
         url: `/hr-updates/edit/${id}`,
-        method:"PATCH",
+        method: "PATCH",
         body: data,
       }),
       invalidatesTags: ["HrUpdates"],
@@ -42,7 +43,7 @@ const hrUpdateApi = api.injectEndpoints({
     deletehrupdates: builder.mutation<ApiGeneralResponse, string>({
       query: (id) => ({
         url: `hr-updates/delete/${id}`,
-        method:"DELETE",
+        method: "DELETE",
       }),
       invalidatesTags: ["HrUpdates"],
     }),

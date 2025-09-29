@@ -12,13 +12,14 @@ const programManualsApi = api.injectEndpoints({
         page = 1,
         limit = 10,
         search = "",
+        slug="",
         type,
         sortBy = "createdAt",
         order = "desc",
       }) => ({
         url: "/program-manuals/view",
         method: "GET",
-        params: { page, limit, search, type, sortBy, order },
+        params: { page, limit, search, type,slug, sortBy, order },
       }),
       providesTags:["Manual"]
     }),
