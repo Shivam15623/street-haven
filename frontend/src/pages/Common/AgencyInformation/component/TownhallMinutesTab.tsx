@@ -3,16 +3,19 @@ import useHasPermission from "../../../../hooks/Auth";
 import { useFetchMeetingMinutesQuery } from "../../../../services/meetingminutesApi";
 import ActionstownhallMinutes from "./ActionstownhallMinutes";
 import TownhallMinuteCard from "./TownhallMinuteCard";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Icon } from "@iconify/react/dist/iconify.js";
 
 const TownhallMinutesTab = () => {
   const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const pageSize = 10;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const slugParam = searchParams.get("slug") ?? "";
   const { data, isLoading, isError, error } = useFetchMeetingMinutesQuery({
     page: 1,
     limit: 10,
+    slug: slugParam,
     sortBy: "meetingDate",
     order: "desc",
   });

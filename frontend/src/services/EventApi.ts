@@ -1,6 +1,7 @@
 import type {
   EventCalendarCredentials,
   EventCredentials,
+  EventUpcomingQuery,
   EventUpcomingResponse,
 } from "../interfaces/EventInterfaces";
 import type { ApiGeneralResponse } from "../interfaces/Response";
@@ -24,10 +25,21 @@ export const EventApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Event"],
     }),
-    fetchEventsupcoming: builder.query<EventUpcomingResponse, undefined>({
-      query: () => ({
+    fetchEventsupcoming: builder.query<
+      EventUpcomingResponse,
+      EventUpcomingQuery
+    >({
+      query: ({
+        page = 1,
+        limit = 10,
+        search = "",
+        slug = "",
+        sortBy = "eventDate",
+        order = "asc",
+      }) => ({
         url: "/events/upcoming",
         method: "GET",
+        params: { page, limit, search, slug, sortBy, order },
       }),
       providesTags: ["Event"],
     }),

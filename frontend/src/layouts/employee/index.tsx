@@ -174,7 +174,7 @@ const EmployeeLayout = () => {
       <main className="dashboard-main">
         <div className="navbar-header">
           <div className="d-flex align-items-center justify-content-between w-100 h-100">
-            <div className="d-flex flex-wrap align-items-center gap-4">
+            <div className="d-flex flex-nowrap align-items-center gap-4">
               <button
                 onClick={mobileMenuControl}
                 type="button"

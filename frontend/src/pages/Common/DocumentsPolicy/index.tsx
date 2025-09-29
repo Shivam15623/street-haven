@@ -6,23 +6,36 @@ import "@assets/css/PageCss/program.css";
 import { useFetchManualsQuery } from "../../../services/ProgramManualApi";
 import ActionsProgram from "./components/ActionsProgram";
 import useHasPermission from "../../../hooks/Auth";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 const ProgramManuals = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
-
+  const [searchParams,setSearchParams] = useSearchParams();
+  const slugParam = searchParams.get("slug") ?? "";
   const pageSize = 10;
 
   const { isAdmin } = useHasPermission();
+    const handleSearchChange = (value: string) => {
+    setSearch(value);
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) {
+      params.delete("slug"); // remove slug
+
+    }
+    setSearchParams(params);
+  };
+
 
   // Fetch manuals using RTK Query
   const { data, isLoading } = useFetchManualsQuery({
     page,
     limit: pageSize,
     search,
-    type:undefined,
+    slug: slugParam,
+    type: undefined,
     sortBy: "createdAt",
     order: "desc",
   });
@@ -65,7 +78,7 @@ const ProgramManuals = () => {
           placeholder="Search Documents"
           value={search}
           onChange={(e) => {
-            setSearch(e.target.value);
+            handleSearchChange(e.target.value);
             setPage(1); // Reset to first page on search
           }}
         />
