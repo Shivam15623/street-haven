@@ -9,7 +9,7 @@ import "pdfjs-dist/web/pdf_viewer.css";
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 type Props = {
-  title:string
+  title: string;
   attachment: {
     fileName: string;
     fileUrl: string;
@@ -18,7 +18,7 @@ type Props = {
   };
 };
 
-const DocumentDetails = ({ attachment,title }: Props) => {
+const DocumentDetails = ({ attachment, title }: Props) => {
   const [showModal, setShowModal] = useState(false);
   const [numPages, setNumPages] = useState<number | null>(null);
 
@@ -92,7 +92,7 @@ const DocumentDetails = ({ attachment,title }: Props) => {
           }}
         >
           <Document
-            file={attachment.fileUrl}
+            file={{ url: attachment.fileUrl }}
             onLoadSuccess={onDocumentLoadSuccess}
             loading={<p>Loading PDF...</p>}
             error={<p>Failed to load PDF</p>}

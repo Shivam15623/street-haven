@@ -83,7 +83,7 @@ const ViewTownHallMinutes = ({ attachment, meetings }: Props) => {
           }}
         >
           <Document
-            file={attachment.fileUrl}
+            file={{ url: attachment.fileUrl }}
             loading={<p>Loading PDF...</p>}
             error={<p>Failed to load PDF</p>}
           >
