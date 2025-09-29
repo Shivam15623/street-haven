@@ -54,7 +54,11 @@ const HrUpdatesView = ({ update }: Props) => {
             overflow: "auto",
           }}
         >
-          <Document file="/alarm-report.pdf">
+          <Document
+            file={attachment.fileUrl}
+            loading={<p>Loading PDF...</p>}
+            error={<p>Failed to load PDF</p>}
+          >
             <Page
               pageNumber={1}
               width={Math.min(window.innerWidth * 0.8, 450)}
