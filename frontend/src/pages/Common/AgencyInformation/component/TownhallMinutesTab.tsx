@@ -10,7 +10,7 @@ const TownhallMinutesTab = () => {
   const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const pageSize = 10;
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const slugParam = searchParams.get("slug") ?? "";
   const { data, isLoading, isError, error } = useFetchMeetingMinutesQuery({
     page: 1,
