@@ -16,7 +16,7 @@ type Props = {
 const HrUpdatesView = ({ update }: Props) => {
   const [showModal, setShowModal] = useState(false);
   const { attachment } = update;
-
+ console.log(attachment.fileUrl)
   return (
     <>
       <Button
@@ -55,7 +55,7 @@ const HrUpdatesView = ({ update }: Props) => {
           }}
         >
           <Document
-            file={attachment.fileUrl}
+            file={{url:attachment.fileUrl}}
             loading={<p>Loading PDF...</p>}
             error={<p>Failed to load PDF</p>}
           >
