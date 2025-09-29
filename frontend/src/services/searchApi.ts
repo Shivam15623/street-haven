@@ -1,45 +1,16 @@
 import type { ApiResponse } from "../interfaces/Response";
 import { api } from "../redux/ApiSlice";
-interface searchResultEvent {
+interface searchResultItem {
   _id: string;
-  eventDate: string;
-  startTime: string;
-  endTime: string;
+  slug: string;
   title: string;
-  createdAt: string;
-  updatedAt: string;
-  status: "new" | "update" | null;
 }
-interface searchResultMeeting {
-  _id: string;
-  title: string;
-  meetingDate: string;
-  createdAt: string;
-  updatedAt: string;
-  status: "new" | "update" | null;
-}
-interface searchResulthrUpdate {
-  _id: string;
-  title: string;
-  createdAt: string;
-  updatedAt: string;
-  status: "new" | "update" | null;
-}
-interface searchResultMannual {
-  _id: string;
-  title: string;
-  description: string;
-  createdAt: string;
-  updatedAt: string;
-  status: "new" | "update" | null;
-}
-
 type SearchResultResponse = ApiResponse<{
   isEmpty?: true;
-  events: searchResultEvent[];
-  hrUpdates: searchResulthrUpdate[];
-  programManuals: searchResultMannual[];
-  meetingMinutes: searchResultMeeting[];
+  events: searchResultItem[];
+  hrUpdates: searchResultItem[];
+  programManuals: searchResultItem[];
+  meetingMinutes: searchResultItem[];
 }>;
 export const searchApi = api.injectEndpoints({
   endpoints: (builder) => ({

@@ -23,7 +23,7 @@ export interface EventUpcomingData {
   registeredUsers: string[]; // assuming these are user IDs
   totalRegistered: number;
   capacity: number;
-  isRegistered:boolean
+  isRegistered: boolean;
   status: "upcoming" | "completed" | "cancelled"; // extend as per your app logic
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
@@ -32,4 +32,21 @@ export interface EventCalendarCredentials {
   startDate: string;
   endDate: string;
 }
-export type EventUpcomingResponse = ApiResponse<EventUpcomingData[]>;
+export interface EventUpcomingQuery {
+  page?: number;
+  limit?: number;
+  slug?: string;
+  search?: string;
+  sortBy?: string;
+  order?: "asc" | "desc";
+}
+export type EventCalendarResponse=ApiResponse<EventUpcomingData[]>
+export type EventUpcomingResponse = ApiResponse<{
+  events: EventUpcomingData[];
+  paggination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}>;

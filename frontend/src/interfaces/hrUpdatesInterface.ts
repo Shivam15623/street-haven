@@ -3,6 +3,7 @@ import type { ApiResponse } from "./Response";
 export interface hrUpdatesQuery {
   page?: number;
   limit?: number;
+  slug?:string;
   search?: string;
   sortBy?: string;
   order?: "asc" | "desc";

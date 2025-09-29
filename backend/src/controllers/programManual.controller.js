@@ -149,6 +149,7 @@ export const GetProgramManuals = asyncHandler(async (req, res) => {
     limit = 10,
     search = "",
     type,
+    slug = "",
     sortBy = "createdAt",
     order = "desc",
   } = req.query;
@@ -156,7 +157,9 @@ export const GetProgramManuals = asyncHandler(async (req, res) => {
   const query = {};
 
   // If search query exists → search in title, description, and tags
-  if (search) {
+  if (slug) {
+    query.slug = slug; // exact match
+  } else if (search) {
     query.$or = [
       { title: { $regex: search, $options: "i" } },
       { description: { $regex: search, $options: "i" } },

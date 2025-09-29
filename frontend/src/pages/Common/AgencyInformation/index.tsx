@@ -4,7 +4,11 @@ import OrganizationalChartTab from "./component/OrganizationalChartTab";
 import TownhallMinutesTab from "./component/TownhallMinutesTab";
 import "@assets/css/PageCss/orgchart.css";
 import HrUpdatesTab from "./component/HrUpdatesTab";
+import { useSearchParams } from "react-router-dom";
 const AgencyInfo = () => {
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab") ?? "collective_agreement";
+  console.log(tabParam)
   return (
     <div className="d-flex flex-column gap-4">
       {" "}
@@ -18,6 +22,7 @@ const AgencyInfo = () => {
         </p>
       </div>
       <StreetTab
+        defaultActiveKey={tabParam}
         tabs={[
           {
             key: "collective_agreement",
@@ -33,11 +38,12 @@ const AgencyInfo = () => {
             key: "organizational_chart",
             label: "Organizational Chart",
             content: <OrganizationalChartTab />,
-          },{
-            key:"hr_updates",
-            label:"HR updates",
-            content:<HrUpdatesTab/>
-          }
+          },
+          {
+            key: "hr_updates",
+            label: "HR updates",
+            content: <HrUpdatesTab />,
+          },
         ]}
       />
     </div>

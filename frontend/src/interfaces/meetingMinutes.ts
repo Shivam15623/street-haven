@@ -34,6 +34,7 @@ export interface MeetingMinutesData {
 export interface MeetingMinuteQuery {
   page?: number;
   limit?: number;
+  slug?: string;
   search?: string;
   sortBy?: string;
   order?: "asc" | "desc";
