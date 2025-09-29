@@ -21,7 +21,7 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
 
   const attachmentData = {
     fileName: uploadedFile.original_filename || "manual",
-    fileUrl: uploadedFile.url,
+    fileUrl: uploadedFile.secure_url,
     size: uploadedFile.bytes, // Cloudinary gives bytes
     totalPages: totalPages,
   };
