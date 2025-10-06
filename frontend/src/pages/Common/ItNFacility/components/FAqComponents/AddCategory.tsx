@@ -138,7 +138,7 @@ const AddCategory: React.FC = () => {
                       {/* FAQ items */}
                       <div className="p-10 ">
                         {" "}
-                        {values.faqs.map((faq, index) => (
+                        {values.faqs.map((_faq, index) => (
                           <div
                             key={index}
                             className="border-0-5 rounded p-3 mb-3 overflow-hidden position-relative d-flex flex-column gap-18"
