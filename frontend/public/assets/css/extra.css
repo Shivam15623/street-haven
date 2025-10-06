@@ -282,7 +282,7 @@ table.dataTable td.dt-type-date {
 }
 
 .btn-street-lg {
-  width: 100%;   /* Full width on small screens */
+  width: fit-content;   /* Full width on small screens */
   height: 40px;  /* Keep height consistent */
 
 }

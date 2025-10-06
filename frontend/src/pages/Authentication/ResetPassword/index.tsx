@@ -46,8 +46,8 @@ const ResetPassword: React.FC = () => {
       } else {
         showError("invaid session");
       }
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      showError(error.data.message);
     }
   };
 

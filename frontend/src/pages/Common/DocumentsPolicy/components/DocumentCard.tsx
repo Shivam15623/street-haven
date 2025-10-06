@@ -6,6 +6,7 @@ import Badge from "../../../../components/child/Badge";
 import ActionsProgram from "./ActionsProgram";
 import useHasPermission from "../../../../hooks/Auth";
 import DeleteMannuals from "./DeleteMannuals";
+import dayjs from "dayjs";
 
 export type Document = {
   _id: string;
@@ -14,6 +15,7 @@ export type Document = {
   tags: string[];
   type: string;
   updatedAt: string;
+  createdAt: string;
   attachment: {
     fileName: string;
     fileUrl: string;
@@ -90,7 +92,12 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
           {/* Footer */}
           <div className="d-flex flex-column flex-xl-row gap-3  align-items-xl-center  justify-content-between">
             <div className="text-xxs xs:text-xs fw-normal">
-              Updated: {updatedAt}
+              {" "}
+              {updatedAt === Pdocument.createdAt ? (
+                <>Created:{dayjs(Pdocument.createdAt).format("MM/DD/YYYY")}</>
+              ) : (
+                <>Updated: {dayjs(updatedAt).format("MM/DD/YYYY")}</>
+              )}
             </div>
             <div className="d-flex flex-row gap-8 gap-sm-12 justify-content-end">
               <DocumentDetails title={title} attachment={attachment} />
