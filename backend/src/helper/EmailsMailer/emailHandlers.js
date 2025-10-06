@@ -24,7 +24,7 @@ export const sendVerificationEmail = async ({ email, userId }) => {
 
 export const sendResetEmail = async ({ email }) => {
   // Generate plain token
-  
+
   const resetToken = crypto.randomBytes(32).toString("hex");
 
   // Hash it before storing in DB
@@ -39,12 +39,11 @@ export const sendResetEmail = async ({ email }) => {
   );
 
   const resetLink = `${process.env.DOMAIN}/reset-password?token=${resetToken}`;
-  console.log("token reset",resetLink)
 
   const emailContent = generateEmailTemplate({
     type: "reset",
     data: { link: resetLink },
   });
-
+  console.log("token reset", resetLink, emailContent);
   return sendEmail({ to: email, ...emailContent });
 };
