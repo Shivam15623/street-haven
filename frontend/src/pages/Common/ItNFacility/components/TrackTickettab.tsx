@@ -13,7 +13,12 @@ const TrackTickettab = () => {
   const [filter, setFilter] = useState<TicketFetchQuery>({
     page: 1,
     priority: "All",
-    status: statusParam,
+    status: statusParam as
+      | "Open"
+      | "In Progress"
+      | "Under Review"
+      | "Completed"
+      | "All",
     limit: 10,
     order: "desc",
     search: "",

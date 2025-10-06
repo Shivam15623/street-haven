@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import { useAllEmployeesQuery } from "../../../services/EmployeeApi";
 import DataTable from "../../../components/child/DataTable";
 import { EmployeeColumn } from "./components/EmployeeColumn";

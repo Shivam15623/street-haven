@@ -10,17 +10,21 @@ import { TimePicker } from "../../../../components/child/TimePicker";
 import CustomDatePicker from "../../../../components/child/DatePicker";
 
 const incidentReportSchema = Yup.object({
-  date: Yup.date()
+  date: Yup.string()
     .required("Date of incident is required")
-    .test("not-future-date", "Date cannot be in the future", function (value) {
-      if (!value) return true;
+    .test("valid-date", "Invalid date format", (val) => {
+      return val ? !isNaN(Date.parse(val)) : false;
+    })
+    .test("not-future-date", "Date cannot be in the future", (val) => {
+      if (!val) return true;
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const selected = new Date(value);
+      const selected = new Date(val);
+      // ignore time when comparing
       selected.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+
       return selected <= today;
     }),
-
   time: Yup.string()
     .required("Time of incident is required")
     .test("not-future-time", "Time cannot be in the future", function (val) {
@@ -61,7 +65,7 @@ const incidentReportSchema = Yup.object({
     500,
     "Actions taken cannot exceed 500 characters"
   ),
-
+  newWitness: Yup.string(),
   reporterName: Yup.string(),
 });
 

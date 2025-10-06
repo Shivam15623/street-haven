@@ -2,7 +2,7 @@ import React from "react";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Icon } from "@iconify/react";
-import { Button, Form } from "react-bootstrap";
+import { Button } from "react-bootstrap";
 
 interface CustomDatePickerProps {
   value?: Date | null;
@@ -29,7 +29,6 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
     <div className="w-100">
       <ReactDatePicker
         selected={value}
-        
         onChange={onChange}
         dateFormat="yyyy-MM-dd"
         placeholderText={placeholder}
