@@ -39,6 +39,7 @@ export const sendResetEmail = async ({ email }) => {
   );
 
   const resetLink = `${process.env.DOMAIN}/reset-password?token=${resetToken}`;
+  console.log("token reset",resetLink)
 
   const emailContent = generateEmailTemplate({
     type: "reset",

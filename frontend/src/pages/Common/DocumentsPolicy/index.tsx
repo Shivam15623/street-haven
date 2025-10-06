@@ -7,33 +7,33 @@ import { useFetchManualsQuery } from "../../../services/ProgramManualApi";
 import ActionsProgram from "./components/ActionsProgram";
 import useHasPermission from "../../../hooks/Auth";
 import { Link, useSearchParams } from "react-router-dom";
+import { useDebounce } from "../../../hooks/useDebounce";
 
 const ProgramManuals = () => {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 1000);
   const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
-  const [searchParams,setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const slugParam = searchParams.get("slug") ?? "";
   const pageSize = 10;
 
   const { isAdmin } = useHasPermission();
-    const handleSearchChange = (value: string) => {
+  const handleSearchChange = (value: string) => {
     setSearch(value);
 
     const params = new URLSearchParams(searchParams.toString());
     if (value) {
       params.delete("slug"); // remove slug
-
     }
     setSearchParams(params);
   };
-
 
   // Fetch manuals using RTK Query
   const { data, isLoading } = useFetchManualsQuery({
     page,
     limit: pageSize,
-    search,
+    search: debouncedSearch,
     slug: slugParam,
     type: undefined,
     sortBy: "createdAt",

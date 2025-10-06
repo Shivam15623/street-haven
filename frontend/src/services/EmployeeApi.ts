@@ -1,3 +1,4 @@
+import type { SignupCredentials } from "../interfaces/AuthInterfaces";
 import type { ApiGeneralResponse, ApiResponse } from "../interfaces/Response";
 import { api } from "../redux/ApiSlice";
 export interface EmployeeData {
@@ -43,6 +44,7 @@ const EmployeeApi = api.injectEndpoints({
         method: "GET",
         params: { page, limit, search, sortBy, order, forDropdown },
       }),
+      providesTags: ["Employees"],
     }),
     editEmployee: builder.mutation<
       ApiGeneralResponse,
@@ -53,12 +55,22 @@ const EmployeeApi = api.injectEndpoints({
         method: "PATCH",
         body: data,
       }),
+      invalidatesTags: ["Employees"],
     }),
     deleteEmployee: builder.mutation<ApiGeneralResponse, { id: string }>({
       query: ({ id }) => ({
         url: `/employees/delete/${id}`,
         method: "DELETE",
       }),
+      invalidatesTags: ["Employees"],
+    }),
+    addEmployee: builder.mutation<ApiGeneralResponse, SignupCredentials>({
+      query: (credentials) => ({
+        url: "/employees/add",
+        method: "POST",
+        body: credentials,
+      }),
+      invalidatesTags: ["Employees"],
     }),
   }),
 });
@@ -67,4 +79,5 @@ export const {
   useAllEmployeesQuery,
   useEditEmployeeMutation,
   useDeleteEmployeeMutation,
+  useAddEmployeeMutation,
 } = EmployeeApi;
