@@ -51,7 +51,7 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
               <h6 className="text-street-dark mb-0 fw-semibold text-center text-lg-start text-xs sm:text-sm">
                 {data.label}
               </h6>
-              <p className="text-xxs sm:text-xs text-center text-lg-start  fw-normal">
+              <p className="text-xxs org-sub sm:text-xs text-center text-lg-start  fw-normal">
                 {data.department}
               </p>
             </div>
@@ -60,11 +60,11 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
 
         <div className="d-flex flex-grow-1 flex-column text-center text-lg-start  text-xxs sm:text-xs fw-normal gap-1 justify-content-evenly mt-2 transition-all overflow-hidden">
           <p>
-            Reports to:{" "}
+            <span className="org-label">Reports to:{" "}</span>{" "}
             <span className="text-street-dark">{data.reportsTo}</span>
           </p>
           <p className="d-inline-flex flex-column align-items-center flex-xl-row">
-            Supervises:{" "}
+            <span className="org-label">Supervises:</span>{" "}
             {data.supervises?.length === 0 ? (
               <span className="text-street-dark">N/A</span>
             ) : (

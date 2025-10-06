@@ -18,7 +18,7 @@ export const LazyAdminRoot = React.lazy(() => import("../layouts/admin"));
 export const LazyEmployeedashboard = React.lazy(
   () => import("../pages/Employee/Dashboard")
 );
-export const LazyAdminDashboard=React.lazy(
+export const LazyAdminDashboard = React.lazy(
   () => import("../pages/Admin/Dashboard")
 );
 
@@ -34,6 +34,9 @@ export const LazyFormReports = React.lazy(
 );
 export const LazyAgencyInfo = React.lazy(
   () => import("../pages/Common/AgencyInformation")
+);
+export const LazyEmployees = React.lazy(
+  () => import("../pages/Admin/Employees")
 );
 export const LazyEvents = React.lazy(() => import("../pages/Common/Events"));
 export const LazyProfile = React.lazy(() => import("../pages/Common/Profile"));

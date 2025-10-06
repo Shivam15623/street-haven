@@ -35,7 +35,7 @@ const PdfUploader: React.FC<PDFUploadProps> = ({ name, label }) => {
   };
 
   return (
-    <BootstrapForm.Group controlId={name} className="mb-4">
+    <BootstrapForm.Group controlId={name} className="d-flex flex-column gap-8">
       {label && (
         <BootstrapForm.Label className="fw-medium mb-2 text-street-dark">
           {label}

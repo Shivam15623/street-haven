@@ -7,7 +7,7 @@ interface CardWrapperProps {
   children: React.ReactNode;
 }
 
-const CardlistWrapper: React.FC<CardWrapperProps> = ({ title, viewAllLink = "#", children }) => {
+const CardlistWrapper: React.FC<CardWrapperProps> = ({ title, viewAllLink , children }) => {
   return (
     <div className="card">
       <div className="card-body p-16 p-sm-20 p-lg-24">
@@ -18,7 +18,7 @@ const CardlistWrapper: React.FC<CardWrapperProps> = ({ title, viewAllLink = "#",
             {viewAllLink && (
               <Link
                 to={viewAllLink}
-                className="text-street-primary hover-text-primary d-flex text-xxs  xs:text-xs align-items-center"
+                className="text-street-primary hover-text-primary fw-bold d-flex text-xs  xs:text-sm align-items-center"
               >
                 View All
               </Link>

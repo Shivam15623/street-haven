@@ -8,6 +8,8 @@ import { showSuccess } from "../../../../utills/toastutills";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import { Form } from "react-bootstrap";
+import CustomDatePicker from "../../../../components/child/DatePicker";
+import { TimePicker } from "../../../../components/child/TimePicker";
 
 const EventFormSchema = Yup.object().shape({
   title: Yup.string().required("Title is required"),
@@ -129,7 +131,15 @@ const ActionsEvent = ({ id }: { id?: string }) => {
           }}
           onSubmit={isEdit ? handleEdit : handleCreate}
         >
-          {({ handleSubmit, handleChange, values, errors, touched }) => (
+          {({
+            handleSubmit,
+            handleChange,
+            values,
+            errors,
+            touched,
+            setFieldValue,
+            setFieldTouched,
+          }) => (
             <Form
               id={isEdit ? "event-edit-form" : "event-create-form"}
               onSubmit={handleSubmit}
@@ -211,46 +221,57 @@ const ActionsEvent = ({ id }: { id?: string }) => {
               {/* Event Date */}
               <Form.Group>
                 <Form.Label>Event Date</Form.Label>
-                <Form.Control
-                  type="date"
-                  name="eventDate"
-                  value={values.eventDate}
-                  onChange={handleChange}
+                <CustomDatePicker
+                  value={values.eventDate ? new Date(values.eventDate) : null}
+                  onChange={(date) => {
+                    setFieldValue(
+                      "eventDate",
+                      date ? date.toISOString().split("T")[0] : ""
+                    );
+                    setFieldTouched("eventDate", true);
+                  }}
                   isInvalid={!!errors.eventDate && touched.eventDate}
                 />
-                <Form.Control.Feedback type="invalid">
-                  {errors.eventDate}
-                </Form.Control.Feedback>
+
+                {errors.eventDate && touched.eventDate && (
+                  <div className="invalid-feedback d-block">
+                    {errors.eventDate}
+                  </div>
+                )}
               </Form.Group>
 
               {/* Start Time */}
               <Form.Group>
                 <Form.Label>Start Time</Form.Label>
-                <Form.Control
-                  type="time"
+                <TimePicker
                   name="startTime"
                   value={values.startTime}
-                  onChange={handleChange}
-                  isInvalid={!!errors.startTime && touched.startTime}
+                  onChange={(val) => setFieldValue("startTime", val)}
+                  onBlur={() => setFieldTouched("startTime", true)} // 👈 handled automatically
                 />
-                <Form.Control.Feedback type="invalid">
-                  {errors.startTime}
-                </Form.Control.Feedback>
+
+                {errors.startTime && touched.startTime && (
+                  <div className="invalid-feedback d-block">
+                    {errors.startTime}
+                  </div>
+                )}
               </Form.Group>
 
               {/* End Time */}
               <Form.Group>
                 <Form.Label>End Time</Form.Label>
-                <Form.Control
-                  type="time"
+                <TimePicker
                   name="endTime"
                   value={values.endTime}
-                  onChange={handleChange}
-                  isInvalid={!!errors.endTime && touched.endTime}
+                  onChange={(val) => setFieldValue("endTime", val)}
+                  onBlur={() => setFieldTouched("endTime", true)} // 👈 handled automatically
                 />
-                <Form.Control.Feedback type="invalid">
-                  {errors.endTime}
-                </Form.Control.Feedback>
+
+                {errors.endTime && touched.endTime && (
+                  <div className="invalid-feedback d-block">
+                    {errors.endTime}
+                  </div>
+                )}
               </Form.Group>
             </Form>
           )}
