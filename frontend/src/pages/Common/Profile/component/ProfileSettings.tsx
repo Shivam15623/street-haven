@@ -3,6 +3,8 @@ import { Formik, Form as FormikForm } from "formik";
 import { Form, Row, Col } from "react-bootstrap";
 import * as Yup from "yup";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import { useSelector } from "react-redux";
+import { selectAuth } from "../../../../redux/AuthSlice";
 
 // ✅ Validation Schema
 const ProfileSchema = Yup.object({
@@ -20,6 +22,7 @@ const ProfileSchema = Yup.object({
 });
 
 const ProfileSettings: React.FC = () => {
+  const { user } = useSelector(selectAuth);
   return (
     <div className="card">
       <div className="card-body p-16 radius-8 p-md-24  d-flex flex-column gap-20">
@@ -27,13 +30,13 @@ const ProfileSettings: React.FC = () => {
 
         <Formik
           initialValues={{
-            firstName: "",
-            lastName: "",
+            firstName: user?.firstName,
+            lastName: user?.lastName,
             title: "",
             hireDate: "",
             timePeriod: "",
-            workEmail: "",
-            workPhone: "",
+            workEmail: user?.email,
+            workPhone: user?.lastName,
           }}
           validationSchema={ProfileSchema}
           onSubmit={(values) => {

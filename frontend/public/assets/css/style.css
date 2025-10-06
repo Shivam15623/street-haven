@@ -16825,7 +16825,16 @@ td.fc-header-center {
 .sidebar-menu li a:hover .menu-icon {
   color: var(--street-primary-base);
 }
-
+.sidebar-menu li a:hover .sidebar-form {
+  fill: #0160a6;
+  stroke: #0160a6;
+}
+.sidebar-menu li a:hover .sidebar-form-stroke {
+  stroke: white;
+}
+.sidebar-menu li a:hover .sidebar-agency-stroke {
+  stroke: white;
+}
 .sidebar-menu li a .menu-icon {
   font-size: 1.125rem;
   margin-inline-end: 0.5rem;

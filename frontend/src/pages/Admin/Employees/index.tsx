@@ -1,7 +1,8 @@
-import  { useState } from "react";
+import { useState } from "react";
 import { useAllEmployeesQuery } from "../../../services/EmployeeApi";
 import DataTable from "../../../components/child/DataTable";
 import { EmployeeColumn } from "./components/EmployeeColumn";
+import AddEmployee from "./components/AddEmployee";
 
 const Employees = () => {
   // 🔹 State for table controls
@@ -18,14 +19,19 @@ const Employees = () => {
     order,
     sortBy,
     search,
+    forDropdown:false
   });
 
   const employees = data?.data?.employees ?? [];
+  console.log(data)
 
   if (isLoading) return <p>Loading...</p>;
 
   return (
     <div className="d-flex flex-column gap-8 gap-sm-16 gap-md-24">
+      <div>
+        <AddEmployee />
+      </div>
       <DataTable
         columns={EmployeeColumn}
         onLimitChange={setLimit}
