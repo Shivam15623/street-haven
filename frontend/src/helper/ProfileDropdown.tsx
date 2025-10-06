@@ -5,11 +5,13 @@ import { useDispatch } from "react-redux";
 import { useLogoutMutation } from "../services/AuthApi";
 import { selectAuth, setLoggedOut } from "../redux/AuthSlice";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 const ProfileDropdown = () => {
   const [logout] = useLogoutMutation();
   const dispatch = useDispatch();
   const { user } = useSelector(selectAuth);
-
+  const navigate = useNavigate();
+  console.log("erwfguwegyfyuwegfuygweufgweugfe",user?.profilePic)
   const onLogout = async () => {
     console.log("tree");
     try {
@@ -42,7 +44,7 @@ const ProfileDropdown = () => {
         <Dropdown.Divider />
 
         {/* Menu Items */}
-        <Dropdown.Item href={`/${user?.role}/profile`}>
+        <Dropdown.Item onClick={() => navigate(`/${user?.role}/profile`)}>
           <Icon icon="solar:user-linear" width={20} height={20} />
           My Profile
         </Dropdown.Item>
