@@ -1,7 +1,6 @@
 import { Formik } from "formik";
 import * as Yup from "yup";
 import { Form, Col, Row } from "react-bootstrap";
-import { Link } from "react-router-dom";
 import PasswordInput from "../../../../components/Authentication/PasswordInput";
 import { useChangePasswordMutation } from "../../../../services/UserApi";
 import { showSuccess } from "../../../../utills/toastutills";
@@ -40,7 +39,9 @@ const ChangePassword = () => {
   return (
     <div className="card">
       <div className="card-body p-16 radius-8 p-md-24 d-flex flex-column gap-20">
-        <h3 className="text-street-dark text-xl fw-semibold">Change Password</h3>
+        <h3 className="text-street-dark text-xl fw-semibold">
+          Change Password
+        </h3>
 
         <Formik
           initialValues={{
@@ -53,10 +54,21 @@ const ChangePassword = () => {
             handleChangePassword(values, resetForm)
           }
         >
-          {({ handleSubmit, handleChange, values, errors, touched, resetForm }) => (
+          {({
+            handleSubmit,
+            handleChange,
+            values,
+            errors,
+            touched,
+            resetForm,
+          }) => (
             <Form noValidate onSubmit={handleSubmit}>
               {/* Current Password */}
-              <Form.Group as={Row} className="mb-3 align-items-center" controlId="currentPassword">
+              <Form.Group
+                as={Row}
+                className="mb-3 align-items-center"
+                controlId="currentPassword"
+              >
                 <Form.Label column sm={2}>
                   Current Password
                 </Form.Label>
@@ -67,18 +79,23 @@ const ChangePassword = () => {
                     value={values.currentPassword}
                     onChange={handleChange}
                     placeholder="Enter Current Password"
-                    isInvalid={touched.currentPassword && !!errors.currentPassword}
+                    isInvalid={
+                      touched.currentPassword && !!errors.currentPassword
+                    }
                     error={errors.currentPassword}
                   />
-                  <Link className="text-sm fw-normal link-street-primary" to="/forgot-password">
-                    Forgot Password?
-                  </Link>
                 </Col>
               </Form.Group>
 
               {/* New Password */}
-              <Form.Group as={Row} className="mb-3 align-items-center" controlId="newPassword">
-                <Form.Label column sm={2}>New Password</Form.Label>
+              <Form.Group
+                as={Row}
+                className="mb-3 align-items-center"
+                controlId="newPassword"
+              >
+                <Form.Label column sm={2}>
+                  New Password
+                </Form.Label>
                 <Col sm={10}>
                   <PasswordInput
                     size="sm"
@@ -93,8 +110,14 @@ const ChangePassword = () => {
               </Form.Group>
 
               {/* Confirm Password */}
-              <Form.Group as={Row} className="mb-3 align-items-center" controlId="confirmPassword">
-                <Form.Label column sm={2}>Confirm Password</Form.Label>
+              <Form.Group
+                as={Row}
+                className="mb-3 align-items-center"
+                controlId="confirmPassword"
+              >
+                <Form.Label column sm={2}>
+                  Confirm Password
+                </Form.Label>
                 <Col sm={10}>
                   <PasswordInput
                     size="sm"
@@ -102,7 +125,9 @@ const ChangePassword = () => {
                     value={values.confirmPassword}
                     onChange={handleChange}
                     placeholder="Confirm New Password"
-                    isInvalid={touched.confirmPassword && !!errors.confirmPassword}
+                    isInvalid={
+                      touched.confirmPassword && !!errors.confirmPassword
+                    }
                     error={errors.confirmPassword}
                   />
                 </Col>

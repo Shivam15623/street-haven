@@ -80,8 +80,8 @@ const RequestForm = () => {
 
                 <Row>
                   <Col>
-                    <Form.Group controlId="reqTitle">
-                      <Form.Label className="fw-medium mb-10 text-street-dark">
+                    <Form.Group controlId="reqTitle" className="d-flex flex-column gap-8">
+                      <Form.Label className="fw-medium  text-street-dark">
                         Request Title
                       </Form.Label>
                       <Form.Control
@@ -105,8 +105,8 @@ const RequestForm = () => {
                 {/* Description */}
                 <Row>
                   <Col>
-                    <Form.Group controlId="description">
-                      <Form.Label className="fw-medium mb-10 text-street-dark">
+                    <Form.Group controlId="description" className="d-flex flex-column gap-8">
+                      <Form.Label className="fw-medium text-street-dark">
                         Detailed Description
                       </Form.Label>
                       <Form.Control
@@ -130,8 +130,8 @@ const RequestForm = () => {
                 {/* Priority & category side by side */}
                 <Row>
                   <Col>
-                    <Form.Group controlId="priority">
-                      <Form.Label className="fw-medium mb-10 text-street-dark">
+                    <Form.Group controlId="priority" className="d-flex flex-column gap-8">
+                      <Form.Label className="fw-medium  text-street-dark">
                         Priority
                       </Form.Label>
                       <Form.Select
@@ -155,8 +155,8 @@ const RequestForm = () => {
                 </Row>
                 <Row>
                   <Col>
-                    <Form.Group controlId="category">
-                      <Form.Label className="fw-medium mb-10 text-street-dark">
+                    <Form.Group controlId="category" className="d-flex flex-column gap-8">
+                      <Form.Label className="fw-medium text-street-dark">
                         Category
                       </Form.Label>
                       <Form.Select
@@ -184,8 +184,8 @@ const RequestForm = () => {
                 {/* Location */}
                 <Row>
                   <Col>
-                    <Form.Group controlId="location">
-                      <Form.Label className="fw-medium mb-10 text-street-dark">
+                    <Form.Group controlId="location" className="d-flex flex-column gap-8">
+                      <Form.Label className="fw-medium text-street-dark">
                         Location
                       </Form.Label>
                       <Form.Control

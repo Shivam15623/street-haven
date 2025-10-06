@@ -57,9 +57,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ name, label }) => {
   }, [imagePreview]);
 
   return (
-    <Form.Group controlId={name}>
+    <Form.Group controlId={name} className="d-flex flex-column gap-8">
       {label && (
-        <Form.Label className="fw-medium mb-10 text-street-dark">
+        <Form.Label className="fw-medium text-street-dark">
           {label}
         </Form.Label>
       )}

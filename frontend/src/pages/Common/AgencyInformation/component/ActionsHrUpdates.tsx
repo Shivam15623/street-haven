@@ -145,10 +145,10 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
         onSubmit={handleSave}
       >
         {({ handleSubmit }) => (
-          <BootstrapForm id="hr-updates-form" onSubmit={handleSubmit}>
+          <BootstrapForm id="hr-updates-form" className="d-flex flex-column gap-16 gap-sm-20" onSubmit={handleSubmit}>
             {/* Title */}
-            <BootstrapForm.Group className="mb-3">
-              <BootstrapForm.Label className="mb-2">Title</BootstrapForm.Label>
+            <BootstrapForm.Group className="d-flex flex-column gap-8">
+              <BootstrapForm.Label >Title</BootstrapForm.Label>
               <Field
                 name="title"
                 as={BootstrapForm.Control}
@@ -162,8 +162,8 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
             </BootstrapForm.Group>
 
             {/* Description */}
-            <BootstrapForm.Group className="mb-3">
-              <BootstrapForm.Label className="mb-2">
+            <BootstrapForm.Group className="d-flex flex-column gap-8">
+              <BootstrapForm.Label >
                 Description
               </BootstrapForm.Label>
               <Field

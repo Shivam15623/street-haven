@@ -55,7 +55,12 @@ const CollectiveAgreementCard = () => {
           {articles.map((article) => (
             <div className="col">
               {" "}
-              <div className="border-0-5 border-street-base text-street-dark text-xs sm:text-sm fw-semibold radius-12 bg-base h-100 p-16 p-sm-20 p-md-24">
+              <div
+                className="border-0-5  text-street-dark text-xs sm:text-sm fw-semibold radius-12 bg-base h-100 p-16 p-sm-20 p-md-24"
+                style={{
+                  borderColor: "#AAAAAA",
+                }}
+              >
                 {article}
               </div>
             </div>

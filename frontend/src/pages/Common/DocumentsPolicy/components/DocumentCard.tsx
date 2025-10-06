@@ -88,11 +88,11 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
           </div>
 
           {/* Footer */}
-          <div className="d-flex flex-row align-items-center justify-content-between">
+          <div className="d-flex flex-column flex-xl-row gap-3  align-items-xl-center  justify-content-between">
             <div className="text-xxs xs:text-xs fw-normal">
               Updated: {updatedAt}
             </div>
-            <div className="d-flex flex-row gap-8 gap-sm-12">
+            <div className="d-flex flex-row gap-8 gap-sm-12 justify-content-end">
               <DocumentDetails title={title} attachment={attachment} />
               <button
                 className="btn btn-street-primary btn-street-lg p-8 d-flex flex-row align-items-center justify-content-between gap-1 px-sm-24 px-md-32 radius-12 text-xxs sm:text-xs"

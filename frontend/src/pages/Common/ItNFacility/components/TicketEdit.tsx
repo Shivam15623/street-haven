@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Col, Row, Form,Spinner } from "react-bootstrap";
+import { Col, Row, Form, Spinner } from "react-bootstrap";
 import { Formik, Form as FormikForm } from "formik";
 import * as Yup from "yup";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
@@ -8,18 +8,24 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import { useEditTicketMutation } from "../../../../services/ticketApi";
 import { showSuccess } from "../../../../utills/toastutills";
 import type { TicketData } from "../../../../interfaces/Ticket";
+import { useAllEmployeesQuery } from "../../../../services/EmployeeApi";
+import ImageUpload from "../../../../components/child/Imageupload";
+import { useSelector } from "react-redux";
+import { selectAuth } from "../../../../redux/AuthSlice";
+import useHasPermission from "../../../../hooks/Auth";
+
 // ✅ Validation Schema
 const TicketSchema = Yup.object({
-  requestTitle: Yup.string().required("Request title is required"),
-  requester: Yup.string().required("Requester is required"),
-  assignee: Yup.string().required("Assignee is required"),
-  status: Yup.string().required("Status is required"),
-  id: Yup.string().required("Ticket ID is required"),
-  description: Yup.string().required("Description is required"),
-  priority: Yup.string().required("Priority is required"),
-  category: Yup.string().required("Category is required"),
-  location: Yup.string().required("Location is required"),
-  attachment: Yup.string().required("Attachment is required"),
+  requestTitle: Yup.string(),
+  requester: Yup.string(),
+  assignedId: Yup.string(),
+  status: Yup.string(),
+  id: Yup.string(),
+  description: Yup.string(),
+  priority: Yup.string(),
+  category: Yup.string(),
+  location: Yup.string(),
+  photo: Yup.mixed<File>().nullable(),
 });
 
 type TicketValues = Yup.InferType<typeof TicketSchema>;
@@ -30,28 +36,55 @@ interface TicketCardProps {
 
 const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
   const [showModal, setShowModal] = useState(false);
+  const { user } = useSelector(selectAuth);
+  const { isAdmin } = useHasPermission();
+  const isAssigned = ticket.assignedTo?._id === user?._id;
+  const isRequester = ticket.createdBy._id === user?._id;
+  const [editphoto, seteditphoto] = useState(false);
+  const { data: employeeData, isLoading: isEmployeeLoading } =
+    useAllEmployeesQuery({ forDropdown: true });
   const [editTicket, { isLoading }] = useEditTicketMutation();
 
   const initialValues: TicketValues = {
     requestTitle: ticket.req_title,
     requester: ticket.createdBy.firstname + " " + ticket.createdBy.lastname,
-    assignee: ticket.assignedTo
-      ? ticket.assignedTo.firstname + " " + ticket.assignedTo.lastname
-      : "Unassigned",
+    assignedId: ticket.assignedTo ? ticket.assignedTo._id : "Unassigned",
     status: ticket.status,
     id: ticket._id,
     description: ticket.description,
     priority: ticket.priority,
     category: ticket.category,
     location: ticket.location ?? "", // default to empty string
-    attachment: ticket.photo?.fileUrl ?? "", // default to empty string
   };
-
+  const statusOptions = ["Open", "In Progress", "Completed", "Under Review"];
   const handleEdit = async (values: TicketValues) => {
     try {
-      const res = await editTicket(values).unwrap();
+      const formData = new FormData();
+      if (values.requestTitle && values.requestTitle !== ticket.req_title)
+        formData.append("requestTitle", values.requestTitle);
+      if (values.description && values.description !== ticket.description)
+        formData.append("description", values.description);
+      if (values.priority && values.priority !== ticket.priority)
+        formData.append("priority", values.priority);
+      if (values.category && values.category !== ticket.category)
+        formData.append("category", values.category);
+      if (values.location && values.location !== ticket.location)
+        formData.append("location", values.location);
+      if (values.status && values.status !== ticket.status)
+        formData.append("status", values.status);
+      if (values.assignedId && values.assignedId !== ticket.assignedTo?._id)
+        formData.append("assignedId", values.assignedId);
+      if (values.photo) {
+        formData.append("photo", values.photo);
+      }
+      const res = await editTicket({
+        ticketId: ticket._id,
+        formData: formData,
+      }).unwrap();
       if (res.success) {
         showSuccess(res.message);
+        setShowModal(false);
+        seteditphoto(false);
       }
     } catch (error) {
       console.log(error);
@@ -72,6 +105,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
         size="xl"
         onHide={() => {
           setShowModal(false);
+          seteditphoto(false);
         }}
         title="Ticket Details"
         headerClassName="text-xl p-0 pb-20 text-street-dark"
@@ -89,7 +123,10 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
             </button>
             <button
               className="btn btn-street-neutral btn-street-lg d-flex flex-row align-items-center justify-content-center radius-12 px-12 px-sm-16 px-md-28 text-xxs xs:text-xs sm:text-sm"
-              onClick={() => setShowModal(false)}
+              onClick={() => {
+                setShowModal(false);
+                seteditphoto(false);
+              }}
             >
               Cancel
             </button>
@@ -128,6 +165,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       type="text"
                       name="requestTitle"
                       value={values.requestTitle}
+                      disabled={!(isAdmin || isRequester)}
                       onChange={handleChange}
                       isInvalid={touched.requestTitle && !!errors.requestTitle}
                     />
@@ -151,6 +189,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       size="sm"
                       type="text"
                       name="requester"
+                      disabled
                       value={values.requester}
                       onChange={handleChange}
                       isInvalid={touched.requester && !!errors.requester}
@@ -171,16 +210,27 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                     Assignee
                   </Form.Label>
                   <Col sm={10}>
-                    <Form.Control
-                      type="text"
+                    <Form.Select
                       size="sm"
-                      name="assignee"
-                      value={values.assignee}
+                      name="assignedId"
+                      value={values.assignedId}
+                      disabled={!isAdmin}
                       onChange={handleChange}
-                      isInvalid={touched.assignee && !!errors.assignee}
-                    />
+                      isInvalid={touched.assignedId && !!errors.assignedId}
+                    >
+                      <option value="">Select Assignee</option>
+                      {isEmployeeLoading ? (
+                        <option disabled>Loading...</option>
+                      ) : (
+                        employeeData?.data.employees.map((emp) => (
+                          <option key={emp._id} value={emp._id}>
+                            {emp.firstname} {emp.lastname} ({emp.email})
+                          </option>
+                        ))
+                      )}
+                    </Form.Select>
                     <Form.Control.Feedback type="invalid">
-                      {errors.assignee}
+                      {errors.assignedId}
                     </Form.Control.Feedback>
                   </Col>
                 </Row>
@@ -195,14 +245,21 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                     Status
                   </Form.Label>
                   <Col sm={10}>
-                    <Form.Control
-                      type="text"
+                    <Form.Select
                       size="sm"
                       name="status"
                       value={values.status}
+                      disabled={!(isAdmin || isAssigned)}
                       onChange={handleChange}
                       isInvalid={touched.status && !!errors.status}
-                    />
+                    >
+                      <option value="">Select Status</option>
+                      {statusOptions.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </Form.Select>
                     <Form.Control.Feedback type="invalid">
                       {errors.status}
                     </Form.Control.Feedback>
@@ -223,6 +280,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       type="text"
                       size="sm"
                       name="id"
+                      disabled
                       value={values.id}
                       onChange={handleChange}
                       isInvalid={touched.id && !!errors.id}
@@ -248,6 +306,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       rows={3}
                       name="description"
                       value={values.description}
+                      disabled={!(isAdmin || isRequester)}
                       onChange={handleChange}
                       isInvalid={touched.description && !!errors.description}
                     />
@@ -267,14 +326,20 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                     Priority
                   </Form.Label>
                   <Col sm={10}>
-                    <Form.Control
-                      type="text"
-                      size="sm"
+                    <Form.Select
                       name="priority"
+                      size="sm"
                       value={values.priority}
+                      disabled={!(isAdmin || isRequester)}
                       onChange={handleChange}
+                      className="text-street-base"
                       isInvalid={touched.priority && !!errors.priority}
-                    />
+                    >
+                      <option value="">Select Priority</option>
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                    </Form.Select>
                     <Form.Control.Feedback type="invalid">
                       {errors.priority}
                     </Form.Control.Feedback>
@@ -291,14 +356,22 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                     Category
                   </Form.Label>
                   <Col sm={10}>
-                    <Form.Control
-                      type="text"
-                      size="sm"
+                    <Form.Select
                       name="category"
+                      size="sm"
                       value={values.category}
                       onChange={handleChange}
+                      disabled={!(isAdmin || isRequester)}
+                      className="text-street-base"
                       isInvalid={touched.category && !!errors.category}
-                    />
+                    >
+                      <option value="">Select category</option>
+                      {["IT Help Desk", "Property Maintenance"].map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </Form.Select>
                     <Form.Control.Feedback type="invalid">
                       {errors.category}
                     </Form.Control.Feedback>
@@ -319,6 +392,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       type="text"
                       size="sm"
                       name="location"
+                      disabled={!(isAdmin || isRequester)}
                       value={values.location}
                       onChange={handleChange}
                       isInvalid={touched.location && !!errors.location}
@@ -332,17 +406,31 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                 {/* Attachment */}
                 <Row className="mb-3  ">
                   <Col sm={2}>
-                    <p className="text-street-dark text-sm">Attachment</p>
+                    <p className="form-label">Attachment</p>
                   </Col>
-                  <Col sm={10}>
-                    <Icon icon="lucide:paperclip" className="me-1" />
-                    <Link
-                      className="text-street-primary mt-1 mt-sm-0 text-xs fw-normal"
-                      to="#"
-                    >
-                      printer image.png
-                    </Link>
-                  </Col>
+                  {!editphoto && (
+                    <Col sm={10}>
+                      <Icon icon="lucide:paperclip" className="me-1" />
+                      <Link
+                        className="text-street-primary mt-1 mt-sm-0 text-xs fw-normal"
+                        to="#"
+                      >
+                        {ticket.photo?.fileName}
+                      </Link>
+                      {(!isAdmin || !isRequester) && (
+                        <Icon
+                          icon="mdi:file-edit-outline"
+                          className="ms-2 icon-street-edit"
+                          onClick={() => seteditphoto(true)}
+                        />
+                      )}
+                    </Col>
+                  )}
+                  {editphoto && (
+                    <Col sm={10}>
+                      <ImageUpload name="photo" />
+                    </Col>
+                  )}
                 </Row>
 
                 {isLoading && (
