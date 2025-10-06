@@ -6,7 +6,7 @@ import { Form, Button, Row, Col, Spinner } from "react-bootstrap";
 import { useDispatch } from "react-redux";
 import { setLoggedIn } from "../../../../redux/AuthSlice";
 import { useLoginMutation } from "../../../../services/AuthApi";
-import { showSuccess } from "../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../utills/toastutills";
 import PasswordInput from "../../../../components/Authentication/PasswordInput";
 interface LoginValues {
   email: string;
@@ -47,8 +47,8 @@ const LoginForm: React.FC = () => {
         );
         showSuccess(response.message);
       }
-    } catch (error) {
-      console.error("Signup failed:", error);
+    } catch (error: any) {
+      showError(error.data.message);
     }
   };
   return (
@@ -137,7 +137,6 @@ const LoginForm: React.FC = () => {
                   <Link
                     to={"/forgot-password"}
                     className=" text-sm fw-normal link-street-primary"
-                  
                   >
                     Forgot Password?
                   </Link>

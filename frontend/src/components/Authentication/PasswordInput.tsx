@@ -48,18 +48,17 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
           ...style, // ✅ merge custom styles
         }}
       />
-      {!error && (
-        <span
-          className="position-absolute top-50 text-street-base text-lg end-0 translate-middle-y pe-3"
-          onClick={() => setShowPassword((prev) => !prev)}
-        >
-          {showPassword ? (
-            <Icon icon="bi:eye-slash" className="text-xl" />
-          ) : (
-            <Icon icon="bi:eye" className="text-xl" />
-          )}
-        </span>
-      )}
+
+      <span
+        className="position-absolute top-50 text-street-base text-lg end-0 translate-middle-y pe-3"
+        onClick={() => setShowPassword((prev) => !prev)}
+      >
+        {showPassword ? (
+          <Icon icon="bi:eye-slash" className="text-xl" />
+        ) : (
+          <Icon icon="bi:eye" className="text-xl" />
+        )}
+      </span>
 
       {error && (
         <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>

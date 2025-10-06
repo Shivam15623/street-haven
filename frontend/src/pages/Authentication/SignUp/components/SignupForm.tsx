@@ -4,7 +4,7 @@ import * as Yup from "yup";
 import Form from "react-bootstrap/Form";
 import { Button, Col, Row } from "react-bootstrap";
 import { useRegisterEmployeeMutation } from "../../../../services/AuthApi";
-import { showSuccess } from "../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../utills/toastutills";
 import PasswordInput from "../../../../components/Authentication/PasswordInput";
 interface SignupValues {
   firstName: string;
@@ -45,8 +45,8 @@ const SignupForm = () => {
       if (res.success) {
         showSuccess(res.message);
       }
-    } catch (error) {
-      console.error("Signup failed:", error);
+    } catch (error:any) {
+      showError(error.data.message)
     }
   };
 
