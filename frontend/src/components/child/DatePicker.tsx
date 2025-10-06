@@ -1,4 +1,4 @@
-import React from "react";
+import React, { forwardRef } from "react";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Icon } from "@iconify/react";
@@ -25,14 +25,29 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   maxDate,
   disabled = false,
 }) => {
+  // Custom input component
+  const CustomInput = forwardRef(
+    ({ value, onClick }: { value?: string; onClick?: () => void }, ref) => (
+      <div
+        ref={ref as any}
+        className={`form-control d-flex justify-content-between align-items-center ${className} ${
+          isInvalid ? "is-invalid" : ""
+        }`}
+        onClick={onClick}
+        style={{ cursor: disabled ? "not-allowed" : "pointer" }}
+      >
+        <span>{value || placeholder}</span>
+        <Icon icon="akar-icons:calendar" className="text-xl" />
+      </div>
+    )
+  );
+
   return (
     <div className="w-100">
       <ReactDatePicker
         selected={value}
         onChange={onChange}
         dateFormat="yyyy-MM-dd"
-        placeholderText={placeholder}
-        className={`form-control ${className} ${isInvalid ? "is-invalid" : ""}`}
         minDate={minDate}
         maxDate={maxDate}
         disabled={disabled}
@@ -40,6 +55,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
         showYearDropdown
         dropdownMode="select"
         autoComplete="off"
+        customInput={<CustomInput />}
         renderCustomHeader={({
           date,
           decreaseMonth,
@@ -49,7 +65,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
           prevMonthButtonDisabled,
           nextMonthButtonDisabled,
         }) => (
-          <div className="d-flex justify-content-between align-items-center px-2 py-2 date_y border-bottom rounded-top">
+          <div className="d-flex justify-content-between align-items-center px-2 py-2 border-bottom rounded-top">
             <Button
               variant="light"
               className="d-flex align-items-center p-1"
@@ -62,23 +78,12 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
 
             <div className="d-flex gap-2">
               <select
-                className="px-12 py-2 text-sm font-medium d-flex align-items-center text-street-dark border radius-12"
+                className="px-2 py-1 text-sm font-medium border rounded"
                 value={date.getMonth()}
                 onChange={(e) => changeMonth(Number(e.target.value))}
               >
                 {[
-                  "Jan",
-                  "Feb",
-                  "Mar",
-                  "Apr",
-                  "May",
-                  "Jun",
-                  "Jul",
-                  "Aug",
-                  "Sep",
-                  "Oct",
-                  "Nov",
-                  "Dec",
+                  "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"
                 ].map((month, idx) => (
                   <option key={idx} value={idx}>
                     {month}
@@ -87,18 +92,17 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
               </select>
 
               <select
-                className="px-12 py-2 text-sm font-medium d-flex align-items-center text-street-dark border radius-12"
+                className="px-2 py-1 text-sm font-medium border rounded"
                 value={date.getFullYear()}
                 onChange={(e) => changeYear(Number(e.target.value))}
               >
-                {Array.from(
-                  { length: 50 },
-                  (_, i) => new Date().getFullYear() - 25 + i
-                ).map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
+                {Array.from({ length: 50 }, (_, i) => new Date().getFullYear() - 25 + i).map(
+                  (year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  )
+                )}
               </select>
             </div>
 

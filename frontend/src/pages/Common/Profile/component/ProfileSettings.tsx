@@ -1,5 +1,5 @@
 import React from "react";
-import { Formik, Form as FormikForm} from "formik";
+import { Formik, Form as FormikForm } from "formik";
 import { Form, Row, Col } from "react-bootstrap";
 import * as Yup from "yup";
 import { Icon } from "@iconify/react/dist/iconify.js";
@@ -138,7 +138,10 @@ const ProfileSettings: React.FC = () => {
                 <Col sm={10}>
                   <div className="icon-field">
                     <span className="icon">
-                      <Icon icon="mdi-light:email" />
+                      <Icon
+                        icon="mdi-light:email"
+                        className="text-street-base"
+                      />
                     </span>
                     <Form.Control
                       type="text"
@@ -154,7 +157,7 @@ const ProfileSettings: React.FC = () => {
                   </div>
                 </Col>
               </Row>
-              
+
               <Row className="mb-3 align-items-center">
                 <Form.Label column sm={2}>
                   Work Phone
@@ -162,7 +165,10 @@ const ProfileSettings: React.FC = () => {
                 <Col sm={10}>
                   <div className="icon-field">
                     <span className="icon">
-                      <Icon icon="famicons:call-outline" />
+                      <Icon
+                        icon="famicons:call-outline"
+                        className="text-street-base"
+                      />
                     </span>
                     <Form.Control
                       type="text"

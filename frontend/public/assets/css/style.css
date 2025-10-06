@@ -13573,7 +13573,7 @@ textarea:active {
   position: relative;
   display: flex;
   align-items: center;
-  border: 0.5px solid var(--street-base-50);
+
   border-radius: 8px;
   overflow: hidden;
 }
@@ -13587,8 +13587,13 @@ textarea:active {
   justify-content: center;
   align-items: center;
   font-size: 1.25rem;
-  background-color: var(--street-bg-secondary);
-  color: var(--text-secondary-light);
+  background-color: var(--street-bg-f4);
+  border: 0.5px solid var(--street-border-base-50);
+  border-right: none;
+  border-radius: 8px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  color: var(--text-street-base);
   pointer-events: none; /* so clicks go to input */
   z-index: 1;
 }
