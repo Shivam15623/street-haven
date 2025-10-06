@@ -19,7 +19,7 @@ export const sendEmail = async ({ to, subject, html }) => {
   try {
     const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail({
       to: [{ email: to }],
-      sender: { email: "phenomenalshivam2@gmail.com", name: "Shivam" },
+      sender: { name: "Shivam", email: "phenomenalshivam2@gmail.com" },
       subject,
       htmlContent: html,
     });
