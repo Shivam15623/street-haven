@@ -6,7 +6,10 @@ import { Link } from "react-router-dom";
 import TicketDetails from "./TicketEdit";
 import Badge from "../../../../components/child/Badge";
 import type { TicketData } from "../../../../interfaces/Ticket";
-
+import TicketComment from "./TicketComment";
+import { useSelector } from "react-redux";
+import { selectAuth } from "../../../../redux/AuthSlice";
+import useHasPermission from "../../../../hooks/Auth";
 
 interface TicketCardProps {
   ticket: TicketData;
@@ -26,7 +29,10 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     createdAt,
     _id,
   } = ticket;
-
+  const { user } = useSelector(selectAuth);
+  const { isAdmin } = useHasPermission();
+  const isAssigned = ticket.assignedTo?._id === user?._id;
+  const isRequester = ticket.createdBy._id === user?._id;
   // Meta info
   const meta: string[] = [
     `#${_id}`, // Ticket ID
@@ -47,7 +53,19 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
             {req_title}
           </h1>
           <div className="d-flex flex-row gap-10">
-            <Badge variant="primary-soft">{status}</Badge>
+            <Badge
+              variant={
+                status === "Completed"
+                  ? "success-soft"
+                  : status === "Open"
+                  ? "danger-soft"
+                  : status === "In Progress"
+                  ? "warning-soft"
+                  : "primary-soft"
+              }
+            >
+              {status}
+            </Badge>
             <Badge
               variant={
                 priority === "High"
@@ -119,8 +137,12 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
               </div>
             )}
           </div>
-
-          <TicketDetails ticket={ticket} />
+          <div className="d-flex flex flex-row gap-2">
+            <TicketComment ticket={ticket} />
+            {(isAdmin || isAssigned || isRequester) && (
+              <TicketDetails ticket={ticket} />
+            )}
+          </div>
         </div>
       </div>
     </div>

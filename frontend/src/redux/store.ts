@@ -15,19 +15,21 @@ import { setupListeners } from "@reduxjs/toolkit/query";
 
 import authReducer from "./AuthSlice.ts";
 
-const persistConfig = {
-  key: "root",
+// ✅ Persist config only for `auth`
+const authPersistConfig = {
+  key: "auth",
   version: 1,
   storage: storageSession,
 };
-const reducer = combineReducers({
-  [api.reducerPath]: api.reducer,
-  auth: authReducer.reducer,
+
+// ✅ Wrap only auth reducer with persistReducer
+const rootReducer = combineReducers({
+  [api.reducerPath]: api.reducer, // NOT persisted
+  auth: persistReducer(authPersistConfig, authReducer.reducer),
 });
-const persistedReducer = persistReducer(persistConfig, reducer);
 
 export const store = configureStore({
-  reducer: persistedReducer,
+  reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {

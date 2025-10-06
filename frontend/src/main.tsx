@@ -25,9 +25,11 @@ import "jsvectormap/dist/jsvectormap.css";
 import "react-toastify/dist/ReactToastify.css";
 import "react-modal-video/css/modal-video.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import "react-datepicker/dist/react-datepicker.css";
+import "react-time-picker/dist/TimePicker.css";
+import "react-clock/dist/Clock.css";
 import "@assets/css/Street.css";
 // main.tsx
-
 
 import App from "./App.tsx";
 import { PersistGate } from "redux-persist/es/integration/react";
@@ -35,13 +37,16 @@ import { Provider } from "react-redux";
 import { store } from "./redux/store.ts";
 import persistStore from "redux-persist/es/persistStore";
 import { ToastContainer } from "react-toastify";
+import { SocketProvider } from "./context/SocketProvider.tsx";
 const persistor = persistStore(store);
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Provider store={store}>
-      <PersistGate persistor={persistor}>
-        <ToastContainer />
-        <App />
+      <PersistGate loading={<div>Loading...</div>} persistor={persistor}>
+        <SocketProvider>
+          <ToastContainer />
+          <App />
+        </SocketProvider>
       </PersistGate>
     </Provider>
   </StrictMode>

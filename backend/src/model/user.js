@@ -39,13 +39,7 @@ const UserSchema = new mongoose.Schema(
       type: String, // This can be a URL or file path
       default: "", // Optional
     },
-    slug: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-    },
+    
     password: {
       type: String,
       required: true,

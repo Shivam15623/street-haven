@@ -29,7 +29,7 @@ export const createStaffFeedBack = asyncHandler(async (req, res) => {
   }
   res
     .status(201)
-    .json(new ApiResponse(true, "Incident report created successfully"));
+    .json(new ApiResponse(true, "Staff feedback created successfully"));
 });
 
 export const GetAllStaffFeedBack = asyncHandler(async (req, res) => {

@@ -149,8 +149,8 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
             onSubmit={handleSubmit}
           >
             {/* Title */}
-            <BootstrapForm.Group className="mb-3">
-              <BootstrapForm.Label className="mb-2">Title</BootstrapForm.Label>
+            <BootstrapForm.Group className="d-flex flex-column gap-8">
+              <BootstrapForm.Label >Title</BootstrapForm.Label>
               <BootstrapForm.Control
                 type="text"
                 placeholder="Enter title"
@@ -164,8 +164,8 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
             </BootstrapForm.Group>
 
             {/* Description */}
-            <BootstrapForm.Group className="mb-3">
-              <BootstrapForm.Label className="mb-2">
+            <BootstrapForm.Group className="d-flex flex-column gap-8">
+              <BootstrapForm.Label >
                 Description
               </BootstrapForm.Label>
               <BootstrapForm.Control
@@ -182,8 +182,8 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
             </BootstrapForm.Group>
 
             {/* Type */}
-            <BootstrapForm.Group className="mb-3">
-              <BootstrapForm.Label className="mb-2">Type</BootstrapForm.Label>
+            <BootstrapForm.Group className="d-flex flex-column gap-8">
+              <BootstrapForm.Label >Type</BootstrapForm.Label>
               <BootstrapForm.Select
                 value={values.type}
                 isInvalid={!!errors.type && touched.type}
@@ -202,8 +202,8 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
             </BootstrapForm.Group>
 
             {/* Tags */}
-            <BootstrapForm.Group className="mb-3">
-              <BootstrapForm.Label className="mb-2">Tags</BootstrapForm.Label>
+            <BootstrapForm.Group className="d-flex flex-column gap-8">
+              <BootstrapForm.Label >Tags</BootstrapForm.Label>
               <FieldArray name="tags">
                 {({ push, remove }) => (
                   <>
