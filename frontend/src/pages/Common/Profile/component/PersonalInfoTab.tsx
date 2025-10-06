@@ -1,5 +1,4 @@
 import avatar from "@assets/images/avatar/john.jpg";
-import { Icon } from "@iconify/react/dist/iconify.js";
 import ImageUploader from "./ImageUploader";
 import { useFetchUserProfileQuery } from "../../../../services/UserApi";
 import dayjs from "dayjs";
