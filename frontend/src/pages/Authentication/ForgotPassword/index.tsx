@@ -6,7 +6,7 @@ import { Button, Col, Form, Row } from "react-bootstrap";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import { useForgotPasswordMutation } from "../../../services/AuthApi";
-import { showSuccess } from "../../../utills/toastutills";
+import { showError, showSuccess } from "../../../utills/toastutills";
 interface ForgotValues {
   email: string;
 }
@@ -23,8 +23,8 @@ const ForgotPassword = () => {
       if (res?.success) {
         showSuccess(res.message);
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err:any) {
+      showError(err.data.message);
     }
   };
   return (

@@ -8,6 +8,24 @@ import Badge from "../../../../components/child/Badge";
 import { TimePicker } from "../../../../components/child/TimePicker";
 import CustomDatePicker from "../../../../components/child/DatePicker";
 
+function parseLocalDate(val: string) {
+  const [year, month, day] = val.split("-").map(Number);
+  return new Date(year, month - 1, day); // month is 0-indexed
+}
+
+function isSameOrBeforeToday(val: string) {
+  if (!val) return true;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const selected = parseLocalDate(val);
+  console.log(selected, "rfergreg");
+  console.log(today, "today");
+  selected.setHours(0, 0, 0, 0);
+
+  return selected <= today;
+}
+
 const staffFeedbackSchema = Yup.object({
   date: Yup.string()
     .required("Date of incident is required")
@@ -15,14 +33,7 @@ const staffFeedbackSchema = Yup.object({
       return val ? !isNaN(Date.parse(val)) : false;
     })
     .test("not-future-date", "Date cannot be in the future", (val) => {
-      if (!val) return true;
-      const today = new Date();
-      const selected = new Date(val);
-      // ignore time when comparing
-      selected.setHours(0, 0, 0, 0);
-      today.setHours(0, 0, 0, 0);
-
-      return selected <= today;
+      return isSameOrBeforeToday(val || "");
     }),
 
   time: Yup.string()
@@ -31,24 +42,14 @@ const staffFeedbackSchema = Yup.object({
       const { date } = this.parent;
       if (!date || !val) return true;
 
-      const today = new Date();
-      const selectedDate = new Date(date);
+      const [h, m] = val.split(":").map(Number);
 
-      // check only if the selected date = today
-      const isToday =
-        selectedDate.getFullYear() === today.getFullYear() &&
-        selectedDate.getMonth() === today.getMonth() &&
-        selectedDate.getDate() === today.getDate();
+      // combine date and time
+      const incidentDateTime = new Date(date);
+      incidentDateTime.setHours(h, m, 0, 0);
 
-      if (isToday) {
-        const [h, m] = val.split(":");
-        const selected = new Date();
-        selected.setHours(Number(h), Number(m), 0, 0);
-
-        return selected <= today;
-      }
-
-      return true;
+      const now = new Date();
+      return incidentDateTime <= now;
     }),
 
   location: Yup.string(),
@@ -69,7 +70,6 @@ const staffFeedbackSchema = Yup.object({
     "Actions taken cannot exceed 500 characters"
   ),
   newWitness: Yup.string(),
-
   reporterName: Yup.string(),
 });
 
@@ -109,6 +109,8 @@ const StaffFeedbackForm: React.FC = () => {
 
         <Formik
           validationSchema={staffFeedbackSchema}
+          validateOnChange={false}
+          validateOnBlur={true}
           initialValues={{
             date: new Date().toISOString().split("T")[0],
             time: "",
