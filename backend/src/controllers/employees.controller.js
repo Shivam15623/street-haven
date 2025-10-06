@@ -30,8 +30,9 @@ export const AllEmployees = asyncHandler(async (req, res) => {
     ];
   }
 
-  // Fields to select
-  const selectFields = forDropdown
+  const isDropdown = String(forDropdown).toLowerCase() === "true";
+
+  const selectFields = isDropdown
     ? "_id firstname lastname email"
     : "-forgotPasswordToken -forgotPasswordTokenExpiry -refreshToken -password";
 
@@ -55,7 +56,7 @@ export const AllEmployees = asyncHandler(async (req, res) => {
     .limit(Number(limit));
 
   const totalEmployees = await User.countDocuments(query);
-
+  console.log("propsd", employees);
   if (employees.length === 0) {
     return res
       .status(200)
@@ -74,7 +75,36 @@ export const AllEmployees = asyncHandler(async (req, res) => {
     })
   );
 });
+export const AddEmployee = asyncHandler(async (req, res) => {
+  const { firstName, lastName, email, password, phone } = req.body;
 
+  const ExistingUser = await User.findOne({
+    $or: [{ email: email }, { phoneNo: phone }],
+  });
+  if (ExistingUser) {
+    if (ExistingUser.email === email) {
+      throw new ApiError(400, "User already exists with this email");
+    } else if (ExistingUser.phoneNo === phone) {
+      throw new ApiError(400, "User already exists with this phone number");
+    }
+  }
+
+  const newUser = await User.create({
+    firstname: firstName,
+    lastname: lastName,
+    email: email,
+    password: password,
+    phoneNo: phone,
+    role: "employee",
+  });
+  const findUser = await User.findById(newUser._id);
+  if (!findUser) {
+    throw new ApiError(500, "Account not created due to server error");
+  }
+  return res
+    .status(201)
+    .json(new ApiResponse(201, "Employee Account created successfully"));
+});
 export const EditEmployee = asyncHandler(async (req, res) => {
   const { id: userId } = req.params;
   const findUser = await User.findById(userId);

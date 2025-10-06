@@ -10,7 +10,6 @@ import { showError, showSuccess } from "../../../../utills/toastutills";
 import PasswordInput from "../../../../components/Authentication/PasswordInput";
 interface LoginValues {
   email: string;
-
   password: string;
 }
 const loginSchema = Yup.object({
@@ -34,7 +33,7 @@ const LoginForm: React.FC = () => {
           firstName: user.firstName,
           lastName: user.lastName,
           phoneNo: user.phoneNo,
-          profile: user.profilePic,
+          profilePic: user.profilePic,
           role: user.role,
           slug: user.slug,
         };

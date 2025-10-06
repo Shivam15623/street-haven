@@ -164,6 +164,7 @@ export const GetProgramManuals = asyncHandler(async (req, res) => {
       { title: { $regex: search, $options: "i" } },
       { description: { $regex: search, $options: "i" } },
       { tags: { $regex: search, $options: "i" } },
+      { type: { $regex: search, $options: "i" } },
     ];
   }
 

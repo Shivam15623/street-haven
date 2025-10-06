@@ -408,7 +408,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                   <Col sm={2}>
                     <p className="form-label">Attachment</p>
                   </Col>
-                  {!editphoto && (
+                  {!(editphoto || !ticket.photo) && (
                     <Col sm={10}>
                       <Icon icon="lucide:paperclip" className="me-1" />
                       <Link
@@ -426,7 +426,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       )}
                     </Col>
                   )}
-                  {editphoto && (
+                  {(editphoto || !ticket.photo) && (
                     <Col sm={10}>
                       <ImageUpload name="photo" />
                     </Col>
