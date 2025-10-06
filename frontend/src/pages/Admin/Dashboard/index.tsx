@@ -37,7 +37,7 @@ const AdminDashboard = () => {
         </div>
       </div>
       <Row className=" g-2 g-md-4">
-        <Col xs={6} sm={6} md={4}>
+        <Col xs={6} sm={6} md={3}>
           <div
             onClick={() =>
               window.open(
@@ -50,7 +50,7 @@ const AdminDashboard = () => {
             Staff Portal
           </div>
         </Col>
-        <Col xs={6} sm={6} md={4}>
+        <Col xs={6} sm={6} md={3}>
           <div
             onClick={() =>
               window.open(
@@ -63,7 +63,7 @@ const AdminDashboard = () => {
             SH Webmail
           </div>
         </Col>
-        <Col xs={12} sm={12} md={4}>
+        <Col xs={12} sm={12} md={3}>
           <div
             onClick={() =>
               window.open(
@@ -76,6 +76,19 @@ const AdminDashboard = () => {
             Staff Schedules
           </div>
         </Col>
+        <Col xs={12} sm={12} md={3}>
+          <div
+            // onClick={() =>
+            //   window.open(
+            //     "https://streethaven.sharepoint.com/sites/StreetHaven/Staff%20Schedules/Forms/AllItems.aspx",
+            //     "_blank"
+            //   )
+            // }
+            className="link-card h-80-px cursor-pointer h-sm-100-px h-md-144-px w-100 radius-12 p-md-24 d-flex fw-bold text-md sm:text-lg md:text-xl flex-row justify-content-center align-items-center bg-street-primary text-white"
+          >
+            CMS
+          </div>
+        </Col>
       </Row>
 
       <Row className=" g-2 g-md-3 g-lg-4">
@@ -86,13 +99,7 @@ const AdminDashboard = () => {
           key={"Events"}
           link={`/${user?.role}/events`}
         />
-        <DashboardCard
-          icon="heroicons:document"
-          label="Recent Documents"
-          value={12}
-          link={`/${user?.role}/programs&manuals`}
-          key={"Recent Documents"}
-        />
+
         <DashboardCard
           icon="iconamoon:ticket-light"
           label="Open Tickets"

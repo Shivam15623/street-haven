@@ -419,7 +419,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       </Link>
                       {(!isAdmin || !isRequester) && (
                         <Icon
-                          icon="mdi:file-edit-outline"
+                          icon="mdi:file-edit"
                           className="ms-2 icon-street-edit"
                           onClick={() => seteditphoto(true)}
                         />
