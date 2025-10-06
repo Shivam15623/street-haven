@@ -21,7 +21,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
 }) => {
   const navigate=useNavigate()
   return (
-    <Col sm={6} lg={3}>
+    <Col sm={6} lg={4}>
       <div onClick={()=>navigate(link)} className={`card-box cursor-pointer ${bg}`}>
         <div className="card-box-left">
           <h3 className="card-box-value">{value}</h3>
