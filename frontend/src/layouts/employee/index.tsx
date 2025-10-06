@@ -26,7 +26,7 @@ const menuItems = [
     icon: ProgramIcon,
   },
   {
-    label: "IT & Facility",
+    label: "Facility",
     path: "/employee/it_facility",
     icon: ItNFacility,
   },
