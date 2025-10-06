@@ -14,6 +14,7 @@ import type { MeetingMinutesData } from "../../../../interfaces/meetingMinutes";
 import PdfField from "../../../../components/child/PdfField";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import CustomDatePicker from "../../../../components/child/DatePicker";
 dayjs.extend(utc);
 // ✅ Schema
 const TownhallMinutesFormSchema = (isEdit: boolean) =>
@@ -188,11 +189,11 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
         validationSchema={TownhallMinutesFormSchema(isEdit)}
         onSubmit={handleSave}
       >
-        {({ values, handleSubmit, setFieldValue }) => (
-          <BootstrapForm id="minute-meeting-form" onSubmit={handleSubmit}>
+        {({ values, handleSubmit, setFieldValue,touched,setFieldTouched,errors }) => (
+          <BootstrapForm id="minute-meeting-form" className="d-flex flex-column gap-16 gap-sm-20" onSubmit={handleSubmit}>
             {/* Title */}
-            <BootstrapForm.Group className="mb-3">
-              <BootstrapForm.Label className="mb-2">Title</BootstrapForm.Label>
+            <BootstrapForm.Group className="d-flex flex-column gap-8">
+              <BootstrapForm.Label >Title</BootstrapForm.Label>
               <Field
                 name="title"
                 as={BootstrapForm.Control}
@@ -206,8 +207,8 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
             </BootstrapForm.Group>
 
             {/* Attendees */}
-            <BootstrapForm.Group className="mb-3">
-              <BootstrapForm.Label className="mb-2">
+            <BootstrapForm.Group className="d-flex flex-column gap-8">
+              <BootstrapForm.Label >
                 Attendees
               </BootstrapForm.Label>
               <Field
@@ -224,25 +225,32 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
             </BootstrapForm.Group>
 
             {/* Meeting Date */}
-            <BootstrapForm.Group className="mb-3">
-              <BootstrapForm.Label className="mb-2">
+            <BootstrapForm.Group className="d-flex flex-column gap-8">
+              <BootstrapForm.Label >
                 Meeting Date
               </BootstrapForm.Label>
-              <Field
-                name="meetingDate"
-                type="date"
-                as={BootstrapForm.Control}
-              />
-              <ErrorMessage
-                name="meetingDate"
-                component="div"
-                className="text-danger"
-              />
+              <CustomDatePicker
+                  value={values.meetingDate ? new Date(values.meetingDate) : null}
+                  onChange={(date) => {
+                    setFieldValue(
+                      "meetingDate",
+                      date ? date.toISOString().split("T")[0] : ""
+                    );
+                    setFieldTouched("meetingDate", true);
+                  }}
+                  isInvalid={!!errors.meetingDate && touched.meetingDate}
+                />
+
+                {errors.meetingDate && touched.meetingDate && (
+                  <div className="invalid-feedback d-block">
+                    {errors.meetingDate}
+                  </div>
+                )}
             </BootstrapForm.Group>
 
             {/* Key Topics Discussed */}
-            <BootstrapForm.Group className="mb-3">
-              <BootstrapForm.Label className="mb-2">
+            <BootstrapForm.Group className="d-flex flex-column gap-8">
+              <BootstrapForm.Label >
                 Key Topics Discussed
               </BootstrapForm.Label>
               <FieldArray
@@ -297,8 +305,8 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
             </BootstrapForm.Group>
 
             {/* Key Highlights */}
-            <BootstrapForm.Group className="mb-3">
-              <BootstrapForm.Label className="mb-2">
+            <BootstrapForm.Group className="d-flex flex-column gap-8">
+              <BootstrapForm.Label >
                 Key Highlights
               </BootstrapForm.Label>
               <FieldArray

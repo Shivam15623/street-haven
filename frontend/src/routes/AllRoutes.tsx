@@ -15,6 +15,7 @@ import {
   LazyResetPassword,
   LazyAdminRoot,
   LazyAdminDashboard,
+  LazyEmployees,
 } from "../Lazy Components";
 import { Navigate, type RouteObject } from "react-router-dom";
 import RouteGuard from "../Routeguard";
@@ -97,6 +98,7 @@ export const AllRoutes: RouteObject[] = [
       { path: "it_facility", element: withSuspense(<LazyHelpDesk />) },
       { path: "forms", element: withSuspense(<LazyFormReports />) },
       { path: "profile", element: withSuspense(<LazyProfile />) },
+      { path: "employees", element: withSuspense(<LazyEmployees />) },
     ],
   },
 ];

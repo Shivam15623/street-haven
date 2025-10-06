@@ -17,3 +17,13 @@
 .org-node {
   border: 1.5px solid rgba(1, 96, 166, 0.5);
 }
+.org-label{
+  color: #555555;
+}
+[data-theme="dark"] .org-label{
+  color: #AEB0B2 ;
+}
+[data-theme="dark"] .org-sub{
+  color: #F2F0EC;
+  font-style: normal;
+}

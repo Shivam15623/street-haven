@@ -47,6 +47,8 @@ import StaffFeedbackRouter from "./routes/staffFeedback.routes.js";
 import meetingMinutesRouter from "./routes/meetingMinutes.routes.js";
 import ticketRouter from "./routes/ticket.routes.js";
 import hrUpdateRouter from "./routes/hrUpdates.routes.js";
+import EmployeeRoutes from "./routes/employee.routes.js";
+import FAQRoutes from "./routes/FAQ.routes.js";
 import searchRoutes from "./routes/search.routes.js";
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
@@ -57,7 +59,9 @@ app.use("/api/v1/incident-reports", IncidentReportRouter);
 app.use("/api/v1/staff-feedback", StaffFeedbackRouter);
 app.use("/api/v1/meeting-minutes", meetingMinutesRouter);
 app.use("/api/v1/hr-updates", hrUpdateRouter);
-app.use("/api/v1/search",searchRoutes)
+app.use("/api/v1/search",searchRoutes);
+app.use("/api/v1/employees",EmployeeRoutes);
+app.use("/api/v1/faq",FAQRoutes)
 app.use(errorHandler);
 
 app.use("/public/attachments", express.static("public/attachments"));
