@@ -46,7 +46,8 @@ export interface SignupCredentials {
 }
 export interface ForgotPasswordcredential {
   token: string;
-  newpassword: string;
+  newPassword: string;
+  confirmPassword:string;
 }
 
 export interface RequestResetPasswordcredential {

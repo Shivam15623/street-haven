@@ -43,7 +43,7 @@ export const loginUserSchema = yup.object({
 
 export const resetPasswordSchema = yup.object({
   token: yup.string().required("Token is required"),
-  newpassword: yup
+  newPassword: yup
     .string()
     .matches(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&_])[A-Za-z\d@$!%*?#&_]{8,}$/,
@@ -51,7 +51,7 @@ export const resetPasswordSchema = yup.object({
     )
     .required("New password is required"),
 
-  confirmpassword: yup
+  confirmPassword: yup
     .string()
     .oneOf([yup.ref("newpassword")], "Confirm password must match new password")
     .required("Confirm password is required"),
