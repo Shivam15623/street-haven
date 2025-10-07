@@ -36,6 +36,7 @@ const LoginForm: React.FC = () => {
           profilePic: user.profilePic,
           role: user.role,
           slug: user.slug,
+          createdAt:user.createdAt
         };
 
         dispatch(

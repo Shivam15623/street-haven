@@ -1,9 +1,11 @@
 import React from "react";
-
 import { Spinner } from "react-bootstrap";
 import AnnouncementCardWrapper from "./AnnouncementCardWrapper";
 import dayjs from "dayjs";
-import { useSignUpForEventMutation } from "../../../../services/EventApi";
+import {
+  useSignOutFromEventMutation,
+  useSignUpForEventMutation,
+} from "../../../../services/EventApi";
 import type { EventUpcomingData } from "../../../../interfaces/EventInterfaces";
 import { showSuccess } from "../../../../utills/toastutills";
 
@@ -27,26 +29,42 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
     totalRegistered,
     createdAt,
   } = event;
+
   const progress = Math.min((totalRegistered / capacity) * 100, 100);
   const formattedDate = dayjs(eventDate).format("MM/DD/YYYY");
-  const [registerEvent, { isLoading }] = useSignUpForEventMutation();
-  const handleSignup = async () => {
-    try {
-      const res = await registerEvent(eventId).unwrap();
-      if (res.success) {
-        showSuccess(res.message);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  const isFull = totalRegistered >= capacity;
   const formattedTimeRange =
     startTime && endTime
       ? `${dayjs(startTime).format("hh:mm A")} - ${dayjs(endTime).format(
           "hh:mm A"
         )}`
       : "";
+  const isFull = totalRegistered >= capacity;
+
+  // Mutations
+  const [registerEvent, { isLoading: isRegistering }] =
+    useSignUpForEventMutation();
+  const [signOutEvent, { isLoading: isUnregistering }] =
+    useSignOutFromEventMutation();
+
+  // Handle Register
+  const handleSignup = async () => {
+    try {
+      const res = await registerEvent(eventId).unwrap();
+      if (res.success) showSuccess(res.message);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  // Handle Unregister
+  const handleSignout = async () => {
+    try {
+      const res = await signOutEvent(eventId).unwrap();
+      if (res.success) showSuccess(res.message);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
     <AnnouncementCardWrapper
@@ -56,14 +74,16 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
       description={description}
       CTATrigger={
         <button
-          disabled={isRegistered || isLoading || isFull} // disable if registered, loading, or full
-          onClick={handleSignup}
-          className="btn btn-street-primary d-flex align-items-center justify-content-center radius-12 w-160-px gap-2 text-xs"
+          disabled={isFull || isRegistering || isUnregistering}
+          onClick={isRegistered ? handleSignout : handleSignup}
+          className={`btn btn-street-primary d-flex align-items-center justify-content-center radius-12 w-160-px gap-2 text-xs ${
+            isRegistered ? "btn-street-delete" : ""
+          }`}
         >
-          {isLoading && (
+          {(isRegistering || isUnregistering) && (
             <Spinner animation="border" size="sm" className="me-2" />
           )}
-          {isFull ? "Full" : isRegistered ? "Registered" : "Sign Up"}
+          {isFull ? "Full" : isRegistered ? "Cancel Registration" : "Sign Up"}
         </button>
       }
     >
@@ -114,16 +134,18 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
         </div>
       </div>
       <hr className="d-block d-sm-none bg-street-base" />
-      <div className="d-flex  d-sm-none justify-content-end">
+      <div className="d-flex d-sm-none justify-content-end">
         <button
-          disabled={isRegistered || isLoading || isFull} // disable if registered, loading, or full
-          onClick={handleSignup}
-          className="btn btn-street-primary d-flex align-items-center justify-content-center radius-12 w-160-px gap-2 text-xs"
+          disabled={isFull || isRegistering || isUnregistering}
+          onClick={isRegistered ? handleSignout : handleSignup}
+          className={`btn btn-street-primary d-flex align-items-center justify-content-center radius-12 w-160-px gap-2 text-xs ${
+            isRegistered ? "btn-outline-danger" : ""
+          }`}
         >
-          {isLoading && (
+          {(isRegistering || isUnregistering) && (
             <Spinner animation="border" size="sm" className="me-2" />
           )}
-          {isFull ? "Full" : isRegistered ? "Registered" : "Sign Up"}
+          {isFull ? "Full" : isRegistered ? "Cancel Registration" : "Sign Up"}
         </button>
       </div>
     </AnnouncementCardWrapper>
