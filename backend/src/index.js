@@ -13,6 +13,7 @@ export const io = new Server(server, {
     credentials: true,
     origin: process.env.CLIENT_URL,
   },
+  transports: ["websocket"],
 });
 export const activeTicketUsers = {};
 // Handle socket connections
@@ -22,8 +23,8 @@ io.on("connection", (socket) => {
   // Example: join a room for ticket
   socket.on("joinRoom", ({ ticketId, userId }) => {
     socket.join(ticketId);
-    console.log("user joined ticket room",ticketId);
-    
+    console.log("user joined ticket room", ticketId);
+
     if (!activeTicketUsers[ticketId]) activeTicketUsers[ticketId] = new Set();
     activeTicketUsers[ticketId].add(userId);
   });
