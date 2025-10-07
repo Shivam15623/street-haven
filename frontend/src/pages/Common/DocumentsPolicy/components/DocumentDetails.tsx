@@ -53,7 +53,7 @@ const DocumentDetails = ({ attachment, title }: Props) => {
         className="btn btn-street-outline-primary d-flex align-items-center w-43-px px-8 py-8 px-sm-10 radius-12"
         onClick={() => setShowModal(true)}
       >
-        <Icon icon="solar:eye-linear" className="text-lg sm:text-xl" />
+        <Icon icon="solar:eye-bold" className="text-lg sm:text-xl" />
       </Button>
 
       <ModalWrapper

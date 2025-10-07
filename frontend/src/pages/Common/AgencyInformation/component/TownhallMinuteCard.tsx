@@ -60,21 +60,21 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
             <div className="d-flex align-items-center flex-row flex-wrap text-xxs xs:text-xs fw-normal gap-10 gap-sm-24">
               <span className="d-flex align-items-center gap-1 gap-sm-6">
                 <Icon
-                  icon="uit:calender"
+                  icon="uis:calender"
                   className="text-street-primary  text-xxs xs:text-xs"
                 />
                 {new Date(meetingDate).toLocaleDateString()}
               </span>
               <span className="d-flex align-items-center gap-1 gap-sm-6">
                 <Icon
-                  icon="octicon:people-24"
+                  icon="fa6-solid:user-group"
                   className="text-street-primary text-xxs xs:text-xs"
                 />
                 {attendees} attendees
               </span>
               <span className="d-flex align-items-center gap-1 gap-sm-6">
                 <Icon
-                  icon="iconamoon:file-document-light"
+                  icon="famicons:document-sharp"
                   className="text-street-primary text-xxs xs:text-xs"
                 />
                 {attachment.totalPages} pages
