@@ -19,14 +19,15 @@ export const sendEmail = async ({ to, subject, html }) => {
   try {
     const senderEmail = "phenomenalshivam2@gmail.com";
     const senderName = "CRM";
-    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail({
+    const sendSmtpEmail = {
       sender: { name: senderName, email: senderEmail },
       to: [{ email: to }],
-      subject: subject,
+      subject,
       htmlContent: html,
-    });
+    };
 
     const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
+
     console.log("Email sent successfully:", response);
     return response;
   } catch (error) {
