@@ -36,7 +36,8 @@ const ResetPassword: React.FC = () => {
       if (token) {
         const response = await resetPassword({
           token,
-          newpassword: values.newPassword,
+          newPassword: values.newPassword,
+          confirmPassword:values.confirmPassword
         }).unwrap();
 
         if (response?.success) {
