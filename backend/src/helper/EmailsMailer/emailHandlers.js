@@ -23,27 +23,39 @@ export const sendVerificationEmail = async ({ email, userId }) => {
 };
 
 export const sendResetEmail = async ({ email }) => {
-  // Generate plain token
-
+  // Generate a plain reset token
   const resetToken = crypto.randomBytes(32).toString("hex");
 
-  // Hash it before storing in DB
+  // Hash it before storing in the database
   const hashedToken = await bcrypt.hash(resetToken, 10);
 
-  await User.findOne(
+  // Update user record with token and expiry
+  const user = await User.findOneAndUpdate(
     { email },
     {
       forgotPasswordToken: hashedToken,
-      forgotPasswordTokenExpiry: Date.now() + 3600000,
-    }
+      forgotPasswordTokenExpiry: Date.now() + 3600000, // 1 hour
+    },
+    { new: true }
   );
 
-  const resetLink = `${process.env.DOMAIN}/reset-password?token=${resetToken}`;
+  if (!user) {
+    throw new Error("User not found with this email.");
+  }
 
+  // Generate reset link
+  const resetLink = `${process.env.DOMAIN}/reset-password?token=${hashedToken}`;
+
+  // Create email HTML content
   const emailContent = generateEmailTemplate({
     type: "reset",
     data: { link: resetLink },
   });
-  console.log("token reset", resetLink, emailContent);
-  return sendEmail({ to: email, ...emailContent });
+
+  console.log("Reset link generated:", resetLink);
+
+  // Send email
+  await sendEmail({ to: email, ...emailContent });
+
+  return { success: true, message: "Reset email sent successfully." };
 };
