@@ -60,7 +60,7 @@ const ChangePassword = () => {
             values,
             errors,
             touched,
-            resetForm,
+           
           }) => (
             <Form noValidate onSubmit={handleSubmit}>
               {/* Current Password */}
@@ -141,13 +141,6 @@ const ChangePassword = () => {
                   disabled={isLoading}
                 >
                   {isLoading ? "Submitting..." : "Submit"}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-street-neutral d-flex flex-row align-items-center justify-content-center radius-12 w-144-px h-40-px px-8"
-                  onClick={() => resetForm()} // ✅ Reset form on Cancel
-                >
-                  Cancel
                 </button>
               </div>
             </Form>

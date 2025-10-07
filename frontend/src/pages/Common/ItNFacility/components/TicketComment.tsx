@@ -123,7 +123,7 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
   useEffect(() => {
     if (!socket) return;
 
-    socket.emit("joinRoom", ticket._id);
+    socket.emit("joinRoom", { ticketId: ticket._id, userId: user?._id });
 
     socket.on("newComment", (comment: commentData & { ticketId: string }) => {
       if (comment.ticketId !== ticket._id) return;
@@ -148,10 +148,10 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
     });
 
     return () => {
-      socket.emit("leaveRoom", ticket._id);
+      socket.emit("leaveRoom", { ticketId: ticket._id, userId: user?._id });
       socket.off("newComment");
     };
-  }, [socket, ticket._id]);
+  }, [socket, ticket._id,user?._id]);
 
   const handleFileSelect = () => {
     fileInputRef.current?.click();

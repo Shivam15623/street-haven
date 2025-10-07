@@ -1,22 +1,46 @@
 import mongoose from "mongoose";
 
-const notificationSchema = new mongoose.Schema({
-  type: { type: String, enum: ["broadcast", "personal"], required: true },
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, 
-  title: { type: String, required: true },
-  message: { type: String, required: true },
-  link: { type: String },
-  read: { type: Boolean, default: false },
-  createdAt: { type: Date, default: Date.now },
-  resource: {
-    resourceType: { type: String, required: true }, // e.g., 'employee', 'faq'
-    resourceId: {
-      type: mongoose.Schema.Types.ObjectId,
-      refPath: "resource.resourceType",
+const NotificationSchema = new mongoose.Schema(
+  {
+    // Who receives this notification
+    recipients: [
+      {
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        read: { type: Boolean, default: false },
+        readAt: { type: Date, default: null },
+        deleted: { type: Boolean, default: false }, // soft delete per user
+      },
+    ],
+
+    type: {
+      type: String,
+      enum: [
+        "ticket_comment",
+        "success",
+        "warning",
+        "error",
+        "action",
+        "ticket_created",
+      ],
+      required: true,
     },
+    title: { type: String, required: true },
+    message: { type: String, required: true },
+    link: { type: String },
+    meta: { type: Object },
+ 
+    expireAt: { type: Date },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
-});
+  { timestamps: true }
+);
 
-const Notification = mongoose.model("Notification", notificationSchema);
+// TTL index for automatic deletion
+NotificationSchema.index({ expireAt: 1 }, { expireAfterSeconds: 0 });
 
+const Notification = mongoose.model("Notification", NotificationSchema);
 export default Notification;

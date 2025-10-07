@@ -1,44 +1,97 @@
-import { io } from "../index.js";
+import mongoose from "mongoose";
+import { activeTicketUsers, io } from "../index.js";
 import Comment from "../model/comments.js";
+import Notification from "../model/notification.js";
 import Ticket from "../model/ticket.js";
+import User from "../model/user.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import { uploadOnCloudinary } from "../utills/cloudinary.js";
 
 export const createTicket = asyncHandler(async (req, res) => {
-  const { _id: userId } = req.user;
-  const { reqTitle, description, priority, category, location } = req.body;
-  const photoPath = req?.file?.path;
-  let uploadedFile;
-  if (photoPath) {
-    uploadedFile = await uploadOnCloudinary(photoPath);
-    if (!uploadedFile?.url) {
-      throw new ApiError(500, "photo upload failed");
-    }
-  }
-  const payload = {
-    req_title: reqTitle,
-    description: description,
-    createdBy: userId,
-    priority: priority,
-    category: category,
-    location: location,
-  };
-  if (uploadedFile?.url) {
-    payload.photo = {
-      fileName: uploadedFile.original_filename || "photo",
-      fileUrl: uploadedFile.secure_url,
-    };
-  }
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-  const ticket = await Ticket.create(payload);
-  if (!ticket) {
-    throw new ApiError(500, "Server side Error");
+  try {
+    const { _id: userId } = req.user;
+    const { reqTitle, description, priority, category, location } = req.body;
+    const photoPath = req?.file?.path;
+    let uploadedFile;
+
+    if (photoPath) {
+      uploadedFile = await uploadOnCloudinary(photoPath);
+      if (!uploadedFile?.url) {
+        throw new ApiError(500, "photo upload failed");
+      }
+    }
+
+    const payload= {
+      req_title: reqTitle,
+      description,
+      createdBy: userId,
+      priority,
+      category,
+      location,
+    };
+    if (uploadedFile?.url) {
+      payload.photo = {
+        fileName: uploadedFile.original_filename || "photo",
+        fileUrl: uploadedFile.secure_url,
+      };
+    }
+
+    // Create ticket inside transaction
+    const ticket = await Ticket.create([payload], { session });
+    if (!ticket || ticket.length === 0) {
+      throw new ApiError(500, "Ticket creation failed");
+    }
+
+    // Create notifications inside transaction
+    const admins = await User.find(
+      { role: "admin" },
+      "_id firstname lastname email",
+      { session }
+    );
+
+    if (admins && admins.length > 0) {
+      const recipients = admins.map((admin) => ({ userId: admin._id }));
+
+      const notification = await Notification.create(
+        [
+          {
+            recipients,
+            type: "ticket_created",
+            title: "New Ticket Created",
+            message: `A new ticket "${reqTitle}" has been created by ${req.user.firstname} ${req.user.lastname}.`,
+            link: `/it_facility?tab=track_tickets&status=Open`,
+            createdBy: userId,
+            meta: { ticketId: ticket[0]._id, priority },
+          },
+        ],
+        { session }
+      );
+
+      // Emit notification via Socket.IO
+      recipients.forEach((r) => {
+        io.to(`user_${r.userId.toString()}`).emit(
+          "newNotification",
+          notification[0]
+        );
+      });
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res
+      .status(200)
+      .json(new ApiResponse(201, "Ticket created successfully"));
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw err; // Will be handled by asyncHandler
   }
-  return res
-    .status(200)
-    .json(new ApiResponse(201, "Ticket created successfully"));
 });
 export const editTicket = asyncHandler(async (req, res) => {
   const {
@@ -55,6 +108,7 @@ export const editTicket = asyncHandler(async (req, res) => {
   console.log(status);
   // Find the ticket
   const ticket = await Ticket.findById(ticketId);
+  let notifymessages = [];
   if (!ticket) {
     throw new ApiError(404, "No Such Ticket found");
   }
@@ -70,7 +124,6 @@ export const editTicket = asyncHandler(async (req, res) => {
 
   // Keep track of fields to update
   let updatedFields = {};
-
   if (role === "admin") {
     // Admin can change assigned person
     if (assignedId && assignedId !== ticket.assignedTo?.toString()) {
@@ -81,12 +134,15 @@ export const editTicket = asyncHandler(async (req, res) => {
       updatedFields.status = status;
     }
     // Admin can also edit requester fields if you want
-    if (priority && priority !== ticket.priority)
+    if (priority && priority !== ticket.priority) {
       updatedFields.priority = priority;
-    if (description && description !== ticket.description)
+    }
+    if (description && description !== ticket.description) {
       updatedFields.description = description;
-    if (requestTitle && requestTitle !== ticket.req_title)
+    }
+    if (requestTitle && requestTitle !== ticket.req_title) {
       updatedFields.req_title = requestTitle;
+    }
     if (category && category !== ticket.category)
       updatedFields.category = category;
     if (uploadedFile && uploadedFile.secure_url !== ticket.photo)
@@ -285,7 +341,7 @@ export const AddComment = asyncHandler(async (req, res) => {
 
   // Upload attachments to Cloudinary
   let attachments = [];
-  console.log("vdfgdfgdfgrtergrthrtheryheryjh",req.files);
+
   if (req.files && req.files.length > 0) {
     const uploadPromises = req.files.map((file) =>
       uploadOnCloudinary(file.path)
@@ -310,6 +366,53 @@ export const AddComment = asyncHandler(async (req, res) => {
 
   // Emit to all clients in the ticket room
   io.to(ticketId).emit("newComment", populatedComment);
+
+  // --- Notification logic ---
+  const ticket = await Ticket.findById(ticketId).populate(
+    "createdBy assignedTo",
+    "_id firstname lastname email"
+  );
+  if (ticket) {
+    // Determine recipients: creator + assigned user, excluding comment author
+    const recipients = [];
+    if (
+      ticket.createdBy &&
+      ticket.createdBy._id.toString() !== userId.toString()
+    ) {
+      recipients.push(ticket.createdBy._id);
+    }
+    if (
+      ticket.assignedTo &&
+      ticket.assignedTo._id.toString() !== userId.toString()
+    ) {
+      recipients.push(ticket.assignedTo._id);
+    }
+    const admins = await User.find({ role: "admin" }).select("_id");
+    if (admins.length > 0) {
+      admins.map((a) => recipients.push(a._id));
+    }
+
+    if (recipients.length > 0) {
+      const notification = await Notification.create({
+        recipients: recipients.map((u) => ({ userId: u, read: false })),
+        type: "ticket_comment",
+        title: "New Comment Added",
+        message: `${req.user.firstname} commented on ticket "${ticket.req_title}"`,
+        link: `/it_facility?tab=track_tickets&status=${ticket.status}`,
+        createdBy: userId,
+       
+        meta: { ticketId, commentId: comment._id },
+      });
+
+      // --- Emit notification only to users NOT currently viewing the ticket ---
+      recipients.forEach((r) => {
+        if (!activeTicketUsers[ticketId]?.has(r)) {
+          io.to(`user_${r.toString()}`).emit("newNotification", notification);
+          console.log(`user_${r.toString()}`);
+        }
+      });
+    }
+  }
 
   res.status(201).json(new ApiResponse(201, "Comment added successfully"));
 });

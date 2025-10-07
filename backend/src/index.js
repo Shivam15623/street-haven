@@ -14,23 +14,37 @@ export const io = new Server(server, {
     origin: process.env.CLIENT_URL,
   },
 });
+export const activeTicketUsers = {};
 // Handle socket connections
 io.on("connection", (socket) => {
   console.log("⚡ New client connected:", socket.id);
 
   // Example: join a room for ticket
-  socket.on("joinRoom", (ticketId) => {
+  socket.on("joinRoom", ({ ticketId, userId }) => {
     socket.join(ticketId);
-    console.log(`Socket ${socket.id} joined room ${ticketId}`);
+    console.log("user joined ticket room",ticketId);
+    
+    if (!activeTicketUsers[ticketId]) activeTicketUsers[ticketId] = new Set();
+    activeTicketUsers[ticketId].add(userId);
   });
 
-  socket.on("leaveRoom", (ticketId) => {
+  socket.on("leaveRoom", ({ ticketId, userId }) => {
     socket.leave(ticketId);
-    console.log(`Socket ${socket.id} left room ${ticketId}`);
+    activeTicketUsers[ticketId]?.delete(userId);
+  });
+  socket.on("joinUserRoom", ({ userId }) => {
+    socket.join(`user_${userId}`);
+    console.log(`User ${userId} joined notification room`);
+  });
+  socket.on("leaveUserRoom", ({ userId }) => {
+    socket.leave(`user_${userId}`);
+    console.log(`User ${userId} left notification room`);
   });
 
   socket.on("disconnect", () => {
-    console.log("❌ Client disconnected:", socket.id);
+    Object.keys(activeTicketUsers).forEach((ticketId) => {
+      activeTicketUsers[ticketId]?.delete(socket.id); // if you map socketId to userId
+    });
   });
 });
 ConnectDb()
