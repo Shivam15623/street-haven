@@ -157,9 +157,10 @@ export const ForgotPassword = asyncHandler(async (req, res) => {
 });
 export const ResetPassword = asyncHandler(async (req, res) => {
   const { token, newPassword, confirmPassword } = req.body;
-  const hashedToken = await bcrypt.hash(token, 10);
+
+  console.log(Date.now())
   const user = await User.findOne({
-    forgotPasswordToken: hashedToken, // Corrected field
+    forgotPasswordToken: token,
     forgotPasswordTokenExpiry: { $gt: Date.now() },
   });
   if (!user) {
