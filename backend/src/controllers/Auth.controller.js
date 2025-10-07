@@ -111,6 +111,7 @@ export const Login = asyncHandler(async (req, res) => {
     role: findUser.role,
     slug: findUser.slug,
     profilePic: findUser.profilePic,
+    createdAt: findUser.createdAt,
   };
   const isProduction = process.env.NODE_ENV === "production";
 
@@ -158,7 +159,7 @@ export const ForgotPassword = asyncHandler(async (req, res) => {
 export const ResetPassword = asyncHandler(async (req, res) => {
   const { token, newPassword, confirmPassword } = req.body;
 
-  console.log(Date.now())
+  console.log(Date.now());
   const user = await User.findOne({
     forgotPasswordToken: token,
     forgotPasswordTokenExpiry: { $gt: Date.now() },
@@ -214,6 +215,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
       role: findUser.role,
       slug: findUser.slug,
       profilePic: findUser.profilePic,
+      createdAt: findUser.createdAt,
     };
 
     const isProduction = process.env.NODE_ENV === "production";
@@ -278,6 +280,7 @@ export const silentAuth = asyncHandler(async (req, res) => {
     role: finduser.role,
     slug: finduser.slug,
     profilePic: finduser.profilePic,
+    createdAt: finduser.createdAt,
   };
   const isProduction = process.env.NODE_ENV === "production";
 

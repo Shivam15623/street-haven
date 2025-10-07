@@ -9,6 +9,7 @@ interface User {
   role: "admin" | "employee";
   profilePic?: string;
   slug: string;
+  createdAt: string;
 }
 export interface ChangeUserDetailsPayLoad {
   firstName?: string;
@@ -17,6 +18,7 @@ export interface ChangeUserDetailsPayLoad {
   phoneNo?: string;
   profilePic?: string;
   slug?: string;
+  createdAt?: string;
 }
 export interface AuthState {
   isLoggedIn: boolean;
@@ -47,7 +49,7 @@ export interface SignupCredentials {
 export interface ForgotPasswordcredential {
   token: string;
   newPassword: string;
-  confirmPassword:string;
+  confirmPassword: string;
 }
 
 export interface RequestResetPasswordcredential {

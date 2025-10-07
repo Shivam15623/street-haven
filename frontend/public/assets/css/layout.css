@@ -525,12 +525,12 @@
 @media (max-width: 768px) {
   .search-Content {
     width: 100%;
-    padding: 12px 16px;
+    padding: 10px 16px;
   }
 }
 
 /* Extra small screens (very small mobile) */
-@media (max-width: 480px) {
+@media ((max-width: 575.98px)) {
   .search-Content {
     width: 100%;
     padding: 8px 12px;

@@ -63,6 +63,13 @@ export const EventApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Event"],
     }),
+    signOutFromEvent:builder.mutation<ApiGeneralResponse,string>({
+      query:(eventId)=>({
+        url:`/events/signout/${eventId}`,
+        method:"PATCH",
+      }),
+      invalidatesTags:["Event"]
+    })
   }),
 });
 
@@ -72,4 +79,5 @@ export const {
   useFetchEventsupcomingQuery,
   useFetchEventsCalendarQuery,
   useSignUpForEventMutation,
+  useSignOutFromEventMutation
 } = EventApi;

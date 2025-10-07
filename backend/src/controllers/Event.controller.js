@@ -163,3 +163,27 @@ export const EventSignUp = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, "User registered for the event successfully"));
 });
+
+export const EventSignOut = asyncHandler(async (req, res) => {
+  const { id: eventId } = req.params;
+  const { _id: userId } = req.user;
+  const event = await Event.findOne({
+    _id: eventId,
+    eventDate: { $gte: new Date() },
+  });
+  if (!event) {
+    throw new ApiError(404, "Event Not Found");
+  }
+  if (!event.registeredUsers.includes(userId)) {
+    throw new ApiError(400, "You are not registered for this event");
+  }
+  event.registeredUsers = event.registeredUsers.filter(
+    (id) => id.toString() !== userId.toString()
+  );
+  await event.save();
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, "User unregistered from the event successfully")
+    );
+});
