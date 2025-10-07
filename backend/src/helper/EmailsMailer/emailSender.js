@@ -17,10 +17,12 @@ const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
  */
 export const sendEmail = async ({ to, subject, html }) => {
   try {
+    const senderEmail = "phenomenalshivam2@gmail.com";
+    const senderName = "CRM";
     const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail({
+      sender: { name: senderName, email: senderEmail },
       to: [{ email: to }],
-      sender: { name: "Shivam", email: "phenomenalshivam2@gmail.com" },
-      subject,
+      subject: subject,
       htmlContent: html,
     });
 
