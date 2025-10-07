@@ -5,6 +5,7 @@ import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import generateTokens from "../utills/GenerateTokens.js";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 export const RegisterEmployee = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, password, phone } = req.body;
 
