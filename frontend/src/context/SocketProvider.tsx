@@ -10,9 +10,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
   const [socket, setSocket] = useState<Socket | null>(null);
   const [connected, setConnected] = useState(false);
 
-
   useEffect(() => {
     const newSocket = io(SOCKET_URL, {
+      transports: ["websocket"], // force websocket transport
       withCredentials: true,
     });
     setSocket(newSocket);
