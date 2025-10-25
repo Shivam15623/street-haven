@@ -145,7 +145,8 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
         {({ values, setFieldValue, handleSubmit, errors, touched }) => (
           <BootstrapForm
             noValidate
-            id="program-manual-form"
+            id="program-manual-form" 
+            className="d-flex flex-column gap-2"
             onSubmit={handleSubmit}
           >
             {/* Title */}

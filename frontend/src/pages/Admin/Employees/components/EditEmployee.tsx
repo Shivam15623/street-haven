@@ -12,7 +12,13 @@ const editEmployeeSchema = yup.object({
   firstname: yup.string().required("First name is required"),
   lastname: yup.string().required("Last name is required"),
   email: yup.string().email("Invalid email").required("Email is required"),
-  phoneNo: yup.string().required("Phone number is required"),
+  phoneNo: yup
+    .string()
+    .required("Phone number is required")
+    .matches(
+      /^(?:\+1\s?)?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
+      "Enter a valid 10-digit Canadian phone number"
+    ),
   profilePic: yup.mixed<File>().nullable(),
 });
 

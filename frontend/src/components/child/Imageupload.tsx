@@ -2,7 +2,6 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import React, { useEffect, useRef, useState } from "react";
 import { Form } from "react-bootstrap";
 import { useFormikContext } from "formik";
-import { Link } from "react-router-dom";
 
 interface ImageUploadProps {
   name: string; // Formik field name
@@ -12,8 +11,14 @@ interface ImageUploadFormValues {
   [key: string]: File | null;
 }
 const ImageUpload: React.FC<ImageUploadProps> = ({ name, label }) => {
-  const { setFieldValue, touched, errors } =
+  const { values, setFieldValue, touched, errors } =
     useFormikContext<ImageUploadFormValues>();
+
+  useEffect(() => {
+    if (!values[name]) {
+      setImagePreview(null);
+    }
+  }, [values[name]]);
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -59,9 +64,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ name, label }) => {
   return (
     <Form.Group controlId={name} className="d-flex flex-column gap-8">
       {label && (
-        <Form.Label className="fw-medium text-street-dark">
-          {label}
-        </Form.Label>
+        <Form.Label className="fw-medium text-street-dark">{label}</Form.Label>
       )}
 
       <div className="upload-image-wrapper d-flex align-items-center gap-3">
@@ -92,7 +95,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ name, label }) => {
                 ? "bg-neutral-200 border-primary"
                 : "bg-hover-neutral-200"
             }`}
-            htmlFor={name}
             onDragOver={(e) => {
               e.preventDefault();
               setIsDragging(true);
@@ -110,9 +112,15 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ name, label }) => {
             ) : (
               <p className="fw-normal text-sm img-upload-text">
                 Drag & drop or{" "}
-                <Link to="#" className="text-street-primary">
+                <span
+                  className="text-street-primary cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent label click
+                    fileInputRef.current?.click();
+                  }}
+                >
                   browse
-                </Link>
+                </span>
               </p>
             )}
           </label>

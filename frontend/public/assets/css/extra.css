@@ -278,13 +278,12 @@ table.dataTable td.dt-type-date {
 }
 
 [data-theme="dark"] .img-upload-text {
-  color: #F2F0EC;
+  color: #f2f0ec;
 }
 
 .btn-street-lg {
-  width: fit-content;   /* Full width on small screens */
-  height: 40px;  /* Keep height consistent */
-
+  width: fit-content; /* Full width on small screens */
+  height: 40px; /* Keep height consistent */
 }
 
 /* Tablet (≥768px) */
@@ -302,4 +301,19 @@ table.dataTable td.dt-type-date {
     height: 40px;
   }
 }
+.epr-emoji-category-label {
+  display: none !important;
+}
 
+.tiptap-editor-content ul {
+  list-style-type: disc; /* bullets */
+  padding-left: 1.5rem;
+}
+
+.tiptap-editor-content ol {
+  list-style-type: decimal; /* numbers */
+  padding-left: 1.5rem;
+}
+[contenteditable]:focus {
+    outline: none !important; 
+}

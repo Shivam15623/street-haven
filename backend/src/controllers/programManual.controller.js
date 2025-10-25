@@ -1,45 +1,105 @@
+import mongoose from "mongoose";
 import { getPdfPageCount } from "../helper/pdfpagecount.js";
+import { activeTicketUsers, io } from "../index.js";
+import Notification from "../model/notification.js";
 import ProgramManual from "../model/programManuals.js";
+import User from "../model/user.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import { uploadOnCloudinary } from "../utills/cloudinary.js";
+
 export const AddProgramManual = asyncHandler(async (req, res) => {
-  const { title, description, tags, type } = req.body;
-  const { _id: userId } = req.user;
-  const atttchmentpath = req?.file?.path;
-  if (!atttchmentpath) {
-    throw new ApiError(400, "attachment file is missing");
-  }
-  const totalPages = await getPdfPageCount(atttchmentpath);
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { title, description, tags, type } = req.body;
+    const { _id: userId, firstname } = req.user;
+    const atttchmentpath = req?.file?.path;
 
-  const uploadedFile = await uploadOnCloudinary(atttchmentpath);
+    if (!atttchmentpath) {
+      throw new ApiError(400, "Attachment file is missing");
+    }
 
-  if (!uploadedFile?.url) {
-    throw new ApiError(500, "attachment upload failed");
-  }
+    const totalPages = await getPdfPageCount(atttchmentpath);
+    const uploadedFile = await uploadOnCloudinary(atttchmentpath);
 
-  const attachmentData = {
-    fileName: uploadedFile.original_filename || "manual",
-    fileUrl: uploadedFile.secure_url,
-    size: uploadedFile.bytes, // Cloudinary gives bytes
-    totalPages: totalPages,
-  };
-  const programmanual = await ProgramManual.create({
-    title: title,
-    description: description,
-    tags: tags,
-    type: type,
-    createdBy: userId,
-    attachment: attachmentData,
-  });
-  if (!programmanual) {
-    throw new ApiError(500, "server Error");
+    if (!uploadedFile?.url) {
+      throw new ApiError(500, "Attachment upload failed");
+    }
+
+    const attachmentData = {
+      fileName: uploadedFile.original_filename || "manual",
+      fileUrl: uploadedFile.secure_url,
+      size: uploadedFile.bytes,
+      totalPages,
+    };
+
+    // Create Program Manual within the session
+    const programmanual = await ProgramManual.create(
+      [
+        {
+          title,
+          description,
+          tags,
+          type,
+          createdBy: userId,
+          attachment: attachmentData,
+        },
+      ],
+      { session }
+    );
+
+    if (!programmanual || programmanual.length === 0) {
+      throw new ApiError(500, "Server Error");
+    }
+
+    // Fetch all other users
+    const allUsers = await User.find({ _id: { $ne: userId } }).session(session);
+
+    // Create Notification within the session
+    const notification = await Notification.create(
+      [
+        {
+          recipients: allUsers.map((u) => ({ userId: u._id, read: false })),
+          type: "mannual_added",
+          title: "New Program Manual Added",
+          message: `${firstname} added a new Program Manual: "${title}"`,
+          link: `/program-manuals/${programmanual[0]._id}`,
+          createdBy: userId,
+          meta: { programManualId: programmanual[0]._id },
+        },
+      ],
+      { session }
+    );
+
+    // Commit transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    // Emit real-time notifications outside transaction
+    allUsers.forEach((u) => {
+      io.to(`user_${u._id.toString()}`).emit(
+        "newNotification",
+        notification[0]
+      );
+    });
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          201,
+          "Program Manual added and notifications sent successfully"
+        )
+      );
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
   }
-  return res
-    .status(200)
-    .json(new ApiResponse(201, "program Mannual Added Successfully "));
 });
+
 // 📌 Edit Program Manual
 export const EditProgramManual = asyncHandler(async (req, res) => {
   const { id } = req.params;

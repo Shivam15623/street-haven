@@ -3,15 +3,16 @@ import ModalWrapper from "../../../../components/child/ModalWrapper";
 import * as yup from "yup";
 import { Formik, Field, ErrorMessage } from "formik";
 import { Form as BootstrapForm } from "react-bootstrap";
-
 import { showSuccess } from "../../../../utills/toastutills";
 import PdfField from "../../../../components/child/PdfField";
-
 import type { hrUpdateData } from "../../../../interfaces/hrUpdatesInterface";
 import {
   useCreatehrUpdatesMutation,
   useEdithrupdatesMutation,
 } from "../../../../services/hrUpdatesApi";
+import DraftEditor from "../../../../components/child/DrafEditor";
+import { EditorState, convertToRaw, convertFromRaw } from "draft-js";
+import TiptapEditor from "../../../../components/child/DrafEditor";
 
 // ✅ Schema
 const HrUpdatesFormSchema = (isEdit: boolean) =>
@@ -22,12 +23,8 @@ const HrUpdatesFormSchema = (isEdit: boolean) =>
       .min(3, "Title must be at least 3 characters")
       .max(150, "Title must be at most 150 characters")
       .required("Title is required"),
-    description: yup
-      .string()
-      .trim()
-      .min(5, "Description must be at least 5 characters")
-      .max(500, "Description must be at most 500 characters")
-      .required("Description is required"),
+    description: yup.string(),
+
     attachment: yup
       .mixed<File>()
       .nullable()
@@ -76,7 +73,7 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
 
   const initialValues = {
     title: update?.title || "",
-    description: update?.description || "",
+    description: update?.description ?? "",
     createdAt: update?.createdAt
       ? new Date(update.createdAt).toISOString().split("T")[0] // YYYY-MM-DD
       : "",
@@ -89,6 +86,7 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
   ) => {
     try {
       const formData = buildFormData(values);
+
       const res = isEdit
         ? await editUpdate({ id: update!._id, data: formData }).unwrap()
         : await createUpdate(formData).unwrap();
@@ -144,11 +142,15 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
         validationSchema={HrUpdatesFormSchema(isEdit)}
         onSubmit={handleSave}
       >
-        {({ handleSubmit }) => (
-          <BootstrapForm id="hr-updates-form" className="d-flex flex-column gap-16 gap-sm-20" onSubmit={handleSubmit}>
+        {({ handleSubmit, values, setFieldValue }) => (
+          <BootstrapForm
+            id="hr-updates-form"
+            className="d-flex flex-column gap-16 gap-sm-20"
+            onSubmit={handleSubmit}
+          >
             {/* Title */}
             <BootstrapForm.Group className="d-flex flex-column gap-8">
-              <BootstrapForm.Label >Title</BootstrapForm.Label>
+              <BootstrapForm.Label>Title</BootstrapForm.Label>
               <Field
                 name="title"
                 as={BootstrapForm.Control}
@@ -163,13 +165,10 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
 
             {/* Description */}
             <BootstrapForm.Group className="d-flex flex-column gap-8">
-              <BootstrapForm.Label >
-                Description
-              </BootstrapForm.Label>
-              <Field
-                name="description"
-                as={BootstrapForm.Control}
-                placeholder="Enter description"
+              <BootstrapForm.Label>Description</BootstrapForm.Label>
+              <TiptapEditor
+                content={values.description}
+                onChange={(state) => setFieldValue("description", state)}
               />
               <ErrorMessage
                 name="description"

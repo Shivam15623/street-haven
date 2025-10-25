@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import  { useState } from "react";
+import { useState } from "react";
 import { Col, Row } from "react-bootstrap";
 import RequestForm from "./RequestForm";
 
@@ -71,7 +71,7 @@ const SubmitRequestTab = () => {
       {/* FORM SECTION */}
       {active && (
         <div>
-          <RequestForm />
+          <RequestForm onCancel={() => setActive(false)} />
         </div>
       )}
     </div>

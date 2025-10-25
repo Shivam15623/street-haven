@@ -25,6 +25,7 @@ const NotificationSchema = new mongoose.Schema(
         "error",
         "action",
         "ticket_created",
+        "mannual_added"
       ],
       required: true,
     },

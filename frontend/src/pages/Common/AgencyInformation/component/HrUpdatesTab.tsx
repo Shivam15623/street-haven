@@ -66,14 +66,14 @@ const HrUpdatesTab = () => {
         <ActionsHrUpdates show={showModal} onHide={() => setShowModal(false)} />
       )}
 
-      {/* Data display */}
+      {/* Data display
       {isLoading && <p>Loading...</p>}
       {isError && <p>Something went wrong</p>}
       {data?.data.hrupdates?.length
         ? data.data.hrupdates.map((update) => (
             <HRUpdateCard key={update._id} update={update} />
           ))
-        : !isLoading && <p>No HR updates found.</p>}
+        : !isLoading && <p>No HR updates found.</p>} */}
     </div>
   );
 };
