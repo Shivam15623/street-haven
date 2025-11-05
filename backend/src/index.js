@@ -18,12 +18,12 @@ export const io = new Server(server, {
 export const activeTicketUsers = {};
 // Handle socket connections
 io.on("connection", (socket) => {
-  console.log("⚡ New client connected:", socket.id);
+
 
   // Example: join a room for ticket
   socket.on("joinRoom", ({ ticketId, userId }) => {
     socket.join(ticketId);
-    console.log("user joined ticket room", ticketId);
+
 
     if (!activeTicketUsers[ticketId]) activeTicketUsers[ticketId] = new Set();
     activeTicketUsers[ticketId].add(userId);
@@ -35,11 +35,11 @@ io.on("connection", (socket) => {
   });
   socket.on("joinUserRoom", ({ userId }) => {
     socket.join(`user_${userId}`);
-    console.log(`User ${userId} joined notification room`);
+
   });
   socket.on("leaveUserRoom", ({ userId }) => {
     socket.leave(`user_${userId}`);
-    console.log(`User ${userId} left notification room`);
+
   });
 
   socket.on("disconnect", () => {

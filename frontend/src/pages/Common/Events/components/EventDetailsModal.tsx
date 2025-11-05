@@ -97,7 +97,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
     createdAt,
   } = event;
   const isPastEvent = dayjs(eventDate).isBefore(dayjs(), "day");
-  console.log(location.location_name);
+
   const formattedTimeRange =
     startTime && endTime
       ? `${dayjs(startTime).format("hh:mm A")} -  ${dayjs(endTime).format(

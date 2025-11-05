@@ -105,7 +105,7 @@ export const editTicket = asyncHandler(async (req, res) => {
   } = req.body;
   const { id: ticketId } = req.params;
   const { role, _id: userId } = req.user;
-  console.log(status);
+
   // Find the ticket
   const ticket = await Ticket.findById(ticketId);
   let notifymessages = [];
@@ -408,7 +408,7 @@ export const AddComment = asyncHandler(async (req, res) => {
       recipients.forEach((r) => {
         if (!activeTicketUsers[ticketId]?.has(r)) {
           io.to(`user_${r.toString()}`).emit("newNotification", notification);
-          console.log(`user_${r.toString()}`);
+
         }
       });
     }

@@ -47,7 +47,7 @@ const programManualSchema = new mongoose.Schema(
 );
 const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 5);
 programManualSchema.pre("save", function (next) {
-  console.log("try")
+
   if (!this.slug || this.isNew) {
     // Use slugify to convert title to URL-friendly string
     const baseSlug = slugify(this.title, {

@@ -6,6 +6,7 @@ import {
   EventsCalendar,
   EventSignOut,
   EventSignUp,
+  fetchRegisterations,
   GetPastEvents,
   GetUpcomingEvents,
 } from "../controllers/Event.controller.js";
@@ -19,5 +20,6 @@ router.post("/create", requireAdminRole, createEvent);
 router.patch("/edit/:id", requireAdminRole, editEvent);
 router.post("/calendar", EventsCalendar);
 router.route("/signup/:id").post(EventSignUp);
-router.route("/signout/:id").patch(EventSignOut);
+router.route("/signout/:id").patch(EventSignOut); 
+router.route("/registrations/:id").get(fetchRegisterations);
 export default router;

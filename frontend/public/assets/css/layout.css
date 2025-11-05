@@ -186,8 +186,8 @@
 ---------------------------- */
 @media (max-width: 575.98px) {
   .user-dropdown .dropdown-toggle img {
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
   }
 
   .user-dropdown .dropdown-menu {
@@ -415,8 +415,8 @@
    =========================== */
 @media (max-width: 576px) {
   .notification-dropdown .dropdown-toggle {
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
   }
   .notification-dropdown .dropdown-menu {
     min-width: 200px;

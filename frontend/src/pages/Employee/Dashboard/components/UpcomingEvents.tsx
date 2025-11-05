@@ -14,7 +14,7 @@ const UpcomingEvents: React.FC<UpcomingEventCardProps> = ({
   loading,
 }) => {
   const { user } = useSelector(selectAuth);
-  console.log("events", events);
+
 
   return (
     <CardlistWrapper

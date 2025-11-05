@@ -11,9 +11,9 @@ const ProfileDropdown = () => {
   const dispatch = useDispatch();
   const { user } = useSelector(selectAuth);
   const navigate = useNavigate();
-  console.log("erwfguwegyfyuwegfuygweufgweugfe",user?.profilePic)
+
   const onLogout = async () => {
-    console.log("tree");
+
     try {
       const res = await logout(undefined).unwrap();
       if (res.statuscode === 200) {

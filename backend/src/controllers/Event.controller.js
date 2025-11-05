@@ -50,11 +50,11 @@ export const createEvent = asyncHandler(async (req, res) => {
     const notification = await Notification.create(
       [
         {
-          recipients: [{ userId }], // You can also target admins here
           type: "event_activity",
           title: "New Event Created",
           message: `The event "${title}" has been created by ${firstname} ${lastname}.`,
           link: `/events/${event._id}`,
+          isGlobal:true,
           createdBy: userId,
           meta: { eventId: event._id },
         },
@@ -62,7 +62,7 @@ export const createEvent = asyncHandler(async (req, res) => {
       { session }
     );
 
-    io.to(`user_${userId.toString()}`).emit("newNotification", notification[0]);
+    io.emit("newNotification", notification[0]);
 
     await session.commitTransaction();
     session.endSession();
@@ -88,26 +88,35 @@ export const editEvent = asyncHandler(async (req, res) => {
     eventDate,
   } = req.body;
 
-  const existEvent = await Event.findById(eventId);
-  if (!existEvent) {
-    throw new ApiError(404, "Event Does Not Exists");
+  const updateData = {};
+
+  if (title) updateData.title = title;
+  if (description) updateData.description = description;
+  if (facilitator) updateData.facilitator = facilitator;
+  if (capacity) updateData.capacity = capacity;
+  if (eventDate) updateData.eventDate = eventDate;
+
+  // For nested object location
+  if (locationName || locationUrl) {
+    updateData.location = {};
+    if (locationName) updateData.location.location_name = locationName;
+    if (locationUrl) updateData.location.location_url = locationUrl;
   }
 
-  existEvent.title = title;
-  existEvent.description = description;
-  existEvent.location = {
-    location_name: locationName,
-    location_url: locationUrl,
-  };
-  existEvent.facilitator = facilitator;
-  existEvent.capacity = capacity;
-  existEvent.eventDate = eventDate;
+  const updatedEvent = await Event.findByIdAndUpdate(eventId, updateData, {
+    new: true, // return updated document
+    runValidators: true,
+  });
 
-  await existEvent.save();
+  if (!updatedEvent) {
+    throw new ApiError(404, "Event does not exist");
+  }
+
   return res
     .status(200)
-    .json(new ApiResponse(201, "Event Edited SuccessFully"));
+    .json(new ApiResponse(200, "Event updated successfully", updatedEvent));
 });
+
 export const GetUpcomingEvents = asyncHandler(async (req, res) => {
   const { _id: userId } = req.user;
 
@@ -395,7 +404,29 @@ export const EventSignOut = asyncHandler(async (req, res) => {
   }
 });
 
+export const fetchRegisterations = asyncHandler(async (req, res) => {
+  const { id: eventId } = req.params;
 
-export const fetchRegisterations=asyncHandler(async(req,res)=>{
-  
-})
+  if (!eventId) {
+    return res.status(400).json({ message: "Event ID is required" });
+  }
+
+  // Populate registered users
+  const event = await Event.findById(eventId)
+    .populate("registeredUsers", "firstname lastname email") // choose fields
+    .select("title registeredUsers totalRegistered capacity");
+
+  if (!event) {
+    return res.status(404).json({ message: "Event not found" });
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        "User unregistered from the event successfully",
+        event
+      )
+    );
+});

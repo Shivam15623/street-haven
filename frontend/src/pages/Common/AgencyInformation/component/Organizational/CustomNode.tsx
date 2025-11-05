@@ -7,7 +7,7 @@ export type CustomNodeData = {
   department?: string;
   reportsTo?: string;
   supervises?: string[];
- 
+
   expanded: boolean; // 👈 we'll pass id from React
 };
 
@@ -22,7 +22,7 @@ export type CustomNodeProps = {
 // 👇 forwardRef so Flow can attach refs
 const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
   ({ id, data, onToggle, fixedHeight, fixedWidth }, ref) => {
-    console.log(fixedHeight);
+
     return (
       <div
         ref={ref}
@@ -30,7 +30,7 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
         style={{
           minHeight: fixedHeight ? `${fixedHeight}px` : "auto",
           width: `${fixedWidth}px`,
-          zIndex:1
+          zIndex: 1,
         }} // ✅ Sync width style={{ minHeight: `${fixedHeight}px` }}
       >
         <Handle
@@ -62,7 +62,7 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
 
         <div className="d-flex flex-grow-1 flex-column text-center text-lg-start  text-xxs sm:text-xs fw-normal gap-1 justify-content-evenly mt-2 transition-all overflow-hidden">
           <p>
-            <span className="org-label">Reports to:{" "}</span>{" "}
+            <span className="org-label">Reports to: </span>{" "}
             <span className="text-street-dark">{data.reportsTo}</span>
           </p>
           <p className="d-inline-flex flex-column align-items-center flex-xl-row">
@@ -100,7 +100,7 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
             }}
             onClick={(e) => {
               e.stopPropagation();
-              console.log("click",id)
+
               onToggle?.(id);
             }}
           >
