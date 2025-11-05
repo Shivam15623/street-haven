@@ -11,6 +11,7 @@ import Badge from "../../../../components/child/Badge";
 import { showSuccess } from "../../../../utills/toastutills";
 import PdfField from "../../../../components/child/PdfField";
 import type { Document } from "./DocumentCard";
+import QuillEditor from "../../../../components/child/QuillEditor";
 
 // 🔹 Schema generator (avoids duplication)
 const programManualSchema = (isEdit: boolean) =>
@@ -33,7 +34,7 @@ const programManualSchema = (isEdit: boolean) =>
         return value.size <= 16 * 1024 * 1024;
       }),
   });
-  type ProgramManualFormValues = {
+type ProgramManualFormValues = {
   title: string;
   description: string;
   type: string;
@@ -42,7 +43,7 @@ const programManualSchema = (isEdit: boolean) =>
   newTag: string;
 };
 // 🔹 Helper: build FormData
-const buildFormData = (values:ProgramManualFormValues) => {
+const buildFormData = (values: ProgramManualFormValues) => {
   const formData = new FormData();
   formData.append("title", values.title);
   formData.append("description", values.description);
@@ -145,13 +146,13 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
         {({ values, setFieldValue, handleSubmit, errors, touched }) => (
           <BootstrapForm
             noValidate
-            id="program-manual-form" 
+            id="program-manual-form"
             className="d-flex flex-column gap-2"
             onSubmit={handleSubmit}
           >
             {/* Title */}
             <BootstrapForm.Group className="d-flex flex-column gap-8">
-              <BootstrapForm.Label >Title</BootstrapForm.Label>
+              <BootstrapForm.Label>Title</BootstrapForm.Label>
               <BootstrapForm.Control
                 type="text"
                 placeholder="Enter title"
@@ -166,16 +167,12 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
 
             {/* Description */}
             <BootstrapForm.Group className="d-flex flex-column gap-8">
-              <BootstrapForm.Label >
-                Description
-              </BootstrapForm.Label>
-              <BootstrapForm.Control
-                as="textarea"
-                rows={3}
-                placeholder="Enter description"
-                value={values.description}
-                isInvalid={!!errors.description && touched.description}
-                onChange={(e) => setFieldValue("description", e.target.value)}
+              <BootstrapForm.Label>Description</BootstrapForm.Label>
+              <QuillEditor
+                content={values.description}
+                onChange={(val) => setFieldValue("description", val)}
+                isInvalid={touched.description && !!errors.description}
+                errorMessage={errors.description as string}
               />
               <BootstrapForm.Control.Feedback type="invalid">
                 <ErrorMessage name="description" />
@@ -184,7 +181,7 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
 
             {/* Type */}
             <BootstrapForm.Group className="d-flex flex-column gap-8">
-              <BootstrapForm.Label >Type</BootstrapForm.Label>
+              <BootstrapForm.Label>Type</BootstrapForm.Label>
               <BootstrapForm.Select
                 value={values.type}
                 isInvalid={!!errors.type && touched.type}
@@ -204,7 +201,7 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
 
             {/* Tags */}
             <BootstrapForm.Group className="d-flex flex-column gap-8">
-              <BootstrapForm.Label >Tags</BootstrapForm.Label>
+              <BootstrapForm.Label>Tags</BootstrapForm.Label>
               <FieldArray name="tags">
                 {({ push, remove }) => (
                   <>

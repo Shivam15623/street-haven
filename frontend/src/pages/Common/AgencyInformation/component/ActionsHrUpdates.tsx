@@ -10,9 +10,7 @@ import {
   useCreatehrUpdatesMutation,
   useEdithrupdatesMutation,
 } from "../../../../services/hrUpdatesApi";
-import DraftEditor from "../../../../components/child/DrafEditor";
-import { EditorState, convertToRaw, convertFromRaw } from "draft-js";
-import TiptapEditor from "../../../../components/child/DrafEditor";
+import QuillEditor from "../../../../components/child/QuillEditor";
 
 // ✅ Schema
 const HrUpdatesFormSchema = (isEdit: boolean) =>
@@ -166,7 +164,7 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
             {/* Description */}
             <BootstrapForm.Group className="d-flex flex-column gap-8">
               <BootstrapForm.Label>Description</BootstrapForm.Label>
-              <TiptapEditor
+              <QuillEditor
                 content={values.description}
                 onChange={(state) => setFieldValue("description", state)}
               />

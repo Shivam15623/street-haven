@@ -3,7 +3,8 @@ import type { ApiResponse } from "./Response";
 export interface EventCredentials {
   title: string;
   description: string;
-  location: string;
+  locationName: string;
+  locationUrl: string;
   facilitator: string;
   capacity: number;
   eventDate: Date;
@@ -15,7 +16,7 @@ export interface EventUpcomingData {
   title: string;
   description: string;
   createdBy: { _id: string; firstname: string; lastname: string };
-  location: string;
+  location: { location_name: string; location_url: string };
   eventDate: string; // ISO date string (e.g. "2025-09-11T00:00:00.000Z")
   startTime: string; // ISO date string with time
   endTime: string; // ISO date string with time
@@ -24,6 +25,7 @@ export interface EventUpcomingData {
   totalRegistered: number;
   capacity: number;
   isRegistered: boolean;
+  slug: string;
   status: "upcoming" | "completed" | "cancelled"; // extend as per your app logic
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
@@ -40,7 +42,7 @@ export interface EventUpcomingQuery {
   sortBy?: string;
   order?: "asc" | "desc";
 }
-export type EventCalendarResponse=ApiResponse<EventUpcomingData[]>
+export type EventCalendarResponse = ApiResponse<EventUpcomingData[]>;
 export type EventUpcomingResponse = ApiResponse<{
   events: EventUpcomingData[];
   paggination: {

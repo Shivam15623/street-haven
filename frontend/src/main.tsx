@@ -18,6 +18,7 @@ import "@assets/css/lib/file-upload.css";
 import "@assets/css/lib/audioplayer.css";
 import "@assets/css/lib/animate.min.css";
 import "@assets/css/style.css";
+
 import "@assets/css/extra.css";
 import "react-quill/dist/quill.snow.css";
 import "jsvectormap/dist/jsvectormap.css";

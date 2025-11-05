@@ -4,6 +4,7 @@ import { Col, Form, Row, Spinner } from "react-bootstrap";
 import ImageUpload from "../../../../components/child/Imageupload";
 import { useCreateTicketMutation } from "../../../../services/ticketApi";
 import { showSuccess } from "../../../../utills/toastutills";
+import QuillEditor from "../../../../components/child/QuillEditor";
 
 const requestSchema = Yup.object({
   reqTitle: Yup.string().required("Request Title is required"),
@@ -68,6 +69,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onCancel }) => {
             values,
             touched,
             errors,
+            setFieldValue,
           }) => (
             <div
               className={`position-relative ${
@@ -118,17 +120,13 @@ const RequestForm: React.FC<RequestFormProps> = ({ onCancel }) => {
                       <Form.Label className="fw-medium text-street-dark">
                         Detailed Description
                       </Form.Label>
-                      <Form.Control
-                        as="textarea"
-                        rows={3}
-                        name="description"
-                        placeholder="Please provide as much detail as possible about the issue, including any error messages, when it started, and steps you've already tried..."
-                        className="py-12 px-16 text-sm text-street-base"
-                        value={values.description}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
+                      <QuillEditor
+                        content={values.description}
+                        onChange={(val) => setFieldValue("description", val)}
                         isInvalid={touched.description && !!errors.description}
+                        errorMessage={errors.description as string}
                       />
+
                       <Form.Control.Feedback type="invalid">
                         {errors.description}
                       </Form.Control.Feedback>

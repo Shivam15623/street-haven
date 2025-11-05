@@ -7,7 +7,7 @@ import ActionsProgram from "./ActionsProgram";
 import useHasPermission from "../../../../hooks/Auth";
 import DeleteMannuals from "./DeleteMannuals";
 import dayjs from "dayjs";
-
+import DOMPurify from "dompurify";
 export type Document = {
   _id: string;
   title: string;
@@ -66,7 +66,12 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
               <p className="text-xs xs:text-sm text-street-dark fw-semibold">
                 {title}
               </p>
-              <p className="fw-normal text-xs xs:text-sm">{description}</p>
+              <div
+                className="parse"
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(description),
+                }}
+              />
             </div>
           </div>
 

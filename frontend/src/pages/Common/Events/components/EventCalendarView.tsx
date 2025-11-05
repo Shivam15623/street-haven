@@ -6,10 +6,15 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { Button, Spinner } from "react-bootstrap"; // ✅ Import Spinner
 import { MonthYearPicker } from "../../../../components/MonthYearPicker";
 import { useFetchEventsCalendarQuery } from "../../../../services/EventApi";
+import type { EventUpcomingData } from "../../../../interfaces/EventInterfaces";
+import EventDetailsModal from "./EventDetailsModal";
 
 const EventCalendarView = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
-
+  const [selectedEvent, setSelectedEvent] = useState<EventUpcomingData | null>(
+    null
+  );
+  const [openModal, setOpenModal] = useState(false);
   const formatDate = (date: Date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -39,6 +44,18 @@ const EventCalendarView = () => {
     if (api) {
       api.gotoDate(date);
       setCurrentDate(date);
+    }
+  };
+  
+  const handleEventClick = (clickInfo) => {
+    const slug = clickInfo.event.extendedProps.slug;
+
+    const clickedEvent = data?.data.find((e) => e.slug === slug);
+    console.log("poptriop", slug);
+    if (clickedEvent) {
+      console.log("pop");
+      setSelectedEvent(clickedEvent);
+      setOpenModal(true);
     }
   };
 
@@ -84,6 +101,15 @@ const EventCalendarView = () => {
           initialView="dayGridMonth"
           dayHeaderClassNames={"py-20 sm:text-xs text-xxs"}
           eventClassNames={"bg-transparent p-0"}
+          eventDidMount={(info) => {
+            const eventEnd = new Date(info.event.end);
+            const now = new Date();
+
+            // If the event is in the past
+            if (eventEnd < now) {
+              info.el.style.opacity = "0.5"; // make it faded
+            }
+          }}
           eventContent={(arg) => {
             const start = arg.event.start?.toLocaleTimeString([], {
               hour: "2-digit",
@@ -112,10 +138,14 @@ const EventCalendarView = () => {
           firstDay={1}
           fixedWeekCount={false}
           events={data?.data.map((event) => ({
+            extendedProps: {
+              slug: event.slug, // ✅ store custom property here
+            },
             title: event.title,
             start: event.startTime,
             end: event.endTime,
           }))}
+          eventClick={handleEventClick}
           dayCellDidMount={(info) => {
             const startOfMonth = new Date(
               info.view.currentStart.getFullYear(),
@@ -144,6 +174,14 @@ const EventCalendarView = () => {
             }
           }}
         />
+        {selectedEvent && (
+          <EventDetailsModal
+            event={selectedEvent}
+            open={openModal}
+            handleClose={() => setOpenModal(false)}
+           
+          />
+        )}
       </div>
     </div>
   );

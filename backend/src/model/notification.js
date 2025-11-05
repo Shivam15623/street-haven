@@ -25,7 +25,8 @@ const NotificationSchema = new mongoose.Schema(
         "error",
         "action",
         "ticket_created",
-        "mannual_added"
+        "mannual_added",
+        "event_activity",
       ],
       required: true,
     },
@@ -33,7 +34,7 @@ const NotificationSchema = new mongoose.Schema(
     message: { type: String, required: true },
     link: { type: String },
     meta: { type: Object },
- 
+
     expireAt: { type: Date },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },

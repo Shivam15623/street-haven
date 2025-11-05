@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { useState} from "react";
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import HRUpdateCard from "./HRUpdateCard";
 import { useViewhrUpdatesQuery } from "../../../../services/hrUpdatesApi";
@@ -32,7 +32,7 @@ const HrUpdatesTab = () => {
     const params = new URLSearchParams(searchParams.toString());
     if (value) {
       params.delete("slug"); // remove slug
-      params.delete("tab");  // remove tab
+      params.delete("tab"); // remove tab
     }
     setSearchParams(params);
   };
@@ -66,14 +66,13 @@ const HrUpdatesTab = () => {
         <ActionsHrUpdates show={showModal} onHide={() => setShowModal(false)} />
       )}
 
-      {/* Data display
       {isLoading && <p>Loading...</p>}
       {isError && <p>Something went wrong</p>}
       {data?.data.hrupdates?.length
         ? data.data.hrupdates.map((update) => (
             <HRUpdateCard key={update._id} update={update} />
           ))
-        : !isLoading && <p>No HR updates found.</p>} */}
+        : !isLoading && <p>No HR updates found.</p>}
     </div>
   );
 };

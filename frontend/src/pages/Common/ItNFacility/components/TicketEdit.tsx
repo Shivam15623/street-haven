@@ -13,6 +13,7 @@ import ImageUpload from "../../../../components/child/Imageupload";
 import { useSelector } from "react-redux";
 import { selectAuth } from "../../../../redux/AuthSlice";
 import useHasPermission from "../../../../hooks/Auth";
+import QuillEditor from "../../../../components/child/QuillEditor";
 
 // ✅ Validation Schema
 const TicketSchema = Yup.object({
@@ -138,7 +139,14 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
           validationSchema={TicketSchema}
           onSubmit={handleEdit}
         >
-          {({ handleSubmit, handleChange, values, errors, touched }) => (
+          {({
+            handleSubmit,
+            handleChange,
+            values,
+            errors,
+            touched,
+            setFieldValue,
+          }) => (
             <Form
               noValidate
               onSubmit={handleSubmit}
@@ -301,14 +309,12 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                     Description
                   </Form.Label>
                   <Col sm={10}>
-                    <Form.Control
-                      as="textarea"
-                      rows={3}
-                      name="description"
-                      value={values.description}
+                    <QuillEditor
+                      content={values.description}
+                      onChange={(val) => setFieldValue("description", val)}
                       disabled={!(isAdmin || isRequester)}
-                      onChange={handleChange}
                       isInvalid={touched.description && !!errors.description}
+                      errorMessage={errors.description as string}
                     />
                     <Form.Control.Feedback type="invalid">
                       {errors.description}
