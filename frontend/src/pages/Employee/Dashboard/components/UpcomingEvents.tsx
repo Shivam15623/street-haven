@@ -90,13 +90,17 @@ const UpcomingEvents: React.FC<UpcomingEventCardProps> = ({
                 </p>
 
                 {/* Location */}
-                <p className="mb-0 text-xs text-street-base d-flex flex-row align-items-center gap-1">
+                <a
+                  href={event.location.location_url}
+                  target="_blank"
+                  className="mb-0 text-xs text-street-base d-flex flex-row align-items-center gap-1"
+                >
                   <Icon
                     icon="icomoon-free:location"
                     className="text-street-primary"
                   />
-                  {event.location}
-                </p>
+                  {event.location.location_name}
+                </a>
               </div>
             </div>
           ))

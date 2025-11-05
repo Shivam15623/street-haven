@@ -6,7 +6,7 @@ import type {
 } from "../../../../../interfaces/incidentReport";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import SimpleTable from "../../../../../components/child/SimpleTable";
-
+import DOMPurify from "dompurify";
 interface Column {
   header: string;
   accessor: (row: IncidentReportData) => React.ReactNode;
@@ -31,7 +31,14 @@ const columns: Column[] = [
   },
   {
     header: "Description",
-    accessor: (row) => row.description,
+    accessor: (row) => (
+      <div
+        className="parse"
+        dangerouslySetInnerHTML={{
+          __html: DOMPurify.sanitize(row.description),
+        }}
+      />
+    ),
   },
   {
     header: "Witnesses",
@@ -67,8 +74,6 @@ const IncidentReportSubmission = () => {
     useViewIncidentReportQuery(filter);
 
   if (isLoading) return <div>Loading...</div>;
-
- 
 
   return (
     <div className="d-flex flex-column gap-24">

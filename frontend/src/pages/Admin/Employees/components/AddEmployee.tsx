@@ -28,7 +28,10 @@ const AddEmployeeSchema = Yup.object({
     .email("Invalid email address"),
   phone: Yup.string()
     .required("Phone number is required")
-    .matches(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian phone number"),
+    .matches(
+      /^(?:\+1\s?)?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
+      "Enter a valid 10-digit Canadian phone number"
+    ),
   password: Yup.string()
     .required("Password is required")
     .min(8, "Password must be at least 8 characters")
@@ -100,7 +103,7 @@ const AddEmployee = () => {
         >
           {({ handleSubmit, handleChange, values, touched, errors }) => (
             <Form
-              noValidate 
+              noValidate
               id="add-employee-form"
               onSubmit={handleSubmit}
               className="d-flex flex-column gap-16"

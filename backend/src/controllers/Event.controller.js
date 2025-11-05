@@ -1,44 +1,92 @@
+import mongoose from "mongoose";
 import Event from "../model/event.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
-
+import Notification from "../model/notification.js";
+import { io } from "../index.js";
 export const createEvent = asyncHandler(async (req, res) => {
   const {
     title,
     description,
-    location,
+    locationName,
+    locationUrl,
     facilitator,
     capacity,
     eventDate,
     startTime,
     endTime,
   } = req.body;
-  const { _id: userId } = req.user;
+  const { _id: userId, firstname, lastname } = req.user;
 
-  const newEvent = await Event.create({
-    title: title,
-    description: description,
-    location: location,
-    facilitator: facilitator,
-    capacity: capacity,
-    eventDate: eventDate,
-    createdBy: userId,
-    startTime: startTime,
-    endTime: endTime,
-  });
-  const findEvent = await Event.findById(newEvent._id);
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-  if (!findEvent) {
-    throw ApiError(500, "Something Wrong happened !");
+  try {
+    const newEvent = await Event.create(
+      [
+        {
+          title,
+          description,
+          location: {
+            location_name: locationName,
+            location_url: locationUrl,
+          },
+          facilitator,
+          capacity,
+          eventDate,
+          createdBy: userId,
+          startTime,
+          endTime,
+        },
+      ],
+      { session }
+    );
+
+    const event = newEvent[0];
+    if (!event) throw new ApiError(500, "Event creation failed");
+
+    // 🔔 Create notification for event creation
+    const notification = await Notification.create(
+      [
+        {
+          recipients: [{ userId }], // You can also target admins here
+          type: "event_activity",
+          title: "New Event Created",
+          message: `The event "${title}" has been created by ${firstname} ${lastname}.`,
+          link: `/events/${event._id}`,
+          createdBy: userId,
+          meta: { eventId: event._id },
+        },
+      ],
+      { session }
+    );
+
+    io.to(`user_${userId.toString()}`).emit("newNotification", notification[0]);
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(201).json(new ApiResponse(201, "New Event Added!"));
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new ApiError(500, error.message || "Something went wrong!");
   }
-  return res.status(200).json(new ApiResponse(201, "new Event Added!"));
 });
+
 export const editEvent = asyncHandler(async (req, res) => {
   const { id: eventId } = req.params;
 
-  const { title, description, location, facilitator, capacity, eventDate } =
-    req.body;
+  const {
+    title,
+    description,
+    locationName,
+    locationUrl,
+    facilitator,
+    capacity,
+    eventDate,
+  } = req.body;
 
   const existEvent = await Event.findById(eventId);
   if (!existEvent) {
@@ -47,7 +95,10 @@ export const editEvent = asyncHandler(async (req, res) => {
 
   existEvent.title = title;
   existEvent.description = description;
-  existEvent.location = location;
+  existEvent.location = {
+    location_name: locationName,
+    location_url: locationUrl,
+  };
   existEvent.facilitator = facilitator;
   existEvent.capacity = capacity;
   existEvent.eventDate = eventDate;
@@ -119,8 +170,71 @@ export const GetUpcomingEvents = asyncHandler(async (req, res) => {
     })
   );
 });
+export const GetPastEvents = asyncHandler(async (req, res) => {
+  const { _id: userId } = req.user;
+
+  const {
+    page = 1,
+    limit = 10,
+    search = "",
+    slug = "",
+    sortBy = "eventDate",
+    order = "desc", // Usually you want latest past events first
+  } = req.query;
+
+  const query = {};
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Only past events
+  query.eventDate = { $lt: today };
+
+  // Slug overrides search
+  if (slug) {
+    query.slug = slug;
+  } else if (search) {
+    query.$or = [
+      { title: { $regex: search, $options: "i" } },
+      { description: { $regex: search, $options: "i" } },
+      { location: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  const pastEvents = await Event.find(query)
+    .populate("createdBy", "firstname lastname")
+    .sort({ [sortBy]: order === "asc" ? 1 : -1 })
+    .skip((Number(page) - 1) * Number(limit))
+    .limit(Number(limit));
+
+  const totalEvents = await Event.countDocuments(query);
+
+  // Add `isRegistered` for current user
+  const eventsWithRegistration = pastEvents.map((event) => {
+    const isRegistered = event.registeredUsers
+      ? event.registeredUsers.includes(userId)
+      : false;
+    return {
+      ...event.toObject(),
+      isRegistered,
+    };
+  });
+
+  res.status(200).json(
+    new ApiResponse(200, "Past Events fetched successfully", {
+      events: eventsWithRegistration,
+      paggination: {
+        total: totalEvents,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(totalEvents / Number(limit)),
+      },
+    })
+  );
+});
 
 export const EventsCalendar = asyncHandler(async (req, res) => {
+  const { _id: userId } = req.user;
   const { startDate, endDate } = req.body;
   if (!startDate || !endDate) {
     return res
@@ -135,55 +249,153 @@ export const EventsCalendar = asyncHandler(async (req, res) => {
 
   const events = await Event.find({
     eventDate: { $gte: start, $lte: end },
-  }).sort({ eventDate: 1 });
-
-  return res
-    .status(200)
-    .json(new ApiResponse(201, "events fetched Successfully", events));
-});
-export const EventSignUp = asyncHandler(async (req, res) => {
-  const { id: eventId } = req.params;
-  const { _id: userId } = req.user;
-  const event = await Event.findOne({
-    _id: eventId,
-    eventDate: { $gte: new Date() },
+  })
+    .populate("createdBy", "firstname lastname")
+    .sort({ eventDate: 1 });
+  // Add `isRegistered` for current user
+  const eventsWithRegistration = events.map((event) => {
+    const isRegistered = event.registeredUsers
+      ? event.registeredUsers.includes(userId)
+      : false;
+    return {
+      ...event.toObject(),
+      isRegistered,
+    };
   });
-  if (!event) {
-    throw new ApiError(404, "Event Not Found");
-  }
-  if (event.registeredUsers.includes(userId)) {
-    throw new ApiError(400, "User already registered for this event");
-  }
-  if (event.registeredUsers.length >= event.capacity) {
-    throw new ApiError(400, "Event capacity reached");
-  }
-  event.registeredUsers.push(userId);
-  await event.save();
-  return res
-    .status(200)
-    .json(new ApiResponse(200, "User registered for the event successfully"));
-});
 
-export const EventSignOut = asyncHandler(async (req, res) => {
-  const { id: eventId } = req.params;
-  const { _id: userId } = req.user;
-  const event = await Event.findOne({
-    _id: eventId,
-    eventDate: { $gte: new Date() },
-  });
-  if (!event) {
-    throw new ApiError(404, "Event Not Found");
-  }
-  if (!event.registeredUsers.includes(userId)) {
-    throw new ApiError(400, "You are not registered for this event");
-  }
-  event.registeredUsers = event.registeredUsers.filter(
-    (id) => id.toString() !== userId.toString()
-  );
-  await event.save();
   return res
     .status(200)
     .json(
-      new ApiResponse(200, "User unregistered from the event successfully")
+      new ApiResponse(
+        201,
+        "events fetched Successfully",
+        eventsWithRegistration
+      )
     );
 });
+export const EventSignUp = asyncHandler(async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { id: eventId } = req.params;
+    const { _id: userId, firstname, lastname } = req.user;
+
+    const event = await Event.findOne({
+      _id: eventId,
+      eventDate: { $gte: new Date() },
+    }).session(session);
+
+    if (!event) throw new ApiError(404, "Event not found");
+    if (event.registeredUsers.includes(userId))
+      throw new ApiError(400, "User already registered for this event");
+    if (event.registeredUsers.length >= event.capacity)
+      throw new ApiError(400, "Event capacity reached");
+
+    // ✅ Add user to registered list
+    event.registeredUsers.push(userId);
+    await event.save({ session });
+
+    // ✅ Create signup notification
+    const notification = await Notification.create(
+      [
+        {
+          recipients: [{ userId }],
+          type: "event_activity",
+          title: "Event Registration Successful",
+          message: `You have successfully registered for "${event.title}".`,
+          link: `/events/${event._id}`,
+          createdBy: userId,
+          meta: {
+            eventId: event._id,
+            eventTitle: event.title,
+            action: "signup",
+            performedBy: userId,
+          },
+        },
+      ],
+      { session }
+    );
+
+    io.to(`user_${userId.toString()}`).emit("newNotification", notification[0]);
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(200).json(
+      new ApiResponse(200, {
+        success: true,
+        message: "User registered for the event successfully",
+      })
+    );
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new ApiError(500, error.message || "Something went wrong");
+  }
+});
+
+export const EventSignOut = asyncHandler(async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { id: eventId } = req.params;
+    const { _id: userId, firstname, lastname } = req.user;
+
+    const event = await Event.findOne({
+      _id: eventId,
+      eventDate: { $gte: new Date() },
+    }).session(session);
+
+    if (!event) throw new ApiError(404, "Event not found");
+    if (!event.registeredUsers.includes(userId))
+      throw new ApiError(400, "You are not registered for this event");
+
+    // ✅ Remove user from registered list
+    event.registeredUsers = event.registeredUsers.filter(
+      (id) => id.toString() !== userId.toString()
+    );
+    await event.save({ session });
+
+    // ✅ Create sign-out notification
+    const notification = await Notification.create(
+      [
+        {
+          recipients: [{ userId }],
+          type: "event_activity",
+          title: "Event Registration Cancelled",
+          message: `You have cancelled your registration for "${event.title}".`,
+          link: `/events/${event._id}`,
+          createdBy: userId,
+          meta: {
+            eventId: event._id,
+            eventTitle: event.title,
+            action: "signout",
+            performedBy: userId,
+          },
+        },
+      ],
+      { session }
+    );
+
+    io.to(`user_${userId.toString()}`).emit("newNotification", notification[0]);
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(200).json(
+      new ApiResponse(200, {
+        success: true,
+        message: "User unregistered from the event successfully",
+      })
+    );
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new ApiError(500, error.message || "Something went wrong");
+  }
+});
+
+
+export const fetchRegisterations=asyncHandler(async(req,res)=>{
+  
+})

@@ -278,13 +278,12 @@ table.dataTable td.dt-type-date {
 }
 
 [data-theme="dark"] .img-upload-text {
-  color: #F2F0EC;
+  color: #f2f0ec;
 }
 
 .btn-street-lg {
-  width: fit-content;   /* Full width on small screens */
-  height: 40px;  /* Keep height consistent */
-
+  width: fit-content; /* Full width on small screens */
+  height: 40px; /* Keep height consistent */
 }
 
 /* Tablet (≥768px) */
@@ -302,4 +301,102 @@ table.dataTable td.dt-type-date {
     height: 40px;
   }
 }
+.epr-emoji-category-label {
+  display: none !important;
+}
 
+.tiptap-editor-content ul {
+  list-style-type: disc; /* bullets */
+  padding-left: 1.5rem;
+}
+
+.tiptap-editor-content ol {
+  list-style-type: decimal; /* numbers */
+  padding-left: 1.5rem;
+}
+[contenteditable]:focus {
+  outline: none !important;
+}
+.ql-editor u {
+  text-decoration: underline;
+}
+.ql-editor em {
+  font-style: italic;
+}
+.ql-editor s {
+  text-decoration: line-through;
+}
+.ql-editor {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol";
+}
+.ql-align-center {
+  text-align: center;
+}
+.ql-align-right {
+  text-align: right;
+}
+.prose ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+}
+.prose ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+}
+[data-theme="dark"] .ql-container.ql-snow {
+  background-color: #1e1e1e; /* Dark gray */
+  color: #f1f1f1;
+  border-color: #444;
+}
+
+/* ===== Toolbar background ===== */
+[data-theme="dark"] .ql-toolbar.ql-snow {
+  background-color: #2b2b2b;
+  border-color: #444;
+}
+
+/* ===== Quill buttons ===== */
+[data-theme="dark"] .ql-toolbar button {
+  color: #ccc;
+}
+
+[data-theme="dark"] .ql-toolbar button:hover,
+[data-theme="dark"] .ql-toolbar button.ql-active {
+  background-color: #3a3a3a;
+  color: #fff;
+}
+
+/* ===== Dropdowns ===== */
+[data-theme="dark"] .ql-toolbar .ql-picker {
+  color: #ddd;
+}
+
+[data-theme="dark"] .ql-toolbar .ql-picker-options {
+  background-color: #2b2b2b;
+  border-color: #444;
+  color: #fff;
+}
+
+/* ===== Emoji Picker ===== */
+[data-theme="dark"] .EmojiPickerReact {
+  background-color: #1e1e1e !important;
+  border-color: #444 !important;
+  color: #f1f1f1 !important;
+}
+
+[data-theme="dark"] .EmojiPickerReact .epr-emoji-category-label {
+  background-color: #2b2b2b !important;
+  color: #ccc !important;
+}
+
+/* ===== Scrollbar inside editor ===== */
+[data-theme="dark"] .ql-editor::-webkit-scrollbar {
+  width: 8px;
+}
+
+[data-theme="dark"] .ql-editor::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}

@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import React, { type ReactNode } from "react";
-
+import DOMPurify from "dompurify";
 interface AnnouncementCardWrapperProps {
   title: string;
   createdBy: string;
@@ -44,7 +44,12 @@ const AnnouncementCardWrapper: React.FC<AnnouncementCardWrapperProps> = ({
       </div>
 
       {/* Description */}
-      <p className="fw-normal text-xs xs:text-sm">{description}</p>
+      <div
+        className="parse"
+        dangerouslySetInnerHTML={{
+          __html: DOMPurify.sanitize(description),
+        }}
+      />
 
       {/* Extra children (buttons, tags, etc.) */}
       {children}

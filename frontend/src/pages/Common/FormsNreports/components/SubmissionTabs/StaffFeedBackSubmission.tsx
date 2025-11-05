@@ -6,7 +6,7 @@ import type {
 } from "../../../../../interfaces/incidentReport";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import SimpleTable from "../../../../../components/child/SimpleTable";
-
+import DOMPurify from "dompurify";
 interface Column {
   header: string;
   accessor: (row: StaffFeedbackData) => React.ReactNode;
@@ -33,7 +33,17 @@ const columns: Column[] = [
   },
   { header: "Location", accessor: (row) => row.location || "N/A" },
   { header: "Category", accessor: (row) => row.category },
-  { header: "Description", accessor: (row) => row.description },
+  {
+    header: "Description",
+    accessor: (row) => (
+      <div
+        className="parse"
+        dangerouslySetInnerHTML={{
+          __html: DOMPurify.sanitize(row.description),
+        }}
+      />
+    ),
+  },
   {
     header: "Witnesses",
     accessor: (row) =>
@@ -42,14 +52,18 @@ const columns: Column[] = [
         : "None",
   },
   { header: "Actions Taken", accessor: (row) => row.actionsTaken || "None" },
-  { header: "Reporter Name", accessor: (row) => row.reporterName || "Anonymous" },
+  {
+    header: "Reporter Name",
+    accessor: (row) => row.reporterName || "Anonymous",
+  },
   {
     header: "Submitted By",
     accessor: (row) =>
-      `${row.submittedBy?.firstname || "Unknown"} (${row.submittedBy?.email || "N/A"})`,
+      `${row.submittedBy?.firstname || "Unknown"} (${
+        row.submittedBy?.email || "N/A"
+      })`,
   },
 ];
-
 
 // Staff Feedback Component using table
 const StaffFeedBackSubmission = () => {
@@ -60,8 +74,9 @@ const StaffFeedBackSubmission = () => {
     search: "",
   });
 
-  const { data: feedBackSubmissions, isLoading } = useViewStaffFeedBackQuery(filter);
-  console.log(feedBackSubmissions)
+  const { data: feedBackSubmissions, isLoading } =
+    useViewStaffFeedBackQuery(filter);
+  console.log(feedBackSubmissions);
 
   if (isLoading) return <div>Loading...</div>;
 
@@ -92,7 +107,9 @@ const StaffFeedBackSubmission = () => {
           page={filter.page!}
           limit={filter.limit!}
           total={total}
-          onPageChange={(newPage) => setFilter((prev) => ({ ...prev, page: newPage }))}
+          onPageChange={(newPage) =>
+            setFilter((prev) => ({ ...prev, page: newPage }))
+          }
         />
       ) : (
         <p className="text-muted">No feedback submissions yet.</p>

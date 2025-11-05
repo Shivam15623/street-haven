@@ -8,6 +8,7 @@ import Badge from "../../../../components/child/Badge";
 
 import { TimePicker } from "../../../../components/child/TimePicker";
 import CustomDatePicker from "../../../../components/child/DatePicker";
+import QuillEditor from "../../../../components/child/QuillEditor";
 
 const incidentReportSchema = Yup.object({
   date: Yup.string()
@@ -231,16 +232,12 @@ const IncidentreportForm: React.FC = () => {
                     <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
                       Detailed Description
                     </Form.Label>
-                    <Form.Control
-                      as="textarea"
-                      rows={3}
-                      name="description"
-                      placeholder="Provide a detailed description of what happened..."
-                      value={values.description}
-                      onChange={handleChange}
-                      className="text-xs xs:text-sm fw-normal mb-10"
-                      isInvalid={!!errors.description && touched.description}
-                    />
+                     <QuillEditor
+                  content={values.description}
+                  onChange={(val) => setFieldValue("description", val)}
+                  isInvalid={touched.description && !!errors.description}
+                  errorMessage={errors.description as string}
+                />
                     <div className="text-start  text-sm text-street-base">
                       {values.description.length} /500 characters
                     </div>

@@ -1,15 +1,18 @@
 import React, { useRef, useState } from "react";
 import { Form as BootstrapForm } from "react-bootstrap";
-import { Link } from "react-router-dom";
+
 import { useField, useFormikContext } from "formik";
 
 interface PDFUploadProps {
   name: string; // Formik field name
   label?: string;
 }
-
+interface PDFUploadFormValues {
+  [key: string]: File | null;
+}
 const PdfUploader: React.FC<PDFUploadProps> = ({ name, label }) => {
-  const { setFieldValue, touched, errors } = useFormikContext<any>();
+  const { setFieldValue, touched, errors } =
+    useFormikContext<PDFUploadFormValues>();
   const [field] = useField<File | null>(name);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -45,7 +48,6 @@ const PdfUploader: React.FC<PDFUploadProps> = ({ name, label }) => {
         className={`upload-file h-80-px w-100 border input-form-light radius-8 overflow-hidden border-dashed bg-neutral-50 d-flex align-items-center flex-column justify-content-center gap-1 ${
           isDragging ? "bg-neutral-200 border-primary" : "bg-hover-neutral-200"
         }`}
-        htmlFor={name}
         onDragOver={(e) => {
           e.preventDefault();
           setIsDragging(true);
@@ -66,9 +68,15 @@ const PdfUploader: React.FC<PDFUploadProps> = ({ name, label }) => {
         ) : (
           <p className="fw-normal text-sm img-upload-text">
             Drag & drop or{" "}
-            <Link to="#" className="text-street-primary">
+            <span
+              className="text-street-primary cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent label click
+                fileInputRef.current?.click();
+              }}
+            >
               browse
-            </Link>
+            </span>
           </p>
         )}
       </label>
