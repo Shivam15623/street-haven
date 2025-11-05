@@ -56,7 +56,7 @@ export const AllEmployees = asyncHandler(async (req, res) => {
     .limit(Number(limit));
 
   const totalEmployees = await User.countDocuments(query);
-  console.log("propsd", employees);
+
   if (employees.length === 0) {
     return res
       .status(200)

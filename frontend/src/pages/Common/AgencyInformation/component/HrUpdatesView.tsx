@@ -16,7 +16,7 @@ type Props = {
 const HrUpdatesView = ({ update }: Props) => {
   const [showModal, setShowModal] = useState(false);
   const { attachment } = update;
- console.log(attachment.fileUrl)
+
   return (
     <>
       <Button

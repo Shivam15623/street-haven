@@ -24,7 +24,7 @@ const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
         <div className="d-flex flex-row justify-content-between">
           <div className="d-flex flex-column flex-grow-1 gap-10">
             <p className="text-md text-street-dark fw-semibold">{title}</p>
-            <div 
+            <div
               className="prose flex-grow-1"
               dangerouslySetInnerHTML={{ __html: description }}
             />
@@ -79,7 +79,6 @@ const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
                   id={_id}
                   show={showDelete}
                   onHide={() => setShowDelete(false)}
-                  onSuccess={() => console.log("Deleted successfully")}
                 />
               </>
             )}

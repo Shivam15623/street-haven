@@ -108,7 +108,7 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
   const [createmeeting, { isLoading }] = useCreatemeetingMinutesMutation();
   const [editMeeting, { isLoading: isEditing }] =
     useEditmeetingMinutesMutation();
-  console.log(meeting?.meetingDate);
+
   const initialValues = {
     title: meeting?.title || "",
     attendees: meeting?.attendees || 0,
@@ -189,11 +189,22 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
         validationSchema={TownhallMinutesFormSchema(isEdit)}
         onSubmit={handleSave}
       >
-        {({ values, handleSubmit, setFieldValue,touched,setFieldTouched,errors }) => (
-          <BootstrapForm id="minute-meeting-form" className="d-flex flex-column gap-16 gap-sm-20" onSubmit={handleSubmit}>
+        {({
+          values,
+          handleSubmit,
+          setFieldValue,
+          touched,
+          setFieldTouched,
+          errors,
+        }) => (
+          <BootstrapForm
+            id="minute-meeting-form"
+            className="d-flex flex-column gap-16 gap-sm-20"
+            onSubmit={handleSubmit}
+          >
             {/* Title */}
             <BootstrapForm.Group className="d-flex flex-column gap-8">
-              <BootstrapForm.Label >Title</BootstrapForm.Label>
+              <BootstrapForm.Label>Title</BootstrapForm.Label>
               <Field
                 name="title"
                 as={BootstrapForm.Control}
@@ -208,9 +219,7 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
 
             {/* Attendees */}
             <BootstrapForm.Group className="d-flex flex-column gap-8">
-              <BootstrapForm.Label >
-                Attendees
-              </BootstrapForm.Label>
+              <BootstrapForm.Label>Attendees</BootstrapForm.Label>
               <Field
                 name="attendees"
                 type="number"
@@ -226,33 +235,29 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
 
             {/* Meeting Date */}
             <BootstrapForm.Group className="d-flex flex-column gap-8">
-              <BootstrapForm.Label >
-                Meeting Date
-              </BootstrapForm.Label>
+              <BootstrapForm.Label>Meeting Date</BootstrapForm.Label>
               <CustomDatePicker
-                  value={values.meetingDate ? new Date(values.meetingDate) : null}
-                  onChange={(date) => {
-                    setFieldValue(
-                      "meetingDate",
-                      date ? date.toISOString().split("T")[0] : ""
-                    );
-                    setFieldTouched("meetingDate", true);
-                  }}
-                  isInvalid={!!errors.meetingDate && touched.meetingDate}
-                />
+                value={values.meetingDate ? new Date(values.meetingDate) : null}
+                onChange={(date) => {
+                  setFieldValue(
+                    "meetingDate",
+                    date ? date.toISOString().split("T")[0] : ""
+                  );
+                  setFieldTouched("meetingDate", true);
+                }}
+                isInvalid={!!errors.meetingDate && touched.meetingDate}
+              />
 
-                {errors.meetingDate && touched.meetingDate && (
-                  <div className="invalid-feedback d-block">
-                    {errors.meetingDate}
-                  </div>
-                )}
+              {errors.meetingDate && touched.meetingDate && (
+                <div className="invalid-feedback d-block">
+                  {errors.meetingDate}
+                </div>
+              )}
             </BootstrapForm.Group>
 
             {/* Key Topics Discussed */}
             <BootstrapForm.Group className="d-flex flex-column gap-8">
-              <BootstrapForm.Label >
-                Key Topics Discussed
-              </BootstrapForm.Label>
+              <BootstrapForm.Label>Key Topics Discussed</BootstrapForm.Label>
               <FieldArray
                 name="keyTopicsDiscussed"
                 render={(arrayHelpers) => (
@@ -306,9 +311,7 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
 
             {/* Key Highlights */}
             <BootstrapForm.Group className="d-flex flex-column gap-8">
-              <BootstrapForm.Label >
-                Key Highlights
-              </BootstrapForm.Label>
+              <BootstrapForm.Label>Key Highlights</BootstrapForm.Label>
               <FieldArray
                 name="keyHighlights"
                 render={(arrayHelpers) => (

@@ -23,7 +23,7 @@ const Employees = () => {
   });
 
   const employees = data?.data?.employees ?? [];
-  console.log(data)
+
 
   if (isLoading) return <p>Loading...</p>;
 

@@ -2,6 +2,7 @@ import type {
   EventCalendarCredentials,
   EventCalendarResponse,
   EventCredentials,
+  EventRegisterations,
   EventUpcomingQuery,
   EventUpcomingResponse,
 } from "../interfaces/EventInterfaces";
@@ -88,6 +89,12 @@ export const EventApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Event"],
     }),
+    getEventRegistrations: builder.query<EventRegisterations, string>({
+      query: (id) => ({
+        url: `/events/registrations/${id}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -99,4 +106,5 @@ export const {
   useSignUpForEventMutation,
   useSignOutFromEventMutation,
   useFetchEventsPastQuery,
+  useGetEventRegistrationsQuery,
 } = EventApi;

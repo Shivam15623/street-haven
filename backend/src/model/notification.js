@@ -34,7 +34,7 @@ const NotificationSchema = new mongoose.Schema(
     message: { type: String, required: true },
     link: { type: String },
     meta: { type: Object },
-
+    isGlobal: { type: Boolean, default: false },
     expireAt: { type: Date },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },

@@ -15,7 +15,7 @@ const SearchContent = () => {
   const { user } = useSelector(selectAuth);
   const debouncedQuery = useDebounce<string>(query, 500);
   const { data: results, isLoading } = useSearchAllContentQuery(debouncedQuery);
-  console.log("results", results);
+
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

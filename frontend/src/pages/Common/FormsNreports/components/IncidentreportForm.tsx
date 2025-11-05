@@ -83,7 +83,7 @@ const IncidentreportForm: React.FC = () => {
       const fullDateTime = new Date(
         `${values.date}T${values.time}`
       ).toISOString();
-      console.log(fullDateTime);
+
       const payload = {
         ...values,
         date: fullDateTime, // full ISO timestamp
@@ -130,7 +130,7 @@ const IncidentreportForm: React.FC = () => {
             setFieldValue,
             setFieldTouched,
           }) => {
-            console.log("Formik Errors:", errors);
+
             return (
               <div
                 className={`position-relative ${
