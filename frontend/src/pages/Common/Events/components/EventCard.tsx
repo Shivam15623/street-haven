@@ -30,6 +30,9 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
     createdAt,
   } = event;
 
+  // ✅ Check if event is in the past
+  const isPastEvent = dayjs(eventDate).isBefore(dayjs(), "day");
+
   const progress = Math.min((totalRegistered / capacity) * 100, 100);
   const formattedDate = dayjs(eventDate).format("MM/DD/YYYY");
   const formattedTimeRange =
@@ -66,26 +69,45 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
     }
   };
 
+  // ✅ Decide what button to show
+  let actionButton;
+  if (isPastEvent) {
+    // For past events — only show registration status
+    actionButton = (
+      <button
+        disabled
+        className={`btn d-flex align-items-center justify-content-center radius-12 w-160-px gap-2 text-xs ${
+          isRegistered ? "btn-success" : "btn-secondary"
+        }`}
+      >
+        {isRegistered ? "You registered for this" : "You didn’t register"}
+      </button>
+    );
+  } else {
+    // For upcoming events — allow signup/cancel
+    actionButton = (
+      <button
+        disabled={isFull || isRegistering || isUnregistering}
+        onClick={isRegistered ? handleSignout : handleSignup}
+        className={`btn btn-street-primary d-flex align-items-center justify-content-center radius-12 w-160-px gap-2 text-xs ${
+          isRegistered ? "btn-street-delete" : ""
+        }`}
+      >
+        {(isRegistering || isUnregistering) && (
+          <Spinner animation="border" size="sm" className="me-2" />
+        )}
+        {isFull ? "Full" : isRegistered ? "Cancel Registration" : "Sign Up"}
+      </button>
+    );
+  }
+
   return (
     <AnnouncementCardWrapper
       title={title}
       createdBy={createdBy.firstname + " " + createdBy.lastname}
       created_At={dayjs(createdAt).format("YYYY-MM-DD")}
       description={description}
-      CTATrigger={
-        <button
-          disabled={isFull || isRegistering || isUnregistering}
-          onClick={isRegistered ? handleSignout : handleSignup}
-          className={`btn btn-street-primary d-flex align-items-center justify-content-center radius-12 w-160-px gap-2 text-xs ${
-            isRegistered ? "btn-street-delete" : ""
-          }`}
-        >
-          {(isRegistering || isUnregistering) && (
-            <Spinner animation="border" size="sm" className="me-2" />
-          )}
-          {isFull ? "Full" : isRegistered ? "Cancel Registration" : "Sign Up"}
-        </button>
-      }
+      CTATrigger={actionButton}
     >
       {/* Event details */}
       <div className="p-8 p-md-16 rounded-1 d-flex flex-column align-content-center bg-event-details gap-3">
@@ -102,7 +124,13 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
           {/* Location */}
           <div className="col-6 col-md-4 d-flex flex-column gap-1">
             <p className="text-xxs xs:text-xs fw-normal">Location</p>
-            <p className="text-xs xs:text-sm fw-semibold">{location}</p>
+            <a
+              href={location.location_url}
+              target="_blank"
+              className="text-xs xs:text-sm fw-semibold"
+            >
+              {location.location_name}
+            </a>
           </div>
 
           {/* Facilitator (optional) */}
@@ -132,21 +160,6 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
             style={{ width: `${progress}%` }}
           />
         </div>
-      </div>
-      <hr className="d-block d-sm-none bg-street-base" />
-      <div className="d-flex d-sm-none justify-content-end">
-        <button
-          disabled={isFull || isRegistering || isUnregistering}
-          onClick={isRegistered ? handleSignout : handleSignup}
-          className={`btn btn-street-primary d-flex align-items-center justify-content-center radius-12 w-160-px gap-2 text-xs ${
-            isRegistered ? "btn-outline-danger" : ""
-          }`}
-        >
-          {(isRegistering || isUnregistering) && (
-            <Spinner animation="border" size="sm" className="me-2" />
-          )}
-          {isFull ? "Full" : isRegistered ? "Cancel Registration" : "Sign Up"}
-        </button>
       </div>
     </AnnouncementCardWrapper>
   );

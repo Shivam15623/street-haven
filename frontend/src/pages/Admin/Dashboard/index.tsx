@@ -109,9 +109,9 @@ const AdminDashboard = () => {
         />
         <DashboardCard
           icon="lucide:party-popper"
-          label="Celebrations"
+          label="Announcements"
           value={3}
-          key={"Celebrations"}
+          key={"Announcements"}
         />
       </Row>
       <Row className="g-4">

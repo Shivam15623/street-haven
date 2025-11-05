@@ -24,9 +24,22 @@ const eventSchema = new mongoose.Schema(
       required: true,
     },
     location: {
-      type: String,
-      required: [true, "Event location is required"],
-      trim: true,
+      location_name: {
+        type: String,
+        required: [true, "Location name is required"],
+        trim: true,
+      },
+      location_url: {
+        type: String,
+        trim: true,
+        validate: {
+          validator: function (v) {
+            // optional but must be a URL if provided
+            return !v || /^https?:\/\/.+/.test(v);
+          },
+          message: "Invalid location URL format",
+        },
+      },
     },
     eventDate: {
       type: Date,

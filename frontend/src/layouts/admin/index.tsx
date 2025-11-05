@@ -12,6 +12,7 @@ import Events from "../../assets/icons/sidebaricons/EventsIcon2.svg?react";
 import FormIcon from "../../assets/icons/sidebaricons/Forms.svg?react";
 import ItNFacility from "../../assets/icons/sidebaricons/Facility.svg?react";
 import ProgramIcon from "../../assets/icons/sidebaricons/Program.svg?react";
+import EmployeesIcon from "../../assets/icons/sidebaricons/Employees.svg?react";
 import SearchContent from "../../helper/SearchContent";
 const menuItems = [
   {
@@ -43,7 +44,7 @@ const menuItems = [
   {
     label: "Employees",
     path: "/admin/employees",
-    icon: AgencyInfo,
+    icon: EmployeesIcon,
   },
 ];
 const AdminLayout = () => {

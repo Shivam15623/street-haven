@@ -53,6 +53,12 @@ button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
+.rdw-dropdown-wrapper,
+.rdw-option-wrapper,
+.rdw-emoji-wrapper,
+.rdw-colorpicker-wrapper {
+  z-index: 9999 !important;
+}
 
 @media (prefers-color-scheme: light) {
   :root {

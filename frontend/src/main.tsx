@@ -18,10 +18,11 @@ import "@assets/css/lib/file-upload.css";
 import "@assets/css/lib/audioplayer.css";
 import "@assets/css/lib/animate.min.css";
 import "@assets/css/style.css";
+
 import "@assets/css/extra.css";
 import "react-quill/dist/quill.snow.css";
 import "jsvectormap/dist/jsvectormap.css";
-
+import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import "react-toastify/dist/ReactToastify.css";
 import "react-modal-video/css/modal-video.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
@@ -29,6 +30,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "react-time-picker/dist/TimePicker.css";
 import "react-clock/dist/Clock.css";
 import "@assets/css/Street.css";
+import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 // main.tsx
 
 import App from "./App.tsx";

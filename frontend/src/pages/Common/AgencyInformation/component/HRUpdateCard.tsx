@@ -1,11 +1,11 @@
-import  { useState } from "react";
+import { useState } from "react";
 import HrUpdatesView from "./HrUpdatesView";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import type { hrUpdateData } from "../../../../interfaces/hrUpdatesInterface";
 import useHasPermission from "../../../../hooks/Auth";
 import ActionsHrUpdates from "./ActionsHrUpdates";
 import DeleteHrUpdate from "./deleteHrUpdates";
-
+import "react-quill/dist/quill.snow.css";
 const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
   const { title, _id, createdAt, description, createdBy } = update;
   const { isAdmin } = useHasPermission();
@@ -22,9 +22,12 @@ const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
     <div className="card">
       <div className="card-body p-16 p-sm-20 p-md-24 d-flex flex-column gap-14 radius-12">
         <div className="d-flex flex-row justify-content-between">
-          <div className="d-flex flex-column gap-10">
+          <div className="d-flex flex-column flex-grow-1 gap-10">
             <p className="text-md text-street-dark fw-semibold">{title}</p>
-            <p className="text-xs text-street-base">{description}</p>
+            <div 
+              className="prose flex-grow-1"
+              dangerouslySetInnerHTML={{ __html: description }}
+            />
             <div className="d-flex flex-row gap-24 align-items-center text-street-base">
               <p className="d-flex flex-row align-items-center text-xs gap-8">
                 <Icon

@@ -18,11 +18,14 @@ export const EventApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Event"],
     }),
-    editEvent: builder.mutation({
-      query: (credentials) => ({
-        url: "/events/edit",
+    editEvent: builder.mutation<
+      ApiGeneralResponse,
+      { cred: EventCredentials; id: string }
+    >({
+      query: ({ cred, id }) => ({
+        url: `/events/edit/${id}`,
         method: "PATCH",
-        body: credentials,
+        body: cred,
       }),
       invalidatesTags: ["Event"],
     }),
@@ -39,6 +42,21 @@ export const EventApi = api.injectEndpoints({
         order = "asc",
       }) => ({
         url: "/events/upcoming",
+        method: "GET",
+        params: { page, limit, search, slug, sortBy, order },
+      }),
+      providesTags: ["Event"],
+    }),
+    fetchEventsPast: builder.query<EventUpcomingResponse, EventUpcomingQuery>({
+      query: ({
+        page = 1,
+        limit = 10,
+        search = "",
+        slug = "",
+        sortBy = "eventDate",
+        order = "asc",
+      }) => ({
+        url: "/events/past",
         method: "GET",
         params: { page, limit, search, slug, sortBy, order },
       }),
@@ -63,13 +81,13 @@ export const EventApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Event"],
     }),
-    signOutFromEvent:builder.mutation<ApiGeneralResponse,string>({
-      query:(eventId)=>({
-        url:`/events/signout/${eventId}`,
-        method:"PATCH",
+    signOutFromEvent: builder.mutation<ApiGeneralResponse, string>({
+      query: (eventId) => ({
+        url: `/events/signout/${eventId}`,
+        method: "PATCH",
       }),
-      invalidatesTags:["Event"]
-    })
+      invalidatesTags: ["Event"],
+    }),
   }),
 });
 
@@ -79,5 +97,6 @@ export const {
   useFetchEventsupcomingQuery,
   useFetchEventsCalendarQuery,
   useSignUpForEventMutation,
-  useSignOutFromEventMutation
+  useSignOutFromEventMutation,
+  useFetchEventsPastQuery,
 } = EventApi;
