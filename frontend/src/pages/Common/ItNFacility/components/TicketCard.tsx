@@ -10,7 +10,7 @@ import TicketComment from "./TicketComment";
 import { useSelector } from "react-redux";
 import { selectAuth } from "../../../../redux/AuthSlice";
 import useHasPermission from "../../../../hooks/Auth";
-
+import DOMPurify from "dompurify";
 interface TicketCardProps {
   ticket: TicketData;
 }
@@ -81,7 +81,12 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
         </div>
 
         {/* Description */}
-        <p className="text-xxs xs:text-xs fw-normal">{description}</p>
+        <div
+          className="parse"
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(description),
+          }}
+        />
 
         {/* Meta info */}
         <div className="text-xs d-flex flex-column flex-md-row gap-1 gap-md-3 fw-normal">

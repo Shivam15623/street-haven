@@ -151,7 +151,7 @@ const layoutTree = (
     node.position = { x, y };
 
     // Calculate width dynamically based on container width and x
-    console.log("co", containerWidth, x);
+
     const dynamicWidth = (containerWidth - x - 30) / 1.3; // 20px padding
     node.data = { ...node.data, width: dynamicWidth };
 

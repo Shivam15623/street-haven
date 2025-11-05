@@ -77,7 +77,7 @@ const ImageUploader = () => {
       const res = await editAvatar(formData).unwrap();
       if (res.success) {
         showSuccess(res.message || "Profile image updated successfully!");
-        console.log("bacardi", res.data);
+
         const payload = {
           profilePic: res.data.profilePic,
         };

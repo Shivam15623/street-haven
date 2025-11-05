@@ -8,6 +8,7 @@ import {
 } from "../../../../services/EventApi";
 import type { EventUpcomingData } from "../../../../interfaces/EventInterfaces";
 import { showSuccess } from "../../../../utills/toastutills";
+import ViewRegistrations from "./ViewRegisterations";
 
 interface EventCardProps {
   event: EventUpcomingData;
@@ -74,30 +75,36 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
   if (isPastEvent) {
     // For past events — only show registration status
     actionButton = (
-      <button
-        disabled
-        className={`btn d-flex align-items-center justify-content-center radius-12 w-160-px gap-2 text-xs ${
-          isRegistered ? "btn-success" : "btn-secondary"
-        }`}
-      >
-        {isRegistered ? "You registered for this" : "You didn’t register"}
-      </button>
+      <div className="d-flex flex-row gap-2">
+        <ViewRegistrations eventId={eventId} />{" "}
+        <button
+          disabled
+          className={`btn d-flex align-items-center justify-content-center radius-12 w-160-px gap-2 text-xs ${
+            isRegistered ? "btn-success" : "btn-secondary"
+          }`}
+        >
+          {isRegistered ? "You registered for this" : "You didn’t register"}
+        </button>
+      </div>
     );
   } else {
     // For upcoming events — allow signup/cancel
     actionButton = (
-      <button
-        disabled={isFull || isRegistering || isUnregistering}
-        onClick={isRegistered ? handleSignout : handleSignup}
-        className={`btn btn-street-primary d-flex align-items-center justify-content-center radius-12 w-160-px gap-2 text-xs ${
-          isRegistered ? "btn-street-delete" : ""
-        }`}
-      >
-        {(isRegistering || isUnregistering) && (
-          <Spinner animation="border" size="sm" className="me-2" />
-        )}
-        {isFull ? "Full" : isRegistered ? "Cancel Registration" : "Sign Up"}
-      </button>
+      <div className="d-flex flex-row gap-2">
+        <ViewRegistrations eventId={eventId} />{" "}
+        <button
+          disabled={isFull || isRegistering || isUnregistering}
+          onClick={isRegistered ? handleSignout : handleSignup}
+          className={`btn btn-street-primary d-flex align-items-center justify-content-center radius-12 w-160-px gap-2 text-xs ${
+            isRegistered ? "btn-street-delete" : ""
+          }`}
+        >
+          {(isRegistering || isUnregistering) && (
+            <Spinner animation="border" size="sm" className="me-2" />
+          )}
+          {isFull ? "Full" : isRegistered ? "Cancel Registration" : "Sign Up"}
+        </button>
+      </div>
     );
   }
 

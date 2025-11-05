@@ -76,7 +76,7 @@ const StaffFeedBackSubmission = () => {
 
   const { data: feedBackSubmissions, isLoading } =
     useViewStaffFeedBackQuery(filter);
-  console.log(feedBackSubmissions);
+
 
   if (isLoading) return <div>Loading...</div>;
 

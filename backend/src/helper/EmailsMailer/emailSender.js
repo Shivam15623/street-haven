@@ -28,7 +28,7 @@ export const sendEmail = async ({ to, subject, html }) => {
 
     const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
 
-    console.log("Email sent successfully:", response);
+
     return response;
   } catch (error) {
     console.error(`Error sending email to ${to}:`, error);

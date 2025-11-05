@@ -3,12 +3,11 @@ import fs from "fs";
 export const validateRequest = (schema, property = "body") => {
   return async (req, res, next) => {
     try {
-      console.log(req["body"])
+
       const validatedData = await schema.validate(req[property], {
         abortEarly: false, // return all errors, not just the first
         stripUnknown: true, // remove any unknown fields not defined in schema
       });
-      console.log("etdetfv",validatedData);
       // Overwrite the original req.body (or req.query/req.params) with validated & cleaned data
       req[property] = validatedData;
       next();

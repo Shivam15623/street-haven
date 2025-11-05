@@ -8,7 +8,7 @@ import { useSearchParams } from "react-router-dom";
 const AgencyInfo = () => {
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get("tab") ?? "collective_agreement";
-  console.log(tabParam)
+
   return (
     <div className="d-flex flex-column gap-4">
       {" "}
