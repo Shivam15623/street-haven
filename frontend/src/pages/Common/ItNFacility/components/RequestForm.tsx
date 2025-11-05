@@ -1,10 +1,10 @@
-
 import { Formik } from "formik";
 import * as Yup from "yup";
 import { Col, Form, Row, Spinner } from "react-bootstrap";
 import ImageUpload from "../../../../components/child/Imageupload";
 import { useCreateTicketMutation } from "../../../../services/ticketApi";
 import { showSuccess } from "../../../../utills/toastutills";
+import QuillEditor from "../../../../components/child/QuillEditor";
 
 const requestSchema = Yup.object({
   reqTitle: Yup.string().required("Request Title is required"),
@@ -14,11 +14,15 @@ const requestSchema = Yup.object({
     .oneOf(["IT Help Desk", "Property Maintenance"])
     .required("Category is required"),
   location: Yup.string().required("location is required"),
- photo: Yup.mixed<File>().nullable()
+  photo: Yup.mixed<File>().nullable(),
 });
 type requestticketValue = Yup.InferType<typeof requestSchema>;
-const RequestForm = () => {
+interface RequestFormProps {
+  onCancel: () => void;
+}
+const RequestForm: React.FC<RequestFormProps> = ({ onCancel }) => {
   const [createTicket, { isLoading }] = useCreateTicketMutation();
+
   const handlecreateTicket = async (
     values: requestticketValue,
     { resetForm }: { resetForm: () => void }
@@ -65,6 +69,7 @@ const RequestForm = () => {
             values,
             touched,
             errors,
+            setFieldValue,
           }) => (
             <div
               className={`position-relative ${
@@ -80,7 +85,10 @@ const RequestForm = () => {
 
                 <Row>
                   <Col>
-                    <Form.Group controlId="reqTitle" className="d-flex flex-column gap-8">
+                    <Form.Group
+                      controlId="reqTitle"
+                      className="d-flex flex-column gap-8"
+                    >
                       <Form.Label className="fw-medium  text-street-dark">
                         Request Title
                       </Form.Label>
@@ -105,21 +113,20 @@ const RequestForm = () => {
                 {/* Description */}
                 <Row>
                   <Col>
-                    <Form.Group controlId="description" className="d-flex flex-column gap-8">
+                    <Form.Group
+                      controlId="description"
+                      className="d-flex flex-column gap-8"
+                    >
                       <Form.Label className="fw-medium text-street-dark">
                         Detailed Description
                       </Form.Label>
-                      <Form.Control
-                        as="textarea"
-                        rows={3}
-                        name="description"
-                        placeholder="Please provide as much detail as possible about the issue, including any error messages, when it started, and steps you've already tried..."
-                        className="py-12 px-16 text-sm text-street-base"
-                        value={values.description}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
+                      <QuillEditor
+                        content={values.description}
+                        onChange={(val) => setFieldValue("description", val)}
                         isInvalid={touched.description && !!errors.description}
+                        errorMessage={errors.description as string}
                       />
+
                       <Form.Control.Feedback type="invalid">
                         {errors.description}
                       </Form.Control.Feedback>
@@ -130,7 +137,10 @@ const RequestForm = () => {
                 {/* Priority & category side by side */}
                 <Row>
                   <Col>
-                    <Form.Group controlId="priority" className="d-flex flex-column gap-8">
+                    <Form.Group
+                      controlId="priority"
+                      className="d-flex flex-column gap-8"
+                    >
                       <Form.Label className="fw-medium  text-street-dark">
                         Priority
                       </Form.Label>
@@ -155,7 +165,10 @@ const RequestForm = () => {
                 </Row>
                 <Row>
                   <Col>
-                    <Form.Group controlId="category" className="d-flex flex-column gap-8">
+                    <Form.Group
+                      controlId="category"
+                      className="d-flex flex-column gap-8"
+                    >
                       <Form.Label className="fw-medium text-street-dark">
                         Category
                       </Form.Label>
@@ -184,7 +197,10 @@ const RequestForm = () => {
                 {/* Location */}
                 <Row>
                   <Col>
-                    <Form.Group controlId="location" className="d-flex flex-column gap-8">
+                    <Form.Group
+                      controlId="location"
+                      className="d-flex flex-column gap-8"
+                    >
                       <Form.Label className="fw-medium text-street-dark">
                         Location
                       </Form.Label>
@@ -226,7 +242,13 @@ const RequestForm = () => {
                     >
                       Submit Request
                     </button>
-                    <button className="btn text-sm btn-md px-8 btn-street-neutral  w-144-px text-street-base fw-medium radius-12">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onCancel();
+                      }}
+                      className="btn text-sm btn-md px-8 btn-street-neutral  w-144-px text-street-base fw-medium radius-12"
+                    >
                       Cancel
                     </button>
                   </div>

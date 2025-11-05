@@ -27,7 +27,10 @@ const signupSchema = Yup.object({
     .email("Invalid email address"),
   phone: Yup.string()
     .required("Phone number is required")
-    .matches(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian phone number"),
+    .matches(
+      /^(?:\+1\s?)?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
+      "Enter a valid 10-digit Canadian phone number"
+    ),
   password: Yup.string()
     .required("Password is required")
     .min(8, "Password must be at least 8 characters")
@@ -45,8 +48,8 @@ const SignupForm = () => {
       if (res.success) {
         showSuccess(res.message);
       }
-    } catch (error:any) {
-      showError(error.data.message)
+    } catch (error: any) {
+      showError(error.data.message);
     }
   };
 
@@ -170,7 +173,7 @@ const SignupForm = () => {
                       type="tel"
                       name="phone"
                       className="form-control h-50-px "
-                      placeholder="Your phone"
+                      placeholder="+1 (123) 456-7890"
                       value={values.phone}
                       onChange={handleChange}
                       style={{

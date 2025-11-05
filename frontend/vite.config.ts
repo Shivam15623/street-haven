@@ -5,7 +5,10 @@ import svgr from "vite-plugin-svgr";
 
 export default defineConfig({
   plugins: [svgr(), react()],
-  base: "/",  // ✅ absolute root, not relative
+  base: "/", // ✅ absolute root, not relative
+  define: {
+    global: "window",
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

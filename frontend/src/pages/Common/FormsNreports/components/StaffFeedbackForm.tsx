@@ -7,6 +7,7 @@ import { showSuccess } from "../../../../utills/toastutills";
 import Badge from "../../../../components/child/Badge";
 import { TimePicker } from "../../../../components/child/TimePicker";
 import CustomDatePicker from "../../../../components/child/DatePicker";
+import QuillEditor from "../../../../components/child/QuillEditor";
 
 function parseLocalDate(val: string) {
   const [year, month, day] = val.split("-").map(Number);
@@ -256,13 +257,11 @@ const StaffFeedbackForm: React.FC = () => {
                     <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
                       Detailed Description
                     </Form.Label>
-                    <Form.Control
-                      as="textarea"
-                      rows={3}
-                      name="description"
-                      value={values.description}
-                      onChange={handleChange}
-                      isInvalid={!!errors.description && touched.description}
+                    <QuillEditor
+                      content={values.description}
+                      onChange={(val) => setFieldValue("description", val)}
+                      isInvalid={touched.description && !!errors.description}
+                      errorMessage={errors.description as string}
                     />
                     <div>{values.description.length}/500 characters</div>
                     <Form.Control.Feedback type="invalid">
@@ -292,7 +291,6 @@ const StaffFeedbackForm: React.FC = () => {
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") {
                                   e.preventDefault();
-                                  // ensure witnesses array exists
                                   const witnessesArray = values.witnesses ?? [];
                                   if (
                                     values.newWitness &&
@@ -319,6 +317,13 @@ const StaffFeedbackForm: React.FC = () => {
                               </Badge>
                             ))}
                           </div>
+
+                          {/* 🔥 Add this */}
+                          {touched.witnesses && errors.witnesses && (
+                            <div className="text-danger small mt-1">
+                              {errors.witnesses as string}
+                            </div>
+                          )}
                         </>
                       )}
                     </FieldArray>

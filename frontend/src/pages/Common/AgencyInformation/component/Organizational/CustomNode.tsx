@@ -7,6 +7,7 @@ export type CustomNodeData = {
   department?: string;
   reportsTo?: string;
   supervises?: string[];
+ 
   expanded: boolean; // 👈 we'll pass id from React
 };
 
@@ -29,6 +30,7 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
         style={{
           minHeight: fixedHeight ? `${fixedHeight}px` : "auto",
           width: `${fixedWidth}px`,
+          zIndex:1
         }} // ✅ Sync width style={{ minHeight: `${fixedHeight}px` }}
       >
         <Handle
@@ -98,6 +100,7 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
             }}
             onClick={(e) => {
               e.stopPropagation();
+              console.log("click",id)
               onToggle?.(id);
             }}
           >
