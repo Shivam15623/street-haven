@@ -82,10 +82,18 @@ const ActionsEvent = ({ id }: { id?: string }) => {
   };
 
   const handleEdit = async (values: EventFormValues) => {
-    const res = await editEvent({cred:values,id:id}).unwrap();
-    if (res.success) {
-      showSuccess(res.message);
-      setShowModal(false);
+    if (id) {
+      const payload = {
+        ...values,
+        eventDate: new Date(values.eventDate),
+        startTime: new Date(`${values.eventDate}T${values.startTime}`),
+        endTime: new Date(`${values.eventDate}T${values.endTime}`),
+      };
+      const res = await editEvent({ cred: payload, id: id }).unwrap();
+      if (res.success) {
+        showSuccess(res.message);
+        setShowModal(false);
+      }
     }
   };
 

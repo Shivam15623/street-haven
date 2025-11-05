@@ -1,4 +1,4 @@
-import React from "react";
+
 import { useFetchEventsPastQuery } from "../../../../services/EventApi";
 import EventCard from "./EventCard";
 

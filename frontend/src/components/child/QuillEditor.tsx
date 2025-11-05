@@ -45,7 +45,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
     const range = editor.getSelection(true);
     if (range) {
       editor.insertText(range.index, emoji);
-      editor.setSelection(range.index + emoji.length);
+      editor.setSelection(range.index + emoji.length, 0); // ✅ fixed
     } else {
       editor.insertText(editor.getLength(), emoji);
     }

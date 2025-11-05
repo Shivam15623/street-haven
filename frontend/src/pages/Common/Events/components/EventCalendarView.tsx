@@ -8,7 +8,7 @@ import { MonthYearPicker } from "../../../../components/MonthYearPicker";
 import { useFetchEventsCalendarQuery } from "../../../../services/EventApi";
 import type { EventUpcomingData } from "../../../../interfaces/EventInterfaces";
 import EventDetailsModal from "./EventDetailsModal";
-
+import type { EventClickArg } from "@fullcalendar/core";
 const EventCalendarView = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<EventUpcomingData | null>(
@@ -46,8 +46,8 @@ const EventCalendarView = () => {
       setCurrentDate(date);
     }
   };
-  
-  const handleEventClick = (clickInfo) => {
+
+  const handleEventClick = (clickInfo: EventClickArg) => {
     const slug = clickInfo.event.extendedProps.slug;
 
     const clickedEvent = data?.data.find((e) => e.slug === slug);
@@ -102,13 +102,9 @@ const EventCalendarView = () => {
           dayHeaderClassNames={"py-20 sm:text-xs text-xxs"}
           eventClassNames={"bg-transparent p-0"}
           eventDidMount={(info) => {
-            const eventEnd = new Date(info.event.end);
-            const now = new Date();
-
-            // If the event is in the past
-            if (eventEnd < now) {
-              info.el.style.opacity = "0.5"; // make it faded
-            }
+            const eventEnd = info.event.end && new Date(info.event.end);
+            if (eventEnd && eventEnd < new Date())
+              info.el.style.opacity = "0.5";
           }}
           eventContent={(arg) => {
             const start = arg.event.start?.toLocaleTimeString([], {
@@ -179,7 +175,6 @@ const EventCalendarView = () => {
             event={selectedEvent}
             open={openModal}
             handleClose={() => setOpenModal(false)}
-           
           />
         )}
       </div>
