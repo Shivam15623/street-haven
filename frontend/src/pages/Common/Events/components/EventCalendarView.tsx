@@ -51,9 +51,9 @@ const EventCalendarView = () => {
     const slug = clickInfo.event.extendedProps.slug;
 
     const clickedEvent = data?.data.find((e) => e.slug === slug);
-    console.log("poptriop", slug);
+
     if (clickedEvent) {
-      console.log("pop");
+
       setSelectedEvent(clickedEvent);
       setOpenModal(true);
     }

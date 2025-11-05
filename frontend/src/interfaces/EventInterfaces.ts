@@ -42,6 +42,17 @@ export interface EventUpcomingQuery {
   sortBy?: string;
   order?: "asc" | "desc";
 }
+
+export interface EventRegisterationsData {
+  _id: string;
+  title: string;
+  registeredUsers: [
+    { _id: string; firstname: string; lastname: string; email: string }
+  ];
+  totalRegistered: number;
+  capacity: number;
+}
+export type EventRegisterations = ApiResponse<EventRegisterationsData>;
 export type EventCalendarResponse = ApiResponse<EventUpcomingData[]>;
 export type EventUpcomingResponse = ApiResponse<{
   events: EventUpcomingData[];

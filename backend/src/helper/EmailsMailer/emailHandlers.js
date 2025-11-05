@@ -52,7 +52,6 @@ export const sendResetEmail = async ({ email }) => {
     data: { link: resetLink },
   });
 
-  console.log("Reset link generated:", resetLink);
 
   // Send email
   await sendEmail({ to: email, ...emailContent });

@@ -57,7 +57,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
     if (p === "AM" && hr === 12) hr = 0;
 
     const formatted24 = `${hr.toString().padStart(2, "0")}:${m}`;
-    console.log(formatted24);
+
     onChange(formatted24); // send 24-hour string
   };
 

@@ -65,9 +65,9 @@ export const editMeetingMinutes = asyncHandler(async (req, res) => {
   ) {
     updates.keyTopicsDiscussed = keyTopicsDiscussed;
   }
-  console.log("trecd", meetingDate === meetingMinutes.meetingDate);
+
   if (meetingDate && meetingDate !== meetingMinutes.meetingDate) {
-    console.log(meetingDate, meetingMinutes.meetingDate);
+
     updates.meetingDate = meetingDate;
   }
 
@@ -103,7 +103,7 @@ export const editMeetingMinutes = asyncHandler(async (req, res) => {
       updates.attachment = newAttachment;
     }
   }
-  console.log("updates", updates);
+
   // ✅ No changes → skip DB write
   if (Object.keys(updates).length === 0) {
     return res

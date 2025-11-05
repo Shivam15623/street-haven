@@ -27,7 +27,7 @@ export const createFAQCategory = asyncHandler(async (req, res) => {
 
 // ✅ Get All FAQ Categories
 export const getAllFAQCategories = asyncHandler(async (req, res) => {
-  const categories = await FAQCategory.find().sort({ createdAt: -1 });
+  const categories = await FAQCategory.find().sort({ priority: -1 });
 
   return res
     .status(200)
@@ -191,7 +191,7 @@ export const getAllEmergencyContacts = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(
-      new ApiResponse(200,  "Emergency contacts fetched successfully",contacts)
+      new ApiResponse(200, "Emergency contacts fetched successfully", contacts)
     );
 });
 

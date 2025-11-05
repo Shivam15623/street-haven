@@ -20,8 +20,7 @@ function isSameOrBeforeToday(val: string) {
   today.setHours(0, 0, 0, 0);
 
   const selected = parseLocalDate(val);
-  console.log(selected, "rfergreg");
-  console.log(today, "today");
+
   selected.setHours(0, 0, 0, 0);
 
   return selected <= today;
@@ -85,7 +84,7 @@ const StaffFeedbackForm: React.FC = () => {
   ) => {
     try {
       // combine date and time if needed
-      console.log("tor", values.time);
+
       const fullDateTime = values.time
         ? `${values.date}T${values.time}`
         : values.date;

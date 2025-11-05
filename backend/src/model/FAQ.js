@@ -29,6 +29,10 @@ const faqCategorySchema = new mongoose.Schema(
       type: [faqSchema],
       default: [],
     },
+    priority: {
+      type: Number,
+      default: 1, // higher number = lower priority
+    },
   },
   { timestamps: true }
 );

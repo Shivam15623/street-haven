@@ -31,7 +31,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
 
     // 🏠 Special handling for root "/"
     if (location.pathname === "/") {
-      console.log("rop")
+
       if (!isLoggedIn) {
         navigate("/login", { replace: true });
       } else if (role) {

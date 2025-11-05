@@ -104,7 +104,7 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
 export const EditProgramManual = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { title, description, tags, type } = req.body;
-  console.log("called", title, description, tags, type);
+
 
   const programManual = await ProgramManual.findById(id);
   if (!programManual) {
