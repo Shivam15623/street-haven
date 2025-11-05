@@ -62,7 +62,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
   return (
     <div className={`w-100 ${className}`}>
       <div
-        className={`border rounded bg-white shadow-sm position-relative ${
+        className={`border rounded bg-white shadow-sm position-relative overflow-hidden ${
           isInvalid ? "border-danger" : "border-secondary"
         }`}
         style={{
@@ -121,26 +121,28 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
             <button className="ql-link" />
 
             {/* Emoji button */}
-            <button
-              type="button"
-              onClick={() => setShowEmojiPicker((prev) => !prev)}
-              className="btn btn-sm btn-light ms-2"
-            >
-              😊
-            </button>
-          </div>
-        )}
-
-        {showEmojiPicker && !disabled && (
-          <div
-            className="position-absolute bg-white border rounded shadow p-2"
-            style={{ top: "50px", right: "10px", zIndex: 20 }}
-          >
-            <EmojiPicker
-              onEmojiClick={handleEmojiClick}
-              height={320}
-              width={260}
-            />
+            <div className="position-relative">
+              {" "}
+              <button
+                type="button"
+                onClick={() => setShowEmojiPicker((prev) => !prev)}
+                className="btn btn-sm btn-light ms-2"
+              >
+                😊
+              </button>
+              {showEmojiPicker && !disabled && (
+                <div
+                  className="position-absolute bg-white border rounded shadow p-2"
+                  style={{ top: "50px", right: "10px", zIndex: 20 }}
+                >
+                  <EmojiPicker
+                    onEmojiClick={handleEmojiClick}
+                    height={320}
+                    width={260}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         )}
 
