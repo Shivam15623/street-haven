@@ -29,7 +29,7 @@ interface ActionOrgNodeProps {
   onHide: () => void;
 }
 
-const OrgNodeSchema = (isEdit: boolean) =>
+const OrgNodeSchema = () =>
   Yup.object().shape({
     label: Yup.string().required("Label is required"),
     department: Yup.string().required("Department is required"),
@@ -45,7 +45,7 @@ const ActionOrgNode: React.FC<ActionOrgNodeProps> = ({
   const [createNode, { isLoading }] = useAddNodeMutation();
   const [editNode, { isLoading: isEditing }] = useEditNodeMutation();
 
-  const { data: nodesData } = useGetTreeNodesQuery();
+  const { data: nodesData } = useGetTreeNodesQuery(undefined);
   console.log()
   const [nodeOptions, setNodeOptions] = useState<OrgNodeOption[]>([]);
 

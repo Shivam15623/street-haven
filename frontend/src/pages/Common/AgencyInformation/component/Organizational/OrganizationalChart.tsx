@@ -10,7 +10,6 @@ import {
   ReactFlowProvider,
   type Edge,
   type Node,
-  Position,
 } from "@xyflow/react";
 import dagre from "@dagrejs/dagre";
 import "@xyflow/react/dist/style.css";
@@ -564,7 +563,6 @@ function layoutDagre(
       Math.min(CHILDREN_PER_ROW, children.length) * nodeWidth +
       (Math.min(CHILDREN_PER_ROW, children.length) - 1) * HORIZONTAL_SPACING;
 
-    const baseX = x + nodeWidth / 2 - totalChildWidth / 2;
     let currentY = y + nodeHeight + VERTICAL_SPACING;
 
     let totalSubtreeHeight = nodeHeight; // start with own height
@@ -794,7 +792,6 @@ function Flow() {
           minZoom={0.5}
           maxZoom={2}
           defaultEdgeOptions={{ zIndex: -23 }}
-          
 
           // No fitView calls anywhere
         />
