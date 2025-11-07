@@ -400,3 +400,6 @@ table.dataTable td.dt-type-date {
   background: #555;
   border-radius: 4px;
 }
+.react-flow__node {
+   z-index: -1 !important;
+}

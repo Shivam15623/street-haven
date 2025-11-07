@@ -39,7 +39,7 @@ const UserSchema = new mongoose.Schema(
       type: String, // This can be a URL or file path
       default: "", // Optional
     },
-    
+
     password: {
       type: String,
       required: true,
@@ -59,8 +59,8 @@ const UserSchema = new mongoose.Schema(
       required: true,
       unique: true,
       match: [
-        /^\+?[1-9]\d{7,14}$/,
-        "Please enter a valid international phone number",
+        /^\+1\s?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
+        "Please enter a valid Canadian phone number (e.g. +1 (416) 555-1234)",
       ],
     },
     forgotPasswordToken: String,

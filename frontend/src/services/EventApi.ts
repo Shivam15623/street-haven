@@ -95,6 +95,12 @@ export const EventApi = api.injectEndpoints({
         method: "GET",
       }),
     }),
+    getEventDetail: builder.query({
+      query: (slug) => ({
+        url: `/events/details/${slug}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -106,5 +112,5 @@ export const {
   useSignUpForEventMutation,
   useSignOutFromEventMutation,
   useFetchEventsPastQuery,
-  useGetEventRegistrationsQuery,
+  useGetEventRegistrationsQuery,useGetEventDetailQuery
 } = EventApi;

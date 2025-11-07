@@ -105,7 +105,7 @@ export default function Sheet({
         style={dialogStyle}
         {...rest}
       >
-        <Offcanvas.Header closeButton={closeButton}>
+        <Offcanvas.Header closeButton={closeButton} color="white" className="bg-street-primary text-white">
           <Offcanvas.Title id={`${sheetId}-label`}>{title}</Offcanvas.Title>
         </Offcanvas.Header>
 
