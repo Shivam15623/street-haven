@@ -51,6 +51,7 @@ import EmployeeRoutes from "./routes/employee.routes.js";
 import FAQRoutes from "./routes/FAQ.routes.js";
 import searchRoutes from "./routes/search.routes.js";
 import notificationRoutes from "./routes/notifications.routes.js";
+import orgNodeRoutes from "./routes/orgNode.routes.js";
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/program-manuals", programManualRouter);
@@ -64,6 +65,7 @@ app.use("/api/v1/search",searchRoutes);
 app.use("/api/v1/employees",EmployeeRoutes);
 app.use("/api/v1/faq",FAQRoutes)
 app.use("/api/v1/notifications",notificationRoutes)
+app.use("/api/v1/orgNode",orgNodeRoutes)
 app.use(errorHandler);
 
 app.use("/public/attachments", express.static("public/attachments"));

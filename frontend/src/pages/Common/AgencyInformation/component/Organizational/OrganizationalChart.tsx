@@ -10,7 +10,6 @@ import {
   ReactFlowProvider,
   type Edge,
   type Node,
-  Position,
 } from "@xyflow/react";
 import dagre from "@dagrejs/dagre";
 import "@xyflow/react/dist/style.css";
@@ -507,6 +506,7 @@ function computeVisibleIds(expandedSet: Set<string>) {
   visit(ROOT_ID);
   return visible;
 }
+
 function layoutDagre(
   visibleIds: Set<string>,
   containerWidth: number,
@@ -514,9 +514,8 @@ function layoutDagre(
   nodeHeight: number
 ) {
   const g = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
-  g.setGraph({ rankdir: "TB", nodesep: 20, ranksep: 130 });
+  g.setGraph({ rankdir: "TB", nodesep: 20, ranksep: 80 });
 
-  // Mark nodes as hidden or visible
   const vNodes = initialNodes.map((n) => ({
     ...n,
     hidden: !visibleIds.has(n.id),
@@ -525,47 +524,94 @@ function layoutDagre(
     (e) => visibleIds.has(e.source) && visibleIds.has(e.target)
   );
 
-  // Add visible nodes to dagre
   for (const n of vNodes) {
     if (!n.hidden) g.setNode(n.id, { width: nodeWidth, height: nodeHeight });
   }
-
-  // Add edges to dagre
   for (const e of vEdges) g.setEdge(e.source, e.target);
 
-  // Compute dagre layout
   dagre.layout(g);
 
-  // Initial positions from dagre
-  const visibleDagNodes = vNodes
-    .filter((n) => !n.hidden)
-    .map((n) => g.node(n.id));
-  const minX = Math.min(...visibleDagNodes.map((dn) => dn.x - dn.width / 2));
-  const maxX = Math.max(...visibleDagNodes.map((dn) => dn.x + dn.width / 2));
-  const centerX = (minX + maxX) / 2;
-  const offsetX = containerWidth / 2 - centerX;
+  // Build parent-child relationships
+  const childrenByParent = new Map<string, Node<CustomNodeData>[]>();
+  for (const e of vEdges) {
+    const child = vNodes.find((n) => n.id === e.target);
+    if (!child) continue;
+    if (!childrenByParent.has(e.source)) childrenByParent.set(e.source, []);
+    childrenByParent.get(e.source)!.push(child);
+  }
 
-  let layoutedNodes: Node<CustomNodeData>[] = vNodes.map((n) => {
-    if (n.hidden) return n;
-    const dn = g.node(n.id)!;
-    let x = dn.x - dn.width / 2 + offsetX;
-    const y = dn.y - dn.height / 2 + ROOT_TOP_Y;
+  // Recursive layout builder
+  const positionNode = (
+    nodeId: string,
+    x: number,
+    y: number
+  ): { positioned: Node<CustomNodeData>[]; width: number; height: number } => {
+    const node = vNodes.find((n) => n.id === nodeId)!;
+    const children = childrenByParent.get(nodeId) || [];
+    const positioned: Node<CustomNodeData>[] = [];
+    node.position = { x, y };
+    positioned.push(node);
 
-    if (n.id === ROOT_ID) x = (containerWidth - dn.width) / 2;
+    if (children.length === 0)
+      return { positioned, width: nodeWidth, height: nodeHeight };
+    const CHILDREN_PER_ROW = 3;
+    const numRows = Math.ceil(children.length / CHILDREN_PER_ROW);
+    const HORIZONTAL_SPACING = 30;
+    const VERTICAL_SPACING = 80;
+
+    const totalChildWidth =
+      Math.min(CHILDREN_PER_ROW, children.length) * nodeWidth +
+      (Math.min(CHILDREN_PER_ROW, children.length) - 1) * HORIZONTAL_SPACING;
+
+    let currentY = y + nodeHeight + VERTICAL_SPACING;
+
+    let totalSubtreeHeight = nodeHeight; // start with own height
+
+    for (let r = 0; r < numRows; r++) {
+      const childrenInRow = children.slice(
+        r * CHILDREN_PER_ROW,
+        (r + 1) * CHILDREN_PER_ROW
+      );
+      const rowWidth =
+        childrenInRow.length * nodeWidth +
+        (childrenInRow.length - 1) * HORIZONTAL_SPACING;
+      const rowX = x + nodeWidth / 2 - rowWidth / 2;
+
+      let rowMaxHeight = 0;
+
+      childrenInRow.forEach((c, j) => {
+        const childX = rowX + j * (nodeWidth + HORIZONTAL_SPACING);
+        const { positioned: childNodes, height: subHeight } = positionNode(
+          c.id,
+          childX,
+          currentY
+        );
+        rowMaxHeight = Math.max(rowMaxHeight, subHeight);
+        positioned.push(...childNodes);
+      });
+
+      currentY += rowMaxHeight + VERTICAL_SPACING;
+      totalSubtreeHeight += rowMaxHeight + VERTICAL_SPACING;
+    }
 
     return {
-      ...n,
-      position: { x, y },
-      sourcePosition: Position.Bottom,
-      targetPosition: Position.Top,
+      positioned,
+      width: totalChildWidth,
+      height: totalSubtreeHeight,
     };
-  });
+  };
 
-  /* -----------------------------
-     Post-processing adjustment
-  ------------------------------ */
-  // group nodes by row (y position rounded)
+  // Start layout from root
+  const rootX = (containerWidth - nodeWidth) / 2;
+  const rootY = ROOT_TOP_Y;
+  const { positioned } = positionNode(ROOT_ID, rootX, rootY);
+  /* -----------------------------------------------------------------
+   🔧 NEW SECTION: Align children rows horizontally after layout
+----------------------------------------------------------------- */
+  let layoutedNodes = positioned;
   const rows: Record<number, Node<CustomNodeData>[]> = {};
+
+  // 1️⃣ Group nodes by rows
   for (const n of layoutedNodes) {
     if (n.hidden) continue;
     const rowY = Math.round(n.position.y / 10) * 10;
@@ -573,11 +619,12 @@ function layoutDagre(
     rows[rowY].push(n);
   }
 
-  // adjust children positions
+  // 2️⃣ Adjust children alignment per row
   for (const row of Object.values(rows)) {
     row.sort((a, b) => a.position.x - b.position.x);
     const leftMostParent = row[0];
     const rightMostParent = row[row.length - 1];
+    const isSingleParentRow = row.length === 1;
 
     for (const parent of row) {
       if (parent.id === ROOT_ID) continue;
@@ -589,21 +636,31 @@ function layoutDagre(
       );
       if (children.length <= 1) continue;
 
+      // 🧠 NEW CHECK:
+      // If only one parent in this  → skip adjustments
+
+      if (isSingleParentRow) {
+        continue;
+      }
+
+      // Leftmost parent → align leftmost child
       if (parent === leftMostParent) {
-        // leftmost parent: align leftmost child
         children.sort((a, b) => a.position.x - b.position.x);
         const dx = parent.position.x - children[0].position.x;
         children.forEach((c) => (c.position.x += dx));
+
+        // Rightmost parent → align rightmost child
       } else if (parent === rightMostParent) {
-        // rightmost parent: align rightmost child
         children.sort((a, b) => b.position.x - a.position.x);
         const dx = parent.position.x - children[0].position.x;
         children.forEach((c) => (c.position.x += dx));
+
+        // Middle parents → evenly space if they have too many children
       } else {
-        if (children.length > 3) {
+        if (children.length === 3) {
           const startX = leftMostParent.position.x;
           let lastX = startX;
-          children.sort((a, b) => a.position.x - b.position.x); // optional
+          children.sort((a, b) => a.position.x - b.position.x);
           children.forEach((c) => {
             c.position.x = lastX;
             lastX += nodeWidth + 20; // spacing between children
@@ -612,7 +669,7 @@ function layoutDagre(
       }
     }
   }
-
+  /* ----------------------------------------------------------------- */
   // Recalculate bounding box
   const visibleNodes = layoutedNodes.filter((n) => !n.hidden);
   const newMinX = Math.min(...visibleNodes.map((n) => n.position.x));
@@ -639,14 +696,13 @@ function layoutDagre(
   );
   const contentHeight = Math.max(800, maxY + 100);
 
-  return { nodes: layoutedNodes, edges: vEdges, contentHeight };
+  return { nodes: visibleNodes, edges: vEdges, contentHeight };
 }
 
 // -----------------------------
 // Component
 // -----------------------------
 const MemoCustomNode = React.memo(CustomNode);
-
 function Flow() {
   const containerRef = useRef<HTMLDivElement>(null);
   const width = useContainerWidth(containerRef);
@@ -690,22 +746,22 @@ function Flow() {
     });
   }, []);
 
- const nodeTypes = useMemo(
-  () => ({
-    custom: (props:CustomNodeProps) => (
-      <MemoCustomNode
-        {...props}
-        ref={(el) => {
-          nodeRefs.current[props.id] = el;
-        }}
-        onToggle={handleToggle}
-        fixedHeight={maxNodeHeight}
-        fixedWidth={(width - 100) / 4 || 340}
-      />
-    ),
-  }),
-  [handleToggle, maxNodeHeight, width]
-);
+  const nodeTypes = useMemo(
+    () => ({
+      custom: (props: CustomNodeProps) => (
+        <MemoCustomNode
+          {...props}
+          ref={(el) => {
+            nodeRefs.current[props.id] = el;
+          }}
+          onToggle={handleToggle}
+          fixedHeight={maxNodeHeight}
+          fixedWidth={(width - 100) / 4 || 340}
+        />
+      ),
+    }),
+    [handleToggle, maxNodeHeight, width]
+  );
   const { nodes, edges, contentHeight } = useMemo(() => {
     const visibleIds = computeVisibleIds(expanded);
     const nodeWidth = (width - 100) / 4 || 340;
@@ -735,6 +791,8 @@ function Flow() {
           zoomOnDoubleClick={false}
           minZoom={0.5}
           maxZoom={2}
+          defaultEdgeOptions={{ zIndex: -23 }}
+
           // No fitView calls anywhere
         />
       </div>

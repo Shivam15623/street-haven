@@ -111,7 +111,6 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
   return (
     <AnnouncementCardWrapper
       title={title}
-      createdBy={createdBy.firstname + " " + createdBy.lastname}
       created_At={dayjs(createdAt).format("YYYY-MM-DD")}
       description={description}
       CTATrigger={actionButton}
@@ -144,7 +143,9 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
           {facilitator && (
             <div className="col-6 col-md-4 d-flex flex-column gap-1">
               <p className="text-xxs xs:text-xs fw-normal">Facilitator</p>
-              <p className="text-xs xs:text-sm fw-semibold">{facilitator}</p>
+              <p className="text-xs xs:text-sm fw-semibold">
+                {createdBy.firstname + " " + createdBy.lastname}
+              </p>
             </div>
           )}
         </div>

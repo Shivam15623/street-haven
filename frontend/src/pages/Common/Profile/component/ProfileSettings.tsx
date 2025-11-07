@@ -13,6 +13,7 @@ import {
 import { showError, showSuccess } from "../../../../utills/toastutills";
 import { useDispatch } from "react-redux";
 import { UpdateUserDetails } from "../../../../redux/AuthSlice";
+import { PatternFormat } from "react-number-format";
 
 dayjs.extend(relativeTime);
 // ✅ Validation Schema
@@ -210,14 +211,26 @@ const ProfileSettings: React.FC = () => {
                         className="text-street-base"
                       />
                     </span>
-                    <Form.Control
-                      type="text"
-                      size="sm"
+                    <PatternFormat
+                      format="+1 (###) ###-####"
+                      allowEmptyFormatting
+                      mask="_"
                       name="workPhone"
-                      placeholder="+1 (416) 555-2045"
+                      className={`form-control ${
+                        touched.workPhone && errors.workPhone
+                          ? "is-invalid"
+                          : ""
+                      }`}
+                      placeholder="+1 (123) 456-7890"
                       value={values.workPhone}
-                      onChange={handleChange}
-                      isInvalid={touched.workPhone && !!errors.workPhone}
+                      onValueChange={(valuesObj) => {
+                        handleChange({
+                          target: {
+                            name: "workPhone",
+                            value: valuesObj.formattedValue, // e.g. "+1 (647) 222-9988"
+                          },
+                        });
+                      }}
                     />
                     <Form.Control.Feedback type="invalid">
                       {errors.workPhone}

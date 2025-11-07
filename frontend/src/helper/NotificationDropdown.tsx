@@ -45,7 +45,7 @@ const NotificationDropdown = () => {
     <Dropdown className="notification-dropdown">
       <Dropdown.Toggle id="notification-dropdown-toggle">
         <Icon icon="basil:notification-outline" className="alarm notifyicon" />
-        {unreadCount > 0 && <span className="badge-unread">{unreadCount}</span>}
+        {unreadCount > 0 && <span className="badge-unread"></span>}
       </Dropdown.Toggle>
 
       <Dropdown.Menu className="p-0 border-1 border-sh-base">
