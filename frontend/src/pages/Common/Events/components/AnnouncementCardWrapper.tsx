@@ -3,7 +3,6 @@ import React, { type ReactNode } from "react";
 import DOMPurify from "dompurify";
 interface AnnouncementCardWrapperProps {
   title: string;
-  createdBy: string;
   created_At: string;
   description: string;
   children?: ReactNode;
@@ -12,7 +11,6 @@ interface AnnouncementCardWrapperProps {
 
 const AnnouncementCardWrapper: React.FC<AnnouncementCardWrapperProps> = ({
   title,
-  createdBy,
   created_At,
   description,
   children,
@@ -36,7 +34,7 @@ const AnnouncementCardWrapper: React.FC<AnnouncementCardWrapperProps> = ({
               {title}
             </div>
             <p className="mb-0 text-xxs xs:text-xs fw-normal">
-              {createdBy} <span className="ms-1">• {created_At}</span>
+              Created At <span className="ms-1">• {created_At}</span>
             </p>
           </div>
         </div>

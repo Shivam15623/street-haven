@@ -54,7 +54,7 @@ export const createEvent = asyncHandler(async (req, res) => {
           title: "New Event Created",
           message: `The event "${title}" has been created by ${firstname} ${lastname}.`,
           link: `/events/${event._id}`,
-          isGlobal:true,
+          isGlobal: true,
           createdBy: userId,
           meta: { eventId: event._id },
         },
@@ -413,7 +413,7 @@ export const fetchRegisterations = asyncHandler(async (req, res) => {
 
   // Populate registered users
   const event = await Event.findById(eventId)
-    .populate("registeredUsers", "firstname lastname email") // choose fields
+    .populate("registeredUsers", "firstname lastname email phoneNo slug") // choose fields
     .select("title registeredUsers totalRegistered capacity");
 
   if (!event) {
@@ -427,6 +427,27 @@ export const fetchRegisterations = asyncHandler(async (req, res) => {
         200,
         "User unregistered from the event successfully",
         event
+      )
+    );
+});
+
+export const EventDetails = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+
+  const findevent = await Event.findOne({ slug: slug }).populate(
+    "createdBy",
+    "firstname lastname"
+  );
+  if (!findevent) {
+    throw new ApiError(400, "No Such Event Found");
+  }
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        `Event data of ${findevent.title} fetched`,
+        findevent
       )
     );
 });

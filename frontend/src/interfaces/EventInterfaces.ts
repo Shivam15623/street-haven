@@ -47,7 +47,14 @@ export interface EventRegisterationsData {
   _id: string;
   title: string;
   registeredUsers: [
-    { _id: string; firstname: string; lastname: string; email: string }
+    {
+      _id: string;
+      firstname: string;
+      lastname: string;
+      email: string;
+      slug: string;
+      phoneNo: string;
+    }
   ];
   totalRegistered: number;
   capacity: number;

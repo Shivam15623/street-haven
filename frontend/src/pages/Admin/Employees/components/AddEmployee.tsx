@@ -7,6 +7,7 @@ import { showError, showSuccess } from "../../../../utills/toastutills";
 import { Col, Form, Row } from "react-bootstrap";
 import PasswordInput from "../../../../components/Authentication/PasswordInput";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import { PatternFormat } from "react-number-format";
 interface AddEmployeeValues {
   firstName: string;
   lastName: string;
@@ -186,14 +187,23 @@ const AddEmployee = () => {
                     className="d-flex flex-column gap-1"
                   >
                     <Form.Label className="fw-normal m-0">Phone</Form.Label>
-                    <Form.Control
-                      type="tel"
+                    <PatternFormat
+                      format="+1 (###) ###-####"
+                      mask="_"
                       name="phone"
-                      className="form-control"
-                      placeholder="Your phone"
+                      className={`form-control ${
+                        touched.phone && errors.phone ? "is-invalid" : ""
+                      }`}
+                      placeholder="+1 (123) 456-7890"
                       value={values.phone}
-                      onChange={handleChange}
-                      isInvalid={touched.phone && !!errors.phone}
+                      onValueChange={(valuesObj) => {
+                        handleChange({
+                          target: {
+                            name: "phone",
+                            value: valuesObj.formattedValue,
+                          },
+                        });
+                      }}
                     />
                     <Form.Control.Feedback type="invalid">
                       {errors.phone}
