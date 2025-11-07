@@ -7,6 +7,7 @@ import { useEditEmployeeMutation } from "../../../../services/EmployeeApi";
 import { showSuccess } from "../../../../utills/toastutills";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import FormImageUploader from "./FormProfileUploader";
+import { PatternFormat } from "react-number-format";
 
 const editEmployeeSchema = yup.object({
   firstname: yup.string().required("First name is required"),
@@ -16,19 +17,19 @@ const editEmployeeSchema = yup.object({
     .string()
     .required("Phone number is required")
     .matches(
-      /^(?:\+1\s?)?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
-      "Enter a valid 10-digit Canadian phone number"
+      /^\+1\s\(\d{3}\)\s\d{3}-\d{4}$/,
+      "Enter a valid Canadian phone number (e.g. +1 (123) 456-7890)"
     ),
   profilePic: yup.mixed<File>().nullable(),
 });
 
 type EditEmployeeValues = yup.InferType<typeof editEmployeeSchema>;
 
-type EditEmployeeProps = {
+interface EditEmployeeProps {
   initialValues: EditEmployeeValues;
   id: string;
   profilePic: string | null;
-};
+}
 
 const EditEmployee: React.FC<EditEmployeeProps> = ({
   initialValues,
@@ -40,7 +41,6 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
 
   const handleSave = async (values: EditEmployeeValues) => {
     try {
-      // Convert values to FormData
       const formData = new FormData();
       formData.append("firstname", values.firstname);
       formData.append("lastname", values.lastname);
@@ -51,11 +51,8 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
         formData.append("profilePic", values.profilePic);
       }
 
-      // Send FormData
       const res = await editEmployee({ id, data: formData }).unwrap();
-      if (res.success) {
-        showSuccess(res.message);
-      }
+      if (res.success) showSuccess(res.message);
       setShowModal(false);
     } catch (err) {
       console.error("Failed to save employee:", err);
@@ -65,11 +62,12 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
   return (
     <>
       <button
-        className="btn btn-sm btn-street-edit  d-flex flex-row align-items-center justify-content-center"
+        className="btn btn-sm btn-street-edit d-flex flex-row align-items-center justify-content-center"
         onClick={() => setShowModal(true)}
       >
         <Icon icon="tabler:edit" className="text-xl" />
       </button>
+
       <ModalWrapper
         show={showModal}
         title="Edit Employee Profile"
@@ -106,15 +104,15 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
           {({ handleSubmit, setFieldValue, values, errors, touched }) => (
             <BootstrapForm
               id="edit-employee-form"
-              className=" d-flex flex-column gap-18"
+              className="d-flex flex-column gap-18"
               onSubmit={handleSubmit}
             >
+              {/* Profile Picture */}
               <div className="d-flex flex-row align-items-center justify-content-center">
-                {" "}
                 <FormImageUploader
                   setFieldValue={setFieldValue}
                   value={values.profilePic}
-                  imageUrl={profilePic} // existing URL from backend
+                  imageUrl={profilePic}
                 />
               </div>
 
@@ -163,11 +161,19 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
               {/* Phone Number */}
               <BootstrapForm.Group className="d-flex flex-column gap-8">
                 <BootstrapForm.Label>Phone Number</BootstrapForm.Label>
-                <BootstrapForm.Control
-                  type="text"
+                <PatternFormat
+                  format="+1 (###) ###-####"
+                  allowEmptyFormatting
+                  mask="_"
+                  name="phoneNo"
+                  className={`form-control ${
+                    touched.phoneNo && errors.phoneNo ? "is-invalid" : ""
+                  }`}
+                  placeholder="+1 (123) 456-7890"
                   value={values.phoneNo}
-                  isInvalid={!!errors.phoneNo && touched.phoneNo}
-                  onChange={(e) => setFieldValue("phoneNo", e.target.value)}
+                  onValueChange={(valuesObj) =>
+                    setFieldValue("phoneNo", valuesObj.formattedValue)
+                  }
                 />
                 <BootstrapForm.Control.Feedback type="invalid">
                   <ErrorMessage name="phoneNo" />

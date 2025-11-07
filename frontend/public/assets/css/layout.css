@@ -426,7 +426,8 @@
   }
   .notification-dropdown .badge-unread {
     top: 11px;
-    left: 19px;
+    left: 19px; 
+    color: black;
   }
 
   /* Header bigger on mobile */

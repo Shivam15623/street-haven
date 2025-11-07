@@ -124,7 +124,7 @@ const EventCalendarView = () => {
                 <p className="fw-normal text-xxs text-street-base mb-0 ">
                   {start} - {end}
                 </p>
-                <p className="fw-medium text-xxs sm:text-xs text-street-dark mb-0 ">
+                <p className="fw-medium text-xs sm:text-sm text-street-dark mb-0 ">
                   {arg.event.title}
                 </p>
               </div>

@@ -22,15 +22,14 @@ export type CustomNodeProps = {
 // 👇 forwardRef so Flow can attach refs
 const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
   ({ id, data, onToggle, fixedHeight, fixedWidth }, ref) => {
-
     return (
       <div
         ref={ref}
-        className="p-8 p-lg-12 gap-10 d-flex flex-column radius-8 org-node shadow-sm relative"
+        className="p-8 p-lg-12 gap-10 d-flex flex-column radius-8 org-node shadow-sm position-relative "
         style={{
           minHeight: fixedHeight ? `${fixedHeight}px` : "auto",
           width: `${fixedWidth}px`,
-          zIndex: 1,
+    
         }} // ✅ Sync width style={{ minHeight: `${fixedHeight}px` }}
       >
         <Handle

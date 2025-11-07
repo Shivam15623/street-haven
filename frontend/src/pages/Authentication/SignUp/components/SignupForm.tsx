@@ -6,6 +6,7 @@ import { Button, Col, Row } from "react-bootstrap";
 import { useRegisterEmployeeMutation } from "../../../../services/AuthApi";
 import { showError, showSuccess } from "../../../../utills/toastutills";
 import PasswordInput from "../../../../components/Authentication/PasswordInput";
+import { PatternFormat } from "react-number-format";
 interface SignupValues {
   firstName: string;
   lastName: string;
@@ -169,19 +170,28 @@ const SignupForm = () => {
                     className="d-flex flex-column gap-1"
                   >
                     <Form.Label className="fw-normal m-0">Phone</Form.Label>
-                    <Form.Control
-                      type="tel"
+                    <PatternFormat
+                      format="+1 (###) ###-####"
+                      mask="_"
                       name="phone"
-                      className="form-control h-50-px "
-                      placeholder="+1 (123) 456-7890"
-                      value={values.phone}
-                      onChange={handleChange}
+                      className={`form-control ${
+                        touched.phone && errors.phone ? "is-invalid" : ""
+                      }`}
                       style={{
                         backgroundColor: "#F2F0EC",
                         borderColor: "#E2E8F0",
                         borderRadius: "15px",
                       }}
-                      isInvalid={touched.phone && !!errors.phone}
+                      placeholder="+1 (123) 456-7890"
+                      value={values.phone}
+                      onValueChange={(valuesObj) => {
+                        handleChange({
+                          target: {
+                            name: "phone",
+                            value: valuesObj.formattedValue,
+                          },
+                        });
+                      }}
                     />
                     <Form.Control.Feedback type="invalid">
                       {errors.phone}
