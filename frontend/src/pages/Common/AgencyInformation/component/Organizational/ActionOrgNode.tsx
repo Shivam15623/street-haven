@@ -112,7 +112,7 @@ const ActionOrgNode: React.FC<ActionOrgNodeProps> = ({
     >
       <Formik
         initialValues={initialValues}
-        validationSchema={OrgNodeSchema(isEdit)}
+        validationSchema={OrgNodeSchema()}
         onSubmit={handleSave}
       >
         {({ values, setFieldValue }) => (
