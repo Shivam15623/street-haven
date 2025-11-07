@@ -18,6 +18,10 @@ import CustomNode, {
   type CustomNodeData,
   type CustomNodeProps,
 } from "./CustomNode";
+import {
+  useGetTreeNodesQuery,
+  type OrgNodeData,
+} from "../../../../../services/orgApi";
 
 /* -----------------------------
    Constants & Defaults
@@ -26,444 +30,11 @@ import CustomNode, {
 /* -----------------------------
    Initial Data
 ------------------------------ */
-const initialNodes: Node<CustomNodeData>[] = [
-  // Root
-  {
-    id: "1",
-    type: "custom",
-    data: {
-      label: "Executive Director",
-      department: "Administration",
-      reportsTo: "Board of Directors",
-      supervises: [
-        "Clinical Director",
-        "Housing Program Manager",
-        "Finance Manager",
-        "Operations Manager",
-      ],
-      expanded: true,
-    },
-    position: { x: 0, y: 0 },
-  },
-
-  // Level 1 - Four direct children of root
-  {
-    id: "2",
-    type: "custom",
-    data: {
-      label: "Clinical Director",
-      department: "Clinical Services",
-      reportsTo: "Executive Director",
-      supervises: ["Therapists", "Supervisors", "Assistants", "Specialists"],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: "3",
-    type: "custom",
-    data: {
-      label: "Housing Program Manager",
-      department: "Housing Services",
-      reportsTo: "Executive Director",
-      supervises: [
-        "Housing Coordinators",
-        "Support Workers",
-        "Case Managers",
-        "Specialists",
-      ],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: "4",
-    type: "custom",
-    data: {
-      label: "Finance Manager",
-      department: "Finance & Admin",
-      reportsTo: "Executive Director",
-      supervises: [
-        "Finance Assistant",
-        "Development Coordinator",
-        "Accountants",
-        "Auditors",
-      ],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: "5",
-    type: "custom",
-    data: {
-      label: "Operations Manager",
-      department: "Operations",
-      reportsTo: "Executive Director",
-      supervises: ["Logistics", "Facilities", "Maintenance", "Procurement"],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-
-  // Level 2 - Clinical Director children (4)
-  {
-    id: "2a",
-    type: "custom",
-    data: {
-      label: "Therapist Lead",
-      department: "Therapy",
-      reportsTo: "Clinical Director",
-      supervises: [],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: "2b",
-    type: "custom",
-    data: {
-      label: "Supervisor Lead",
-      department: "Clinical Supervision",
-      reportsTo: "Clinical Director",
-      supervises: [],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: "2c",
-    type: "custom",
-    data: {
-      label: "Case Manager Lead",
-      department: "Case Mgmt",
-      reportsTo: "Clinical Director",
-      supervises: [],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: "2d",
-    type: "custom",
-    data: {
-      label: "Clinical Specialist",
-      department: "Special Services",
-      reportsTo: "Clinical Director",
-      supervises: [],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-
-  // Level 2 - Housing Manager children (4)
-  {
-    id: "3a",
-    type: "custom",
-    data: {
-      label: "Housing Coordinator",
-      department: "Housing",
-      reportsTo: "Housing Program Manager",
-      supervises: [],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: "3b",
-    type: "custom",
-    data: {
-      label: "Support Worker",
-      department: "Housing Support",
-      reportsTo: "Housing Program Manager",
-      supervises: [],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: "3c",
-    type: "custom",
-    data: {
-      label: "Case Manager",
-      department: "Case Mgmt",
-      reportsTo: "Housing Program Manager",
-      supervises: [],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: "3d",
-    type: "custom",
-    data: {
-      label: "Housing Specialist",
-      department: "Special Services",
-      reportsTo: "Housing Program Manager",
-      supervises: [],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-
-  // Level 2 - Finance Manager children (4)
-  {
-    id: "4a",
-    type: "custom",
-    data: {
-      label: "Finance Assistant",
-      department: "Finance",
-      reportsTo: "Finance Manager",
-      supervises: [],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: "4b",
-    type: "custom",
-    data: {
-      label: "Development Coordinator",
-      department: "Fundraising",
-      reportsTo: "Finance Manager",
-      supervises: [],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: "4c",
-    type: "custom",
-    data: {
-      label: "Accountant",
-      department: "Accounting",
-      reportsTo: "Finance Manager",
-      supervises: [],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: "4d",
-    type: "custom",
-    data: {
-      label: "Auditor",
-      department: "Audit",
-      reportsTo: "Finance Manager",
-      supervises: [],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-
-  // Level 2 - Operations Manager children (4)
-  {
-    id: "5a",
-    type: "custom",
-    data: {
-      label: "Logistics Coordinator",
-      department: "Logistics",
-      reportsTo: "Operations Manager",
-      supervises: [],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: "5b",
-    type: "custom",
-    data: {
-      label: "Facilities Supervisor",
-      department: "Facilities",
-      reportsTo: "Operations Manager",
-      supervises: [],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: "5c",
-    type: "custom",
-    data: {
-      label: "Maintenance Lead",
-      department: "Maintenance",
-      reportsTo: "Operations Manager",
-      supervises: [],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: "5d",
-    type: "custom",
-    data: {
-      label: "Procurement Lead",
-      department: "Procurement",
-      reportsTo: "Operations Manager",
-      supervises: [],
-      expanded: false,
-    },
-    position: { x: 0, y: 0 },
-  },
-];
-
-const initialEdges: Edge[] = [
-  // Root → Level 1
-  {
-    id: "e12",
-    source: "1",
-    target: "2",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-  {
-    id: "e13",
-    source: "1",
-    target: "3",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-  {
-    id: "e14",
-    source: "1",
-    target: "4",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-  {
-    id: "e15",
-    source: "1",
-    target: "5",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-
-  // Clinical Director → 4 children
-  {
-    id: "e22a",
-    source: "2",
-    target: "2a",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-  {
-    id: "e22b",
-    source: "2",
-    target: "2b",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-  {
-    id: "e22c",
-    source: "2",
-    target: "2c",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-  {
-    id: "e22d",
-    source: "2",
-    target: "2d",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-
-  // Housing Manager → 4 children
-  {
-    id: "e33a",
-    source: "3",
-    target: "3a",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-  {
-    id: "e33b",
-    source: "3",
-    target: "3b",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-  {
-    id: "e33c",
-    source: "3",
-    target: "3c",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-  {
-    id: "e33d",
-    source: "3",
-    target: "3d",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-
-  // Finance Manager → 4 children
-  {
-    id: "e44a",
-    source: "4",
-    target: "4a",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-  {
-    id: "e44b",
-    source: "4",
-    target: "4b",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-  {
-    id: "e44c",
-    source: "4",
-    target: "4c",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-  {
-    id: "e44d",
-    source: "4",
-    target: "4d",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-
-  // Operations Manager → 4 children
-  {
-    id: "e55a",
-    source: "5",
-    target: "5a",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-  {
-    id: "e55b",
-    source: "5",
-    target: "5b",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-  {
-    id: "e55c",
-    source: "5",
-    target: "5c",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-  {
-    id: "e55d",
-    source: "5",
-    target: "5d",
-    type: "smoothstep",
-    style: { stroke: "#0160A6", strokeWidth: 2.5 },
-  },
-];
 
 /* -----------------------------
    Flow Component
 ------------------------------ */
 
-const ROOT_ID = "1";
 const ROOT_TOP_Y = 40;
 const DEFAULT_NODE_HEIGHT = 120;
 
@@ -486,16 +57,20 @@ function useContainerWidth(ref: React.RefObject<HTMLElement | null>) {
   return width;
 }
 
-function computeVisibleIds(expandedSet: Set<string>) {
-  const byId = new Map(initialNodes.map((n) => [n.id, n]));
-  const visible = new Set<string>([ROOT_ID]);
+function computeVisibleIds(
+  nodes: Node<{ node: OrgNodeData; expanded: boolean }>[],
+  rootId: string,
+  expandedSet: Set<string>
+) {
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const visible = new Set<string>([rootId]);
 
   function visit(id: string) {
     const node = byId.get(id);
     if (!node) return;
     if (expandedSet.has(id)) {
-      const children = initialNodes.filter(
-        (c) => c.data.reportsTo === node.data.label
+      const children = nodes.filter(
+        (c) => c.data.node.reportsTo?._id === node.data.node._id
       );
       for (const c of children) {
         visible.add(c.id);
@@ -503,11 +78,44 @@ function computeVisibleIds(expandedSet: Set<string>) {
       }
     }
   }
-  visit(ROOT_ID);
+  visit(rootId);
   return visible;
 }
+function transformOrgNodesToFlow(orgNodes: OrgNodeData[]): {
+  nodes: Node<{ node: OrgNodeData; expanded: boolean }>[];
+  edges: Edge[];
+} {
+  const nodes: Node<{ node: OrgNodeData; expanded: boolean }>[] = [];
+  const edges: Edge[] = [];
 
+  orgNodes.forEach((orgNode) => {
+    nodes.push({
+      id: orgNode._id,
+      type: "custom",
+      data: {
+        node: orgNode, // store entire node data
+        expanded: !orgNode.reportsTo, // root node expanded by default
+      },
+      position: { x: 0, y: 0 },
+    });
+
+    if (orgNode.reportsTo?._id) {
+      edges.push({
+        id: `e${orgNode.reportsTo._id}-${orgNode._id}`,
+        source: orgNode.reportsTo._id,
+        target: orgNode._id,
+        type: "smoothstep",
+        style: { stroke: "#0160A6", strokeWidth: 2.5 },
+      });
+    }
+  });
+
+  return { nodes, edges };
+}
 function layoutDagre(
+  nodes: Node<{ node: OrgNodeData; expanded: boolean }>[],
+  edges: Edge[],
+  rootId: string,
   visibleIds: Set<string>,
   containerWidth: number,
   nodeWidth: number,
@@ -516,11 +124,12 @@ function layoutDagre(
   const g = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
   g.setGraph({ rankdir: "TB", nodesep: 20, ranksep: 80 });
 
-  const vNodes = initialNodes.map((n) => ({
+  const vNodes = nodes.map((n) => ({
     ...n,
     hidden: !visibleIds.has(n.id),
   }));
-  const vEdges = initialEdges.filter(
+
+  const vEdges = edges.filter(
     (e) => visibleIds.has(e.source) && visibleIds.has(e.target)
   );
 
@@ -533,7 +142,8 @@ function layoutDagre(
 
   // Build parent-child relationships
   const childrenByParent = new Map<string, Node<CustomNodeData>[]>();
-  for (const e of vEdges) {
+  for (const e of edges) {
+    // use full edges, not filtered vEdges
     const child = vNodes.find((n) => n.id === e.target);
     if (!child) continue;
     if (!childrenByParent.has(e.source)) childrenByParent.set(e.source, []);
@@ -546,7 +156,11 @@ function layoutDagre(
     x: number,
     y: number
   ): { positioned: Node<CustomNodeData>[]; width: number; height: number } => {
-    const node = vNodes.find((n) => n.id === nodeId)!;
+    const node = vNodes.find((n) => n.id === nodeId);
+    if (!node) {
+      console.warn("Node not found for id:", nodeId);
+      return { positioned: [], width: 0, height: 0 };
+    }
     const children = childrenByParent.get(nodeId) || [];
     const positioned: Node<CustomNodeData>[] = [];
     node.position = { x, y };
@@ -604,11 +218,19 @@ function layoutDagre(
   // Start layout from root
   const rootX = (containerWidth - nodeWidth) / 2;
   const rootY = ROOT_TOP_Y;
-  const { positioned } = positionNode(ROOT_ID, rootX, rootY);
+  const { positioned } = positionNode(rootId, rootX, rootY);
   /* -----------------------------------------------------------------
    🔧 NEW SECTION: Align children rows horizontally after layout
 ----------------------------------------------------------------- */
   let layoutedNodes = positioned;
+  console.log(
+    "grek",
+    nodes,
+    vNodes,
+    childrenByParent,
+    positioned,
+    layoutedNodes
+  );
   const rows: Record<number, Node<CustomNodeData>[]> = {};
 
   // 1️⃣ Group nodes by rows
@@ -627,7 +249,7 @@ function layoutDagre(
     const isSingleParentRow = row.length === 1;
 
     for (const parent of row) {
-      if (parent.id === ROOT_ID) continue;
+      if (parent.id === rootId) continue;
 
       const children = layoutedNodes.filter(
         (n) =>
@@ -672,6 +294,7 @@ function layoutDagre(
   /* ----------------------------------------------------------------- */
   // Recalculate bounding box
   const visibleNodes = layoutedNodes.filter((n) => !n.hidden);
+  console.log(visibleNodes);
   const newMinX = Math.min(...visibleNodes.map((n) => n.position.x));
   const newMaxX = Math.max(
     ...visibleNodes.map((n) => n.position.x + nodeWidth)
@@ -684,7 +307,7 @@ function layoutDagre(
     let newX = n.position.x + finalOffsetX;
     const newY = n.position.y;
 
-    if (n.id === ROOT_ID) newX = (containerWidth - nodeWidth) / 2;
+    if (n.id === rootId) newX = (containerWidth - nodeWidth) / 2;
 
     return { ...n, position: { x: newX, y: newY } };
   });
@@ -695,6 +318,7 @@ function layoutDagre(
       .map((n) => n.position.y + nodeHeight)
   );
   const contentHeight = Math.max(800, maxY + 100);
+  console.log("grek", nodes, vNodes, layoutedNodes, visibleNodes);
 
   return { nodes: visibleNodes, edges: vEdges, contentHeight };
 }
@@ -706,11 +330,33 @@ const MemoCustomNode = React.memo(CustomNode);
 function Flow() {
   const containerRef = useRef<HTMLDivElement>(null);
   const width = useContainerWidth(containerRef);
+  const { data, isLoading } = useGetTreeNodesQuery();
 
+  const { nodes: apiNodes, edges: apiEdges } = useMemo<{
+    nodes: Node<{ node: OrgNodeData; expanded: boolean }>[];
+    edges: Edge[];
+  }>(() => {
+    if (!data?.data) return { nodes: [], edges: [] };
+    return transformOrgNodesToFlow(data.data);
+  }, [data]);
+  const rootId = useMemo(() => {
+    const root = apiNodes.find((n) => !n.data.node.reportsTo?._id);
+    return root?.data.node._id || ""; // fallback to empty string if no root
+  }, [apiNodes]);
   // UI state
-  const [expanded, setExpanded] = useState<Set<string>>(
-    () => new Set(initialNodes.filter((n) => n.data.expanded).map((n) => n.id))
-  );
+  const initialExpandedSet = new Set<string>();
+  apiNodes.forEach((n) => {
+    if (!n.data.node.reportsTo) {
+      initialExpandedSet.add(n.id); // root
+      // add children of root
+      apiNodes.forEach((child) => {
+        if (child.data.node.reportsTo?._id === n.data.node._id) {
+          initialExpandedSet.add(child.id);
+        }
+      });
+    }
+  });
+  const [expanded, setExpanded] = useState<Set<string>>(initialExpandedSet);
   const [maxNodeHeight, setMaxNodeHeight] = useState(DEFAULT_NODE_HEIGHT);
 
   // measure node heights and only grow maxNodeHeight (prevents vertical jitter)
@@ -729,12 +375,14 @@ function Flow() {
     setExpanded((prev) => {
       const next = new Set(prev);
       const isOpen = next.has(id);
-      const target = initialNodes.find((n) => n.id === id);
+      const target = apiNodes.find((n) => n.id === id);
       if (!target) return prev;
 
       // collapse siblings (same parent)
-      const siblings = initialNodes.filter(
-        (n) => n.data.reportsTo === target.data.reportsTo && n.id !== id
+      const siblings = apiNodes.filter(
+        (n) =>
+          n.data.node?.reportsTo?._id === target.data.node.reportsTo?._id &&
+          n.id !== id
       );
       siblings.forEach((s) => next.delete(s.id));
 
@@ -763,10 +411,24 @@ function Flow() {
     [handleToggle, maxNodeHeight, width]
   );
   const { nodes, edges, contentHeight } = useMemo(() => {
-    const visibleIds = computeVisibleIds(expanded);
+    if (!rootId) {
+      // if no root exists, return empty layout
+      return { nodes: [], edges: [], contentHeight: 0 };
+    }
+    const visibleIds = computeVisibleIds(apiNodes, rootId, expanded);
+
+    console.log("visibleIds", Array.from(visibleIds));
     const nodeWidth = (width - 100) / 4 || 340;
-    return layoutDagre(visibleIds, width || 1000, nodeWidth, maxNodeHeight);
-  }, [expanded, width, maxNodeHeight]);
+    return layoutDagre(
+      apiNodes,
+      apiEdges,
+      rootId,
+      visibleIds,
+      width || 1000,
+      nodeWidth,
+      maxNodeHeight
+    );
+  }, [expanded, width, maxNodeHeight, apiNodes]);
 
   return (
     <div

@@ -7,7 +7,6 @@ import {
   useAddNodeMutation,
   useEditNodeMutation,
   useGetTreeNodesQuery,
- 
 } from "../../../../../services/orgApi";
 import { showSuccess } from "../../../../../utills/toastutills";
 
@@ -17,24 +16,33 @@ interface OrgNodeOption {
   department: string;
 }
 
-interface ActionOrgNodeProps {
-  orgNode?: {
-    label: string;
+interface OrgNode {
+  _id: string;
+  label: string;
+  department: string;
+  reportsTo: null | {
     _id: string;
-    reportsTo: null | { label: string; _id: string };
-    department: string;
-    supervises: [string];
+    label: string;
   };
+  supervises: [
+    {
+      _id: string;
+      label: string;
+    }
+  ];
+}
+
+interface ActionOrgNodeProps {
+  orgNode?: OrgNode;
   show: boolean;
   onHide: () => void;
 }
 
-const OrgNodeSchema = () =>
-  Yup.object().shape({
-    label: Yup.string().required("Label is required"),
-    department: Yup.string().required("Department is required"),
-    reportsTo: Yup.string().nullable(),
-  });
+const OrgNodeSchema = Yup.object().shape({
+  label: Yup.string().required("Label is required"),
+  department: Yup.string().required("Department is required"),
+  reportsTo: Yup.string().nullable(),
+});
 
 const ActionOrgNode: React.FC<ActionOrgNodeProps> = ({
   orgNode,
@@ -46,26 +54,27 @@ const ActionOrgNode: React.FC<ActionOrgNodeProps> = ({
   const [editNode, { isLoading: isEditing }] = useEditNodeMutation();
 
   const { data: nodesData } = useGetTreeNodesQuery(undefined);
-  console.log()
   const [nodeOptions, setNodeOptions] = useState<OrgNodeOption[]>([]);
 
   useEffect(() => {
-    if (nodesData) setNodeOptions(nodesData.nodes || []);
+    if (nodesData?.data) {
+      setNodeOptions(nodesData.data);
+    }
   }, [nodesData]);
 
   const initialValues = {
-    label: orgNode ? orgNode.label : "",
-    reportsTo: orgNode?.reportsTo?._id || "",
-    department: orgNode ? orgNode.department : "",
+    label: orgNode?.label || "",
+    department: orgNode?.department || "",
+    reportsTo: orgNode?.reportsTo?._id || null,
   };
-
+  console.log("org", orgNode);
   const handleSave = async (
     values: typeof initialValues,
     { resetForm }: { resetForm: () => void }
   ) => {
     try {
       const res = isEdit
-        ? await editNode({ id: orgNode!._id, data: values }).unwrap()
+        ? await editNode({ id: orgNode!._id, update: values }).unwrap()
         : await createNode(values).unwrap();
 
       if (res.success) {
@@ -112,7 +121,8 @@ const ActionOrgNode: React.FC<ActionOrgNodeProps> = ({
     >
       <Formik
         initialValues={initialValues}
-        validationSchema={OrgNodeSchema()}
+        validationSchema={OrgNodeSchema}
+        enableReinitialize
         onSubmit={handleSave}
       >
         {({ values, setFieldValue }) => (
@@ -153,14 +163,20 @@ const ActionOrgNode: React.FC<ActionOrgNodeProps> = ({
               <Field
                 as={Form.Select}
                 name="reportsTo"
-                value={values.reportsTo}
+                value={values.reportsTo || ""}
+                disabled={orgNode?.reportsTo === null}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                   setFieldValue("reportsTo", e.target.value || null)
                 }
               >
                 <option value="">-- Select Parent Role --</option>
                 {nodeOptions
-                  .filter((n) => !orgNode || n._id !== orgNode._id)
+                  .filter(
+                    (n) =>
+                      !orgNode || // if adding new node
+                      (n._id !== orgNode._id &&
+                        !orgNode.supervises?.some((s) => s._id === n._id)) // exclude self and subordinates
+                  )
                   .map((n) => (
                     <option key={n._id} value={n._id}>
                       {n.label} ({n.department})

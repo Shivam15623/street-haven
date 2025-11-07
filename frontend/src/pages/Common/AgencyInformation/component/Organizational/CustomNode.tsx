@@ -1,12 +1,10 @@
 import { memo, forwardRef } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import type { OrgNodeData } from "../../../../../services/orgApi";
 
 export type CustomNodeData = {
-  label: string;
-  department?: string;
-  reportsTo?: string;
-  supervises?: string[];
+  node: OrgNodeData;
 
   expanded: boolean; // 👈 we'll pass id from React
 };
@@ -17,11 +15,12 @@ export type CustomNodeProps = {
   onToggle?: (id: string) => void;
   fixedHeight?: number;
   fixedWidth?: number; // ✅ Add width
+  onEdit?: () => void;
 };
 
 // 👇 forwardRef so Flow can attach refs
 const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
-  ({ id, data, onToggle, fixedHeight, fixedWidth }, ref) => {
+  ({ id, data, onToggle, fixedHeight, fixedWidth, onEdit }, ref) => {
     return (
       <div
         ref={ref}
@@ -29,7 +28,6 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
         style={{
           minHeight: fixedHeight ? `${fixedHeight}px` : "auto",
           width: `${fixedWidth}px`,
-    
         }} // ✅ Sync width style={{ minHeight: `${fixedHeight}px` }}
       >
         <Handle
@@ -50,10 +48,10 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
             </div>
             <div className="d-flex flex-column gap-1 gap-lg-8">
               <h6 className="text-street-dark mb-0 fw-semibold text-center text-lg-start text-xs sm:text-sm">
-                {data.label}
+                {data.node.label}
               </h6>
               <p className="text-xxs org-sub sm:text-xs text-center text-lg-start  fw-normal">
-                {data.department}
+                {data.node.department}
               </p>
             </div>
           </div>
@@ -62,51 +60,66 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
         <div className="d-flex flex-grow-1 flex-column text-center text-lg-start  text-xxs sm:text-xs fw-normal gap-1 justify-content-evenly mt-2 transition-all overflow-hidden">
           <p>
             <span className="org-label">Reports to: </span>{" "}
-            <span className="text-street-dark">{data.reportsTo}</span>
+            <span className="text-street-dark">
+              {data.node.reportsTo?.label}
+            </span>
           </p>
           <p className="d-inline-flex flex-column align-items-center flex-xl-row">
             <span className="org-label">Supervises:</span>{" "}
-            {data.supervises?.length === 0 ? (
+            {data.node.supervises?.length === 0 ? (
               <span className="text-street-dark">N/A</span>
             ) : (
               <span className="text-street-dark">
-                {data.supervises?.join(", ")}
+                {data.node.supervises.map((n) => n.label)?.join(", ")}
               </span>
             )}
           </p>
         </div>
-
-        {id !== "1" && data.supervises && data?.supervises?.length > 0 && (
-          <Handle
-            type="source" // source handle
-            position={Position.Bottom}
-            className=""
-            id={`toggle-${id}`} // unique id for handle
-            style={{
-              width: 20,
-              height: 24,
-              borderRadius: "50%",
-              backgroundColor: "var(--street-primary-base)", // match your bg-street-primary
-              color: "white",
-              textAlign: "center",
-              border: "0px",
-
-              fontSize: "12px",
-
-              cursor: "pointer",
-
-              padding: "4px",
-            }}
+        {onEdit && (
+          <button
+            className="btn btn-sm btn-light"
+            style={{ height: "30px", fontSize: "12px" }}
             onClick={(e) => {
               e.stopPropagation();
-
-              onToggle?.(id);
+              onEdit();
             }}
           >
-            4
-          </Handle>
+            Edit
+          </button>
         )}
-        {id === "1" && (
+        {data.node.reportsTo !== null &&
+          data.node.supervises &&
+          data.node.supervises?.length > 0 && (
+            <Handle
+              type="source" // source handle
+              position={Position.Bottom}
+              className=""
+              id={`toggle-${id}`} // unique id for handle
+              style={{
+                width: 20,
+                height: 24,
+                borderRadius: "50%",
+                backgroundColor: "var(--street-primary-base)", // match your bg-street-primary
+                color: "white",
+                textAlign: "center",
+                border: "0px",
+
+                fontSize: "12px",
+
+                cursor: "pointer",
+
+                padding: "4px",
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+
+                onToggle?.(id);
+              }}
+            >
+              {data.node.supervises?.length}
+            </Handle>
+          )}
+        {data.node.reportsTo === null && (
           <Handle
             type="source"
             position={Position.Bottom}
