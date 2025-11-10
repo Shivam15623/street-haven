@@ -35,7 +35,7 @@ const FAQResourcesTab = () => {
     <div className="d-flex flex-column gap-4 mb-5">
       {isAdmin && <AddCategory />}
 
-      <Row className="g-3 gy-md-0 gx-md-4">
+      <Row className="g-3 gy-md-4 gx-md-4">
         {data?.data.map((cat: FAQCard) => (
           <Col md={6} key={cat._id}>
             {" "}
