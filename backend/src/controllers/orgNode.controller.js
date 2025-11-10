@@ -1,6 +1,8 @@
 import OrgNode from "../model/orgNode.js";
+import { ApiError } from "../utills/ApiError.js";
+import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
-import mongoose from "mongoose";
+
 
 /* ------------------------------------------------------------------
    📘 Get full organization tree
@@ -10,11 +12,9 @@ export const orgTreeData = asyncHandler(async (req, res) => {
     .populate("supervises", "label department")
     .populate("reportsTo", "label");
 
-  res.status(200).json({
-    success: true,
-    count: nodes.length,
-    data: nodes,
-  });
+  return res
+    .status(200)
+    .json(new ApiResponse(true, "Organization tree fetched successfully", nodes));
 });
 
 /* ------------------------------------------------------------------
@@ -27,10 +27,7 @@ export const addNode = asyncHandler(async (req, res) => {
   if (!reportsTo) {
     const existingRoot = await OrgNode.findOne({ reportsTo: null });
     if (existingRoot) {
-      return res.status(400).json({
-        success: false,
-        message: "Root node already exists. You can’t create another one.",
-      });
+      throw new ApiError(400, "Root node already exists. You can’t create another one.");
     }
   }
 
@@ -48,11 +45,9 @@ export const addNode = asyncHandler(async (req, res) => {
     });
   }
 
-  res.status(201).json({
-    success: true,
-    message: "Node added successfully",
-    data: newNode,
-  });
+  return res
+    .status(201)
+    .json(new ApiResponse(true, "Node created successfully", newNode));
 });
 
 /* ------------------------------------------------------------------
@@ -64,14 +59,12 @@ export const editNode = asyncHandler(async (req, res) => {
 
   const node = await OrgNode.findById(id);
   if (!node) {
-    return res.status(404).json({ success: false, message: "Node not found" });
+    throw new ApiError(404, "Node not found");
   }
 
   // root cannot be reassigned
   if (!node.reportsTo && reportsTo) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Root node cannot be reassigned" });
+    throw new ApiError(400, "Root node cannot be reassigned");
   }
 
   // if changing parent
@@ -96,11 +89,9 @@ export const editNode = asyncHandler(async (req, res) => {
 
   await node.save();
 
-  res.status(200).json({
-    success: true,
-    message: "Node updated successfully",
-    data: node,
-  });
+  return res
+    .status(200)
+    .json(new ApiResponse(true, "Node updated successfully", node));
 });
 
 /* ------------------------------------------------------------------
@@ -111,15 +102,12 @@ export const deleteNode = asyncHandler(async (req, res) => {
 
   const node = await OrgNode.findById(id);
   if (!node) {
-    return res.status(404).json({ success: false, message: "Node not found" });
+    throw new ApiError(404, "Node not found");
   }
 
   // root protection
   if (!node.reportsTo) {
-    return res.status(400).json({
-      success: false,
-      message: "Root node cannot be deleted",
-    });
+    throw new ApiError(400, "Root node cannot be deleted");
   }
 
   // reassign children (make them report to same parent)
@@ -143,8 +131,7 @@ export const deleteNode = asyncHandler(async (req, res) => {
   // delete the node
   await OrgNode.findByIdAndDelete(id);
 
-  res.status(200).json({
-    success: true,
-    message: "Node deleted successfully",
-  });
+  return res
+    .status(200)
+    .json(new ApiResponse(true, "Node deleted successfully"));
 });
