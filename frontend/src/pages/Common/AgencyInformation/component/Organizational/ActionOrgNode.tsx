@@ -7,6 +7,7 @@ import {
   useAddNodeMutation,
   useEditNodeMutation,
   useGetTreeNodesQuery,
+  type OrgNodeData,
 } from "../../../../../services/orgApi";
 import { showSuccess } from "../../../../../utills/toastutills";
 
@@ -16,24 +17,8 @@ interface OrgNodeOption {
   department: string;
 }
 
-interface OrgNode {
-  _id: string;
-  label: string;
-  department: string;
-  reportsTo: null | {
-    _id: string;
-    label: string;
-  };
-  supervises: [
-    {
-      _id: string;
-      label: string;
-    }
-  ];
-}
-
 interface ActionOrgNodeProps {
-  orgNode?: OrgNode;
+  orgNode?: OrgNodeData;
   show: boolean;
   onHide: () => void;
 }

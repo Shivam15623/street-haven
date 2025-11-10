@@ -15,7 +15,7 @@ export type CustomNodeProps = {
   onToggle?: (id: string) => void;
   fixedHeight?: number;
   fixedWidth?: number; // ✅ Add width
-  onEdit?: () => void;
+  onEdit?: (id:string) => void;
 };
 
 // 👇 forwardRef so Flow can attach refs
@@ -81,7 +81,7 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
             style={{ height: "30px", fontSize: "12px" }}
             onClick={(e) => {
               e.stopPropagation();
-              onEdit();
+              onEdit(id);
             }}
           >
             Edit

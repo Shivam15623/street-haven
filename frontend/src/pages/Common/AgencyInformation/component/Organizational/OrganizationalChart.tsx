@@ -4,6 +4,7 @@ import React, {
   useCallback,
   useMemo,
   useLayoutEffect,
+  useEffect,
 } from "react";
 import {
   ReactFlow,
@@ -22,18 +23,7 @@ import {
   useGetTreeNodesQuery,
   type OrgNodeData,
 } from "../../../../../services/orgApi";
-
-/* -----------------------------
-   Constants & Defaults
------------------------------- */
-
-/* -----------------------------
-   Initial Data
------------------------------- */
-
-/* -----------------------------
-   Flow Component
------------------------------- */
+import ActionOrgNode from "./ActionOrgNode";
 
 const ROOT_TOP_Y = 40;
 const DEFAULT_NODE_HEIGHT = 120;
@@ -128,7 +118,6 @@ function layoutDagre(
     ...n,
     hidden: !visibleIds.has(n.id),
   }));
-
   const vEdges = edges.filter(
     (e) => visibleIds.has(e.source) && visibleIds.has(e.target)
   );
@@ -142,8 +131,7 @@ function layoutDagre(
 
   // Build parent-child relationships
   const childrenByParent = new Map<string, Node<CustomNodeData>[]>();
-  for (const e of edges) {
-    // use full edges, not filtered vEdges
+  for (const e of vEdges) {
     const child = vNodes.find((n) => n.id === e.target);
     if (!child) continue;
     if (!childrenByParent.has(e.source)) childrenByParent.set(e.source, []);
@@ -156,11 +144,7 @@ function layoutDagre(
     x: number,
     y: number
   ): { positioned: Node<CustomNodeData>[]; width: number; height: number } => {
-    const node = vNodes.find((n) => n.id === nodeId);
-    if (!node) {
-      console.warn("Node not found for id:", nodeId);
-      return { positioned: [], width: 0, height: 0 };
-    }
+    const node = vNodes.find((n) => n.id === nodeId)!;
     const children = childrenByParent.get(nodeId) || [];
     const positioned: Node<CustomNodeData>[] = [];
     node.position = { x, y };
@@ -168,7 +152,7 @@ function layoutDagre(
 
     if (children.length === 0)
       return { positioned, width: nodeWidth, height: nodeHeight };
-    const CHILDREN_PER_ROW = 3;
+    const CHILDREN_PER_ROW = 4;
     const numRows = Math.ceil(children.length / CHILDREN_PER_ROW);
     const HORIZONTAL_SPACING = 30;
     const VERTICAL_SPACING = 80;
@@ -223,15 +207,8 @@ function layoutDagre(
    🔧 NEW SECTION: Align children rows horizontally after layout
 ----------------------------------------------------------------- */
   let layoutedNodes = positioned;
-  console.log(
-    "grek",
-    nodes,
-    vNodes,
-    childrenByParent,
-    positioned,
-    layoutedNodes
-  );
   const rows: Record<number, Node<CustomNodeData>[]> = {};
+  // 🧭 Compute global layout boundaries (across all rows)
 
   // 1️⃣ Group nodes by rows
   for (const n of layoutedNodes) {
@@ -261,31 +238,62 @@ function layoutDagre(
       // 🧠 NEW CHECK:
       // If only one parent in this  → skip adjustments
 
-      if (isSingleParentRow) {
+      // 🧠 Only skip "overflow" single-parent rows, not real single-parent hierarchies
+      const isOverflowSingleParent =
+        isSingleParentRow &&
+        !layoutedNodes.some(
+          (n) =>
+            !n.hidden &&
+            vEdges.some((e) => e.source === n.id && e.target === parent.id)
+        );
+
+      if (isOverflowSingleParent) continue;
+
+      // find min/max X for this row
+      const minX = Math.min(...row.map((n) => n.position.x));
+      const maxX = Math.max(...row.map((n) => n.position.x + nodeWidth));
+      console.log(minX, maxX);
+      const nodesInThisRow = row.length;
+      if (
+        isSingleParentRow &&
+        !isOverflowSingleParent &&
+        leftMostParent.id === rightMostParent.id
+      ) {
         continue;
       }
+      // Leftmost parent → align leftmost child (only if valid)
+      if (parent.id === leftMostParent.id) {
+        if (children.length <= nodesInThisRow) {
+          children.sort((a, b) => a.position.x - b.position.x);
+          const dx = parent.position.x - children[0].position.x;
+          children.forEach((c) => (c.position.x += dx));
+        } else {
+          children.sort((a, b) => a.position.x - b.position.x);
+          const dx = minX - children[0].position.x;
+          children.forEach((c) => (c.position.x += dx));
+        }
 
-      // Leftmost parent → align leftmost child
-      if (parent === leftMostParent) {
-        children.sort((a, b) => a.position.x - b.position.x);
-        const dx = parent.position.x - children[0].position.x;
-        children.forEach((c) => (c.position.x += dx));
-
-        // Rightmost parent → align rightmost child
-      } else if (parent === rightMostParent) {
-        children.sort((a, b) => b.position.x - a.position.x);
-        const dx = parent.position.x - children[0].position.x;
-        children.forEach((c) => (c.position.x += dx));
+        // Rightmost parent → align rightmost child (only if valid)
+      } else if (parent.id === rightMostParent.id) {
+        if (children.length <= nodesInThisRow) {
+          children.sort((a, b) => b.position.x - a.position.x);
+          const dx = parent.position.x - children[0].position.x;
+          children.forEach((c) => (c.position.x += dx));
+        } else {
+          children.sort((a, b) => b.position.x - a.position.x);
+          const dx = maxX - children[0].position.x + 30;
+          children.forEach((c) => (c.position.x += dx));
+        }
 
         // Middle parents → evenly space if they have too many children
       } else {
-        if (children.length === 3) {
+        if (children.length === 4) {
           const startX = leftMostParent.position.x;
           let lastX = startX;
           children.sort((a, b) => a.position.x - b.position.x);
           children.forEach((c) => {
             c.position.x = lastX;
-            lastX += nodeWidth + 20; // spacing between children
+            lastX += nodeWidth + 30; // spacing between children
           });
         }
       }
@@ -294,7 +302,6 @@ function layoutDagre(
   /* ----------------------------------------------------------------- */
   // Recalculate bounding box
   const visibleNodes = layoutedNodes.filter((n) => !n.hidden);
-  console.log(visibleNodes);
   const newMinX = Math.min(...visibleNodes.map((n) => n.position.x));
   const newMaxX = Math.max(
     ...visibleNodes.map((n) => n.position.x + nodeWidth)
@@ -318,11 +325,9 @@ function layoutDagre(
       .map((n) => n.position.y + nodeHeight)
   );
   const contentHeight = Math.max(800, maxY + 100);
-  console.log("grek", nodes, vNodes, layoutedNodes, visibleNodes);
 
   return { nodes: visibleNodes, edges: vEdges, contentHeight };
 }
-
 // -----------------------------
 // Component
 // -----------------------------
@@ -330,8 +335,9 @@ const MemoCustomNode = React.memo(CustomNode);
 function Flow() {
   const containerRef = useRef<HTMLDivElement>(null);
   const width = useContainerWidth(containerRef);
-  const { data, isLoading } = useGetTreeNodesQuery();
-
+  const { data } = useGetTreeNodesQuery();
+  const [selectedNode, setSelectedNode] = useState<OrgNodeData | null>();
+  const [showEditModal, setShowEditModal] = useState(false);
   const { nodes: apiNodes, edges: apiEdges } = useMemo<{
     nodes: Node<{ node: OrgNodeData; expanded: boolean }>[];
     edges: Edge[];
@@ -344,19 +350,21 @@ function Flow() {
     return root?.data.node._id || ""; // fallback to empty string if no root
   }, [apiNodes]);
   // UI state
-  const initialExpandedSet = new Set<string>();
-  apiNodes.forEach((n) => {
-    if (!n.data.node.reportsTo) {
-      initialExpandedSet.add(n.id); // root
-      // add children of root
-      apiNodes.forEach((child) => {
-        if (child.data.node.reportsTo?._id === n.data.node._id) {
-          initialExpandedSet.add(child.id);
-        }
-      });
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (apiNodes.length > 0 && rootId) {
+      const initialExpandedSet = new Set<string>();
+      const root = apiNodes.find((n) => n.id === rootId);
+
+      if (root) {
+        initialExpandedSet.add(rootId);
+      }
+      console.log("Initial expanded set:", initialExpandedSet);
+
+      setExpanded(initialExpandedSet);
     }
-  });
-  const [expanded, setExpanded] = useState<Set<string>>(initialExpandedSet);
+  }, [apiNodes, rootId]);
+
   const [maxNodeHeight, setMaxNodeHeight] = useState(DEFAULT_NODE_HEIGHT);
 
   // measure node heights and only grow maxNodeHeight (prevents vertical jitter)
@@ -371,29 +379,41 @@ function Flow() {
     }
   });
 
-  const handleToggle = useCallback((id: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      const isOpen = next.has(id);
-      const target = apiNodes.find((n) => n.id === id);
-      if (!target) return prev;
+  const handleToggle = useCallback(
+    (id: string) => {
+      setExpanded((prev) => {
+        const next = new Set(prev);
+        const isOpen = next.has(id);
+        const target = apiNodes.find((n) => n.id === id);
+        if (!target) return prev;
 
-      // collapse siblings (same parent)
-      const siblings = apiNodes.filter(
-        (n) =>
-          n.data.node?.reportsTo?._id === target.data.node.reportsTo?._id &&
-          n.id !== id
-      );
-      siblings.forEach((s) => next.delete(s.id));
+        // collapse siblings (same parent)
+        const siblings = apiNodes.filter(
+          (n) =>
+            n.data.node?.reportsTo?._id === target.data.node.reportsTo?._id &&
+            n.id !== id
+        );
+        siblings.forEach((s) => next.delete(s.id));
 
-      // toggle clicked
-      if (isOpen) next.delete(id);
-      else next.add(id);
+        // toggle clicked
+        if (isOpen) next.delete(id);
+        else next.add(id);
 
-      return next;
-    });
-  }, []);
-
+        return next;
+      });
+    },
+    [apiNodes]
+  );
+  const handleEditNode = useCallback(
+    (id: string) => {
+      const node = apiNodes.find((n) => n.data.node._id === id);
+      if (node) {
+        setSelectedNode(node.data.node);
+        setShowEditModal(true);
+      }
+    },
+    [apiNodes]
+  );
   const nodeTypes = useMemo(
     () => ({
       custom: (props: CustomNodeProps) => (
@@ -405,11 +425,13 @@ function Flow() {
           onToggle={handleToggle}
           fixedHeight={maxNodeHeight}
           fixedWidth={(width - 100) / 4 || 340}
+          onEdit={handleEditNode}
         />
       ),
     }),
     [handleToggle, maxNodeHeight, width]
   );
+
   const { nodes, edges, contentHeight } = useMemo(() => {
     if (!rootId) {
       // if no root exists, return empty layout
@@ -430,35 +452,54 @@ function Flow() {
     );
   }, [expanded, width, maxNodeHeight, apiNodes]);
 
-  return (
-    <div
-      ref={containerRef}
-      style={{
-        width: "100%",
-        height: "80vh", // fixed height (no dancing)
-        overflow: "auto", // scroll if needed
-        border: "0",
-      }}
-    >
-      {/* Optional inner wrapper to reserve scroll height */}
-      <div style={{ height: contentHeight }}>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          nodeTypes={nodeTypes}
-          nodesDraggable={false}
-          panOnDrag={false}
-          zoomOnScroll={false}
-          zoomOnPinch={false}
-          zoomOnDoubleClick={false}
-          minZoom={0.5}
-          maxZoom={2}
-          defaultEdgeOptions={{ zIndex: -23 }}
+  const handleClose = () => {
+    setShowEditModal(false);
+    setSelectedNode(null);
+  };
 
-          // No fitView calls anywhere
-        />
+  return (
+    <>
+      {" "}
+      <div
+        ref={containerRef}
+        style={{
+          width: "100%",
+          height: "80vh", // fixed height (no dancing)
+          overflow: "auto", // scroll if needed
+          border: "0",
+        }}
+      >
+        {/* Optional inner wrapper to reserve scroll height */}
+        <div style={{ height: contentHeight }}>
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            // edgeTypes={edgeTypes}
+            nodesDraggable={false}
+            panOnDrag={false}
+            zoomOnScroll={false}
+            zoomOnPinch={false}
+            zoomOnDoubleClick={false}
+            minZoom={0.5}
+            maxZoom={2}
+            defaultEdgeOptions={{ zIndex: -1 }}
+
+            // No fitView calls anywhere
+          />
+        </div>
       </div>
-    </div>
+      {showEditModal &&
+        selectedNode &&
+        selectedNode !== null &&
+        selectedNode !== undefined && (
+          <ActionOrgNode
+            show={showEditModal}
+            onHide={handleClose}
+            orgNode={selectedNode} // passes selected node data
+          />
+        )}
+    </>
   );
 }
 
