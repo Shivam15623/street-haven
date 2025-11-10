@@ -49,6 +49,7 @@ const AddEmployee = () => {
       const res = await addEmployee(values).unwrap();
       if (res.success) {
         showSuccess(res.message);
+        setShowModal(false);
       }
     } catch (error: any) {
       showError(error.data.message);
@@ -64,7 +65,7 @@ const AddEmployee = () => {
       </button>
       <ModalWrapper
         show={showModal}
-        title="Edit Employee Profile"
+        title="Add New Employee"
         size="lg"
         headerClassName="text-xl p-0 pb-20 text-street-dark"
         className="p-20 p-sm-24 p-md-32 gap-16 gap-sm-20"
