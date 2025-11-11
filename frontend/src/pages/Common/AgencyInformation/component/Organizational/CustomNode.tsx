@@ -15,7 +15,7 @@ export type CustomNodeProps = {
   onToggle?: (id: string) => void;
   fixedHeight?: number;
   fixedWidth?: number; // ✅ Add width
-  onEdit?: (id:string) => void;
+  onEdit?: (id: string) => void;
 };
 
 // 👇 forwardRef so Flow can attach refs
@@ -28,6 +28,7 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
         style={{
           minHeight: fixedHeight ? `${fixedHeight}px` : "auto",
           width: `${fixedWidth}px`,
+          boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
         }} // ✅ Sync width style={{ minHeight: `${fixedHeight}px` }}
       >
         <Handle
