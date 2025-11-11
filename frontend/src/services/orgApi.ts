@@ -48,7 +48,7 @@ export const OrgApi = api.injectEndpoints({
       }),
       invalidatesTags: ["OrgNode"],
     }),
-    deleteNode: builder.mutation({
+    deleteNode: builder.mutation<ApiGeneralResponse, { id: string }>({
       query: ({ id }) => ({
         url: `/orgNode/deleteNode/${id}`,
         method: "DELETE",
