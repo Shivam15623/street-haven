@@ -374,7 +374,7 @@ function Flow() {
             maxZoom={2}
             defaultEdgeOptions={{ zIndex: -1 }}
             elevateNodesOnSelect={false} // ✅ Add this
-            edgesUpdatable={false} // ✅ Add this
+       
             edgesFocusable={false} // ✅ Add this
             // No fitView calls anywhere
           />
