@@ -2,6 +2,7 @@ import { memo, forwardRef } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import type { OrgNodeData } from "../../../../../services/orgApi";
+import DeleteOrgNode from "./DeleteOrgNode";
 
 export type CustomNodeData = {
   node: OrgNodeData;
@@ -29,6 +30,10 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
           minHeight: fixedHeight ? `${fixedHeight}px` : "auto",
           width: `${fixedWidth}px`,
           boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+          zIndex: 10, // ✅ Use reasonable z-index (10 is enough)
+          position: "relative",
+          pointerEvents: "auto",
+          backgroundColor: "var(--street-card)",
         }} // ✅ Sync width style={{ minHeight: `${fixedHeight}px` }}
       >
         <Handle
@@ -78,8 +83,7 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
         </div>
         {onEdit && (
           <button
-            className="btn btn-sm btn-light"
-            style={{ height: "30px", fontSize: "12px" }}
+            className="btn btn-sm btn-street-edit"
             onClick={(e) => {
               e.stopPropagation();
               onEdit(id);
@@ -88,6 +92,8 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
             Edit
           </button>
         )}
+        {data.node.reportsTo !== null && <DeleteOrgNode nodedata={data.node} />}
+
         {data.node.reportsTo !== null &&
           data.node.supervises &&
           data.node.supervises?.length > 0 && (
