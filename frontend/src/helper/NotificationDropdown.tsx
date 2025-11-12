@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Dropdown, Spinner } from "react-bootstrap";
 import { Icon } from "@iconify/react";
 import { Link } from "react-router-dom";
@@ -9,10 +9,8 @@ import {
 import { useSocket } from "../hooks/useSocket";
 import { useSelector } from "react-redux";
 import { selectAuth } from "../redux/AuthSlice";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
+import NotificationItem from "./NotificationItem";
 
-dayjs.extend(relativeTime);
 
 const NotificationDropdown = () => {
   const { socket } = useSocket();
@@ -40,6 +38,10 @@ const NotificationDropdown = () => {
       socket.off("newNotification");
     };
   }, [socket, user?._id]);
+  useEffect(() => {
+    const count = notifications.filter((notif) => !notif.readAt).length;
+    setUnreadCount(count);
+  }, [notifications]);
 
   return (
     <Dropdown className="notification-dropdown">
@@ -66,21 +68,7 @@ const NotificationDropdown = () => {
             </div>
           ) : (
             notifications.map((item) => (
-              <React.Fragment key={item._id}>
-                <Dropdown.Item className="d-flex flex-row align-items-start p-10 p-sm-16 gap-8 gap-sm-12">
-                  <div className="w-6-px h-6-px w-sm-8-px h-sm-8-px bg-street-primary rounded-circle mt-6 flex-shrink-0"></div>
-                  <div className="flex-grow-1">
-                    <p className="text-sm sm:text-sm text-street-dark mb-0">
-                      {item.title}
-                    </p>
-                    <p className="text-xs text-street-base mt-0 mt-sm-1">{item.message}</p>
-                    <p className="text-xxs sm:text-xs text-street-base mt-0 mt-sm-1">
-                      {dayjs(item.createdAt).fromNow()}
-                    </p>
-                  </div>
-                </Dropdown.Item>
-                <Dropdown.Divider />
-              </React.Fragment>
+              <NotificationItem key={item._id} item={item} />
             ))
           )}
         </div>

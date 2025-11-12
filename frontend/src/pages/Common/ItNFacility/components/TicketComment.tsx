@@ -12,6 +12,7 @@ import { useSelector } from "react-redux";
 import { selectAuth } from "../../../../redux/AuthSlice";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+
 dayjs.extend(relativeTime);
 
 // Interface for grouped comments
@@ -24,7 +25,164 @@ interface DateGroupedComments {
   dateLabel: string;
   groups: CommentGroup[];
 }
+interface Attachment {
+  type: "image" | "video" | "audio" | "pdf" | "doc" | "excel" | "zip" | "other";
+  fileName: string;
+  size: number;
+  fileUrl: string;
+  thumbnail?: string;
+}
+// 🔢 Utility function to convert bytes to readable format
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return "0 Bytes";
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + " " + sizes[i];
+};
 
+const AttachmentPreview = ({ attachment }: { attachment: Attachment }) => {
+  // 📸 Image Preview
+  const readableSize = formatFileSize(attachment.size);
+  const getFileIcon = (type: string) => {
+    const iconMap: Record<string, string> = {
+      pdf: "mdi:file-pdf-box",
+      doc: "mdi:file-word-box",
+      excel: "mdi:file-excel-box",
+      zip: "mdi:folder-zip",
+      image: "mdi:file-image-box",
+      video: "mdi:file-video",
+      audio: "mdi:file-music",
+      other: "mdi:file-outline",
+    };
+
+    const colorMap: Record<string, string> = {
+      pdf: "text-danger", // red
+      doc: "text-primary", // blue
+      excel: "text-success", // green
+      zip: "text-warning", // yellow/orange
+      image: "text-info", // cyan
+      video: "text-purple", // or custom class
+      audio: "text-secondary",
+      other: "text-muted",
+    };
+
+    const icon = iconMap[type] || iconMap.other;
+    const color = colorMap[type] || colorMap.other;
+
+    return { icon, color };
+  };
+  const { icon, color } = getFileIcon(attachment.type);
+  const handleDownload = async () => {
+    try {
+      const response = await fetch(attachment.fileUrl);
+      if (!response.ok) throw new Error("Failed to fetch file");
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = attachment.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(blobUrl); // Free memory
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
+  };
+
+  if (attachment.type === "image") {
+    return (
+      <div className="position-relative overflow-hidden rounded-3 cursor-pointer">
+        <img
+          src={attachment.fileUrl}
+          alt={attachment.fileName}
+          className="w-100"
+          style={{
+            height: "12rem",
+            objectFit: "cover",
+            transition: "transform 0.3s",
+          }}
+          onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+          onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+        />
+        <div className="position-absolute bottom-0 end-0 bg-dark bg-opacity-50 text-white small px-2 py-1 rounded-2 m-2">
+          {readableSize}
+        </div>
+      </div>
+    );
+  }
+
+  // 🎥 Video Preview
+  if (attachment.type === "video") {
+    return (
+      <div className="position-relative overflow-hidden rounded-3 cursor-pointer">
+        <img
+          src={attachment.thumbnail || "/placeholder-video.jpg"}
+          alt={attachment.fileName}
+          className="w-100"
+          style={{ height: "12rem", objectFit: "cover" }}
+        />
+        <div className="position-absolute top-50 start-50 translate-middle bg-white bg-opacity-75 rounded-circle p-3">
+          <Icon icon="mdi:play" className="text-primary fs-3" />
+        </div>
+        <div className="position-absolute bottom-0 end-0 bg-dark bg-opacity-50 text-white small px-2 py-1 rounded-2 m-2">
+          {readableSize}
+        </div>
+      </div>
+    );
+  }
+
+  // 🎵 Audio Preview
+  if (attachment.type === "audio") {
+    return (
+      <div className="d-flex align-items-center gap-3 p-3 border rounded-3 bg-light">
+        <div
+          className="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle"
+          style={{ width: "48px", height: "48px" }}
+        >
+          <Icon icon="mdi:music" className={`text-primary fs-5 ${color}`} />
+        </div>
+        <div className="flex-grow-1 text-truncate">
+          <div className="fw-medium text-truncate">{attachment.fileName}</div>
+          <div className="text-muted small">{readableSize}</div>
+        </div>
+        <button
+          onClick={handleDownload}
+          className="btn btn-sm btn-light rounded-circle"
+        >
+          <Icon icon="mdi:download" className="fs-5" />
+        </button>
+      </div>
+    );
+  }
+
+  // 📄 Document (PDF, DOC, etc.)
+  return (
+    <div className="d-flex align-items-center gap-3 p-3 border rounded-3 bg-white hover-shadow-sm cursor-pointer">
+      <div
+        className="d-flex align-items-center justify-content-center bg-light rounded-3"
+        style={{ width: "48px", height: "48px" }}
+      >
+        <Icon icon={icon} className={`fs-4 text-secondary ${color}`} />
+      </div>
+      <div className="flex-grow-1 text-truncate">
+        <div className="fw-medium text-sm text-truncate">
+          {attachment.fileName}
+        </div>
+        <div className="text-muted text-xs small">{readableSize}</div>
+      </div>
+      <button
+        onClick={handleDownload}
+        className="btn h-100 btn-light rounded-circle"
+      >
+        <Icon icon="mdi:download" className="fs-5" />
+      </button>
+    </div>
+  );
+};
 const TicketComment = ({ ticket }: { ticket: TicketData }) => {
   const { socket } = useSocket();
   const { user } = useSelector(selectAuth);
@@ -151,7 +309,7 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
       socket.emit("leaveRoom", { ticketId: ticket._id, userId: user?._id });
       socket.off("newComment");
     };
-  }, [socket, ticket._id,user?._id]);
+  }, [socket, ticket._id, user?._id]);
 
   const handleFileSelect = () => {
     fileInputRef.current?.click();
@@ -185,6 +343,7 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
       title="Ticket Comments"
       size={600}
       placement="end"
+      bodyclassName="p-0"
       trigger={
         <button className="btn btn-street-primary d-flex align-items-center justify-content-center">
           <Icon icon="mdi:chat-outline" className="text-xl" />
@@ -217,7 +376,7 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
               <div key={dateGroup.dateLabel} className="mb-3 ">
                 {/* Date Divider */}
                 <div className="text-center text-muted my-5 position-relative">
-                  <hr className="m-0" />
+                  <hr className="m-0 opacity-0" />
                   <span
                     className="position-absolute top-50 start-50 translate-middle bg-white px-3 text-secondary small fw-medium"
                     style={{ fontSize: "12px" }}
@@ -230,7 +389,7 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
                 {dateGroup.groups.map((group, idx) => (
                   <div
                     key={group.user._id + idx}
-                    className={`chat-single-message d-flex flex-column gap-2 mb-0 ${
+                    className={`chat-single-message p-0 d-flex flex-column gap-2 mb-0 ${
                       user?._id === group.user._id
                         ? "right"
                         : "left align-items-start"
@@ -239,58 +398,25 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
                     {group.messages.map((msg) => (
                       <div
                         key={msg._id}
-                        className="chat-message-content align-items-start position-relative p-10"
+                        className="chat-message-content align-items-start position-relative p-8"
                       >
-                        <p>{msg.message}</p>
+                        {msg.attachments && msg.attachments.length > 0 && (
+                          <div className=" space-y-2 gap-2 d-flex flex-column">
+                            {msg.attachments.map((attachment, idx) => (
+                              <AttachmentPreview
+                                key={idx}
+                                attachment={attachment}
+                              />
+                            ))}
+                          </div>
+                        )}
+                        <p className={" py-2"}>{msg.message}</p>
 
-                        {msg.attachments?.map((att, i) => {
-                          const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(
-                            att
-                          );
-                          return (
-                            <div key={i} className="d-inline-block me-1 mb-1">
-                              {isImage ? (
-                                <img
-                                  src={att}
-                                  alt={`attachment-${i}`}
-                                  className="img-thumbnail"
-                                  style={{
-                                    maxWidth: "100px",
-                                    cursor: "pointer",
-                                  }}
-                                  onClick={() => window.open(att, "_blank")}
-                                />
-                              ) : (
-                                <a
-                                  href={att}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="d-flex align-items-center gap-1"
-                                >
-                                  <Icon
-                                    icon="mdi:file-outline"
-                                    className="text-xl text-muted"
-                                  />
-                                  <span className="small text-primary">
-                                    View file
-                                  </span>
-                                </a>
-                              )}
-                            </div>
-                          );
-                        })}
-
-                        <span
-                          className={`chat-time position-absolute w-fit d-flex gap-1  text-muted ${
-                            user?._id === msg.userId._id
-                              ? "end-100 me-8"
-                              : "start-100 ms-8"
-                          }`}
-                          style={{ top: "20%", transform: "translateY(-50%)" }}
-                        >
-                          {dayjs(msg.createdAt).format("hh:mm")}{" "}
-                          <span>{dayjs(msg.createdAt).format("A")}</span>
-                        </span>
+                        <div className="px-2  d-flex align-items-center  justify-content-end gap-1">
+                          <span className="chat-time text-xxs">
+                            {dayjs(msg.createdAt).format("hh:mm A")}
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -304,14 +430,57 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
             </div>
           )}
         </div>
+        {/* Attachment preview */}
+        {attachments.length > 0 && (
+          <div className="p-2 border-top bg-light">
+            <div
+              className="d-flex gap-2 overflow-auto"
+              style={{ scrollbarWidth: "thin" }}
+            >
+              {attachments.map((file, idx) => (
+                <div
+                  key={idx}
+                  className="position-relative d-flex align-items-center gap-2 p-2 bg-secondary bg-opacity-10 rounded"
+                  style={{ minWidth: "160px" }}
+                >
+                  <Icon
+                    icon="mdi:file-outline"
+                    className="text-muted flex-shrink-0"
+                    width="18"
+                    height="18"
+                  />
+                  <span className="text-truncate small flex-grow-1">
+                    {file.name}
+                  </span>
 
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-light p-1 d-flex align-items-center justify-content-center"
+                    onClick={() =>
+                      setAttachments(attachments.filter((_, i) => i !== idx))
+                    }
+                  >
+                    <Icon icon="mdi:close" width="14" height="14" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <form
-          className="chat-message-box px-1"
+          className="chat-message-box bg-dark px-2"
           onSubmit={(e) => {
             e.preventDefault();
             handleMessageSend();
           }}
         >
+          <button
+            type="button"
+            className=" btn btn-light d-flex align-items-center text-xl"
+            onClick={handleFileSelect}
+          >
+            <Icon icon="ph:link" />
+          </button>
           <input
             type="text"
             className="form-control w-auto"
@@ -329,20 +498,12 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
               e.target.files && handleAddAttachments(e.target.files)
             }
           />
-          <div className="chat-message-box-action ">
-            <button
-              type="button"
-              className="text-xl"
-              onClick={handleFileSelect}
-            >
-              <Icon icon="ph:link" />
-            </button>
-
+          <div className="chat-message-box-action">
             <button
               type="submit"
               className="btn btn-street-primary d-flex align-items-center gap-1 "
             >
-              Send <Icon icon="f7:paperplane" />
+              <Icon icon="f7:paperplane" />
             </button>
           </div>
         </form>

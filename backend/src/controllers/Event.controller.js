@@ -3,8 +3,9 @@ import Event from "../model/event.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
-import Notification from "../model/notification.js";
+
 import { io } from "../index.js";
+import { createNotification } from "../helper/CreateNotoification.js";
 export const createEvent = asyncHandler(async (req, res) => {
   const {
     title,
@@ -47,22 +48,21 @@ export const createEvent = asyncHandler(async (req, res) => {
     if (!event) throw new ApiError(500, "Event creation failed");
 
     // 🔔 Create notification for event creation
-    const notification = await Notification.create(
-      [
-        {
-          type: "event_activity",
-          title: "New Event Created",
-          message: `The event "${title}" has been created by ${firstname} ${lastname}.`,
-          link: `/events/${event._id}`,
-          isGlobal: true,
-          createdBy: userId,
-          meta: { eventId: event._id },
-        },
-      ],
-      { session }
+    const notification = await createNotification(
+      {
+        type: "event_activity",
+        title: "New Event Created",
+        message: `The event "${title}" has been created by ${firstname} ${lastname}.`,
+        link: `/events/${event._id}`,
+        isGlobal: true, // ✅ no per-user mappings
+        createdBy: userId,
+        expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        meta: { eventId: event._id },
+      },
+      session
     );
 
-    io.emit("newNotification", notification[0]);
+    io.emit("newNotification", notification);
 
     await session.commitTransaction();
     session.endSession();
@@ -304,28 +304,26 @@ export const EventSignUp = asyncHandler(async (req, res) => {
     event.registeredUsers.push(userId);
     await event.save({ session });
 
-    // ✅ Create signup notification
-    const notification = await Notification.create(
-      [
-        {
-          recipients: [{ userId }],
-          type: "event_activity",
-          title: "Event Registration Successful",
-          message: `You have successfully registered for "${event.title}".`,
-          link: `/events/${event._id}`,
-          createdBy: userId,
-          meta: {
-            eventId: event._id,
-            eventTitle: event.title,
-            action: "signup",
-            performedBy: userId,
-          },
+    const notification = await createNotification(
+      {
+        recipients: [userId],
+        type: "event_activity",
+        title: "Event Registration Successful",
+        message: `You have successfully registered for "${event.title}".`,
+        link: `/events/${event._id}`,
+        createdBy: userId,
+        expireAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        meta: {
+          eventId: event._id,
+          eventTitle: event.title,
+          action: "signup",
+          performedBy: userId,
         },
-      ],
-      { session }
+      },
+      session
     );
 
-    io.to(`user_${userId.toString()}`).emit("newNotification", notification[0]);
+    io.to(`user_${userId.toString()}`).emit("newNotification", notification);
 
     await session.commitTransaction();
     session.endSession();
@@ -366,27 +364,27 @@ export const EventSignOut = asyncHandler(async (req, res) => {
     await event.save({ session });
 
     // ✅ Create sign-out notification
-    const notification = await Notification.create(
-      [
-        {
-          recipients: [{ userId }],
-          type: "event_activity",
-          title: "Event Registration Cancelled",
-          message: `You have cancelled your registration for "${event.title}".`,
-          link: `/events/${event._id}`,
-          createdBy: userId,
-          meta: {
-            eventId: event._id,
-            eventTitle: event.title,
-            action: "signout",
-            performedBy: userId,
-          },
+
+    const notification = await createNotification(
+      {
+        recipients: [userId],
+        type: "event_activity",
+        title: "Event Registration Cancelled",
+        message: `You have cancelled your registration for "${event.title}".`,
+        link: `/events/${event._id}`,
+        createdBy: userId,
+        expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        meta: {
+          eventId: event._id,
+          eventTitle: event.title,
+          action: "signout",
+          performedBy: userId,
         },
-      ],
-      { session }
+      },
+      session
     );
 
-    io.to(`user_${userId.toString()}`).emit("newNotification", notification[0]);
+    io.to(`user_${userId.toString()}`).emit("newNotification", notification);
 
     await session.commitTransaction();
     session.endSession();
