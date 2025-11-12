@@ -70,13 +70,13 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
           display: "flex",
           flexDirection: "column",
           opacity: disabled ? 0.8 : 1,
-          pointerEvents: disabled ? "none" : "auto",
+          // ✅ remove pointerEvents:none — we’ll handle readonly differently
         }}
       >
         {!disabled && (
           <div
             id="toolbar"
-            className="d-flex align-items-center gap-2 border-bottom bg-light p-2 sticky-top flex-wrap"
+            className="d-flex align-items-center gap-2 border-bottom bg-light p-2  sticky-top flex-wrap"
             style={{ top: 0, zIndex: 10, marginRight: "0px" }}
           >
             <select className="ql-header text-street-base" defaultValue="">
@@ -143,7 +143,13 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
             />
           </div>
         )}
-        <div style={{ flex: 1, overflowY: "auto" }}>
+        <div
+          style={{
+            flex: 1,
+            overflowY: value.trim().length ? "auto" : "hidden", // ✅ hide scroll when empty
+            cursor: disabled ? "not-allowed" : "text",
+          }}
+        >
           <ReactQuill
             ref={quillRef}
             value={value}

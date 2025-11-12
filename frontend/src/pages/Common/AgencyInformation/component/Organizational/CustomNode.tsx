@@ -67,7 +67,7 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
           <p>
             <span className="org-label">Reports to: </span>{" "}
             <span className="text-street-dark">
-              {data.node.reportsTo?.label}
+              {data.node.reportsTo?.label??"N/A"}
             </span>
           </p>
           <p className="d-inline-flex flex-column align-items-center flex-xl-row">
