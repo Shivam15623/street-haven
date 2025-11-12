@@ -8,6 +8,7 @@ import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import { uploadOnCloudinary } from "../utills/cloudinary.js";
+import { createNotification } from "../helper/CreateNotoification.js";
 
 export const AddProgramManual = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
@@ -58,15 +59,16 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
     const allUsers = await User.find({ _id: { $ne: userId } }).session(session);
 
     // Create Notification within the session
-    const notification = await Notification.create(
+    const notification = await createNotification(
       [
         {
-          recipients: allUsers.map((u) => ({ userId: u._id, read: false })),
           type: "mannual_added",
           title: "New Program Manual Added",
           message: `${firstname} added a new Program Manual: "${title}"`,
           link: `/program-manuals/${programmanual[0]._id}`,
           createdBy: userId,
+          isGlobal: true,
+          expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
           meta: { programManualId: programmanual[0]._id },
         },
       ],
@@ -79,10 +81,7 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
 
     // Emit real-time notifications outside transaction
     allUsers.forEach((u) => {
-      io.to(`user_${u._id.toString()}`).emit(
-        "newNotification",
-        notification[0]
-      );
+      io.to(`user_${u._id.toString()}`).emit("newNotification", notification);
     });
 
     return res
@@ -104,7 +103,6 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
 export const EditProgramManual = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { title, description, tags, type } = req.body;
-
 
   const programManual = await ProgramManual.findById(id);
   if (!programManual) {

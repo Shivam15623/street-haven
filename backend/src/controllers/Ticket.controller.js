@@ -1,14 +1,15 @@
 import mongoose from "mongoose";
-import { activeTicketUsers, io } from "../index.js";
+import { io } from "../index.js";
 import Comment from "../model/comments.js";
-import Notification from "../model/notification.js";
+
 import Ticket from "../model/ticket.js";
 import User from "../model/user.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import { uploadOnCloudinary } from "../utills/cloudinary.js";
-
+import { createNotification } from "../helper/CreateNotoification.js";
+import path from "path";
 export const createTicket = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -26,7 +27,7 @@ export const createTicket = asyncHandler(async (req, res) => {
       }
     }
 
-    const payload= {
+    const payload = {
       req_title: reqTitle,
       description,
       createdBy: userId,
@@ -57,7 +58,7 @@ export const createTicket = asyncHandler(async (req, res) => {
     if (admins && admins.length > 0) {
       const recipients = admins.map((admin) => ({ userId: admin._id }));
 
-      const notification = await Notification.create(
+      const notification = await createNotification(
         [
           {
             recipients,
@@ -335,22 +336,48 @@ export const AddComment = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { message } = req.body;
 
-  if (!message) {
-    throw new ApiError(400, "Comment message is required");
-  }
-
-  // Upload attachments to Cloudinary
-  let attachments = [];
-
-  if (req.files && req.files.length > 0) {
-    const uploadPromises = req.files.map((file) =>
-      uploadOnCloudinary(file.path)
+  if (!message && (!req.files || req.files.length === 0)) {
+    throw new ApiError(
+      400,
+      "Comment message or at least one attachment is required"
     );
-    const results = await Promise.all(uploadPromises);
-    attachments = results.map((r) => r.secure_url);
   }
 
-  // Create comment
+  // Cloudinary uploads
+  let attachments = [];
+  if (req.files?.length > 0) {
+    const uploadPromises = req.files.map(async (file) => {
+      const uploadedFile = await uploadOnCloudinary(file.path);
+
+      if (!uploadedFile?.secure_url) {
+        throw new ApiError(
+          500,
+          `Attachment upload failed for ${file.originalname}`
+        );
+      }
+
+      const ext = path.extname(file.originalname).toLowerCase();
+      let type = "other";
+      if ([".jpg", ".jpeg", ".png", ".gif", ".webp"].includes(ext))
+        type = "image";
+      else if ([".mp4", ".mov", ".avi", ".mkv"].includes(ext)) type = "video";
+      else if ([".mp3", ".wav", ".ogg"].includes(ext)) type = "audio";
+      else if ([".pdf"].includes(ext)) type = "pdf";
+      else if ([".doc", ".docx"].includes(ext)) type = "doc";
+      else if ([".xls", ".xlsx"].includes(ext)) type = "excel";
+      else if ([".zip", ".rar"].includes(ext)) type = "zip";
+
+      return {
+        fileName: uploadedFile.original_filename,
+        fileUrl: uploadedFile.secure_url,
+        size: uploadedFile.bytes,
+        type,
+      };
+    });
+
+    attachments = await Promise.all(uploadPromises);
+  }
+
   const comment = await Comment.create({
     ticketId,
     userId,
@@ -358,61 +385,14 @@ export const AddComment = asyncHandler(async (req, res) => {
     attachments,
   });
 
-  // Populate user info for the frontend
   const populatedComment = await Comment.findById(comment._id).populate(
     "userId",
     "firstname lastname email"
   );
 
-  // Emit to all clients in the ticket room
   io.to(ticketId).emit("newComment", populatedComment);
 
-  // --- Notification logic ---
-  const ticket = await Ticket.findById(ticketId).populate(
-    "createdBy assignedTo",
-    "_id firstname lastname email"
-  );
-  if (ticket) {
-    // Determine recipients: creator + assigned user, excluding comment author
-    const recipients = [];
-    if (
-      ticket.createdBy &&
-      ticket.createdBy._id.toString() !== userId.toString()
-    ) {
-      recipients.push(ticket.createdBy._id);
-    }
-    if (
-      ticket.assignedTo &&
-      ticket.assignedTo._id.toString() !== userId.toString()
-    ) {
-      recipients.push(ticket.assignedTo._id);
-    }
-    const admins = await User.find({ role: "admin" }).select("_id");
-    if (admins.length > 0) {
-      admins.map((a) => recipients.push(a._id));
-    }
-
-    if (recipients.length > 0) {
-      const notification = await Notification.create({
-        recipients: recipients.map((u) => ({ userId: u, read: false })),
-        type: "ticket_comment",
-        title: "New Comment Added",
-        message: `${req.user.firstname} commented on ticket "${ticket.req_title}"`,
-        link: `/it_facility?tab=track_tickets&status=${ticket.status}`,
-        createdBy: userId,
-       
-        meta: { ticketId, commentId: comment._id },
-      });
-
-      // --- Emit notification only to users NOT currently viewing the ticket ---
-      recipients.forEach((r) => {
-        if (!activeTicketUsers[ticketId]?.has(r)) {
-          io.to(`user_${r.toString()}`).emit("newNotification", notification);
-
-        }
-      });
-    }
-  }
-
-  res.status(201).json(new ApiResponse(201, "Comment added successfully"));
+  res
+    .status(201)
+    .json(new ApiResponse(201, "Comment added successfully", populatedComment));
 });
