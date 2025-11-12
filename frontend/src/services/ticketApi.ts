@@ -7,7 +7,22 @@ import { api } from "../redux/ApiSlice";
 
 export interface commentData {
   _id: string;
-  attachments?: string[];
+  attachments?: [
+    {
+      size: number;
+      fileName: string;
+      fileUrl: string;
+      type:
+        | "image"
+        | "video"
+        | "audio"
+        | "pdf"
+        | "doc"
+        | "excel"
+        | "zip"
+        | "other";
+    }
+  ];
   message: string;
   userId: {
     firstname: string;

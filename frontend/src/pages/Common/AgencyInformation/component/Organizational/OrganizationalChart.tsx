@@ -122,10 +122,10 @@ function layoutDagre(
   const vEdges = edges.filter(
     (e) => visibleIds.has(e.source) && visibleIds.has(e.target)
   );
-
+  const nodeMap = new Map(vNodes.map((n) => [n.id, n]));
   const childrenByParent = new Map<string, Node<CustomNodeData>[]>();
   for (const e of vEdges) {
-    const child = vNodes.find((n) => n.id === e.target);
+    const child = nodeMap.get(e.target);
     if (!child) continue;
     if (!childrenByParent.has(e.source)) childrenByParent.set(e.source, []);
     childrenByParent.get(e.source)!.push(child);
@@ -374,7 +374,6 @@ function Flow() {
             maxZoom={2}
             defaultEdgeOptions={{ zIndex: -1 }}
             elevateNodesOnSelect={false} // ✅ Add this
-       
             edgesFocusable={false} // ✅ Add this
             // No fitView calls anywhere
           />

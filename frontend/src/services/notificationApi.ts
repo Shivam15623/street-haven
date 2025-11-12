@@ -3,16 +3,19 @@ import { api } from "../redux/ApiSlice";
 export interface notificationData {
   createdAt: string;
   createdBy: string;
-  level: "high" | "low" | "medium";
   link: string;
   message: string;
   meta: any;
-  recipients: string[];
   title: string;
   type: string;
   updatedAt: string;
   _id: string;
+  readAt: string | null;
+  isRead: boolean;
+  isGlobal: boolean;
+  expireAt: string;
 }
+
 type NotificationResponse = ApiResponse<{
   notifications: notificationData[];
   paggination: {
@@ -34,8 +37,18 @@ const notificationApi = api.injectEndpoints({
         method: "GET",
         params: { limit, page },
       }),
+      providesTags: ["Notification"],
+    }),
+    markNotificationsAsRead: builder.mutation<void, string[]>({
+      query: (ids) => ({
+        url: "/notifications/mark-read",
+        method: "POST",
+        body: { ids },
+      }),
+      invalidatesTags: ["Notification"],
     }),
   }),
 });
 
-export const { useFetchNotifyQuery } = notificationApi;
+export const { useFetchNotifyQuery, useMarkNotificationsAsReadMutation } =
+  notificationApi;

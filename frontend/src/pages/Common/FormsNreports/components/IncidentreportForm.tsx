@@ -130,7 +130,6 @@ const IncidentreportForm: React.FC = () => {
             setFieldValue,
             setFieldTouched,
           }) => {
-
             return (
               <div
                 className={`position-relative ${
@@ -232,12 +231,12 @@ const IncidentreportForm: React.FC = () => {
                     <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
                       Detailed Description
                     </Form.Label>
-                     <QuillEditor
-                  content={values.description}
-                  onChange={(val) => setFieldValue("description", val)}
-                  isInvalid={touched.description && !!errors.description}
-                  errorMessage={errors.description as string}
-                />
+                    <QuillEditor
+                      content={values.description}
+                      onChange={(val) => setFieldValue("description", val)}
+                      isInvalid={touched.description && !!errors.description}
+                      errorMessage={errors.description as string}
+                    />
                     <div className="text-start  text-sm text-street-base">
                       {values.description.length} /500 characters
                     </div>

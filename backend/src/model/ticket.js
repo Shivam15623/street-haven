@@ -45,6 +45,11 @@ const TicketSchema = new mongoose.Schema(
       ref: "User", // who raised the ticket
       required: true,
     },
+    latestComment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Comment", // who raised the ticket
+    
+    },
   },
   { timestamps: true } // adds createdAt & updatedAt automatically
 );

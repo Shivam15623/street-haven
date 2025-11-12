@@ -23,6 +23,7 @@ interface SheetProps
   footer?: ReactNode | ((helpers: { close: () => void }) => ReactNode);
   size?: number | string; // number -> px, string ending with % -> width %, else passed as-is
   className?: string;
+  bodyclassName?: string;
   closeButton?: boolean;
   children: ReactNode;
 }
@@ -33,6 +34,7 @@ export default function Sheet({
   children,
   show,
   defaultShow = false,
+  bodyclassName,
   onClose,
   onOpen,
   placement = "end",
@@ -105,11 +107,15 @@ export default function Sheet({
         style={dialogStyle}
         {...rest}
       >
-        <Offcanvas.Header closeButton={closeButton} color="white" className="bg-street-primary text-white">
+        <Offcanvas.Header
+          closeButton={closeButton}
+          color="white"
+          className="bg-street-primary text-white"
+        >
           <Offcanvas.Title id={`${sheetId}-label`}>{title}</Offcanvas.Title>
         </Offcanvas.Header>
 
-        <Offcanvas.Body>{children}</Offcanvas.Body>
+        <Offcanvas.Body className={bodyclassName}>{children}</Offcanvas.Body>
 
         {footer && (
           <div className="offcanvas-footer p-3 border-top">
