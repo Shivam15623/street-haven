@@ -28,14 +28,21 @@ type NotificationResponse = ApiResponse<{
 interface AllNotificationsQuery {
   page?: number;
   limit?: number;
+  type: "global" | "personal" | undefined;
+  readStatus: "read" | "unread" | "all";
 }
 const notificationApi = api.injectEndpoints({
   endpoints: (builder) => ({
     fetchNotify: builder.query<NotificationResponse, AllNotificationsQuery>({
-      query: ({ limit = 10, page = 1 }) => ({
+      query: ({
+        limit = 10,
+        page = 1,
+        type = undefined,
+        readStatus = "all",
+      }) => ({
         url: "/notifications/view",
         method: "GET",
-        params: { limit, page },
+        params: { limit, page, readStatus, type },
       }),
       providesTags: ["Notification"],
     }),

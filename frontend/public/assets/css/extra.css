@@ -406,3 +406,6 @@ table.dataTable td.dt-type-date {
   /* Optional: increase z-index if needed */
   z-index: 2;
 }
+#toolbar .ql-toolbar.ql-snow {
+  border-radius: none !important;
+}

@@ -59,7 +59,7 @@ export const edithrUpdate = asyncHandler(async (req, res) => {
       await deleteFromCloudinary(hrupdate.attachment.fileUrl);
     }
 
-    const totalPages = await getPdfPageCount(req.file.path);
+  
     const uploadedFile = await uploadOnCloudinary(req.file.path);
 
     if (!uploadedFile?.url) {
@@ -70,7 +70,7 @@ export const edithrUpdate = asyncHandler(async (req, res) => {
       fileName: uploadedFile.original_filename || "manual",
       fileUrl: uploadedFile.secure_url,
       size: uploadedFile.bytes,
-      totalPages,
+      
     };
   }
 

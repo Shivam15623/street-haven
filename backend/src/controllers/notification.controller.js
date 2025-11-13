@@ -9,12 +9,16 @@ export const AllNotifications = asyncHandler(async (req, res) => {
   const page = Math.max(1, parseInt(req.query.page) || 1);
   const limit = Math.max(1, parseInt(req.query.limit) || 20);
   const skip = (page - 1) * limit;
-  const onlyUnread = req.query.onlyUnread === "true";
 
-  // Common $lookup to bring user's tracker (if any) into each Notification
+  // --- Filters from query ---
+
+  const typeFilter = req.query.type; // "global" | "personal" | undefined
+  const readStatus = req.query.readStatus; // "read" | "unread" | "all"
+
+  // --- Lookup user tracker (read status) ---
   const lookupStage = {
     $lookup: {
-      from: "usernotifications", // collection name for UserNotification
+      from: "usernotifications",
       let: { notifId: "$_id" },
       pipeline: [
         {
@@ -39,12 +43,11 @@ export const AllNotifications = asyncHandler(async (req, res) => {
     },
   };
 
-  // Add fields for read status coming from userTracker[0] if exists
+  // --- Compute read status ---
   const addFieldsStage = {
     $addFields: {
       userTracker: { $ifNull: ["$userTracker", []] },
       isRead: {
-        // isRead true only if userTracker exists and readAt is not null
         $cond: [
           { $gt: [{ $size: "$userTracker" }, 0] },
           { $ne: [{ $arrayElemAt: ["$userTracker.readAt", 0] }, null] },
@@ -61,8 +64,8 @@ export const AllNotifications = asyncHandler(async (req, res) => {
     },
   };
 
-  // Keep only notifications that are either global OR have a tracker for this user
-  const postLookupMatch = {
+  // --- Base condition: user can see global or personal notifications ---
+  const baseMatchStage = {
     $match: {
       $or: [
         { isGlobal: true },
@@ -71,44 +74,55 @@ export const AllNotifications = asyncHandler(async (req, res) => {
     },
   };
 
-  // If onlyUnread requested, we want only notifications where isRead === false
-  const unreadMatchStage = onlyUnread ? { $match: { isRead: false } } : null;
+  // --- Type filter (global / personal) ---
+  const typeFilterStage =
+    typeFilter === "global"
+      ? { $match: { isGlobal: true } }
+      : typeFilter === "personal"
+      ? { $match: { isGlobal: false } }
+      : null;
 
-  // Projection: return only fields you want frontend to consume
-  const projectStage = {
-    $project: {
-      _id: 1,
-      type: 1,
-      title: 1,
-      message: 1,
-      link: 1,
-      meta: 1, // include if you need it; remove to slim response
-      isGlobal: 1,
-      createdAt: 1,
-      updatedAt: 1,
-      expireAt: 1,
-      isRead: 1,
-      readAt: 1,
-    },
-  };
+  // --- Read status filter ---
+  let readStatusStage = null;
+  if (readStatus === "read") readStatusStage = { $match: { isRead: true } };
+  else if (readStatus === "unread")
+    readStatusStage = { $match: { isRead: false } };
 
-  // Build aggregation for paginated results
-  const pipeline = [lookupStage, addFieldsStage, postLookupMatch];
+  // --- Combine stages ---
+  const pipeline = [lookupStage, addFieldsStage, baseMatchStage];
+  if (typeFilterStage) pipeline.push(typeFilterStage);
+  if (readStatusStage) pipeline.push(readStatusStage);
 
-  if (unreadMatchStage) pipeline.push(unreadMatchStage);
+  // Pagination and projection
   pipeline.push(
     { $sort: { createdAt: -1 } },
     { $skip: skip },
     { $limit: limit },
-    projectStage
+    {
+      $project: {
+        _id: 1,
+        type: 1,
+        title: 1,
+        message: 1,
+        link: 1,
+        meta: 1,
+        isGlobal: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        expireAt: 1,
+        isRead: 1,
+        readAt: 1,
+      },
+    }
   );
 
-  // Build aggregation for count (same initial stages but end with $count)
-  const countPipeline = [lookupStage, addFieldsStage, postLookupMatch];
-  if (unreadMatchStage) countPipeline.push(unreadMatchStage);
+  // Count pipeline
+  const countPipeline = [lookupStage, addFieldsStage, baseMatchStage];
+  if (typeFilterStage) countPipeline.push(typeFilterStage);
+  if (readStatusStage) countPipeline.push(readStatusStage);
   countPipeline.push({ $count: "total" });
 
-  // Run both aggregations
+  // --- Execute ---
   const [notifications, countResult] = await Promise.all([
     Notification.aggregate(pipeline),
     Notification.aggregate(countPipeline),
@@ -116,7 +130,7 @@ export const AllNotifications = asyncHandler(async (req, res) => {
 
   const total = countResult.length > 0 ? countResult[0].total : 0;
 
-  // Response
+  // --- Respond ---
   res.status(200).json(
     new ApiResponse(200, "Notifications fetched successfully", {
       notifications,

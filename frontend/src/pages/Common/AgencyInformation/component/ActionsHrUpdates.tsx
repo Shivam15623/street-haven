@@ -4,16 +4,17 @@ import * as yup from "yup";
 import { Formik, Field, ErrorMessage } from "formik";
 import { Form as BootstrapForm } from "react-bootstrap";
 import { showSuccess } from "../../../../utills/toastutills";
-import PdfField from "../../../../components/child/PdfField";
+
 import type { hrUpdateData } from "../../../../interfaces/hrUpdatesInterface";
 import {
   useCreatehrUpdatesMutation,
   useEdithrupdatesMutation,
 } from "../../../../services/hrUpdatesApi";
 import QuillEditor from "../../../../components/child/QuillEditor";
+import FileField from "../../../../components/child/FileField";
 
 // ✅ Schema
-const HrUpdatesFormSchema = (isEdit: boolean) =>
+const HrUpdatesFormSchema = () =>
   yup.object().shape({
     title: yup
       .string()
@@ -22,14 +23,9 @@ const HrUpdatesFormSchema = (isEdit: boolean) =>
       .max(150, "Title must be at most 150 characters")
       .required("Title is required"),
     description: yup.string(),
-
     attachment: yup
       .mixed<File>()
       .nullable()
-      .test("fileType", "Only PDF files are allowed", (value) => {
-        if (!value) return isEdit; // required in create, optional in edit
-        return value instanceof File && value.type === "application/pdf";
-      })
       .test("fileSize", "File size must be less than 16MB", (value) => {
         if (!value) return true;
         return value.size <= 16 * 1024 * 1024;
@@ -137,7 +133,7 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
     >
       <Formik
         initialValues={initialValues}
-        validationSchema={HrUpdatesFormSchema(isEdit)}
+        validationSchema={HrUpdatesFormSchema()}
         onSubmit={handleSave}
       >
         {({ handleSubmit, values, setFieldValue }) => (
@@ -167,6 +163,15 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
               <QuillEditor
                 content={values.description}
                 onChange={(state) => setFieldValue("description", state)}
+                features={{
+                  align: false,
+                  backgroundColor: true,
+                  color: true,
+                  emoji: true,
+                  headings: true,
+                  link: true,
+                  lists: true,
+                }}
               />
               <ErrorMessage
                 name="description"
@@ -176,18 +181,18 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
             </BootstrapForm.Group>
 
             {/* Attachment */}
-            <PdfField
-              existingPdf={
-                isEdit && update?.attachment
+            <FileField
+              isEdit={true}
+              existingFile={
+                update?.attachment
                   ? {
-                      fileName: update.attachment.fileName,
-                      fileUrl: update.attachment.fileUrl,
+                      fileName: update?.attachment.fileName,
+                      fileUrl: update?.attachment.fileUrl,
                     }
                   : undefined
               }
-              fieldLabel="Attachment"
               name="attachment"
-              isEdit={isEdit}
+              fieldLabel="attachment"
             />
           </BootstrapForm>
         )}

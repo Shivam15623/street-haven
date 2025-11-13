@@ -27,9 +27,13 @@ const EventFormSchema = Yup.object().shape({
   eventDate: Yup.string()
     .required("Event date is required")
     .test("not-in-past", "Event date cannot be in the past", (val) => {
+      console.log("Validating event date:", val);
       if (!val) return false;
+
       const selected = new Date(val);
+      console.log("Selected date:", selected);
       const today = new Date();
+      console.log("today date:", today);
       today.setHours(0, 0, 0, 0);
       return selected >= today;
     }),
@@ -157,6 +161,7 @@ const ActionsEvent = ({ id }: { id?: string }) => {
             errors,
             touched,
             setFieldValue,
+            handleBlur,
             setFieldTouched,
           }) => (
             <Form
@@ -261,14 +266,15 @@ const ActionsEvent = ({ id }: { id?: string }) => {
               <Form.Group className="d-flex flex-column gap-1">
                 <Form.Label>Event Date</Form.Label>
                 <CustomDatePicker
+                  name="eventDate"
                   value={values.eventDate ? new Date(values.eventDate) : null}
-                  onChange={(date) => {
+                  onChange={(date) =>
                     setFieldValue(
                       "eventDate",
                       date ? date.toISOString().split("T")[0] : ""
-                    );
-                    setFieldTouched("eventDate", true);
-                  }}
+                    )
+                  }
+                  onBlur={handleBlur} // 👈 works perfectly now
                   isInvalid={!!errors.eventDate && touched.eventDate}
                 />
 
