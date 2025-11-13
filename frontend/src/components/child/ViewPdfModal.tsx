@@ -1,16 +1,17 @@
 import { useState } from "react";
-import ModalWrapper from "../../../../components/child/ModalWrapper";
+
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Document, Page, pdfjs } from "react-pdf";
 import "pdfjs-dist/web/pdf_viewer.css";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker?url";
-import type { MeetingMinutesData } from "../../../../interfaces/meetingMinutes";
+import ModalWrapper from "./ModalWrapper";
+
 
 // Worker setup
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 type Props = {
-  meetings: MeetingMinutesData;
+  title: string;
   attachment: {
     fileName: string;
     fileUrl: string;
@@ -19,7 +20,7 @@ type Props = {
   };
 };
 
-const ViewTownHallMinutes = ({ attachment, meetings }: Props) => {
+const ViewPdfModal = ({ attachment, title }: Props) => {
   const [showModal, setShowModal] = useState(false);
 
   const handleDownload = async (url: string, filename: string) => {
@@ -53,7 +54,7 @@ const ViewTownHallMinutes = ({ attachment, meetings }: Props) => {
       </button>
 
       <ModalWrapper
-        title={meetings.title}
+        title={title}
         size="xl"
         subtitle={`${attachment.fileName} • ${attachment.totalPages} pages`}
         show={showModal}
@@ -105,4 +106,4 @@ const ViewTownHallMinutes = ({ attachment, meetings }: Props) => {
   );
 };
 
-export default ViewTownHallMinutes;
+export default ViewPdfModal;

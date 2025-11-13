@@ -3,8 +3,9 @@ import TicketCard from "./TicketCard";
 import { TicketCountCard } from "./TicketCountCard";
 import type { TicketFetchQuery } from "../../../../interfaces/Ticket";
 import { useFetchTicketsQuery } from "../../../../services/ticketApi";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import StreetPaggination from "../../../../components/child/StreetPaggination";
 
 const TrackTickettab = () => {
   const [searchParams] = useSearchParams();
@@ -31,11 +32,12 @@ const TrackTickettab = () => {
   const total = ticketData?.data?.paggination?.total ?? 0;
   const totalPages = Math.ceil(total / filter?.limit);
 
-  // Page navigation
-  const goToPage = (pageNumber: number) => {
-    if (pageNumber >= 1 && pageNumber <= totalPages) {
-      setFilter((prev) => ({ ...prev, page: pageNumber }));
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setFilter((prev) => ({ ...prev, page: newPage }));
     }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -201,64 +203,11 @@ const TrackTickettab = () => {
 
       {/* Pagination */}
       {!isLoading && totalPages > 1 && (
-        <ul className="pagination d-flex flex-wrap align-items-center gap-2 justify-content-center">
-          {/* First page */}
-          <li className="page-item">
-            <Link className="page-link" to="#" onClick={() => goToPage(1)}>
-              <Icon icon="ep:d-arrow-left" className="text-xl" />
-            </Link>
-          </li>
-
-          {/* Previous page */}
-          <li className="page-item">
-            <Link
-              className="page-link"
-              to="#"
-              onClick={() => goToPage(filter.page - 1)}
-            >
-              <Icon icon="iconamoon:arrow-left-2-light" className="text-xxl" />
-            </Link>
-          </li>
-
-          {/* Page numbers */}
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <li key={p} className="page-item">
-              <Link
-                className={`page-link ${
-                  filter.page === p
-                    ? "bg-primary text-white"
-                    : "bg-light text-secondary"
-                }`}
-                to="#"
-                onClick={() => goToPage(p)}
-              >
-                {p}
-              </Link>
-            </li>
-          ))}
-
-          {/* Next page */}
-          <li className="page-item">
-            <Link
-              className="page-link"
-              to="#"
-              onClick={() => goToPage(filter.page + 1)}
-            >
-              <Icon icon="iconamoon:arrow-right-2-light" className="text-xxl" />
-            </Link>
-          </li>
-
-          {/* Last page */}
-          <li className="page-item">
-            <Link
-              className="page-link"
-              to="#"
-              onClick={() => goToPage(totalPages)}
-            >
-              <Icon icon="ep:d-arrow-right" className="text-xl" />
-            </Link>
-          </li>
-        </ul>
+        <StreetPaggination
+          page={filter.page}
+          totalPages={totalPages}
+          handlePageChange={handlePageChange}
+        />
       )}
     </div>
   );
