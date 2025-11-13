@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { Icon } from "@iconify/react";
-import ViewTownHallMinutes from "./ViewTownHallMinutes";
+
 import Badge from "../../../../components/child/Badge";
 import type { MeetingMinutesData } from "../../../../interfaces/meetingMinutes";
 import useHasPermission from "../../../../hooks/Auth";
 import ActionstownhallMinutes from "./ActionstownhallMinutes";
 import DeleteMeetingMinutes from "./DeleteMeetingMinutes";
+import ViewPdfModal from "../../../../components/child/ViewPdfModal";
 
 export type TownhallMinuteCardProps = {
   meeting: MeetingMinutesData;
@@ -84,7 +85,7 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
           </div>
 
           <div className="d-none d-sm-flex flex-row gap-6 gap-sm-12">
-            <ViewTownHallMinutes attachment={attachment} meetings={meeting} />
+            <ViewPdfModal attachment={attachment} title={meeting.title} />
             <button
               className="btn btn-street-primary btn-street-lg p-8 px-sm-24 px-md-32 radius-12 text-xxs sm:text-xs"
               onClick={() =>
@@ -165,7 +166,7 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
             </button>
           )}
 
-          <ViewTownHallMinutes attachment={attachment} meetings={meeting} />
+          <ViewPdfModal attachment={attachment} title={meeting.title} />
           <button
             className="btn btn-street-primary btn-street-lg p-8 px-sm-24 px-md-32 radius-12 text-xxs sm:text-xs"
             onClick={() =>

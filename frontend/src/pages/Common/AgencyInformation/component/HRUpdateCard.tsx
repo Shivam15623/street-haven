@@ -1,11 +1,12 @@
 import { useState } from "react";
-import HrUpdatesView from "./HrUpdatesView";
+
 import { Icon } from "@iconify/react/dist/iconify.js";
 import type { hrUpdateData } from "../../../../interfaces/hrUpdatesInterface";
 import useHasPermission from "../../../../hooks/Auth";
 import ActionsHrUpdates from "./ActionsHrUpdates";
 import DeleteHrUpdate from "./deleteHrUpdates";
 import "react-quill/dist/quill.snow.css";
+import ViewFileModal from "../../../../components/child/VIewFileModal";
 const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
   const { title, _id, createdAt, description, createdBy } = update;
   const { isAdmin } = useHasPermission();
@@ -56,7 +57,7 @@ const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
           )}
 
           <div className="d-flex flex-row gap-8 align-items-start">
-            <HrUpdatesView update={update} />
+            <ViewFileModal attachment={update.attachment} title={title} />
             {isAdmin && (
               <button
                 className="btn btn-street-neutral d-flex align-items-center w-43-px px-8 py-8 px-sm-10 radius-12"

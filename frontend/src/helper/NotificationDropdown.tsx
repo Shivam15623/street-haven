@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Dropdown, Spinner } from "react-bootstrap";
 import { Icon } from "@iconify/react";
-import { Link } from "react-router-dom";
 import {
   useFetchNotifyQuery,
   type notificationData,
@@ -10,6 +9,7 @@ import { useSocket } from "../hooks/useSocket";
 import { useSelector } from "react-redux";
 import { selectAuth } from "../redux/AuthSlice";
 import NotificationItem from "./NotificationItem";
+import NotificationView from "./NotificationView";
 
 
 const NotificationDropdown = () => {
@@ -17,7 +17,7 @@ const NotificationDropdown = () => {
   const [notifications, setNotifications] = useState<notificationData[]>([]);
   const { user } = useSelector(selectAuth);
   const [unreadCount, setUnreadCount] = useState<number>(0);
-  const { data, isLoading } = useFetchNotifyQuery({ page: 1, limit: 10 });
+  const { data, isLoading } = useFetchNotifyQuery({ page: 1, limit: 10, readStatus: "all", type: undefined });
 
   useEffect(() => {
     setNotifications(data?.data.notifications ?? []);
@@ -73,14 +73,7 @@ const NotificationDropdown = () => {
           )}
         </div>
 
-        <div className="p-8 p-sm-12 border-top notify-footer border-sh-base">
-          <Link
-            to="/notifications"
-            className="text-xs sm:text-sm link-street-primary"
-          >
-            View All Notifications
-          </Link>
-        </div>
+        <NotificationView/>
       </Dropdown.Menu>
     </Dropdown>
   );

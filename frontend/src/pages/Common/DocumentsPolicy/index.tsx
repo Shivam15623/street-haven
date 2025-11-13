@@ -6,8 +6,9 @@ import "@assets/css/PageCss/program.css";
 import { useFetchManualsQuery } from "../../../services/ProgramManualApi";
 import ActionsProgram from "./components/ActionsProgram";
 import useHasPermission from "../../../hooks/Auth";
-import { Link, useSearchParams } from "react-router-dom";
+import {  useSearchParams } from "react-router-dom";
 import { useDebounce } from "../../../hooks/useDebounce";
+import StreetPaggination from "../../../components/child/StreetPaggination";
 
 const ProgramManuals = () => {
   const [search, setSearch] = useState("");
@@ -44,8 +45,10 @@ const ProgramManuals = () => {
     ? Math.ceil(data.data.paggination.totalPages / pageSize)
     : 0;
 
-  const goToPage = (pageNumber: number) => {
-    if (pageNumber >= 1 && pageNumber <= totalPages) setPage(pageNumber);
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -99,64 +102,11 @@ const ProgramManuals = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <ul className="pagination d-flex flex-wrap align-items-center gap-2 justify-content-center">
-          {/* First page */}
-          <li className="page-item">
-            <Link className="page-link" to="#" onClick={() => goToPage(1)}>
-              <Icon icon="ep:d-arrow-left" className="text-xl" />
-            </Link>
-          </li>
-
-          {/* Previous page */}
-          <li className="page-item">
-            <Link
-              className="page-link"
-              to="#"
-              onClick={() => goToPage(page - 1)}
-            >
-              <Icon icon="iconamoon:arrow-left-2-light" className="text-xxl" />
-            </Link>
-          </li>
-
-          {/* Page numbers */}
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <li key={p} className="page-item">
-              <Link
-                className={`page-link ${
-                  page === p
-                    ? "bg-primary-600 text-white"
-                    : "bg-primary-50 text-secondary-light"
-                }`}
-                to="#"
-                onClick={() => goToPage(p)}
-              >
-                {p}
-              </Link>
-            </li>
-          ))}
-
-          {/* Next page */}
-          <li className="page-item">
-            <Link
-              className="page-link"
-              to="#"
-              onClick={() => goToPage(page + 1)}
-            >
-              <Icon icon="iconamoon:arrow-right-2-light" className="text-xxl" />
-            </Link>
-          </li>
-
-          {/* Last page */}
-          <li className="page-item">
-            <Link
-              className="page-link"
-              to="#"
-              onClick={() => goToPage(totalPages)}
-            >
-              <Icon icon="ep:d-arrow-right" className="text-xl" />
-            </Link>
-          </li>
-        </ul>
+        <StreetPaggination
+          page={page}
+          totalPages={totalPages}
+          handlePageChange={handlePageChange}
+        />
       )}
     </div>
   );
