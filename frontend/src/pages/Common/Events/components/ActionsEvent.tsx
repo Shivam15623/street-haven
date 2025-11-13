@@ -11,6 +11,8 @@ import { Col, Form, Row } from "react-bootstrap";
 import CustomDatePicker from "../../../../components/child/DatePicker";
 import { TimePicker } from "../../../../components/child/TimePicker";
 import QuillEditor from "../../../../components/child/QuillEditor";
+import type { EventUpcomingData } from "../../../../interfaces/EventInterfaces";
+import { Icon } from "@iconify/react/dist/iconify.js";
 
 const EventFormSchema = Yup.object().shape({
   title: Yup.string().required("Title is required"),
@@ -27,13 +29,9 @@ const EventFormSchema = Yup.object().shape({
   eventDate: Yup.string()
     .required("Event date is required")
     .test("not-in-past", "Event date cannot be in the past", (val) => {
-      console.log("Validating event date:", val);
       if (!val) return false;
-
       const selected = new Date(val);
-      console.log("Selected date:", selected);
       const today = new Date();
-      console.log("today date:", today);
       today.setHours(0, 0, 0, 0);
       return selected >= today;
     }),
@@ -46,24 +44,19 @@ const EventFormSchema = Yup.object().shape({
       function (val) {
         const { startTime, eventDate } = this.parent;
         if (!val || !startTime || !eventDate) return true;
-
         const start = new Date(`${eventDate}T${startTime}`);
         const end = new Date(`${eventDate}T${val}`);
-
-        // End must be after start
-        if (end <= start) return false;
-
-        // Check both times are within the same date (no next-day times)
-        return end.getDate() === start.getDate();
+        return end > start && end.getDate() === start.getDate();
       }
     ),
 });
 
 type EventFormValues = Yup.InferType<typeof EventFormSchema>;
 
-const ActionsEvent = ({ id }: { id?: string }) => {
-  const isEdit = Boolean(id);
+const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
+  const isEdit = Boolean(event?._id);
   const [showModal, setShowModal] = React.useState(false);
+
   const [createEvent, { isLoading }] = useCreateEventMutation();
   const [editEvent, { isLoading: isEditLoading }] = useEditEventMutation();
 
@@ -86,30 +79,56 @@ const ActionsEvent = ({ id }: { id?: string }) => {
   };
 
   const handleEdit = async (values: EventFormValues) => {
-    if (id) {
-      const payload = {
-        ...values,
-        eventDate: new Date(values.eventDate),
-        startTime: new Date(`${values.eventDate}T${values.startTime}`),
-        endTime: new Date(`${values.eventDate}T${values.endTime}`),
-      };
-      const res = await editEvent({ cred: payload, id: id }).unwrap();
-      if (res.success) {
-        showSuccess(res.message);
-        setShowModal(false);
-      }
+    if (!event?._id) return;
+    const payload = {
+      ...values,
+      eventDate: new Date(values.eventDate),
+      startTime: new Date(`${values.eventDate}T${values.startTime}`),
+      endTime: new Date(`${values.eventDate}T${values.endTime}`),
+    };
+    const res = await editEvent({ cred: payload, id: event._id }).unwrap();
+    if (res.success) {
+      showSuccess(res.message);
+      setShowModal(false);
     }
+  };
+
+  const initialValues: EventFormValues = {
+    title: event?.title || "",
+    description: event?.description || "",
+    locationName: event?.location.location_name || "",
+    locationUrl: event?.location.location_url || "",
+    facilitator: event?.facilitator || "",
+    capacity: event?.capacity || 0,
+    eventDate: event?.eventDate
+      ? new Date(event.eventDate).toISOString().split("T")[0]
+      : "",
+    startTime: event?.startTime
+      ? new Date(event.startTime).toISOString().slice(11, 16)
+      : "",
+    endTime: event?.endTime
+      ? new Date(event.endTime).toISOString().slice(11, 16)
+      : "",
   };
 
   return (
     <>
       {/* Trigger Button */}
-      <button
-        className="btn btn-street-primary"
-        onClick={() => setShowModal(true)}
-      >
-        {isEdit ? "Edit Event" : "Create Event"}
-      </button>
+      {isEdit ? (
+        <button
+          className="btn btn-street-neutral"
+          onClick={() => setShowModal(true)}
+        >
+          <Icon icon="mdi:pencil" className="text-sm sm:text-xl" />
+        </button>
+      ) : (
+        <button
+          className="btn btn-street-primary"
+          onClick={() => setShowModal(true)}
+        >
+          Create Event
+        </button>
+      )}
 
       <ModalWrapper
         show={showModal}
@@ -141,17 +160,8 @@ const ActionsEvent = ({ id }: { id?: string }) => {
       >
         <Formik
           validationSchema={EventFormSchema}
-          initialValues={{
-            title: "",
-            description: "",
-            locationName: "",
-            locationUrl: "",
-            facilitator: "",
-            capacity: 0,
-            eventDate: "",
-            startTime: "",
-            endTime: "",
-          }}
+          initialValues={initialValues}
+          enableReinitialize
           onSubmit={isEdit ? handleEdit : handleCreate}
         >
           {({
@@ -165,12 +175,12 @@ const ActionsEvent = ({ id }: { id?: string }) => {
             setFieldTouched,
           }) => (
             <Form
-              id={isEdit ? "event-ed" : "event-create-form"}
+              id={isEdit ? "event-edit-form" : "event-create-form"}
               onSubmit={handleSubmit}
               className="d-flex flex-column gap-16 gap-sm-20"
             >
               {/* Title */}
-              <Form.Group className="d-flex flex-column gap-1">
+              <Form.Group>
                 <Form.Label>Title</Form.Label>
                 <Form.Control
                   name="title"
@@ -184,7 +194,7 @@ const ActionsEvent = ({ id }: { id?: string }) => {
               </Form.Group>
 
               {/* Description */}
-              <Form.Group className="d-flex flex-column gap-1">
+              <Form.Group>
                 <Form.Label>Description</Form.Label>
                 <QuillEditor
                   content={values.description}
@@ -192,16 +202,12 @@ const ActionsEvent = ({ id }: { id?: string }) => {
                   isInvalid={touched.description && !!errors.description}
                   errorMessage={errors.description as string}
                 />
-                <Form.Control.Feedback type="invalid">
-                  {errors.description}
-                </Form.Control.Feedback>
               </Form.Group>
 
-              {/* Location Name */}
+              {/* Location */}
               <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
                 <Col md={6}>
-                  {" "}
-                  <Form.Group className="d-flex flex-column gap-1">
+                  <Form.Group>
                     <Form.Label>Location Name</Form.Label>
                     <Form.Control
                       name="locationName"
@@ -213,12 +219,10 @@ const ActionsEvent = ({ id }: { id?: string }) => {
                       {errors.locationName}
                     </Form.Control.Feedback>
                   </Form.Group>
-                </Col>{" "}
+                </Col>
                 <Col md={6}>
-                  {" "}
-                  {/* Location URL */}
-                  <Form.Group className="d-flex flex-column gap-1">
-                    <Form.Label>Location URL (Google Maps or other)</Form.Label>
+                  <Form.Group>
+                    <Form.Label>Location URL</Form.Label>
                     <Form.Control
                       name="locationUrl"
                       value={values.locationUrl}
@@ -234,7 +238,7 @@ const ActionsEvent = ({ id }: { id?: string }) => {
               </Row>
 
               {/* Facilitator */}
-              <Form.Group className="d-flex flex-column gap-1">
+              <Form.Group>
                 <Form.Label>Facilitator</Form.Label>
                 <Form.Control
                   name="facilitator"
@@ -248,7 +252,7 @@ const ActionsEvent = ({ id }: { id?: string }) => {
               </Form.Group>
 
               {/* Capacity */}
-              <Form.Group className="d-flex flex-column gap-1">
+              <Form.Group>
                 <Form.Label>Capacity</Form.Label>
                 <Form.Control
                   type="number"
@@ -262,8 +266,8 @@ const ActionsEvent = ({ id }: { id?: string }) => {
                 </Form.Control.Feedback>
               </Form.Group>
 
-              {/* Event Date */}
-              <Form.Group className="d-flex flex-column gap-1">
+              {/* Date and Time */}
+              <Form.Group>
                 <Form.Label>Event Date</Form.Label>
                 <CustomDatePicker
                   name="eventDate"
@@ -274,47 +278,42 @@ const ActionsEvent = ({ id }: { id?: string }) => {
                       date ? date.toISOString().split("T")[0] : ""
                     )
                   }
-                  onBlur={handleBlur} // 👈 works perfectly now
+                  onBlur={handleBlur}
                   isInvalid={!!errors.eventDate && touched.eventDate}
                 />
-
                 {errors.eventDate && touched.eventDate && (
                   <div className="invalid-feedback d-block">
                     {errors.eventDate}
                   </div>
                 )}
               </Form.Group>
+
               <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
                 <Col md={6}>
-                  {" "}
-                  {/* Start Time */}
-                  <Form.Group className="d-flex flex-column gap-1">
+                  <Form.Group>
                     <Form.Label>Start Time</Form.Label>
                     <TimePicker
                       name="startTime"
                       value={values.startTime}
                       onChange={(val) => setFieldValue("startTime", val)}
-                      onBlur={() => setFieldTouched("startTime", true)} // 👈 handled automatically
+                      onBlur={() => setFieldTouched("startTime", true)}
                     />
-
                     {errors.startTime && touched.startTime && (
                       <div className="invalid-feedback d-block">
                         {errors.startTime}
                       </div>
                     )}
                   </Form.Group>
-                </Col>{" "}
+                </Col>
                 <Col md={6}>
-                  {/* End Time */}
-                  <Form.Group className="d-flex flex-column gap-1">
+                  <Form.Group>
                     <Form.Label>End Time</Form.Label>
                     <TimePicker
                       name="endTime"
                       value={values.endTime}
                       onChange={(val) => setFieldValue("endTime", val)}
-                      onBlur={() => setFieldTouched("endTime", true)} // 👈 handled automatically
+                      onBlur={() => setFieldTouched("endTime", true)}
                     />
-
                     {errors.endTime && touched.endTime && (
                       <div className="invalid-feedback d-block">
                         {errors.endTime}
