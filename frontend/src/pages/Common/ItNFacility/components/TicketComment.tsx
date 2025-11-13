@@ -13,6 +13,8 @@ import { selectAuth } from "../../../../redux/AuthSlice";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
+import QuillEditor from "../../../../components/child/QuillEditor";
+
 dayjs.extend(relativeTime);
 
 // Interface for grouped comments
@@ -400,6 +402,14 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
                         key={msg._id}
                         className="chat-message-content align-items-start position-relative p-8"
                       >
+                        {user?._id !== group.user._id && (
+                          <div className="pb-2">
+                            <span className="text-xs fw-semibold text-street-primary">
+                              {group.user.firstname} {group.user.lastname}
+                            </span>
+                          </div>
+                        )}
+
                         {msg.attachments && msg.attachments.length > 0 && (
                           <div className=" space-y-2 gap-2 d-flex flex-column">
                             {msg.attachments.map((attachment, idx) => (
@@ -410,7 +420,10 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
                             ))}
                           </div>
                         )}
-                        <p className={" py-2"}>{msg.message}</p>
+                        <div
+                          className="prose py-2 chatpara"
+                          dangerouslySetInnerHTML={{ __html: msg.message }}
+                        />
 
                         <div className="px-2  d-flex align-items-center  justify-content-end gap-1">
                           <span className="chat-time text-xxs">
@@ -474,37 +487,49 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
             handleMessageSend();
           }}
         >
-          <button
-            type="button"
-            className=" btn btn-light d-flex align-items-center text-xl"
-            onClick={handleFileSelect}
-          >
-            <Icon icon="ph:link" />
-          </button>
-          <input
-            type="text"
-            className="form-control w-auto"
-            placeholder="Write message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-          />
-
-          <input
-            type="file"
-            multiple
-            ref={fileInputRef}
-            style={{ display: "none" }}
-            onChange={(e) =>
-              e.target.files && handleAddAttachments(e.target.files)
-            }
-          />
-          <div className="chat-message-box-action">
-            <button
-              type="submit"
-              className="btn btn-street-primary d-flex align-items-center gap-1 "
+          <div className="d-flex flex-row w-100 position-relative bg-white p-2 rounded-2">
+            <QuillEditor
+              content={message}
+              onChange={setMessage}
+              features={{
+                align: false,
+                backgroundColor: false,
+                color: false,
+                emoji: true,
+                headings: true,
+                link: true,
+                lists: true,
+              }}
+            />
+            <div
+              className="chat-message-box-action w-100 flex-row flex-nowrap gap-1 position-absolute justify-content-between px-3   end-0"
+              style={{
+                bottom: "10px",
+              }}
             >
-              <Icon icon="f7:paperplane" />
-            </button>
+              <input
+                type="file"
+                multiple
+                ref={fileInputRef}
+                style={{ display: "none" }}
+                onChange={(e) =>
+                  e.target.files && handleAddAttachments(e.target.files)
+                }
+              />
+              <button
+                type="button"
+                className=" btn btn-light d-flex align-items-center text-xl"
+                onClick={handleFileSelect}
+              >
+                <Icon icon="ph:link" />
+              </button>
+              <button
+                type="submit"
+                className="btn btn-street-primary d-flex align-items-center gap-1 "
+              >
+                <Icon icon="f7:paperplane" />
+              </button>
+            </div>
           </div>
         </form>
       </div>

@@ -3,8 +3,9 @@ import useHasPermission from "../../../../hooks/Auth";
 import { useFetchMeetingMinutesQuery } from "../../../../services/meetingminutesApi";
 import ActionstownhallMinutes from "./ActionstownhallMinutes";
 import TownhallMinuteCard from "./TownhallMinuteCard";
-import { Link, useSearchParams } from "react-router-dom";
-import { Icon } from "@iconify/react/dist/iconify.js";
+import { useSearchParams } from "react-router-dom";
+
+import StreetPaggination from "../../../../components/child/StreetPaggination";
 
 const TownhallMinutesTab = () => {
   const [page, setPage] = useState(1);
@@ -13,18 +14,18 @@ const TownhallMinutesTab = () => {
   const [searchParams] = useSearchParams();
   const slugParam = searchParams.get("slug") ?? "";
   const { data, isLoading, isError, error } = useFetchMeetingMinutesQuery({
-    page: 1,
-    limit: 10,
+    page: page,
+    limit: pageSize,
     slug: slugParam,
     sortBy: "meetingDate",
     order: "desc",
   });
-  const totalPages = data
-    ? Math.ceil(data.data.paggination.totalPages / pageSize)
-    : 0;
+  const totalPages = data ? data.data.paggination.totalPages : 0;
 
-  const goToPage = (pageNumber: number) => {
-    if (pageNumber >= 1 && pageNumber <= totalPages) setPage(pageNumber);
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const { isAdmin } = useHasPermission();
   return (
@@ -74,64 +75,11 @@ const TownhallMinutesTab = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <ul className="pagination d-flex flex-wrap align-items-center gap-2 justify-content-center">
-          {/* First page */}
-          <li className="page-item">
-            <Link className="page-link" to="#" onClick={() => goToPage(1)}>
-              <Icon icon="ep:d-arrow-left" className="text-xl" />
-            </Link>
-          </li>
-
-          {/* Previous page */}
-          <li className="page-item">
-            <Link
-              className="page-link"
-              to="#"
-              onClick={() => goToPage(page - 1)}
-            >
-              <Icon icon="iconamoon:arrow-left-2-light" className="text-xxl" />
-            </Link>
-          </li>
-
-          {/* Page numbers */}
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <li key={p} className="page-item">
-              <Link
-                className={`page-link ${
-                  page === p
-                    ? "bg-primary-600 text-white"
-                    : "bg-primary-50 text-secondary-light"
-                }`}
-                to="#"
-                onClick={() => goToPage(p)}
-              >
-                {p}
-              </Link>
-            </li>
-          ))}
-
-          {/* Next page */}
-          <li className="page-item">
-            <Link
-              className="page-link"
-              to="#"
-              onClick={() => goToPage(page + 1)}
-            >
-              <Icon icon="iconamoon:arrow-right-2-light" className="text-xxl" />
-            </Link>
-          </li>
-
-          {/* Last page */}
-          <li className="page-item">
-            <Link
-              className="page-link"
-              to="#"
-              onClick={() => goToPage(totalPages)}
-            >
-              <Icon icon="ep:d-arrow-right" className="text-xl" />
-            </Link>
-          </li>
-        </ul>
+        <StreetPaggination
+          page={page}
+          handlePageChange={handlePageChange}
+          totalPages={totalPages}
+        />
       )}
     </div>
   );

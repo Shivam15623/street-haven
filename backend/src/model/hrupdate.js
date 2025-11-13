@@ -18,11 +18,6 @@ const attachmentSchema = new mongoose.Schema({
     required: [true, "File size is required"],
     min: [1, "File size must be greater than 0"],
   },
-  totalPages: {
-    type: Number,
-    min: [1, "Total pages must be at least 1"],
-    default: null,
-  },
 });
 
 const HRupdateSchema = new mongoose.Schema(

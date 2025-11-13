@@ -5,26 +5,28 @@ import HRUpdateCard from "./HRUpdateCard";
 import { useViewhrUpdatesQuery } from "../../../../services/hrUpdatesApi";
 import ActionsHrUpdates from "./ActionsHrUpdates";
 import useHasPermission from "../../../../hooks/Auth";
+import StreetPaggination from "../../../../components/child/StreetPaggination";
 
 const HrUpdatesTab = () => {
   const [search, setSearch] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
   const [showModal, setShowModal] = useState(false);
   const { isAdmin } = useHasPermission();
+  const [page, setPage] = useState(1);
 
   // Get slug from URL params
   const slug = searchParams.get("slug") ?? "";
 
   // Call query, include slug
   const { data, isLoading, isError } = useViewhrUpdatesQuery({
-    page: 1,
+    page: page,
     limit: 10,
     search,
     slug,
     sortBy: "createdAt",
     order: "desc",
   });
-
+  const totalPages = data ? data.data.paggination.totalPages : 0;
   // When user types in search, remove slug and tab from URL
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -36,7 +38,11 @@ const HrUpdatesTab = () => {
     }
     setSearchParams(params);
   };
-
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
   return (
     <div className="d-flex flex-column gap-24">
       <div className="d-flex flex-row justify-content-between align-items-center">
@@ -73,6 +79,14 @@ const HrUpdatesTab = () => {
             <HRUpdateCard key={update._id} update={update} />
           ))
         : !isLoading && <p>No HR updates found.</p>}
+
+      {totalPages > 1 && (
+        <StreetPaggination
+          page={page}
+          totalPages={totalPages}
+          handlePageChange={handlePageChange}
+        />
+      )}
     </div>
   );
 };

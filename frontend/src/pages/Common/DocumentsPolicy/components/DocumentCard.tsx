@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Col } from "react-bootstrap";
 import { Icon } from "@iconify/react";
-import DocumentDetails from "./DocumentDetails";
 import Badge from "../../../../components/child/Badge";
 import ActionsProgram from "./ActionsProgram";
 import useHasPermission from "../../../../hooks/Auth";
 import DeleteMannuals from "./DeleteMannuals";
 import dayjs from "dayjs";
 import DOMPurify from "dompurify";
+import ViewPdfModal from "../../../../components/child/ViewPdfModal";
 export type Document = {
   _id: string;
   title: string;
@@ -105,7 +105,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
               )}
             </div>
             <div className="d-flex flex-row gap-8 gap-sm-12 justify-content-end">
-              <DocumentDetails title={title} attachment={attachment} />
+              <ViewPdfModal attachment={attachment} title={title} />
               <button
                 className="btn btn-street-primary btn-street-lg p-8 d-flex flex-row align-items-center justify-content-between gap-1 px-sm-24 px-md-32 radius-12 text-xxs sm:text-xs"
                 onClick={() =>
