@@ -152,7 +152,7 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
   return (
     <ModalWrapper
       show={show}
-      title={isEdit ? "Edit Townhall Minutes" : "Add Townhall Minutes"}
+      title={isEdit ? "Edit Event Minutes" : "Add Event Minutes"}
       size="lg"
       headerClassName="text-xl p-0 pb-20 text-street-dark"
       className="p-20 p-sm-24 p-md-32 gap-16 gap-sm-20"

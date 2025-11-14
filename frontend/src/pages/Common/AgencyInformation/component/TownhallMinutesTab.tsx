@@ -32,13 +32,13 @@ const TownhallMinutesTab = () => {
     <div className="d-flex flex-column gap-24">
       {/* Add Button */}
       <div className="d-flex flex-row justify-content-between align-items-center">
-        <h2 className="text-md sm:text-lg">Townhall Minutes</h2>{" "}
+        <h2 className="text-md sm:text-lg">Event Minutes</h2>{" "}
         {isAdmin && (
           <button
             className="btn btn-street-primary"
             onClick={() => setShowModal(true)}
           >
-            Add Meeting Minute
+            Add Event Minute
           </button>
         )}
       </div>
