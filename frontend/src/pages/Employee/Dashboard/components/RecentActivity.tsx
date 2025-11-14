@@ -15,7 +15,7 @@ const RecentActivity = () => {
     },
     {
       id: 2,
-      title: "Townhall meeting scheduled for Friday",
+      title: "Event meeting scheduled for Friday",
       author: "Leadership Team",
       date: "2025-08-20T14:30:00",
     },
@@ -40,7 +40,7 @@ const RecentActivity = () => {
   ];
 
   return (
-    <CardlistWrapper title="Recent Activity" >
+    <CardlistWrapper title="Recent Activity">
       <div className="d-flex flex-column gap-3">
         {announcements.map((item) => {
           const now = dayjs();

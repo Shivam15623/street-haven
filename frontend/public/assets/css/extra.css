@@ -409,3 +409,17 @@ table.dataTable td.dt-type-date {
 #toolbar .ql-toolbar.ql-snow {
   border-radius: none !important;
 }
+
+#rows-dropdown.dropdown-toggle::after {
+  display: none !important;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span {
+  line-height: normal !important;
+}

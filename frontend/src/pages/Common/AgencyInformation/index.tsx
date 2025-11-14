@@ -31,7 +31,7 @@ const AgencyInfo = () => {
           },
           {
             key: "townhall_minutes",
-            label: "Townhall Minutes",
+            label: "Event Minutes",
             content: <TownhallMinutesTab />,
           },
           {
