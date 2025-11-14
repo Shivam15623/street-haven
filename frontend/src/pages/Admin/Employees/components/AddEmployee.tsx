@@ -56,7 +56,7 @@ const AddEmployee = () => {
     }
   };
   return (
-    <div>
+    <>
       <button
         className="btn btn-street-primary  d-flex flex-row align-items-center gap-2"
         onClick={() => setShowModal(true)}
@@ -239,7 +239,7 @@ const AddEmployee = () => {
           )}
         </Formik>
       </ModalWrapper>
-    </div>
+    </>
   );
 };
 
