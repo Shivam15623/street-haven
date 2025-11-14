@@ -39,7 +39,7 @@ export const addMeetingMinutes = asyncHandler(async (req, res) => {
   if (!meetingminutes) {
     throw new ApiError(500, "Server side Error");
   }
-  return res.status(200).json(new ApiResponse(201, "townhall minutes created"));
+  return res.status(200).json(new ApiResponse(201, "Event minutes created"));
 });
 export const editMeetingMinutes = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -67,7 +67,6 @@ export const editMeetingMinutes = asyncHandler(async (req, res) => {
   }
 
   if (meetingDate && meetingDate !== meetingMinutes.meetingDate) {
-
     updates.meetingDate = meetingDate;
   }
 
