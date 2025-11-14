@@ -44,7 +44,7 @@ const menuItems = [
 const EmployeeLayout = () => {
   const [mobileMenu, setMobileMenu] = useState(false);
   const location = useLocation(); // Hook to get the current route
-
+  const [mobileMode, setMobileMode] = useState(false);
   useEffect(() => {
     const handleDropdownClick = (event: Event) => {
       event.preventDefault();
@@ -174,7 +174,7 @@ const EmployeeLayout = () => {
       <main className="dashboard-main">
         <div className="navbar-header">
           <div className="d-flex align-items-center justify-content-between w-100 h-100">
-            <div className="d-flex flex-nowrap align-items-center gap-12 gap-sm-24">
+            <div className="d-flex flex-nowrap align-items-center gap-4">
               <button
                 onClick={mobileMenuControl}
                 type="button"
@@ -182,18 +182,46 @@ const EmployeeLayout = () => {
               >
                 <Icon icon="heroicons:bars-3-solid" className="icon" />
               </button>
-              <SearchContent/>
+              <div className="d-none d-md-block">
+                <SearchContent
+                  mobileMode={mobileMode}
+                  onclose={() => setMobileMode(false)}
+                />
+              </div>
             </div>
+            {mobileMode && (
+              <div className="d-block w-75">
+                <SearchContent
+                  mobileMode={mobileMode}
+                  onclose={() => setMobileMode(false)}
+                />
+              </div>
+            )}
 
-            <div className="d-flex flex-wrap align-items-center gap-2 gap-sm-12">
-              {/* ThemeToggleButton */}
-              <ThemeToggleButton />
+            {!mobileMode && (
+              <div className="d-flex flex-wrap align-items-center gap-3">
+                {!mobileMode && (
+                  <button
+                    className="d-md-none btn btn-light p-1 d-flex align-items-center rounded-circle opacity-50"
+                    onClick={() => setMobileMode(true)}
+                  >
+                    <Icon
+                      icon="mi:search"
+                      className="text-street-base"
+                      width={20}
+                      height={20}
+                    />
+                  </button>
+                )}
+                {/* ThemeToggleButton */}
+                <ThemeToggleButton />
 
-              <NotificationDropdown />
-              <ProfileDropdown />
+                <NotificationDropdown />
+                <ProfileDropdown />
 
-              {/* Profile dropdown end */}
-            </div>
+                {/* Profile dropdown end */}
+              </div>
+            )}
           </div>
         </div>
 

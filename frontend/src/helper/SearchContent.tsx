@@ -6,20 +6,73 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectAuth } from "../redux/AuthSlice";
 
+// ---------- Types ----------
+interface SearchProps {
+  mobileMode: boolean;
+  onclose: () => void;
+}
 
-const SearchContent = () => {
-  const [query, setQuery] = useState("");
+interface SearchItem {
+  slug: string;
+  title: string;
+}
+
+// ---------- Reusable Group Component ----------
+const ResultGroup = ({
+  title,
+  icon,
+  items,
+  onClick,
+}: {
+  title: string;
+  icon: string;
+  items: SearchItem[];
+  onClick: (slug: string) => void;
+}) => {
+  if (!items?.length) return null;
+
+  return (
+    <div className="d-flex flex-column gap-2 py-3 border-bottom border-gray-100">
+      <div className="fw-semibold d-flex align-items-center gap-2 text-street-primary mb-2">
+        <Icon icon={icon} className="text-street-primary" />
+        <span>{title}</span>
+      </div>
+
+      <div className="ps-3">
+        {items.map((item) => (
+          <div
+            key={item.slug}
+            className="py-2 px-2 d-flex justify-content-between align-items-center hover-item cursor-pointer rounded"
+            onClick={() => onClick(item.slug)}
+          >
+            <span className="fw-medium text-sm text-street-dark">
+              {item.title}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ---------- Main Component ----------
+const SearchContent: React.FC<SearchProps> = ({ mobileMode, onclose }) => {
+  const [query, setQuery] = useState<string>("");
   const navigate = useNavigate();
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [showDropdown, setShowDropdown] = useState<boolean>(false);
 
-  const { user } = useSelector(selectAuth);
-  const debouncedQuery = useDebounce<string>(query, 500);
-  const { data: results, isLoading } = useSearchAllContentQuery(debouncedQuery);
-
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const { user } = useSelector(selectAuth);
+
+  const debouncedQuery = useDebounce<string>(query, 500);
+
+  const { data: results, isLoading } = useSearchAllContentQuery(debouncedQuery);
+
+  // ---------- Close dropdown on outside click ----------
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handler = (event: MouseEvent) => {
       if (
         containerRef.current &&
         !containerRef.current.contains(event.target as Node)
@@ -27,34 +80,65 @@ const SearchContent = () => {
         setShowDropdown(false);
       }
     };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  // ---------- Toggle dropdown on search ----------
   useEffect(() => {
-    if (debouncedQuery) setShowDropdown(true);
-    else setShowDropdown(false);
+    setShowDropdown(!!debouncedQuery);
   }, [debouncedQuery]);
-  const handleClear = () => setQuery("");
+
+  // ---------- Clear search ----------
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (query === "") {
+      if (mobileMode) {
+        onclose();
+      }
+    } else {
+      setQuery("");
+      setShowDropdown(false);
+
+      inputRef.current?.focus();
+    }
+  };
+
+  // --- Navigate handlers ---
+  const goToEvent = (slug: string) =>
+    navigate(`/${user?.role}/events?slug=${slug}`);
+
+  const goToHR = (slug: string) =>
+    navigate(`/${user?.role}/agency_info?tab=hr_updates&slug=${slug}`);
+
+  const goToMinutes = (slug: string) =>
+    navigate(`/${user?.role}/agency_info?tab=townhall_minutes&slug=${slug}`);
+
+  const goToManual = (slug: string) =>
+    navigate(`/${user?.role}/programs&manuals?slug=${slug}`);
 
   return (
-    <div className="position-relative search-ContentContainer w-full ">
-      {/* Search bar */}
+    <div
+      ref={containerRef}
+      className="position-relative search-ContentContainer w-full"
+    >
+      {/* Search Bar */}
       <div
-        className={`search-Content  d-flex align-items-center gap-2 ${
+        className={`search-Content d-flex align-items-center gap-2 ${
           showDropdown ? "queryborder" : ""
         }`}
       >
         <Icon icon="ion:search-outline" className="contentIcon" />
+
         <input
           type="text"
           value={query}
+          ref={inputRef}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search here..."
         />
-        {query && (
+
+        {(mobileMode || query) && (
           <Icon
             icon="ion:close-circle"
             className="contentIcon cursor-pointer"
@@ -62,152 +146,52 @@ const SearchContent = () => {
           />
         )}
       </div>
-      {showDropdown && results?.data && (
-        <div
-          ref={containerRef}
-          className="position-absolute search-Results top-100 left-0 w-100   shadow-none overflow-y-auto"
-        >
-          {/* Loading state */}
+
+      {/* Dropdown */}
+      {showDropdown && results && (
+        <div className="position-absolute search-Results top-100 left-0 w-100 shadow-none overflow-y-auto">
           {isLoading && (
             <div className="d-flex justify-content-center align-items-center py-4">
-              <div className="spinner-border text-street-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            </div>
-          )}
-          {/* Events */}
-          {results.data.events?.length > 0 && (
-            <div className=" d-flex flex-column gap-2 py-3 border-bottom border-gray-100">
-              <div className="fw-semibold d-flex flex-row justify-content-between align-items-center text-street-primary mb-2">
-                <div className="d-flex text-lg align-items-center gap-2">
-                  <Icon
-                    icon="ion:calendar-outline"
-                    className="text-street-primary"
-                  />
-                  <span>Events</span>
-                </div>
-              </div>
-              <div id="eventsContainer" className="ps-3">
-                {results.data.events.map((e) => (
-                  <div
-                    className="py-2 px-2 d-flex justify-content-between align-items-center hover-item cursor-pointer rounded "
-                    onClick={() =>
-                      navigate(`/${user?.role}/events?slug=${e.slug}`)
-                    }
-                  >
-                    <div className="resultDetails ">
-                      <span className="fw-medium text-sm text-street-dark">
-                        {e.title}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          {/* HR Updates */}
-          {results.data.hrUpdates?.length > 0 && (
-            <div className=" d-flex flex-column gap-2 py-3 border-bottom border-gray-100">
-              <div className="fw-semibold d-flex flex-row justify-content-between align-items-center text-street-primary mb-2">
-                <div className="d-flex text-lg align-items-center gap-2">
-                  <Icon
-                    icon="ion:person-outline"
-                    className="text-street-primary"
-                  />
-                  <span>HR Updates</span>
-                </div>
-              </div>
-              <div id="hrUpdatesContainer" className="ps-3">
-                {results.data.hrUpdates.map((hr) => (
-                  <div
-                    className="py-2 px-2 d-flex justify-content-between align-items-center hover-item cursor-pointer rounded "
-                    key={hr.title}
-                    onClick={() =>
-                      navigate(
-                        `/${user?.role}/agency_info?tab=hr_updates&slug=${hr.slug}`
-                      )
-                    }
-                  >
-                    <div className="resultDetails">
-                      <span className="fw-medium text-sm text-street-dark">
-                        {hr.title}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          {/* Meeting Minutes */}
-          {results.data.meetingMinutes?.length > 0 && (
-            <div className=" d-flex flex-column gap-2 py-3 border-bottom border-gray-100">
-              <div className="fw-semibold d-flex flex-row justify-content-between align-items-center text-street-primary mb-2">
-                <div className="d-flex text-lg align-items-center gap-2">
-                  <Icon
-                    icon="ion:document-text-outline"
-                    className="text-street-primary"
-                  />
-                  <span>Meeting Minutes</span>
-                </div>
-              </div>
-              <div id="meetingMinutesContainer" className="ps-3">
-                {results.data.meetingMinutes.map((tm) => (
-                  <div
-                    className="py-2 px-2 d-flex justify-content-between align-items-center hover-item cursor-pointer rounded "
-                    onClick={() =>
-                      navigate(
-                        `/${user?.role}/agency_info?tab=townhall_minutes&slug=${tm.slug}`
-                      )
-                    }
-                  >
-                    <div className="resultDetails">
-                      <span className=" text-sm fw-medium text-street-dark">
-                        {tm.title}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <div className="spinner-border text-street-primary" />
             </div>
           )}
 
-          {/* Program Manuals */}
-          {results.data.programManuals?.length > 0 && (
-            <div className=" d-flex flex-column gap-2 py-3">
-              <div className="fw-semibold d-flex flex-row justify-content-between align-items-center text-street-primary mb-2">
-                <div className="d-flex text-lg align-items-center gap-2">
-                  <Icon
-                    icon="ion:book-outline"
-                    className="text-street-primary"
-                  />
-                  <span>Program Manuals</span>
+          {!isLoading && (
+            <>
+              <ResultGroup
+                title="Events"
+                icon="ion:calendar-outline"
+                items={results.data.events}
+                onClick={goToEvent}
+              />
+
+              <ResultGroup
+                title="HR Updates"
+                icon="ion:person-outline"
+                items={results.data.hrUpdates}
+                onClick={goToHR}
+              />
+
+              <ResultGroup
+                title="Meeting Minutes"
+                icon="ion:document-text-outline"
+                items={results.data.meetingMinutes}
+                onClick={goToMinutes}
+              />
+
+              <ResultGroup
+                title="Program Manuals"
+                icon="ion:book-outline"
+                items={results.data.programManuals}
+                onClick={goToManual}
+              />
+
+              {results.data.isEmpty && (
+                <div className="px-4 py-2 text-gray-500 text-sm">
+                  No results found
                 </div>
-              </div>
-              <div id="programManualsContainer" className="ps-3">
-                {results.data.programManuals.map((pm) => (
-                  <div
-                    className="py-2 px-2 d-flex justify-content-between align-items-center hover-item cursor-pointer rounded "
-                    onClick={() =>
-                      navigate(
-                        `/${user?.role}/programs&manuals?slug=${pm.slug}`
-                      )
-                    }
-                  >
-                    <div className="resultDetails">
-                      <span className="fw-medium text-sm text-street-dark">
-                        {pm.title}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          {/* Empty state */}
-          {results.data.isEmpty && (
-            <div className="px-4 py-2 text-gray-500 text-sm">
-              No results found
-            </div>
+              )}
+            </>
           )}
         </div>
       )}
