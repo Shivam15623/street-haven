@@ -52,6 +52,7 @@ import FAQRoutes from "./routes/FAQ.routes.js";
 import searchRoutes from "./routes/search.routes.js";
 import notificationRoutes from "./routes/notifications.routes.js";
 import orgNodeRoutes from "./routes/orgNode.routes.js";
+import announcementRoutes from "./routes/announcement.routes.js";
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/program-manuals", programManualRouter);
@@ -61,11 +62,12 @@ app.use("/api/v1/incident-reports", IncidentReportRouter);
 app.use("/api/v1/staff-feedback", StaffFeedbackRouter);
 app.use("/api/v1/meeting-minutes", meetingMinutesRouter);
 app.use("/api/v1/hr-updates", hrUpdateRouter);
-app.use("/api/v1/search",searchRoutes);
-app.use("/api/v1/employees",EmployeeRoutes);
-app.use("/api/v1/faq",FAQRoutes)
-app.use("/api/v1/notifications",notificationRoutes)
-app.use("/api/v1/orgNode",orgNodeRoutes)
+app.use("/api/v1/search", searchRoutes);
+app.use("/api/v1/employees", EmployeeRoutes);
+app.use("/api/v1/faq", FAQRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
+app.use("/api/v1/orgNode", orgNodeRoutes);
+app.use("/api/v1/announcement", announcementRoutes);
 app.use(errorHandler);
 
 app.use("/public/attachments", express.static("public/attachments"));

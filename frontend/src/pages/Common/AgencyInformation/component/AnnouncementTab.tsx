@@ -1,0 +1,80 @@
+import { useState } from "react";
+import ActionsAnnouncement from "./ActionsAnnouncement";
+import useHasPermission from "../../../../hooks/Auth";
+import { useViewAnnouncementsQuery } from "../../../../services/AnnouncementApi";
+import { Icon } from "@iconify/react/dist/iconify.js";
+import AnnouncementCard from "./AnnouncementCard";
+import StreetPaggination from "../../../../components/child/StreetPaggination";
+
+const AnnouncementTab = () => {
+  const [open, setOpen] = useState(false);
+  const { isAdmin } = useHasPermission();
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const limit = 10;
+  const { data, isLoading, isError } = useViewAnnouncementsQuery({
+    limit,
+    page,
+    keyword:search
+  });
+  const totalPages = data ? data.data.paggination.totalPages : 0;
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+  };
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  return (
+    <div className="d-flex flex-column gap-24">
+      {/* Add Button */}
+      <div className="d-flex flex-row justify-content-between align-items-center">
+        <h2 className="text-md sm:text-lg">Announcements</h2>{" "}
+        {isAdmin && (
+          <button
+            className="btn btn-street-primary"
+            onClick={() => setOpen(true)}
+          >
+            Add Event Minute
+          </button>
+        )}
+      </div>
+      {/* Search box */}
+      <div className="px-20 py-16 program-input bg-base radius-12 d-flex flex-row align-items-center gap-8">
+        <Icon icon="proicons:search" className="text-xl opacity-50" />
+        <input
+          className="bg-transparent border-0 text-sm text-street-base d-flex flex-grow-1 fw-semibold"
+          placeholder="Search Documents"
+          value={search}
+          onChange={(e) => handleSearchChange(e.target.value)}
+        />
+      </div>
+      {isAdmin && (
+        <ActionsAnnouncement show={open} onHide={() => setOpen(false)} />
+      )}
+      {isLoading && <p>Loading...</p>}
+      {isError && <p>Something went wrong</p>}
+      {data?.data.announcements?.length ? (
+        data?.data.announcements.map((announcement) => (
+          <AnnouncementCard
+            announcement={announcement}
+            key={announcement._id}
+          />
+        ))
+      ) : (
+        <>No Data Found</>
+      )}
+      {totalPages > 1 && (
+        <StreetPaggination
+          page={page}
+          totalPages={totalPages}
+          handlePageChange={handlePageChange}
+        />
+      )}
+    </div>
+  );
+};
+
+export default AnnouncementTab;

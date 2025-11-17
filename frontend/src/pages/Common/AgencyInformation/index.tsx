@@ -5,6 +5,7 @@ import TownhallMinutesTab from "./component/TownhallMinutesTab";
 import "@assets/css/PageCss/orgchart.css";
 import HrUpdatesTab from "./component/HrUpdatesTab";
 import { useSearchParams } from "react-router-dom";
+import AnnouncementTab from "./component/AnnouncementTab";
 const AgencyInfo = () => {
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get("tab") ?? "collective_agreement";
@@ -43,6 +44,11 @@ const AgencyInfo = () => {
             key: "hr_updates",
             label: "HR updates",
             content: <HrUpdatesTab />,
+          },
+          {
+            key: "announcements",
+            label: "Announcement",
+            content: <AnnouncementTab />,
           },
         ]}
       />

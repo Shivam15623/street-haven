@@ -1,9 +1,7 @@
-
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react"; // ✅ use /react here
 import { setLoggedIn, setLoggedOut } from "./AuthSlice";
 import type { RootState } from "./store";
 import type { LoginResponseData } from "../interfaces/AuthInterfaces";
-
 
 const environment = import.meta.env;
 
@@ -48,7 +46,22 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 export const api = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Event","Ticket","Manual","Meetings","HrUpdates","StaffFeedBack","IncidentReport","Profile","FAQ","EmergencyContact","Employees","OrgNode","Notification"],
+  tagTypes: [
+    "Event",
+    "Ticket",
+    "Manual",
+    "Meetings",
+    "HrUpdates",
+    "StaffFeedBack",
+    "IncidentReport",
+    "Profile",
+    "FAQ",
+    "EmergencyContact",
+    "Employees",
+    "OrgNode",
+    "Notification",
+    "Announcement",
+  ],
   endpoints: () => ({}),
 });
 
