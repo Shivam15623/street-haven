@@ -18,9 +18,10 @@ const StreetTab: React.FC<StreetTabProps> = ({ tabs, defaultActiveKey }) => {
   return (
     <>
       <ul
-        className="nav bordered-tab border border-top-0 border-start-0 gap-10 gap-sm-16 gap-md-32 border-end-0 d-inline-flex nav-pills"
+        className="nav bordered-tab border border-top-0 border-start-0 gap-32 border-end-0 d-flex flex-row flex-nowrap  overflow-x-auto overflow-y-hidden nav-pills"
         id="pills-tab"
         role="tablist"
+        style={{ scrollbarWidth: "thin" }}
       >
         {tabs.map((tab) => (
           <li className="nav-item" role="presentation" key={tab.key}>
@@ -28,7 +29,7 @@ const StreetTab: React.FC<StreetTabProps> = ({ tabs, defaultActiveKey }) => {
               className={`nav-link h-100 text-center px-0 pb-24 text-xs xs:text-sm ${
                 activeKey === tab.key ? "active" : ""
               }`}
-              style={{ maxWidth: "165px" }}
+              // style={{ maxWidth: "165px" }}
               id={`pills-${tab.key}-tab`}
               data-bs-toggle="pill"
               data-bs-target={`#pills-${tab.key}`}
@@ -48,7 +49,9 @@ const StreetTab: React.FC<StreetTabProps> = ({ tabs, defaultActiveKey }) => {
         {tabs.map((tab) => (
           <div
             key={tab.key}
-            className={`tab-pane fade ${activeKey === tab.key ? "show active" : ""}`}
+            className={`tab-pane fade ${
+              activeKey === tab.key ? "show active" : ""
+            }`}
             id={`pills-${tab.key}`}
             role="tabpanel"
             aria-labelledby={`pills-${tab.key}-tab`}
