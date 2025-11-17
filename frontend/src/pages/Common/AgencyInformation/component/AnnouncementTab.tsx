@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import ActionsAnnouncement from "./ActionsAnnouncement";
 import useHasPermission from "../../../../hooks/Auth";
 import { useViewAnnouncementsQuery } from "../../../../services/AnnouncementApi";
