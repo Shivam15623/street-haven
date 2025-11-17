@@ -112,6 +112,7 @@ const EmployeeDashboard = () => {
           icon="lucide:party-popper"
           label="Announcements"
           value={3}
+          link={`/${user?.role}/agency_info?tab=announcements`}
           key={"Announcements"}
         />
       </Row>
