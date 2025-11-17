@@ -43,7 +43,7 @@ const AnnouncementCardWrapper: React.FC<AnnouncementCardWrapperProps> = ({
 
       {/* Description */}
       <div
-        className="parse"
+        className="parse Te"
         dangerouslySetInnerHTML={{
           __html: DOMPurify.sanitize(description),
         }}

@@ -117,7 +117,7 @@ const EventDetailspop: React.FC<EventDetailsPopProps> = ({
         <div className="d-flex flex-column gap-2">
           <p className="text-street-dark fw-semibold">Description</p>
           <div
-            className="parse"
+            className="parse Te"
             dangerouslySetInnerHTML={{
               __html: DOMPurify.sanitize(description),
             }}

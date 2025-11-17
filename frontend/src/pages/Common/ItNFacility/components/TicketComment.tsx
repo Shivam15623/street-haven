@@ -353,7 +353,7 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
       }
     >
       <div className="d-flex h-100 flex-column">
-        <div className="chat-main flex-grow-1 overflow-auto mb-2">
+        <div className="chat-main flex-grow-1 overflow-auto">
           {hasMore && (
             <div className="text-center my-3">
               <button
@@ -421,7 +421,7 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
                           </div>
                         )}
                         <div
-                          className="prose py-2 chatpara"
+                          className="prose Te py-2 chatpara"
                           dangerouslySetInnerHTML={{ __html: msg.message }}
                         />
 
@@ -481,32 +481,30 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
           </div>
         )}
         <form
-          className="chat-message-box bg-dark px-2"
+          className="chat-message-box bg-dark p-0 rounded-0"
           onSubmit={(e) => {
             e.preventDefault();
             handleMessageSend();
           }}
         >
-          <div className="d-flex flex-row w-100 position-relative bg-white p-2 rounded-2">
-            <QuillEditor
-              content={message}
-              onChange={setMessage}
-              features={{
-                align: false,
-                backgroundColor: false,
-                color: false,
-                emoji: true,
-                headings: true,
-                link: true,
-                lists: true,
-              }}
-            />
-            <div
-              className="chat-message-box-action w-100 flex-row flex-nowrap gap-1 position-absolute justify-content-between px-3   end-0"
-              style={{
-                bottom: "10px",
-              }}
-            >
+          <div className="d-flex flex-column w-100  p-2 ">
+            <div className="w-100 px-2 py-3">
+              <QuillEditor
+                content={message}
+                onChange={setMessage}
+                features={{
+                  align: false,
+                  backgroundColor: false,
+                  color: false,
+                  emoji: true,
+                  headings: true,
+                  link: true,
+                  lists: true,
+                }}
+              />
+            </div>
+
+            <div className="chat-message-box-action w-100 flex-row flex-nowrap gap-1  justify-content-end px-3 py-2 ">
               <input
                 type="file"
                 multiple
@@ -518,15 +516,17 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
               />
               <button
                 type="button"
-                className=" btn btn-light d-flex align-items-center text-xl"
+                className=" btn btn-light  d-flex align-items-center text-xl"
                 onClick={handleFileSelect}
               >
                 <Icon icon="ph:link" />
               </button>
               <button
                 type="submit"
-                className="btn btn-street-primary d-flex align-items-center gap-1 "
+                className="btn btn-street-primary  text-sm d-flex align-items-center gap-1 "
               >
+                {" "}
+                Send
                 <Icon icon="f7:paperplane" />
               </button>
             </div>

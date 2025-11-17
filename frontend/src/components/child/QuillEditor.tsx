@@ -112,7 +112,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
   return (
     <div className={`w-100 ${className}`}>
       <div
-        className={`border rounded bg-white shadow-sm position-relative ${
+        className={`border rounded bg-white  position-relative ${
           isInvalid ? "border-danger" : "border-sh-base-50"
         }`}
         style={{

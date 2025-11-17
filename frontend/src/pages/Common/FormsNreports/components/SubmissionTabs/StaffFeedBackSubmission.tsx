@@ -37,7 +37,7 @@ const columns: Column[] = [
     header: "Description",
     accessor: (row) => (
       <div
-        className="parse"
+        className="parse Te"
         dangerouslySetInnerHTML={{
           __html: DOMPurify.sanitize(row.description),
         }}
@@ -76,7 +76,6 @@ const StaffFeedBackSubmission = () => {
 
   const { data: feedBackSubmissions, isLoading } =
     useViewStaffFeedBackQuery(filter);
-
 
   if (isLoading) return <div>Loading...</div>;
 
