@@ -32,20 +32,20 @@ const ResultGroup = ({
   if (!items?.length) return null;
 
   return (
-    <div className="d-flex flex-column gap-2 py-3 border-bottom border-gray-100">
+    <div className="d-flex flex-column gap-2 py-2 py-sm-3 border-bottom border-gray-100">
       <div className="fw-semibold d-flex align-items-center gap-2 text-street-primary mb-2">
         <Icon icon={icon} className="text-street-primary" />
-        <span>{title}</span>
+        <span className="text-sm sm:text-md">{title}</span>
       </div>
 
-      <div className="ps-3">
+      <div className="ps-2 ps-sm-3">
         {items.map((item) => (
           <div
             key={item.slug}
-            className="py-2 px-2 d-flex justify-content-between align-items-center hover-item cursor-pointer rounded"
+            className=" py-1 px-1 py-sm-2 px-sm-2 d-flex justify-content-between align-items-center hover-item cursor-pointer rounded"
             onClick={() => onClick(item.slug)}
           >
-            <span className="fw-medium text-sm text-street-dark">
+            <span className="fw-medium text-xs sm:text-sm text-street-dark">
               {item.title}
             </span>
           </div>
@@ -134,6 +134,7 @@ const SearchContent: React.FC<SearchProps> = ({ mobileMode, onclose }) => {
           type="text"
           value={query}
           ref={inputRef}
+          className="flex-grow-1"
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search here..."
         />

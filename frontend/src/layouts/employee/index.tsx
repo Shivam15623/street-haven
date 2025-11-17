@@ -213,7 +213,7 @@ const EmployeeLayout = () => {
               <div className="d-flex flex-wrap align-items-center gap-3">
                 {!mobileMode && (
                   <button
-                    className="d-md-none btn btn-light p-1 d-flex align-items-center rounded-circle opacity-50"
+                    className="d-md-none btn btn-light-50 p-1 d-flex align-items-center rounded-circle "
                     onClick={() => setMobileMode(true)}
                   >
                     <Icon

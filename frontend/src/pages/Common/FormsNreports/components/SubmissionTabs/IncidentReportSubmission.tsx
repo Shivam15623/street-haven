@@ -33,7 +33,7 @@ const columns: Column[] = [
     header: "Description",
     accessor: (row) => (
       <div
-        className="parse"
+        className="parse Te"
         dangerouslySetInnerHTML={{
           __html: DOMPurify.sanitize(row.description),
         }}
