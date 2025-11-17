@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useId } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
@@ -46,7 +46,9 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
   const [openUpwards, setOpenUpwards] = useState(false);
   const quillRef = useRef<ReactQuill>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
-  const [editorHeight, setEditorHeight] = useState(100); // initial min height
+  const [editorHeight, setEditorHeight] = useState(100);
+  const uniqueId = useId();
+  const toolbarId = `toolbar-${uniqueId.replace(/:/g, "-")}`;
 
   // Sync external content changes
   useEffect(() => {
@@ -60,11 +62,11 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
 
     const adjustHeight = () => {
       const scrollHeight = editor.root.scrollHeight;
-      const newHeight = Math.min(scrollHeight, 400); // max 400px height
+      const newHeight = Math.min(scrollHeight, 400);
       setEditorHeight(newHeight);
     };
 
-    adjustHeight(); // initial run
+    adjustHeight();
     editor.on("text-change", adjustHeight);
 
     return () => {
@@ -96,7 +98,6 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
     if (!emojiButtonRef.current) return;
 
     const buttonRect = emojiButtonRef.current.getBoundingClientRect();
-    console.log(window.innerHeight, buttonRect.bottom);
     const spaceBelow = window.innerHeight - buttonRect.bottom;
     const pickerHeight = 320;
 
@@ -105,7 +106,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
   };
 
   const modules = {
-    toolbar: disabled ? false : { container: "#toolbar" },
+    toolbar: disabled ? false : { container: `#${toolbarId}` },
   };
 
   return (
@@ -122,7 +123,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
       >
         {!disabled && (
           <div
-            id="toolbar"
+            id={toolbarId}
             className="d-flex align-items-center gap-2 border-bottom me-0 pe-0 bg-light p-2 sticky-top flex-wrap"
             style={{
               top: 0,
