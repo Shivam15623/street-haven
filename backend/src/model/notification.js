@@ -13,6 +13,7 @@ const NotificationSchema = new mongoose.Schema(
         "ticket_created",
         "manual_added",
         "event_activity",
+        "new_announcement"
       ],
       required: true,
     },
