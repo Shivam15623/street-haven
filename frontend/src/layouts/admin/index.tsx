@@ -220,14 +220,15 @@ const AdminLayout = () => {
               <div className="d-flex flex-wrap align-items-center gap-3">
                 {!mobileMode && (
                   <button
-                    className="d-md-none btn btn-light p-1 d-flex align-items-center rounded-circle opacity-50"
+                    className="d-md-none btn btn-light-50  p-1 d-flex align-items-center rounded-circle"
+                  
                     onClick={() => setMobileMode(true)}
                   >
                     <Icon
                       icon="mi:search"
                       className="text-street-base"
-                      width={20}
-                      height={20}
+                      width={18}
+                      height={18}
                     />
                   </button>
                 )}
