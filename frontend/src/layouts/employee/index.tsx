@@ -117,7 +117,18 @@ const EmployeeLayout = () => {
       });
     };
   }, [location.pathname]);
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setMobileMode(false);
+      }
+    };
 
+    window.addEventListener("resize", handleResize);
+    handleResize();
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const mobileMenuControl = () => {
     setMobileMenu(!mobileMenu);
   };
@@ -190,7 +201,7 @@ const EmployeeLayout = () => {
               </div>
             </div>
             {mobileMode && (
-              <div className="d-block w-75">
+              <div className="d-block d-md-none w-75">
                 <SearchContent
                   mobileMode={mobileMode}
                   onclose={() => setMobileMode(false)}
