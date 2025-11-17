@@ -10,7 +10,7 @@ interface AnnouncementProps {
   announcement: AnnouncementData;
 }
 const AnnouncementCard: React.FC<AnnouncementProps> = ({ announcement }) => {
-  const { title,_id, createdAt, message, createdBy } = announcement;
+  const { title, _id, createdAt, message, createdBy } = announcement;
   const { isAdmin } = useHasPermission();
   const [showDelete, setShowDelete] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -34,14 +34,14 @@ const AnnouncementCard: React.FC<AnnouncementProps> = ({ announcement }) => {
             <div className="d-flex flex-row gap-24 align-items-center text-street-base">
               <p className="d-flex flex-row align-items-center text-xs gap-8">
                 <Icon
-                  icon="uit:calender"
+                  icon="uis:calender"
                   className="text-xs text-street-primary"
                 />
                 <span>{formattedDate}</span>
               </p>
               <p className="d-flex flex-row align-items-center text-xs gap-8">
                 <Icon
-                  icon="octicon:people-24"
+                  icon="fa6-solid:user-group"
                   className="text-xs text-street-primary"
                 />
                 <span>

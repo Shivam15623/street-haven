@@ -82,7 +82,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
 
         {/* Description */}
         <div
-          className="parse"
+          className="parse Te"
           dangerouslySetInnerHTML={{
             __html: DOMPurify.sanitize(description),
           }}

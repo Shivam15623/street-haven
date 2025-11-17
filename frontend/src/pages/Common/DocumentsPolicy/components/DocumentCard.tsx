@@ -67,7 +67,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
                 {title}
               </p>
               <div
-                className="parse"
+                className="parse Te"
                 dangerouslySetInnerHTML={{
                   __html: DOMPurify.sanitize(description),
                 }}
@@ -95,7 +95,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
           </div>
 
           {/* Footer */}
-          <div className="d-flex flex-column flex-xl-row gap-3  align-items-xl-center  justify-content-between">
+          <div className="d-flex  flex-row gap-3  align-items-center  justify-content-between">
             <div className="text-xxs xs:text-xs fw-normal">
               {" "}
               {updatedAt === Pdocument.createdAt ? (
@@ -107,13 +107,13 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
             <div className="d-flex flex-row gap-8 gap-sm-12 justify-content-end">
               <ViewPdfModal attachment={attachment} title={title} />
               <button
-                className="btn btn-street-primary btn-street-lg p-8 d-flex flex-row align-items-center justify-content-between gap-1 px-sm-24 px-md-32 radius-12 text-xxs sm:text-xs"
+                className="btn btn-street-primary   d-flex flex-row align-items-center justify-content-between gap-1  radius-12 text-xxs sm:text-xs"
                 onClick={() =>
                   handleDownload(attachment.fileUrl, attachment.fileName)
                 }
               >
                 <Icon icon="jam:download" className="text-sm sm:text-xl" />
-                Download
+                <span className="d-none d-xxl-block ">Download</span>
               </button>
             </div>
           </div>

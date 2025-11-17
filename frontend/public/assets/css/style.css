@@ -15816,8 +15816,9 @@ td.fc-header-center {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.9375rem;
+  background-color: #ffffff;
   padding: 1rem 1.5rem;
-  border-top: 1px solid var(--neutral-300);
+  border-top: 0.25px solid var(--neutral-300);
 }
 
 .chat-message-box input {
@@ -15829,6 +15830,11 @@ td.fc-header-center {
   flex-wrap: wrap;
   align-items: center;
   gap: 1.25rem;
+
+  border-top: 0.5px solid var(--street-text-base);
+}
+[data-theme="dark"] .chat-message-box {
+  background-color: #1E242C;
 }
 
 .list-style {
