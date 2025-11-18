@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAllEmployeesQuery } from "../../../services/EmployeeApi";
 import DataTable from "../../../components/child/DataTable";
 import { EmployeeColumn } from "./components/EmployeeColumn";
 import AddEmployee from "./components/AddEmployee";
-
 
 const Employees = () => {
   // 🔹 State for table controls
@@ -12,6 +11,19 @@ const Employees = () => {
   const [sortBy, setSortBy] = useState("createdAt");
   const [order, setOrder] = useState<"asc" | "desc">("desc");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // 🔹 Debounce search input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1); // reset page on new search
+    }, 500); // 500ms debounce delay
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [search]);
 
   // 🔹 Fetch employees using current table state
   const { data, isLoading } = useAllEmployeesQuery({
@@ -19,7 +31,7 @@ const Employees = () => {
     limit,
     order,
     sortBy,
-    search,
+    search: debouncedSearch,
     forDropdown: false,
   });
 
@@ -28,10 +40,10 @@ const Employees = () => {
   if (isLoading) return <p>Loading...</p>;
 
   return (
-    <div className="d-flex flex-column gap-18 ">
+    <div className="d-flex flex-column gap-18">
       <div className="card">
-        <div className="card-body  p-16 p-sm-20 radius-12 p-md-24 d-flex flex-row justify-content-between align-items-center">
-          <div className=" d-flex flex-column gap-2">
+        <div className="card-body p-16 p-sm-20 radius-12 p-md-24 d-flex flex-row justify-content-between align-items-center">
+          <div className="d-flex flex-column gap-2">
             <h3 className="text-xl mb-0 text-street-dark fw-semibold">
               Employees
             </h3>
@@ -43,13 +55,12 @@ const Employees = () => {
         </div>
       </div>
       <div className="card">
-        <div className="card-body  p-16 p-sm-20 radius-12 p-md-24">
-          {" "}
+        <div className="card-body p-16 p-sm-20 radius-12 p-md-24">
           <DataTable
             columns={EmployeeColumn}
             onLimitChange={setLimit}
             data={employees}
-            total={data?.data.paggination.total ?? 0}
+            total={data?.data?.paggination?.total ?? 0}
             page={page}
             limit={limit}
             sortBy={sortBy}
@@ -59,10 +70,7 @@ const Employees = () => {
               setSortBy(col);
               setOrder(dir);
             }}
-            onSearchChange={(val) => {
-              setPage(1); // reset to first page on search
-              setSearch(val);
-            }}
+            onSearchChange={(val) => setSearch(val)}
           />
         </div>
       </div>

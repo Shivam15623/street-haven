@@ -196,6 +196,7 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
           touched,
           setFieldTouched,
           errors,
+          handleBlur,
         }) => (
           <BootstrapForm
             id="minute-meeting-form"
@@ -239,12 +240,11 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
               <CustomDatePicker
                 value={values.meetingDate ? new Date(values.meetingDate) : null}
                 onChange={(date) => {
-                  setFieldValue(
-                    "meetingDate",
-                    date ? date.toISOString().split("T")[0] : ""
-                  );
-                  setFieldTouched("meetingDate", true);
+                  const newDate = date ? date.toISOString().split("T")[0] : "";
+                  setFieldValue("meetingDate", newDate, true); // ← Add true to validate immediately
+                  setFieldTouched("meetingDate", true, false); // ← false prevents double validation
                 }}
+                onBlur={handleBlur}
                 isInvalid={!!errors.meetingDate && touched.meetingDate}
               />
 

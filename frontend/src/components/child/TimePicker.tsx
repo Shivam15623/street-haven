@@ -6,6 +6,7 @@ interface TimePickerProps {
   onChange: (value: string) => void; // will send 24-hour string
   placeholder?: string;
   className?: string;
+  isInvalid?: boolean;
   onBlur?: () => void; // Formik onBlur
   setFieldTouched?: (field: string, touched?: boolean) => void; // Formik setFieldTouched
 }
@@ -17,6 +18,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
   placeholder = "Select time",
   className,
   onBlur,
+  isInvalid,
   setFieldTouched,
 }) => {
   const [showPopover, setShowPopover] = useState(false);
@@ -88,7 +90,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
       <div
         className={`form-control rounded px-3 py-2 cursor-pointer select-none ${
           !value ? "text-muted" : ""
-        }`}
+        } ${isInvalid ? "is-invalid " : ""}`}
         onClick={() => setShowPopover(!showPopover)}
       >
         {displayTime}

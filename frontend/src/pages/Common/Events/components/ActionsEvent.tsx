@@ -116,7 +116,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
       {/* Trigger Button */}
       {isEdit ? (
         <button
-          className="btn btn-street-neutral"
+          className="btn btn-street-edit d-flex justify-content-center align-items-center"
           onClick={() => setShowModal(true)}
         >
           <Icon icon="mdi:pencil" className="text-sm sm:text-xl" />
@@ -272,12 +272,13 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
                 <CustomDatePicker
                   name="eventDate"
                   value={values.eventDate ? new Date(values.eventDate) : null}
-                  onChange={(date) =>
-                    setFieldValue(
-                      "eventDate",
-                      date ? date.toISOString().split("T")[0] : ""
-                    )
-                  }
+                  onChange={(date) => {
+                    const newDate = date
+                      ? date.toISOString().split("T")[0]
+                      : "";
+                    setFieldValue("eventDate", newDate, true); // ← Add true to validate immediately
+                    setFieldTouched("eventDate", true, false); // ← false prevents double validation
+                  }}
                   onBlur={handleBlur}
                   isInvalid={!!errors.eventDate && touched.eventDate}
                 />
@@ -297,6 +298,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
                       value={values.startTime}
                       onChange={(val) => setFieldValue("startTime", val)}
                       onBlur={() => setFieldTouched("startTime", true)}
+                      isInvalid={!!errors.startTime && touched.startTime}
                     />
                     {errors.startTime && touched.startTime && (
                       <div className="invalid-feedback d-block">
@@ -313,6 +315,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
                       value={values.endTime}
                       onChange={(val) => setFieldValue("endTime", val)}
                       onBlur={() => setFieldTouched("endTime", true)}
+                      isInvalid={!!errors.endTime && touched.endTime}
                     />
                     {errors.endTime && touched.endTime && (
                       <div className="invalid-feedback d-block">
