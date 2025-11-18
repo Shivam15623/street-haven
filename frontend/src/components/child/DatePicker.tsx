@@ -42,9 +42,12 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
           disabled={disabled}
           placeholder={placeholder}
           className={`form-control ${className} ${
-            isInvalid ? "is-invalid" : ""
+            isInvalid ? "is-invalid " : ""
           }`}
-          style={{ cursor: disabled ? "not-allowed" : "pointer" }}
+          style={{
+            cursor: disabled ? "not-allowed" : "pointer",
+            backgroundColor: "var(--street-card)",
+          }}
         />
 
         <Icon

@@ -193,7 +193,9 @@ const StaffFeedbackForm: React.FC = () => {
                         <TimePicker
                           name="time"
                           value={values.time}
+                          
                           onChange={(val) => setFieldValue("time", val)}
+                          isInvalid={!!errors.time && touched.time}
                           onBlur={() => setFieldTouched("time", true)} // 👈 handled automatically
                         />
 

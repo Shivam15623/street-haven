@@ -298,11 +298,11 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                         values.eventDate ? new Date(values.eventDate) : null
                       }
                       onChange={(date) => {
-                        setFieldValue(
-                          "eventDate",
-                          date ? date.toISOString().split("T")[0] : ""
-                        );
-                        setFieldTouched("eventDate", true);
+                        const newDate = date
+                          ? date.toISOString().split("T")[0]
+                          : "";
+                        setFieldValue("eventDate", newDate, true); // ← Add true to validate immediately
+                        setFieldTouched("eventDate", true, false); // ← false prevents double validation
                       }}
                       isInvalid={!!errors.eventDate && touched.eventDate}
                     />
@@ -320,6 +320,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                     <Form.Label>Start Time</Form.Label>
                     <TimePicker
                       name="startTime"
+                       isInvalid={!!errors.startTime && touched.startTime}
                       value={values.startTime}
                       onChange={(val) => setFieldValue("startTime", val)}
                       onBlur={() => setFieldTouched("startTime", true)} // 👈 handled automatically
@@ -340,6 +341,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                       name="endTime"
                       value={values.endTime}
                       onChange={(val) => setFieldValue("endTime", val)}
+                       isInvalid={!!errors.endTime && touched.endTime}
                       onBlur={() => setFieldTouched("endTime", true)} // 👈 handled automatically
                     />
 
