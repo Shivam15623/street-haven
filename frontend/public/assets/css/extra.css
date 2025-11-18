@@ -427,8 +427,7 @@ h4,
 h5,
 h6,
 p,
-span,
-div {
+span{
   line-height: normal !important;
 }
 [data-theme="dark"] .ql-editor.ql-blank::before {

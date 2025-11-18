@@ -15754,7 +15754,7 @@ td.fc-header-center {
   -o-border-radius: 10px 10px 10px 10px;
 }
 
-.chat-single-message.left .chat-message-content .chatpara {
+.chat-single-message.left .chat-message-content .chatpara * {
   color: var(--text-primary-light);
 }
 
@@ -15792,7 +15792,7 @@ td.fc-header-center {
 [data-theme="dark"] .chat-time {
   color: white;
 }
-.chat-single-message.right .chat-message-content .chatpara {
+.chat-single-message.right .chat-message-content .chatpara * {
   color: white;
 }
 .chat-single-message.right .chat-time {
