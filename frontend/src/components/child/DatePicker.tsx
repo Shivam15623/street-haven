@@ -7,7 +7,7 @@ import { Button } from "react-bootstrap";
 interface CustomDatePickerProps {
   value?: Date | null;
   onChange: (date: Date | null) => void;
-  onBlur?: React.FocusEventHandler<HTMLInputElement>; // ✅ Added for Formik
+  onBlur?: React.FocusEventHandler<HTMLInputElement>;
   placeholder?: string;
   isInvalid?: boolean;
   className?: string;
@@ -21,7 +21,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   name,
   value = null,
   onChange,
-  onBlur, // ✅ accept onBlur
+  onBlur,
   placeholder = "Select date",
   isInvalid = false,
   className = "",
@@ -29,37 +29,37 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   maxDate,
   disabled = false,
 }) => {
-  // Custom input component
-  const CustomInput = forwardRef<
-    HTMLDivElement,
-    {
-      value?: string;
-      onClick?: () => void;
-      onBlur?: React.FocusEventHandler<HTMLInputElement>;
-    }
-  >(({ value, onClick, onBlur }, ref) => {
-    const handleBlur = () => {
-      if (onBlur) {
-        const syntheticEvent = { target: { name } } as any;
-        onBlur(syntheticEvent);
-      }
-    };
-    return (
-      <div
-        ref={ref as any}
-        tabIndex={0} // ✅ makes div focusable so blur can trigger
-        className={`form-control d-flex justify-content-between align-items-center ${className} ${
-          isInvalid ? "is-invalid" : ""
-        }`}
-        onClick={!disabled ? onClick : undefined}
-        onBlur={handleBlur} // ✅ triggers when focus leaves the picker
-        style={{ cursor: disabled ? "not-allowed" : "pointer" }}
-      >
-        <span>{value || placeholder}</span>
-        <Icon icon="akar-icons:calendar" className="text-xl" />
+  const CustomInput = forwardRef<HTMLInputElement, any>(
+    ({ value, onClick, onBlur }, ref) => (
+      <div className="position-relative w-100">
+        <input
+          ref={ref}
+          value={value || ""}
+          onClick={onClick}
+          onBlur={onBlur}
+          readOnly
+          name={name}
+          disabled={disabled}
+          placeholder={placeholder}
+          className={`form-control ${className} ${
+            isInvalid ? "is-invalid" : ""
+          }`}
+          style={{ cursor: disabled ? "not-allowed" : "pointer" }}
+        />
+
+        <Icon
+          icon="akar-icons:calendar"
+          className="position-absolute"
+          style={{
+            right: "10px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            pointerEvents: "none",
+          }}
+        />
       </div>
-    );
-  });
+    )
+  );
 
   CustomInput.displayName = "CustomInput";
 
@@ -68,16 +68,17 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
       <ReactDatePicker
         selected={value}
         onChange={onChange}
-        onBlur={onBlur} // ✅ connect Formik’s blur event
+        onBlur={onBlur}
         dateFormat="yyyy-MM-dd"
         minDate={minDate}
         maxDate={maxDate}
         disabled={disabled}
+        shouldCloseOnSelect={true}
         showMonthDropdown
         showYearDropdown
         dropdownMode="select"
         autoComplete="off"
-        customInput={<CustomInput onBlur={onBlur} />} // ✅ forward blur to custom input
+        customInput={<CustomInput />}
         renderCustomHeader={({
           date,
           decreaseMonth,

@@ -128,7 +128,7 @@ const IncidentreportForm: React.FC = () => {
             errors,
             touched,
             setFieldValue,
-            setFieldTouched,
+            setFieldTouched,handleBlur
           }) => {
             return (
               <div
@@ -157,12 +157,13 @@ const IncidentreportForm: React.FC = () => {
                         <CustomDatePicker
                           value={values.date ? new Date(values.date) : null}
                           onChange={(date) => {
-                            setFieldValue(
-                              "date",
-                              date ? date.toISOString().split("T")[0] : ""
-                            );
-                            setFieldTouched("date", true);
+                            const newDate = date
+                              ? date.toISOString().split("T")[0]
+                              : "";
+                            setFieldValue("date", newDate, true); // ← Add true to validate immediately
+                            setFieldTouched("date", true, false); // ← false prevents double validation
                           }}
+                          onBlur={handleBlur}
                           isInvalid={!!errors.date && touched.date}
                         />
 

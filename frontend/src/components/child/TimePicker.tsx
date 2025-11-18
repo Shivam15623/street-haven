@@ -6,7 +6,8 @@ interface TimePickerProps {
   onChange: (value: string) => void; // will send 24-hour string
   placeholder?: string;
   className?: string;
-  onBlur?: () => void;
+  onBlur?: () => void; // Formik onBlur
+  setFieldTouched?: (field: string, touched?: boolean) => void; // Formik setFieldTouched
 }
 
 export const TimePicker: React.FC<TimePickerProps> = ({
@@ -16,6 +17,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
   placeholder = "Select time",
   className,
   onBlur,
+  setFieldTouched,
 }) => {
   const [showPopover, setShowPopover] = useState(false);
   const [hour, setHour] = useState("12");
@@ -57,7 +59,6 @@ export const TimePicker: React.FC<TimePickerProps> = ({
     if (p === "AM" && hr === 12) hr = 0;
 
     const formatted24 = `${hr.toString().padStart(2, "0")}:${m}`;
-
     onChange(formatted24); // send 24-hour string
   };
 
@@ -68,24 +69,29 @@ export const TimePicker: React.FC<TimePickerProps> = ({
         containerRef.current &&
         !containerRef.current.contains(e.target as Node)
       ) {
-        setShowPopover(false);
+        if (showPopover) {
+          setShowPopover(false);
+          onBlur?.(); // call Formik onBlur
+          setFieldTouched?.(name, true); // mark field as touched
+        }
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [showPopover, onBlur, setFieldTouched, name]);
 
-  // Displayed in fake input: HH:MM AM/PM
-  const displayTime = `${hour}:${minute} ${period}`;
+  const displayTime = value ? `${hour}:${minute} ${period}` : placeholder;
 
   return (
     <div ref={containerRef} className={`position-relative ${className || ""}`}>
       {/* Fake input */}
       <div
-        className="form-control rounded px-3 py-2 cursor-pointer select-none"
+        className={`form-control rounded px-3 py-2 cursor-pointer select-none ${
+          !value ? "text-muted" : ""
+        }`}
         onClick={() => setShowPopover(!showPopover)}
       >
-        {hour && minute && period ? displayTime : placeholder}
+        {displayTime}
       </div>
 
       {/* Popover */}
@@ -94,12 +100,9 @@ export const TimePicker: React.FC<TimePickerProps> = ({
           className="position-absolute w-75 top-100 start-0 mt-1 border rounded shadow p-3"
           style={{ zIndex: 50, background: "var(--street-card)" }}
         >
-          <div className="text-center fw-medium mb-4">Select Time</div>
+          <div className="text-center fw-medium mb-2">Select Time</div>
 
-          <div
-            className="d-flex justify-content-center m-auto align-items-center gap-1"
-            style={{ maxWidth: "350px" }}
-          >
+          <div className="d-flex justify-content-center align-items-center gap-2">
             {/* Hour */}
             <select
               className="form-select form-select-sm text-center"
@@ -113,7 +116,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
               ))}
             </select>
 
-            <span className="mx-1">:</span>
+            <span>:</span>
 
             {/* Minute */}
             <select
@@ -128,8 +131,6 @@ export const TimePicker: React.FC<TimePickerProps> = ({
               ))}
             </select>
 
-            <span className="mx-2"></span>
-
             {/* AM/PM */}
             <select
               className="form-select form-select-sm text-center"
@@ -143,8 +144,16 @@ export const TimePicker: React.FC<TimePickerProps> = ({
         </div>
       )}
 
-      {/* Hidden input for form binding */}
-      <input type="hidden" name={name} value={value || ""} onBlur={onBlur} />
+      {/* Hidden input for Formik */}
+      <input
+        type="hidden"
+        name={name}
+        value={value || ""}
+        onBlur={() => {
+          onBlur?.();
+          setFieldTouched?.(name, true);
+        }}
+      />
     </div>
   );
 };
