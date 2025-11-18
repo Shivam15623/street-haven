@@ -44,9 +44,8 @@ const eventSchema = new mongoose.Schema(
     eventDate: {
       type: Date,
       required: [true, "Event date is required"],
-      index: true, // faster queries for upcoming events
+      index: true,
     },
-    // ✅ Store start and end times
     startTime: {
       type: Date,
       required: [true, "Event start time is required"],

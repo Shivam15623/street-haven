@@ -481,7 +481,7 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
           </div>
         )}
         <form
-          className="chat-message-box bg-dark p-0 rounded-0"
+          className="chat-message-box  p-0 rounded-0"
           onSubmit={(e) => {
             e.preventDefault();
             handleMessageSend();
