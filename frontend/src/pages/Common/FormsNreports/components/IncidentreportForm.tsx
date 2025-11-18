@@ -128,7 +128,8 @@ const IncidentreportForm: React.FC = () => {
             errors,
             touched,
             setFieldValue,
-            setFieldTouched,handleBlur
+            setFieldTouched,
+            handleBlur,
           }) => {
             return (
               <div
@@ -188,6 +189,7 @@ const IncidentreportForm: React.FC = () => {
 
                         <TimePicker
                           name="time"
+                          isInvalid={!!errors.time && touched.time}
                           value={values.time}
                           onChange={(val) => setFieldValue("time", val)}
                           onBlur={() => setFieldTouched("time", true)} // 👈 handled automatically

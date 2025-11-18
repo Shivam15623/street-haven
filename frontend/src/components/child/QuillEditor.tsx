@@ -112,7 +112,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
   return (
     <div className={`w-100 ${className}`}>
       <div
-        className={`border rounded bg-white  position-relative ${
+        className={`border-1 rounded bg-white  position-relative ${
           isInvalid ? "border-danger" : "border-sh-base-50"
         }`}
         style={{
@@ -124,7 +124,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
         {!disabled && (
           <div
             id={toolbarId}
-            className="d-flex align-items-center gap-2 border-bottom me-0 pe-0 bg-light p-2 sticky-top flex-wrap"
+            className="d-flex  align-items-center gap-2 border-bottom me-0 pe-0 bg-light p-2 sticky-top flex-wrap"
             style={{
               top: 0,
               zIndex: 10,
