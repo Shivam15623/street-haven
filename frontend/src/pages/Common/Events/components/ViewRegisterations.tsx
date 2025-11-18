@@ -74,10 +74,10 @@ const ViewRegistrations: React.FC<ViewRegistrationsProps> = ({ eventId }) => {
       }
       trigger={
         <button
-          className="btn btn-street-primary d-flex align-items-center justify-content-center gap-2"
+          className="btn btn-info-600 radius-12 text-xs d-flex align-items-center justify-content-center gap-2"
           title="View Registrations"
         >
-          <Icon icon="mdi:account-group-outline" className="text-xl" />
+          <Icon icon="mdi:account-group-outline" className="text-sm" />
           <span>View</span>
         </button>
       }

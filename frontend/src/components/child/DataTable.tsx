@@ -173,14 +173,14 @@ function DataTable<T extends object>({
         <div className="d-flex gap-2">
           <button
             className="btn btn-sm btn-street-outline-primary"
-            disabled={page === 1}
+            disabled={page === 1 || totalPages === 0}
             onClick={() => onPageChange(page - 1)}
           >
             Prev
           </button>
           <button
             className="btn btn-sm btn-street-outline-primary"
-            disabled={page === totalPages}
+            disabled={page === totalPages || totalPages === 0}
             onClick={() => onPageChange(page + 1)}
           >
             Next
