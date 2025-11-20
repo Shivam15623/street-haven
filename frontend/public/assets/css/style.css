@@ -752,6 +752,9 @@ th {
 .border-sh-primary-3 {
   border: 3px solid var(--street-primary-base);
 }
+.border-sh-primary{
+   border-color:  var(--street-primary-base);
+}
 .bg-street-primary-10 {
   background-color: var(--street-primary-base-10) !important;
 }
