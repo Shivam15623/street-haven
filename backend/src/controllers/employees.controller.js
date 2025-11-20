@@ -96,6 +96,9 @@ export const AddEmployee = asyncHandler(async (req, res) => {
     password: password,
     phoneNo: phone,
     role: "employee",
+    totpSecret: null,
+    isTOTPEnabled: false,
+    isTOTPVerified: false,
   });
   const findUser = await User.findById(newUser._id);
   if (!findUser) {

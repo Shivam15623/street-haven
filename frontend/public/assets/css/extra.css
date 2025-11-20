@@ -427,7 +427,7 @@ h4,
 h5,
 h6,
 p,
-span{
+span {
   line-height: normal !important;
 }
 [data-theme="dark"] .ql-editor.ql-blank::before {
@@ -473,4 +473,21 @@ span{
 /* Optional: Normal text */
 .Te p {
   font-size: 14px !important;
+}
+.timePickerselect.form-select {
+  background-image: none !important;
+  padding: 5px !important ;
+  align-items: center;
+  width: 4rem !important;
+  height: 5rem;
+}
+.verify-form-wrap-img {
+  width: 96px;
+  height: 66px;
+}
+@media (min-width: 768px) {
+  .verify-form-wrap-img {
+    width: 116px;
+    height: 86px;
+  }
 }

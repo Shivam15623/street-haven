@@ -1,161 +1,195 @@
 import React, { useState, useRef, useEffect } from "react";
+import { Button, Form } from "react-bootstrap";
+import { createPopper, type Instance } from "@popperjs/core";
+import { Icon } from "@iconify/react/dist/iconify.js";
+// optional
 
 interface TimePickerProps {
-  name: string;
-  value?: string; // 24-hour format HH:MM
-  onChange: (value: string) => void; // will send 24-hour string
-  placeholder?: string;
+  value?: string;
+  onChange?: (value: string) => void;
+  onBlur?: () => void; // ⬅ Add this
+  disabled?: boolean;
   className?: string;
-  isInvalid?: boolean;
-  onBlur?: () => void; // Formik onBlur
-  setFieldTouched?: (field: string, touched?: boolean) => void; // Formik setFieldTouched
 }
+const hours = Array.from({ length: 12 }, (_, i) => i + 1);
+const minutes = Array.from({ length: 60 }, (_, i) => i);
+const periods = ["AM", "PM"] as const;
 
-export const TimePicker: React.FC<TimePickerProps> = ({
-  name,
+const TimePicker: React.FC<TimePickerProps> = ({
   value,
   onChange,
-  placeholder = "Select time",
+  disabled,
   className,
   onBlur,
-  isInvalid,
-  setFieldTouched,
 }) => {
-  const [showPopover, setShowPopover] = useState(false);
-  const [hour, setHour] = useState("12");
-  const [minute, setMinute] = useState("00");
-  const [period, setPeriod] = useState("AM");
+  const [isOpen, setIsOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const popperInstance = useRef<Instance | null>(null);
 
-  const containerRef = useRef<HTMLDivElement>(null);
+  // Parse time
+  const parseTime = (t?: string) => {
+    if (!t) return { hour: 12, minute: 0, period: "AM" as const };
+    const [h, m] = t.split(":");
+    let hourNum = parseInt(h);
+    const minuteNum = parseInt(m);
+    const period = hourNum >= 12 ? "PM" : "AM";
 
-  const hours = Array.from({ length: 12 }, (_, i) =>
-    (i + 1).toString().padStart(2, "0")
-  );
-  const minutes = Array.from({ length: 60 }, (_, i) =>
-    i.toString().padStart(2, "0")
-  );
+    if (hourNum > 12) hourNum -= 12;
+    if (hourNum === 0) hourNum = 12;
 
-  // Update state from 24-hour value if provided
-  useEffect(() => {
-    if (value) {
-      const [h, m] = value.split(":");
-      let hrNum = Number(h);
-      const p = hrNum >= 12 ? "PM" : "AM";
-      if (hrNum > 12) hrNum -= 12;
-      if (hrNum === 0) hrNum = 12;
-
-      setHour(hrNum.toString().padStart(2, "0"));
-      setMinute(m);
-      setPeriod(p);
-    }
-  }, [value]);
-
-  const handleTimeChange = (h: string, m: string, p: string) => {
-    setHour(h);
-    setMinute(m);
-    setPeriod(p);
-
-    // Convert to 24-hour format
-    let hr = Number(h);
-    if (p === "PM" && hr !== 12) hr += 12;
-    if (p === "AM" && hr === 12) hr = 0;
-
-    const formatted24 = `${hr.toString().padStart(2, "0")}:${m}`;
-    onChange(formatted24); // send 24-hour string
+    return { hour: hourNum, minute: minuteNum, period };
   };
 
-  // Close popover on outside click
+  const { hour, minute, period } = parseTime(value);
+
+  const formatTime = (h: number, m: number, p: string) => {
+    let h24 = h;
+    if (p === "PM" && h !== 12) h24 = h + 12;
+    if (p === "AM" && h === 12) h24 = 0;
+    return `${h24.toString().padStart(2, "0")}:${m
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
+  const handleChange = (h: number, m: number, p: string) => {
+    const formatted = formatTime(h, m, p);
+    onChange?.(formatted);
+  };
+
+  // Popover positioning using Popper.js
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        if (showPopover) {
-          setShowPopover(false);
-          onBlur?.(); // call Formik onBlur
-          setFieldTouched?.(name, true); // mark field as touched
+    if (isOpen && triggerRef.current && popoverRef.current) {
+      popperInstance.current = createPopper(
+        triggerRef.current,
+        popoverRef.current,
+        {
+          placement: "bottom-start",
         }
+      );
+    }
+    return () => {
+      popperInstance.current?.destroy();
+      popperInstance.current = null;
+    };
+  }, [isOpen]);
+
+  // Close on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(e.target as Node) &&
+        !triggerRef.current?.contains(e.target as Node)
+      ) {
+        onBlur?.();
+        setIsOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showPopover, onBlur, setFieldTouched, name]);
 
-  const displayTime = value ? `${hour}:${minute} ${period}` : placeholder;
+    if (isOpen) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [isOpen]);
+
+  const displayTime = value
+    ? `${hour.toString().padStart(2, "0")}:${minute
+        .toString()
+        .padStart(2, "0")} ${period}`
+    : "Select time";
 
   return (
-    <div ref={containerRef} className={`position-relative ${className || ""}`}>
-      {/* Fake input */}
-      <div
-        className={`form-control rounded px-3 py-2 cursor-pointer select-none ${
-          !value ? "text-muted" : ""
-        } ${isInvalid ? "is-invalid " : ""}`}
-        onClick={() => setShowPopover(!showPopover)}
+    <div className={className || ""}>
+      <Button
+        ref={triggerRef}
+        variant="outline-secondary"
+        className="w-100 d-flex align-items-center gap-2 justify-content-start"
+        style={{ border: "1px solid var(--street-border-base-50)" }}
+        onClick={() => setIsOpen((p) => !p)}
+        disabled={disabled}
       >
+        <Icon icon="mdi:clock-outline" width="18" height="18" />
         {displayTime}
-      </div>
+      </Button>
 
-      {/* Popover */}
-      {showPopover && (
+      {isOpen && (
         <div
-          className="position-absolute w-75 top-100 start-0 mt-1 border rounded shadow p-3"
-          style={{ zIndex: 50, background: "var(--street-card)" }}
+          ref={popoverRef}
+          className=" border rounded shadow mt-12 w-auto p-3"
+          style={{ zIndex: 2000, background: "var(--street-card)" }}
         >
-          <div className="text-center fw-medium mb-2">Select Time</div>
-
           <div className="d-flex justify-content-center align-items-center gap-2">
             {/* Hour */}
-            <select
-              className="form-select form-select-sm text-center"
-              value={hour}
-              onChange={(e) => handleTimeChange(e.target.value, minute, period)}
-            >
-              {hours.map((h) => (
-                <option key={h} value={h}>
-                  {h}
-                </option>
-              ))}
-            </select>
+            <div className="text-center">
+              <div className="small text-street-dark mb-1">Hour</div>
+              <Form.Select
+                value={hour}
+                onChange={(e) =>
+                  handleChange(parseInt(e.target.value), minute, period)
+                }
+                className="text-center timePickerselect  fs-4 fw-semibold"
+              >
+                {hours.map((h) => (
+                  <option key={h} value={h}>
+                    {h.toString().padStart(2, "0")}
+                  </option>
+                ))}
+              </Form.Select>
+            </div>
 
-            <span>:</span>
+            <div className="text-xxl fw-bold mt-6">:</div>
 
             {/* Minute */}
-            <select
-              className="form-select form-select-sm text-center"
-              value={minute}
-              onChange={(e) => handleTimeChange(hour, e.target.value, period)}
-            >
-              {minutes.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
+            <div className="text-center">
+              <div className="small text-street-dark mb-1">Minute</div>
+              <Form.Select
+                value={minute}
+                onChange={(e) =>
+                  handleChange(hour, parseInt(e.target.value), period)
+                }
+                className="text-center timePickerselect fs-4 fw-semibold"
+              >
+                {minutes.map((m) => (
+                  <option key={m} value={m}>
+                    {m.toString().padStart(2, "0")}
+                  </option>
+                ))}
+              </Form.Select>
+            </div>
 
             {/* AM/PM */}
-            <select
-              className="form-select form-select-sm text-center"
-              value={period}
-              onChange={(e) => handleTimeChange(hour, minute, e.target.value)}
+            <div className="text-center">
+              <div className="small text-street-dark mb-1">Period</div>
+              <div className="d-flex flex-column gap-1">
+                {periods.map((p) => (
+                  <Button
+                    key={p}
+                    size="sm" className="px-4 rounded-3"
+                    variant={p === period ? "primary" : "outline-secondary"}
+                    onClick={() => handleChange(hour, minute, p)}
+                  >
+                    {p}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="border-top pt-3 mt-3 text-end">
+            <Button
+              size="sm"
+              variant="light"
+              className="rounded-3 py-1 px-2"
+              onClick={() => {
+                onBlur?.(); // ⬅ Mark field as touched
+                setIsOpen(false);
+              }}
             >
-              <option value="AM">AM</option>
-              <option value="PM">PM</option>
-            </select>
+              Done
+            </Button>
           </div>
         </div>
       )}
-
-      {/* Hidden input for Formik */}
-      <input
-        type="hidden"
-        name={name}
-        value={value || ""}
-        onBlur={() => {
-          onBlur?.();
-          setFieldTouched?.(name, true);
-        }}
-      />
     </div>
   );
 };
+export default TimePicker;
