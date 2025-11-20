@@ -14,7 +14,7 @@ import Badge from "../../../../components/child/Badge";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Formik } from "formik";
 import * as Yup from "yup";
-import { TimePicker } from "../../../../components/child/TimePicker";
+import TimePicker from "../../../../components/child/TimePicker";
 import CustomDatePicker from "../../../../components/child/DatePicker";
 import QuillEditor from "../../../../components/child/QuillEditor";
 import DOMPurify from "dompurify";
@@ -319,8 +319,12 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                   <Form.Group className="d-flex flex-column gap-1">
                     <Form.Label>Start Time</Form.Label>
                     <TimePicker
-                      name="startTime"
-                       isInvalid={!!errors.startTime && touched.startTime}
+                      //  isInvalid={!!errors.startTime && touched.startTime}
+                      className={
+                        touched.startTime && errors.startTime
+                          ? "is-invalid"
+                          : ""
+                      }
                       value={values.startTime}
                       onChange={(val) => setFieldValue("startTime", val)}
                       onBlur={() => setFieldTouched("startTime", true)} // 👈 handled automatically
@@ -338,10 +342,14 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                   <Form.Group className="d-flex flex-column gap-1">
                     <Form.Label>End Time</Form.Label>
                     <TimePicker
-                      name="endTime"
+                      className={
+                        touched.endTime && errors.endTime
+                          ? "is-invalid"
+                          : ""
+                      }
                       value={values.endTime}
                       onChange={(val) => setFieldValue("endTime", val)}
-                       isInvalid={!!errors.endTime && touched.endTime}
+                     
                       onBlur={() => setFieldTouched("endTime", true)} // 👈 handled automatically
                     />
 

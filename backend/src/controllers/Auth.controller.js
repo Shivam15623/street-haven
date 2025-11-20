@@ -6,6 +6,9 @@ import { asyncHandler } from "../utills/AsyncHandler.js";
 import generateTokens from "../utills/GenerateTokens.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import otplib from "otplib";
+import speakeasy from "speakeasy";
+import qrcode from "qrcode";
 export const RegisterEmployee = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, password, phone } = req.body;
 
@@ -91,55 +94,42 @@ export const LogOut = asyncHandler(async (req, res) => {
 });
 export const Login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  const findUser = await User.findOne({ email: email });
-  if (!findUser) {
+
+  // 1. Find user
+  const user = await User.findOne({ email });
+  if (!user) {
     throw new ApiError(404, "Account not found with this email");
   }
-  const isPasswordCorrect = await findUser.isPasswordCorrect(password);
+
+  // 2. Validate password
+  const isPasswordCorrect = await user.isPasswordCorrect(password);
   if (!isPasswordCorrect) {
     throw new ApiError(400, "Incorrect password");
   }
-  const { accessToken, refreshToken } = await generateTokens(findUser._id);
 
-  // Sanitize user object for frontend
-  const userToSend = {
-    _id: findUser._id,
-    firstName: findUser.firstname,
-    lastName: findUser.lastname,
-    email: findUser.email,
-    phoneNo: findUser.phoneNo,
-    role: findUser.role,
-    slug: findUser.slug,
-    profilePic: findUser.profilePic,
-    createdAt: findUser.createdAt,
-  };
-  const isProduction = process.env.NODE_ENV === "production";
+  // 3. Create a short-lived temp token (used for TOTP verification / setup)
+ 
+  const tempToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+    expiresIn: "10m",
+  });
 
-  const accessOptions = {
-    httpOnly: true,
-    secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  };
-
-  const refreshOptions = {
-    httpOnly: true,
-    secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-  };
-
-  return res
-    .status(200)
-    .cookie("accessToken", accessToken, accessOptions)
-    .cookie("refreshToken", refreshToken, refreshOptions)
-    .json(
-      new ApiResponse(200, "Login successful", {
-        user: userToSend,
-        accessToken,
-        refreshToken,
+  // 4. If TOTP is already enabled → Ask for authenticator code
+  if (user.isTOTPEnabled) {
+    return res.status(200).json(
+      new ApiResponse(201, "Please enter your 6-digit authenticator code", {
+        status: "TOTP_REQUIRED",
+        tempToken,
       })
     );
+  }
+
+  // 5. If TOTP is not enabled → Ask to set up 2FA
+  return res.status(200).json(
+    new ApiResponse(201, "Please complete two-factor setup", {
+      status: "TOTP_SETUP_REQUIRED",
+      tempToken,
+    })
+  );
 });
 export const ForgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
@@ -313,4 +303,138 @@ export const silentAuth = asyncHandler(async (req, res) => {
         accessToken,
       })
     );
+});
+export const totpGenerate = asyncHandler(async (req, res) => {
+  const { tempToken } = req.body;
+  if (!tempToken) throw new ApiError(400, "Temp token required");
+
+  let decoded;
+  try {
+    decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+  } catch {
+    throw new ApiError(401, "Invalid or expired token");
+  }
+
+  const user = await User.findById(decoded.userId);
+  if (!user) throw new ApiError(404, "User not found");
+
+  const secret = speakeasy.generateSecret({
+    name: `StreetHaven (${user.email}) - ${user.slug}`,
+  });
+
+  user.totpSecret = secret.base32;
+  user.isTOTPEnabled = false;
+  await user.save({ validateBeforeSave: false });
+
+  // 3. Create a short-lived temp token (used for TOTP verification / setup)
+  const setupToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+    expiresIn: "10m",
+  });
+  const qrCode = await new Promise((resolve, reject) => {
+    qrcode.toDataURL(secret.otpauth_url, (err, url) => {
+      if (err) reject(err);
+      else resolve(url);
+    });
+  });
+  return res.status(200).json(
+    new ApiResponse(201, "Connect With Authenticator App", {
+      qrCode,
+      setupToken,
+    })
+  );
+});
+
+export const verifyTOTP = asyncHandler(async (req, res) => {
+  const { tempToken, totpCode } = req.body;
+
+  let decoded;
+  try {
+    decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+  } catch {
+    throw new ApiError(401, "Expired token");
+  }
+
+  const user = await User.findById(decoded.userId);
+
+  console.log(user.totpSecret);
+  const isValid = speakeasy.totp.verify({
+    secret: user.totpSecret,
+    encoding: "base32",
+    token: totpCode,
+    window: 1,
+  });
+
+  if (!isValid) throw new ApiError(400, "Invalid TOTP");
+
+  user.isTOTPEnabled = true;
+  await user.save({ validateBeforeSave: false });
+
+  // NOW CREATE NORMAL LOGIN TOKENS
+  const { accessToken, refreshToken } = await generateTokens(user._id);
+  const userToSend = {
+    _id: user._id,
+    firstName: user.firstname,
+    lastName: user.lastname,
+    email: user.email,
+    phoneNo: user.phoneNo,
+    role: user.role,
+    slug: user.slug,
+    profilePic: user.profilePic,
+    createdAt: user.createdAt,
+  };
+  const isProduction = process.env.NODE_ENV === "production";
+
+  const accessOptions = {
+    httpOnly: true,
+    secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
+    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  };
+
+  const refreshOptions = {
+    httpOnly: true,
+    secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
+    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+  };
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, accessOptions)
+    .cookie("refreshToken", refreshToken, refreshOptions)
+    .json(
+      new ApiResponse(200, "Access token refreshed", {
+        user: userToSend,
+        accessToken,
+        refreshToken,
+      })
+    );
+});
+
+export const verifyTOTPSetup = asyncHandler(async (req, res) => {
+  const { tempToken, totpCode } = req.body;
+
+  let decoded;
+  try {
+    decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+  } catch {
+    throw new ApiError(401, "Expired token");
+  }
+
+  const user = await User.findById(decoded.userId);
+  console.log(user.totpSecret);
+  const isValid = speakeasy.totp.verify({
+    secret: user.totpSecret,
+    encoding: "base32",
+    token: totpCode,
+    window: 1,
+  });
+
+  if (!isValid) throw new ApiError(400, "Invalid TOTP");
+
+  user.isTOTPEnabled = true;
+  user.isTOTPVerified = true;
+  await user.save({ validateBeforeSave: false });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "user Totp setup Verified Now Login"));
 });

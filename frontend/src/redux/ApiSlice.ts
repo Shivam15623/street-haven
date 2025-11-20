@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react"; // ✅ use /react here
 import { setLoggedIn, setLoggedOut } from "./AuthSlice";
 import type { RootState } from "./store";
-import type { LoginResponseData } from "../interfaces/AuthInterfaces";
+import type { LoginVerifyTotpResponseData } from "../interfaces/AuthInterfaces";
 
 const environment = import.meta.env;
 
@@ -30,7 +30,8 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
     );
 
     if (refreshResult?.data) {
-      const { accessToken, user } = refreshResult.data as LoginResponseData;
+      const { accessToken, user } =
+        refreshResult.data as LoginVerifyTotpResponseData;
       api.dispatch(setLoggedIn({ accessToken, UserData: user }));
 
       result = await baseQuery(args, api, extraOptions);

@@ -9,7 +9,7 @@ import { Formik } from "formik";
 import * as Yup from "yup";
 import { Col, Form, Row } from "react-bootstrap";
 import CustomDatePicker from "../../../../components/child/DatePicker";
-import { TimePicker } from "../../../../components/child/TimePicker";
+import TimePicker from "../../../../components/child/TimePicker";
 import QuillEditor from "../../../../components/child/QuillEditor";
 import type { EventUpcomingData } from "../../../../interfaces/EventInterfaces";
 import { Icon } from "@iconify/react/dist/iconify.js";
@@ -294,11 +294,14 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
                   <Form.Group>
                     <Form.Label>Start Time</Form.Label>
                     <TimePicker
-                      name="startTime"
+                      className={
+                        touched.startTime && errors.startTime
+                          ? "is-invalid"
+                          : ""
+                      }
                       value={values.startTime}
                       onChange={(val) => setFieldValue("startTime", val)}
                       onBlur={() => setFieldTouched("startTime", true)}
-                      isInvalid={!!errors.startTime && touched.startTime}
                     />
                     {errors.startTime && touched.startTime && (
                       <div className="invalid-feedback d-block">
@@ -311,11 +314,12 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
                   <Form.Group>
                     <Form.Label>End Time</Form.Label>
                     <TimePicker
-                      name="endTime"
+                      className={
+                        touched.endTime && errors.endTime ? "is-invalid" : ""
+                      }
                       value={values.endTime}
                       onChange={(val) => setFieldValue("endTime", val)}
                       onBlur={() => setFieldTouched("endTime", true)}
-                      isInvalid={!!errors.endTime && touched.endTime}
                     />
                     {errors.endTime && touched.endTime && (
                       <div className="invalid-feedback d-block">
