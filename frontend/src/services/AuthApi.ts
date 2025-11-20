@@ -3,9 +3,14 @@ import type { ApiGeneralResponse } from "../interfaces/Response";
 import { setLoggedIn, setLoggedOut } from "../redux/AuthSlice";
 import type {
   ForgotPasswordcredential,
+  GenerateTotpCredentials,
+  GenerateTotpResponse,
   LoginCredentials,
   LoginResponse,
+  LoginVerifyTotpcredentials,
+  LoginVerifyTotpResponse,
   RequestResetPasswordcredential,
+  SetUpTotpResponseCredentials,
   SignupCredentials,
 } from "../interfaces/AuthInterfaces";
 
@@ -51,7 +56,37 @@ export const authApi = api.injectEndpoints({
         body: credentials,
       }),
     }),
-    silentAuth: builder.query<LoginResponse, void>({
+    verifyTotp: builder.mutation<
+      LoginVerifyTotpResponse,
+      LoginVerifyTotpcredentials
+    >({
+      query: (credentials) => ({
+        url: "/auth/verify-totp",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
+    generateTotp: builder.mutation<
+      GenerateTotpResponse,
+      GenerateTotpCredentials
+    >({
+      query: (credentials) => ({
+        url: "/auth/generate-totp",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
+    setupTotp: builder.mutation<
+      ApiGeneralResponse,
+      SetUpTotpResponseCredentials
+    >({
+      query: (credentials) => ({
+        url: "/auth/setup-totp",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
+    silentAuth: builder.query<LoginVerifyTotpResponse, void>({
       query: () => ({
         url: "/auth/silent-auth",
         method: "GET",
@@ -83,4 +118,7 @@ export const {
   useLogoutMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
+  useVerifyTotpMutation,
+  useGenerateTotpMutation,
+  useSetupTotpMutation
 } = authApi;

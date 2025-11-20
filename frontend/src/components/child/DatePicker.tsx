@@ -1,4 +1,4 @@
-import React, { forwardRef } from "react";
+import React, { forwardRef, useMemo } from "react";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Icon } from "@iconify/react";
@@ -29,39 +29,41 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   maxDate,
   disabled = false,
 }) => {
-  const CustomInput = forwardRef<HTMLInputElement, any>(
-    ({ value, onClick, onBlur }, ref) => (
-      <div className="position-relative w-100">
-        <input
-          ref={ref}
-          value={value || ""}
-          onClick={onClick}
-          onBlur={onBlur}
-          readOnly
-          name={name}
-          disabled={disabled}
-          placeholder={placeholder}
-          className={`form-control ${className} ${
-            isInvalid ? "is-invalid " : ""
-          }`}
-          style={{
-            cursor: disabled ? "not-allowed" : "pointer",
-            backgroundColor: "var(--street-card)",
-          }}
-        />
+  const CustomInput = useMemo(
+    () =>
+      forwardRef<HTMLInputElement, any>(({ value, onClick, onBlur }, ref) => (
+        <div className="position-relative w-100">
+          <input
+            ref={ref}
+            value={value || ""}
+            onClick={onClick}
+            onBlur={onBlur}
+            readOnly
+            name={name}
+            disabled={disabled}
+            placeholder={placeholder}
+            className={`form-control ${className} ${
+              isInvalid ? "is-invalid " : ""
+            }`}
+            style={{
+              cursor: disabled ? "not-allowed" : "pointer",
+              backgroundColor: "var(--street-card)",
+            }}
+          />
 
-        <Icon
-          icon="akar-icons:calendar"
-          className="position-absolute"
-          style={{
-            right: "10px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            pointerEvents: "none",
-          }}
-        />
-      </div>
-    )
+          <Icon
+            icon="akar-icons:calendar"
+            className="position-absolute"
+            style={{
+              right: "10px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              pointerEvents: "none",
+            }}
+          />
+        </div>
+      )),
+    []
   );
 
   CustomInput.displayName = "CustomInput";

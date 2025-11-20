@@ -63,6 +63,17 @@ const UserSchema = new mongoose.Schema(
         "Please enter a valid Canadian phone number (e.g. +1 (416) 555-1234)",
       ],
     },
+    // TOTP secret for Microsoft Authenticator
+    totpSecret: {
+      type: String,
+      default: null,
+    },
+    // Whether user completed TOTP setup
+    isTOTPEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    isTOTPVerified: { type: Boolean, default: false },
     forgotPasswordToken: String,
     forgotPasswordTokenExpiry: Date,
     refreshToken: {

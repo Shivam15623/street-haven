@@ -16,6 +16,8 @@ import {
   LazyAdminRoot,
   LazyAdminDashboard,
   LazyEmployees,
+  LazyVerifyTotp,
+  LazyGenereateTotp,
 } from "../Lazy Components";
 import { Navigate, type RouteObject } from "react-router-dom";
 import RouteGuard from "../Routeguard";
@@ -55,6 +57,23 @@ export const AllRoutes: RouteObject[] = [
     element: withSuspense(
       <RouteGuard isPublic={true}>
         <LazyResetPassword />
+      </RouteGuard>
+    ),
+  },
+  {
+    path: "connect-Authenticator",
+    element: withSuspense(
+      <RouteGuard isPublic={true}>
+        <LazyGenereateTotp />
+      </RouteGuard>
+    ),
+  },
+
+  {
+    path: "otp-verify",
+    element: withSuspense(
+      <RouteGuard isPublic={true}>
+        <LazyVerifyTotp />
       </RouteGuard>
     ),
   },

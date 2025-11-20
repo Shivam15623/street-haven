@@ -6,7 +6,7 @@ import { useCreateIncidentReportMutation } from "../../../../services/IncidentRe
 import { showSuccess } from "../../../../utills/toastutills";
 import Badge from "../../../../components/child/Badge";
 
-import { TimePicker } from "../../../../components/child/TimePicker";
+import TimePicker from "../../../../components/child/TimePicker";
 import CustomDatePicker from "../../../../components/child/DatePicker";
 import QuillEditor from "../../../../components/child/QuillEditor";
 
@@ -188,11 +188,12 @@ const IncidentreportForm: React.FC = () => {
                         </Form.Label>
 
                         <TimePicker
-                          name="time"
-                          isInvalid={!!errors.time && touched.time}
                           value={values.time}
                           onChange={(val) => setFieldValue("time", val)}
-                          onBlur={() => setFieldTouched("time", true)} // 👈 handled automatically
+                          className={
+                            touched.time && errors.time ? "is-invalid" : ""
+                          }
+                          onBlur={() => setFieldTouched("time", true)}
                         />
 
                         {errors.time && touched.time && (

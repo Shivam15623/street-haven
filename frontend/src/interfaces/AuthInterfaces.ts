@@ -31,9 +31,29 @@ export interface SetLoggedInPayload {
 }
 
 export interface LoginResponseData {
+  status: "TOTP_SETUP_REQUIRED" | "TOTP_REQUIRED";
+  tempToken: string;
+}
+export interface LoginVerifyTotpcredentials {
+  tempToken: string;
+  totpCode: number;
+}
+export interface LoginVerifyTotpResponseData {
   user: User;
   refreshToken: string;
   accessToken: string;
+}
+interface GenerateTotpResponseData {
+  qrCode: string;
+  setupToken: string;
+}
+export interface SetUpTotpResponseCredentials{
+  tempToken:string;
+  totpCode:number
+}
+
+export interface GenerateTotpCredentials {
+  tempToken: string;
 }
 export interface LoginCredentials {
   email: string;
@@ -56,3 +76,5 @@ export interface RequestResetPasswordcredential {
   email: string;
 }
 export type LoginResponse = ApiResponse<LoginResponseData>;
+export type LoginVerifyTotpResponse = ApiResponse<LoginVerifyTotpResponseData>;
+export type GenerateTotpResponse = ApiResponse<GenerateTotpResponseData>;
