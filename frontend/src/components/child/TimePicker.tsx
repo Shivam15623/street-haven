@@ -98,18 +98,20 @@ const TimePicker: React.FC<TimePickerProps> = ({
     : "Select time";
 
   return (
-    <div className={className || ""}>
-      <Button
+    <div>
+      <button
         ref={triggerRef}
-        variant="outline-secondary"
-        className="w-100 d-flex align-items-center gap-2 justify-content-start"
-        style={{ border: "1px solid var(--street-border-base-50)" }}
-        onClick={() => setIsOpen((p) => !p)}
+        className={`w-100 form-control d-flex align-items-center gap-2 justify-content-start ${className}`}
+       
+        onClick={(e) => {
+          e.preventDefault();
+          setIsOpen((p) => !p);
+        }}
         disabled={disabled}
       >
         <Icon icon="mdi:clock-outline" width="18" height="18" />
         {displayTime}
-      </Button>
+      </button>
 
       {isOpen && (
         <div
@@ -163,7 +165,8 @@ const TimePicker: React.FC<TimePickerProps> = ({
                 {periods.map((p) => (
                   <Button
                     key={p}
-                    size="sm" className="px-4 rounded-3"
+                    size="sm"
+                    className="px-4 rounded-3"
                     variant={p === period ? "primary" : "outline-secondary"}
                     onClick={() => handleChange(hour, minute, p)}
                   >

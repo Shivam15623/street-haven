@@ -87,7 +87,8 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
           <div className="d-none d-sm-flex flex-row gap-6 gap-sm-12">
             <ViewPdfModal attachment={attachment} title={meeting.title} />
             <button
-              className="btn btn-street-primary btn-street-lg p-8 px-sm-24 px-md-32 radius-12 text-xxs sm:text-xs"
+              className="btn btn-street-primary btn-street-lg p-8 px-sm-24 px-md-32 radius-12 text-xxs sm:text-xs radius-12 p-0"
+              style={{ minWidth: "43px", minHeight: "40px" }}
               onClick={() =>
                 handleDownload(attachment.fileUrl, attachment.fileName)
               }
@@ -97,7 +98,8 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
             </button>
             {isAdmin && (
               <button
-                className="btn btn-street-neutral"
+                className="btn btn-street-neutral d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
+                style={{ width: "43px", height: "40px" }}
                 onClick={() => setShowModal(true)}
               >
                 {" "}

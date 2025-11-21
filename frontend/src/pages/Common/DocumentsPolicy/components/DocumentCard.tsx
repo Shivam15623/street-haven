@@ -112,14 +112,14 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
                   handleDownload(attachment.fileUrl, attachment.fileName)
                 }
               >
-                <Icon icon="jam:download" className="text-sm sm:text-xl" />
+                <Icon icon="jam:download" className="text-xl" />
                 <span className="d-none d-xxl-block ">Download</span>
               </button>
             </div>
           </div>
           {isAdmin && (
             <div
-              className="position-absolute z-3 d-flex flex-row gap-2"
+              className="position-absolute z-1 d-flex flex-row gap-2"
               style={{ top: "10px", right: "10px" }}
             >
               <button

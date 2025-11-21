@@ -48,10 +48,11 @@ const AddFaqs: React.FC<AddFaqsProps> = ({ title, id }) => {
   return (
     <>
       <button
-        className="btn btn-street-primary p-2"
+        className="btn btn-street-primary d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
+        style={{ width: "43px", height: "40px" }}
         onClick={() => setShowModal(true)}
       >
-        <Icon className="text-xl" icon={"mdi:plus"} />
+        <Icon className="text-lg sm:text-xl" icon={"mdi:plus"} />
       </button>
 
       <ModalWrapper

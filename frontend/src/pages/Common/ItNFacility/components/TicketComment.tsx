@@ -347,7 +347,7 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
       placement="end"
       bodyclassName="p-0"
       trigger={
-        <button className="btn btn-street-primary d-flex align-items-center justify-content-center">
+        <button className="btn btn-street-primary d-flex align-items-center justify-content-center radius-12 p-0"   style={{ width: "43px", height: "40px" }}>
           <Icon icon="mdi:chat-outline" className="text-xl" />
         </button>
       }

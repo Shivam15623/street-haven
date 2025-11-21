@@ -59,7 +59,7 @@ const FAQResourcesTab = () => {
                 {cat.faqs.map((faq) => (
                   <div
                     key={faq._id}
-                    className="d-flex flex-column w-fit pe-5 gap-1 ps-2 pt-2 pb-2 rounded position-relative faq-item"
+                    className="d-flex flex-column w-auto pe-5 gap-1 ps-2 pt-2 pb-2 rounded position-relative faq-item"
                     style={{ transition: "background 0.3s" }}
                   >
                     <h6 className="text-xs xs:text-sm text-street-dark mb-0">
@@ -121,7 +121,7 @@ const FAQResourcesTab = () => {
             </p>
             <div className="d-flex flex-column gap-8 ">
               {contacts?.data.map((ct) => (
-                <div className="d-flex flex-row gap-4">
+                <div className="d-flex  flex-row gap-4">
                   <p className="text-xs sm:text-sm text-street-primary fw-medium">
                     {ct.label}:
                     <span className="text-xxs sm:text-xs text-street-primary fw-normal">
