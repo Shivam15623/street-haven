@@ -498,7 +498,7 @@
   /* Notification list takes full height minus header/footer */
   .notification-dropdown .scroll-sm {
     flex-grow: 1;
-    max-height: none;
+    max-height: 400px;
     overflow-y: auto;
   }
 
