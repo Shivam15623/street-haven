@@ -53,7 +53,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
 
           <Icon
             icon="akar-icons:calendar"
-            className="position-absolute"
+            className="position-absolute "
             style={{
               right: "10px",
               top: "50%",

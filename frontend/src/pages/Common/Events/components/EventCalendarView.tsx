@@ -60,8 +60,8 @@ const EventCalendarView = () => {
   };
 
   return (
-    <div className="card position-relative">
-      <div className="p-24">
+    <div className="card position-relative flex-grow-1">
+      <div className="p-24 d-flex flex-column flex-grow-1 calendar-tp">
         <div className="d-flex flex-row justify-content-between justify-content-sm-start align-items-center py-sm-16 py-10 gap-16">
           <Button
             className="btn btn-street-outline-primary text-xs sm:text-sm"

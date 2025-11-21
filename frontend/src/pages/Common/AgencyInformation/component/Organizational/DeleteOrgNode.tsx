@@ -32,7 +32,7 @@ const DeleteOrgNode: React.FC<DeleteOrgNodeProps> = ({ nodedata }) => {
     <div>
       {/* Trigger Button */}
       <button
-        className="btn btn-sm btn-street-delete w-100"
+        className="btn btn-sm btn-street-delete w-100 d-flex text-sm flex-row align-items-center justify-content-center radius-12"
         onClick={() => setShowModal(true)}
       >
         Delete
@@ -68,8 +68,7 @@ const DeleteOrgNode: React.FC<DeleteOrgNodeProps> = ({ nodedata }) => {
       >
         <div className="d-flex flex-column gap-2 text-street-dark">
           <p className="mb-1">
-            Are you sure you want to delete the role{" "}
-            <strong>{label}</strong>?
+            Are you sure you want to delete the role <strong>{label}</strong>?
           </p>
           {department && (
             <p className="text-sm text-muted">
@@ -79,8 +78,8 @@ const DeleteOrgNode: React.FC<DeleteOrgNodeProps> = ({ nodedata }) => {
           {supervises.length > 0 && (
             <p className="text-sm text-danger">
               This role supervises {supervises.length}{" "}
-              {supervises.length === 1 ? "position" : "positions"}.
-              Deleting it will remove these relationships.
+              {supervises.length === 1 ? "position" : "positions"}. Deleting it
+              will remove these relationships.
             </p>
           )}
           {reportsTo && (

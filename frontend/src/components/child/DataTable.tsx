@@ -1,5 +1,5 @@
 import React from "react";
-import { Dropdown, DropdownButton } from "react-bootstrap";
+
 import { Icon } from "@iconify/react";
 
 export type Column<T> = {
@@ -56,30 +56,34 @@ function DataTable<T extends object>({
             onChange={(e) => onSearchChange(e.target.value)}
           />
         </div>
-        <DropdownButton
-          size="sm"
-          id="rows-dropdown"
-          title={
-            <span className="d-flex align-items-center gap-1">
-              Rows: {limit}
-              <Icon icon="mdi:chevron-down" width={16} />
-            </span>
-          }
-          variant="outline-secondary"
-          onSelect={(val) => onLimitChange(Number(val))}
-          className="shadow-sm"
-        >
-          {pageSizes.map((size) => (
-            <Dropdown.Item
-              key={size}
-              eventKey={size}
-              active={limit === size}
-              className="py-1 small"
-            >
-              {size}
-            </Dropdown.Item>
-          ))}
-        </DropdownButton>
+        <div className="dropdown">
+          <button
+            className="btn btn-outline-secondary btn-sm dropdown-toggle radius-8 d-flex align-items-center gap-1 shadow-sm"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            Rows: {limit}
+          </button>
+
+          <ul
+            className="dropdown-menu p-1 radius-8 border-0-5 border-sh-base-50 "
+            style={{ minWidth: "100%", width: "100%" }}
+          >
+            {pageSizes.map((size) => (
+              <li key={size}>
+                <button
+                  className={`dropdown-item p-1 radius-4 text-street-dark small ${
+                    limit === size ? "active" : ""
+                  }`}
+                  onClick={() => onLimitChange(size)}
+                >
+                  {size}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
 
         {/* Search Input */}
       </div>
@@ -172,14 +176,14 @@ function DataTable<T extends object>({
         </span>
         <div className="d-flex gap-2">
           <button
-            className="btn btn-sm btn-street-outline-primary"
+            className="btn btn-sm btn-street-outline-primary d-flex text-sm flex-row align-items-center justify-content-center radius-12"
             disabled={page === 1 || totalPages === 0}
             onClick={() => onPageChange(page - 1)}
           >
             Prev
           </button>
           <button
-            className="btn btn-sm btn-street-outline-primary"
+            className="btn btn-sm btn-street-outline-primary d-flex text-sm flex-row align-items-center justify-content-center radius-12"
             disabled={page === totalPages || totalPages === 0}
             onClick={() => onPageChange(page + 1)}
           >

@@ -76,7 +76,6 @@ const ViewFileModal = ({ attachment, title }: Props) => {
             src={attachment.fileUrl}
             className="w-100  border-1 rounded-2"
             title={attachment.fileName}
-            
             height={640}
           />
         );
@@ -102,7 +101,10 @@ const ViewFileModal = ({ attachment, title }: Props) => {
       case "rar":
         return (
           <div className="d-flex flex-column items-center justify-center h-[60vh] text-center">
-            <Icon icon="mdi:zip-box" className="text-xxl text-street-dark mb-4" />
+            <Icon
+              icon="mdi:zip-box"
+              className="text-xxl text-street-dark mb-4"
+            />
             <p>No preview available for ZIP/RAR files.</p>
             <p className="text-sm text-gray-500">Download to view contents.</p>
           </div>
@@ -124,7 +126,8 @@ const ViewFileModal = ({ attachment, title }: Props) => {
   return (
     <>
       <button
-        className="btn btn-street-outline-primary d-flex align-items-center w-43-px px-8 py-8 radius-12"
+        className="btn btn-street-outline-primary d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
+        style={{ width: "43px", height: "40px" }}
         onClick={() => setShowModal(true)}
       >
         <Icon icon="solar:eye-bold" className="text-lg" />

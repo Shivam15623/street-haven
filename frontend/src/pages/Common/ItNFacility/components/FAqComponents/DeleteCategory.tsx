@@ -29,10 +29,11 @@ const DeleteCategory: React.FC<DeleteCategoryProps> = ({ id, title }) => {
   return (
     <>
       <button
-        className="text-lg btn btn-street-delete btn-sm  d-flex flex-row align-items-center justify-content-center"
+        className="btn btn-street-delete d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
+        style={{ width: "43px", height: "40px" }}
         onClick={() => setShowModal(true)}
       >
-        <Icon icon="lucide:trash-2" />
+        <Icon icon="lucide:trash-2" className="text-md sm:text-xl" />
       </button>
 
       <ModalWrapper

@@ -67,7 +67,7 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
           <p>
             <span className="org-label">Reports to: </span>{" "}
             <span className="text-street-dark">
-              {data.node.reportsTo?.label??"N/A"}
+              {data.node.reportsTo?.label ?? "N/A"}
             </span>
           </p>
           <p className="d-inline-flex flex-column align-items-center flex-xl-row">
@@ -83,7 +83,7 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
         </div>
         {onEdit && (
           <button
-            className="btn btn-sm btn-street-edit"
+            className="btn btn-sm btn-street-edit d-flex text-sm flex-row align-items-center justify-content-center radius-12"
             onClick={(e) => {
               e.stopPropagation();
               onEdit(id);

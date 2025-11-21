@@ -12,7 +12,7 @@ const Events = () => {
   return (
     <div className="d-flex flex-column gap-8 gap-sm-16 gap-md-24 ">
       {/* Top Info */}
-      <div className="d-flex flex-sm-row flex-column justify-content-sm-between justify-content-end gap-2">
+      <div className="d-flex flex-row align-items-center justify-content-between  gap-2">
         <div className="d-flex flex-column gap-2">
           <p className="fw-semibold text-xl xs:text-xxl text-street-dark">
             Staff Events
@@ -22,37 +22,43 @@ const Events = () => {
           </p>
         </div>
         <div className="d-flex sm:d-block justify-content-end">
-          <div className="event-view-toggle w-fit d-flex flex-row p-6  gap-1 radius-12">
+          <div className="event-view-toggle align-items-center w-fit d-flex flex-row p-6  gap-1 radius-12">
             <div
               onClick={() => setView("calender")}
               className={`${
                 view === "calender"
-                  ? "bg-street-primary text-white"
-                  : "bg-transparent text-street-base"
-              } d-flex gap-8 align-items-center justify-content-center p-6 p-sm-8 radius-8 cursor-pointer`}
+                  ? "btn-street-primary text-white"
+                  : "btn-street-neutral switch text-street-base"
+              } d-flex gap-8 align-items-center justify-content-center p-8  radius-8 cursor-pointer`}
+              style={{ maxHeight: "35px" }}
             >
               <Icon
                 icon={"material-symbols-light:event-outline-rounded"}
                 className="text-lg"
               />{" "}
-              <span className=" text-xs fw-semibold">Calendar view</span>
+              <span className=" text-xs d-none d-md-inline-block fw-semibold">
+                Calendar view
+              </span>
             </div>
             <div
               onClick={() => setView("list")}
               className={`${
                 view === "list"
-                  ? "bg-street-primary text-white"
-                  : "bg-transparent text-street-base"
-              } d-flex gap-8 align-items-center justify-content-center p-6 p-sm-8 radius-8 cursor-pointer`}
+                  ? "btn-street-primary text-white"
+                  : "btn-street-neutral switch text-street-base"
+              } d-flex gap-8 align-items-center justify-content-center p-8 radius-8 cursor-pointer`}
+              style={{ maxHeight: "35px" }}
             >
               <Icon icon={"mynaui:list"} className="text-lg" />{" "}
-              <span className="text-xs fw-semibold">List view</span>
+              <span className="text-xs d-none d-md-inline-block fw-semibold">
+                List view
+              </span>
             </div>
           </div>
         </div>
       </div>
-      {isAdmin&&<ActionsEvent />}
-      
+      {isAdmin && <ActionsEvent />}
+
       {view === "list" ? <EventListView /> : <EventCalendarView />}
     </div>
   );

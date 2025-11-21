@@ -44,7 +44,8 @@ const DeleteMeetingMinutes: React.FC<DeleteMeetingProps> = ({
       {/* Trigger Button */}
       <button
         onClick={() => setShowModal(true)}
-        className="btn btn-outline-danger d-flex align-items-center w-43-px px-8 py-8 px-sm-10 radius-12"
+        className="btn btn-outline-danger d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
+        style={{ width: "43px", height: "40px" }}
       >
         <Icon icon="lucide:trash-2" />
       </button>
@@ -87,7 +88,8 @@ const DeleteMeetingMinutes: React.FC<DeleteMeetingProps> = ({
           <div className="border rounded p-3 bg-light">
             <p className="fw-bold mb-1">{title}</p>
             <p className="mb-1">
-              <span className="fw-semibold">Date:</span> {date.format("MMMM D, YYYY")}
+              <span className="fw-semibold">Date:</span>{" "}
+              {date.format("MMMM D, YYYY")}
             </p>
             {attachment && (
               <p className="mb-0">
