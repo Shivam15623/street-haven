@@ -1,7 +1,7 @@
 import { Formik } from "formik";
 
 import * as Yup from "yup";
-import {  Col, Form, Row, Card } from "react-bootstrap";
+import { Col, Form, Row, Card } from "react-bootstrap";
 import CustomDatePicker from "../../../../../components/child/DatePicker";
 
 import TimePicker from "../../../../../components/child/TimePicker";
@@ -92,14 +92,21 @@ const ClientIncidentForm = () => {
   return (
     <div className="d-flex flex-column gap-24 ">
       <div className="card">
-        <div className="card-body d-flex flex-column">
-          <h4 className="text-lg sm:text-xl text-street-dark fw-semibold mb-2">
-            Client Incident Reporting Form
-          </h4>
-          <p className="text-sm text-street-base">
-            Thank you for visiting Street Haven. We value all our clients and
-            strive to meet everyone’s needs.
-          </p>
+        <div className="card-body d-flex flex-row gap-20 align-items-center">
+          <img
+            src="/assets/images/StreetHavenform.png"
+            width={144}
+            height={113}
+          />
+          <div className="d-flex flex-column">
+            <h4 className="text-lg sm:text-xl text-street-dark fw-semibold mb-2">
+              Client Incident Reporting Form
+            </h4>
+             <p className="text-md text-street-dark fw-semibold">
+              Thank you for visiting Street Haven. We value all our clients and
+              strive to meet everyone’s needs.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -457,6 +464,16 @@ const ClientIncidentForm = () => {
                     {errors.ActionTaken}
                   </Form.Control.Feedback>
                 </Form.Group>
+              </Card.Body>
+            </Card>
+            <Card className="shadow-sm border-0">
+              <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
+                <button
+                  type="submit"
+                  className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                >
+                  Submit
+                </button>
               </Card.Body>
             </Card>
           </Form>

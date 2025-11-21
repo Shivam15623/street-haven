@@ -520,3 +520,10 @@ span {
 .calendar-tp .fc {
   flex: 1;
 }
+
+.ql-editor.ql-blank::before {
+  color: var(--text-secondary-light) !important;
+  font-size: 1rem !important;
+  font-style: normal !important;
+  opacity: 0.5;
+}
