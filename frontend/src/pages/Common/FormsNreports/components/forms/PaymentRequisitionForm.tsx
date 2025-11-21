@@ -1,8 +1,9 @@
 import { Field, FieldArray, Formik, type FormikErrors } from "formik";
-import {  Card, Col, Form, Row, Table } from "react-bootstrap";
+import { Card, Col, Form, Row, Table } from "react-bootstrap";
 import * as Yup from "yup";
 import CustomDatePicker from "../../../../../components/child/DatePicker";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import PdfUploader from "../../../../../components/child/PdfUploader";
 
 // --------------------
 // TYPES
@@ -20,7 +21,10 @@ interface FormValues {
   totalAmount: string;
   requestedBy: string;
   requestedDate: Date | null;
+  approvedBy: string;
+  approvedDate: Date | null;
   purchaseDetails: PurchaseDetail[];
+  invoices: File | null;
 }
 
 // --------------------
@@ -31,6 +35,8 @@ const FormSchema = Yup.object({
   totalAmount: Yup.number().required("Amount is required"),
   requestedBy: Yup.string().required("Requested By Name is required"),
   requestedDate: Yup.date().nullable().required("Requested Date is required"),
+  approvedBy: Yup.string().required("Approved By Name is required"),
+  approvedDate: Yup.date().nullable().required("Approved Date is required"),
   purchaseDetails: Yup.array()
     .of(
       Yup.object().shape({
@@ -42,6 +48,15 @@ const FormSchema = Yup.object({
       })
     )
     .min(1, "At least one Purchase Detail is required"),
+  invoices: Yup.mixed<File>()
+    .nullable()
+    .test("fileType", "Only PDF files are allowed", (value) => {
+      return value instanceof File && value.type === "application/pdf";
+    })
+    .test("fileSize", "File size must be less than 16MB", (value) => {
+      if (!value) return true;
+      return value.size <= 16 * 1024 * 1024;
+    }),
 });
 
 const PaymentRequisitionForm = () => {
@@ -50,6 +65,9 @@ const PaymentRequisitionForm = () => {
     totalAmount: "",
     requestedBy: "",
     requestedDate: new Date(),
+    approvedBy: "",
+    approvedDate: new Date(),
+    invoices: null,
     purchaseDetails: [
       {
         date: null,
@@ -68,10 +86,21 @@ const PaymentRequisitionForm = () => {
   return (
     <div className="d-flex flex-column gap-24 ">
       <div className="card">
-        <div className="card-body d-flex flex-column">
-          <h4 className="text-lg sm:text-xl text-street-dark fw-semibold mb-2">
-            Payment Requisition Form
-          </h4>
+        <div className="card-body d-flex flex-row gap-20 align-items-center">
+          <img
+            src="/assets/images/StreetHavenform.png"
+            width={144}
+            height={113}
+          />
+          <div className="d-flex flex-column">
+            <h4 className="text-xxl sm:text-xl text-street-dark fw-semibold mb-2">
+              Payment Requisition Form
+            </h4>
+            <p className="text-md text-street-dark fw-semibold">
+              Thank you for visiting Street Haven. We value all our clients and
+              strive to meet everyone’s needs.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -326,12 +355,75 @@ const PaymentRequisitionForm = () => {
                     </Form.Group>
                   </Col>
                 </Row>
+                <Row className="gy-3 gx-4">
+                  {/* Date */}
+                  <Col xs={12} md={6}>
+                    <Form.Group className="d-flex flex-column gap-8">
+                      <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
+                        Approved By:
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="approvedBy"
+                        value={values.approvedBy}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className="text-xs xs:text-sm"
+                        isInvalid={touched.approvedBy && !!errors.approvedBy}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.approvedBy}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <Form.Group className="d-flex flex-column gap-8">
+                      <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
+                        Date:
+                      </Form.Label>
+
+                      <CustomDatePicker
+                        value={
+                          values.approvedDate
+                            ? new Date(values.approvedDate)
+                            : null
+                        }
+                        onChange={(date) => {
+                          setFieldValue("requestedDate", date, true);
+                          setFieldTouched("requestedDate", true, false);
+                        }}
+                        isInvalid={Boolean(
+                          errors.approvedDate && touched.approvedDate
+                        )}
+                      />
+
+                      {errors.approvedDate && touched.approvedDate && (
+                        <div className="invalid-feedback d-block">
+                          {String(errors.approvedDate)}
+                        </div>
+                      )}
+                    </Form.Group>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+            <Card className="shadow-sm border-0">
+              <Card.Body className="d-flex flex-column gap-16 p-20">
+                {" "}
+                <PdfUploader name={"invoices"} label={"Invoices:"} />
               </Card.Body>
             </Card>
 
-            <button type="submit" className="btn btn-primary w-fit">
-              Submit
-            </button>
+            <Card className="shadow-sm border-0">
+              <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
+                <button
+                  type="submit"
+                  className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                >
+                  Submit
+                </button>
+              </Card.Body>
+            </Card>
           </Form>
         )}
       </Formik>
