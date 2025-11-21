@@ -34,7 +34,8 @@ const DeleteEmployee: React.FC<DeleteEmployeeProps> = ({ employee }) => {
     <div>
       {/* Trigger Button */}
       <button
-        className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center"
+        className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 p-0"
+          style={{ width: "43px", height: "40px" }}
         onClick={() => setShowModal(true)}
         title="Delete Employee"
       >

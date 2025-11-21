@@ -3572,9 +3572,9 @@ fieldset:disabled .btn {
 }
 .dropdown-item.active,
 .dropdown-item:active {
-  color: var(--bs-dropdown-link-active-color);
+  color: white;
   text-decoration: none;
-  background-color: var(--bs-dropdown-link-active-bg);
+  background-color: #0160a6;
 }
 .dropdown-item.disabled,
 .dropdown-item:disabled {

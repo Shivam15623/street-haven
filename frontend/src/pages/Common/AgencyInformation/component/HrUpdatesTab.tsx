@@ -49,7 +49,8 @@ const HrUpdatesTab = () => {
         <h2 className="text-md sm:text-lg">HR updates</h2>
         {isAdmin && (
           <button
-            className="btn btn-street-primary"
+            className="btn btn-street-primary text-sm d-flex  flex-row align-items-center justify-content-center radius-12 "
+            style={{ minWidth: "43px", minHeight: "40px" }}
             onClick={() => setShowModal(true)}
           >
             Add New Update

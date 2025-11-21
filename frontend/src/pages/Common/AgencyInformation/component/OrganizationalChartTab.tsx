@@ -14,7 +14,13 @@ const OrganizationalChartTab = () => {
             <h3 className="fw-bold text-md mb-0 sm:text-lg md:text-xl">
               Organizational Structure
             </h3>
-            <button onClick={()=>setshow(true)} className="btn btn-street-primary">Add New Role </button>
+            <button
+              onClick={() => setshow(true)}
+              className="btn btn-street-primary d-flex text-sm flex-row align-items-center justify-content-center radius-12"
+              style={{ minWidth: "43px", minHeight: "40px" }}
+            >
+              Add New Role{" "}
+            </button>
           </div>
 
           <div className="d-none d-sm-block">

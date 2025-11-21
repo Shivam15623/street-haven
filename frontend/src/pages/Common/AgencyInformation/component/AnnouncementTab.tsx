@@ -15,7 +15,7 @@ const AnnouncementTab = () => {
   const { data, isLoading, isError } = useViewAnnouncementsQuery({
     limit,
     page,
-    keyword:search
+    keyword: search,
   });
   const totalPages = data ? data.data.paggination.totalPages : 0;
   const handleSearchChange = (value: string) => {
@@ -34,10 +34,11 @@ const AnnouncementTab = () => {
         <h2 className="text-md sm:text-lg">Announcements</h2>{" "}
         {isAdmin && (
           <button
-            className="btn btn-street-primary"
+            className="btn btn-street-primary text-sm d-flex flex-row align-items-center justify-content-center radius-12 "
+            style={{ minWidth: "43px", minHeight: "40px" }}
             onClick={() => setOpen(true)}
           >
-            Add Event Minute
+            Add Announcement
           </button>
         )}
       </div>

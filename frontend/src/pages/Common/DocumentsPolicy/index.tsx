@@ -65,7 +65,7 @@ const ProgramManuals = () => {
         </div>
         {isAdmin && (
           <button
-            className="btn btn-street-lg btn-street-primary d-flex align-items-center justify-content-center"
+            className="btn btn-street-lg btn-street-primary radius-12 text-sm d-flex align-items-center justify-content-center"
             onClick={() => setShowModal(true)}
           >
             Add Manual

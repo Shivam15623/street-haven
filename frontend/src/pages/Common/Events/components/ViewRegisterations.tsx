@@ -63,7 +63,7 @@ const ViewRegistrations: React.FC<ViewRegistrationsProps> = ({ eventId }) => {
       footer={
         <div className="text-end d-flex justify-content-end">
           <button
-            className="btn btn-success d-flex align-items-center gap-1"
+            className="btn btn-success radius-12 btn-street-lg text-xs d-flex align-items-center justify-content-center gap-2"
             onClick={handleExportToExcel}
             disabled={!event?.registeredUsers?.length}
           >
@@ -77,8 +77,8 @@ const ViewRegistrations: React.FC<ViewRegistrationsProps> = ({ eventId }) => {
           className="btn btn-info-600 radius-12 text-xs d-flex align-items-center justify-content-center gap-2"
           title="View Registrations"
         >
-          <Icon icon="mdi:account-group-outline" className="text-sm" />
-          <span>View</span>
+          <Icon icon="mdi:account-group-outline" className="text-xl" />
+          <span className="d-none d-sm-inline-block ">View</span>
         </button>
       }
     >

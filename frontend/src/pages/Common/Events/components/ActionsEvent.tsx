@@ -116,14 +116,15 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
       {/* Trigger Button */}
       {isEdit ? (
         <button
-          className="btn btn-street-edit d-flex justify-content-center align-items-center"
+          className="btn btn-street-edit d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
+          style={{ width: "43px", height: "40px" }}
           onClick={() => setShowModal(true)}
         >
-          <Icon icon="mdi:pencil" className="text-sm sm:text-xl" />
+          <Icon icon="mdi:pencil" className="text-xl" />
         </button>
       ) : (
         <button
-          className="btn btn-street-primary"
+          className="btn btn-street-primary btn-street-lg radius-12 d-flex  flex-row align-items-center justify-content-center text-sm"
           onClick={() => setShowModal(true)}
         >
           Create Event
@@ -142,7 +143,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
         footer={
           <>
             <button
-              className="btn btn-street-primary btn-street-lg radius-12 px-12 px-sm-16 px-md-28 text-sm"
+              className="btn btn-street-primary btn-street-lg radius-12 d-flex flex-row align-items-center justify-content-center text-sm"
               type="submit"
               form={isEdit ? "event-edit-form" : "event-create-form"}
               disabled={isLoading || isEditLoading}
@@ -150,7 +151,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
               {isEdit ? "Save Changes" : "Create Event"}
             </button>
             <button
-              className="btn btn-street-neutral btn-street-lg radius-12 px-12 px-sm-16 px-md-28 text-sm"
+              className="btn btn-street-neutral btn-street-lg radius-12 d-flex flex-row align-items-center justify-content-center text-sm"
               onClick={() => setShowModal(false)}
             >
               Cancel

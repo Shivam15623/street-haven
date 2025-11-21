@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import { Formik, Form as FormikForm, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { Form, Button } from "react-bootstrap";
+import { Form } from "react-bootstrap";
 import {
   useAddNodeMutation,
   useEditNodeMutation,
@@ -84,10 +84,10 @@ const ActionOrgNode: React.FC<ActionOrgNodeProps> = ({
       onHide={onHide}
       footer={
         <div className="d-flex gap-2 justify-content-end">
-          <Button
+          <button
             type="submit"
             form="org-node-form"
-            variant="primary"
+            className="btn btn-street-primary btn-street-lg radius-12 d-flex flex-row align-items-center justify-content-center text-sm"
             disabled={isLoading || isEditing}
           >
             {isLoading || isEditing
@@ -97,10 +97,13 @@ const ActionOrgNode: React.FC<ActionOrgNodeProps> = ({
               : isEdit
               ? "Save Changes"
               : "Add Role"}
-          </Button>
-          <Button variant="secondary" onClick={onHide}>
+          </button>
+          <button
+            className="btn btn-street-neutral btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+            onClick={onHide}
+          >
             Cancel
-          </Button>
+          </button>
         </div>
       }
     >
