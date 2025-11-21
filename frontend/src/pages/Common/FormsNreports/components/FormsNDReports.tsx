@@ -4,6 +4,8 @@ import StreetTab from "../../../../components/StreetTab";
 import ClientFeedbackForm from "./forms/ClientFeedbackForm";
 import EmployeeIncidentForm from "./forms/EmployeeIncidentForm";
 import PaymentRequisitionForm from "./forms/PaymentRequisitionForm";
+import ClientIncidentForm from "./forms/ClientIncidentForm";
+import FunctionalAbiltiesForm from "./forms/FunctionalAbiltiesForm";
 
 const FormsNDReports = () => {
   return (
@@ -35,6 +37,15 @@ const FormsNDReports = () => {
           key: "payment_requistion",
           content: <PaymentRequisitionForm />,
         },
+        {
+          label: "Client Incident Report Form",
+          key: "client_incident_report",
+          content: <ClientIncidentForm />,
+        },{
+          label:"Functional Abilities Form",
+          key:"functional_abilties_form",
+          content:<FunctionalAbiltiesForm/>
+        }
         // {
         //   label: "Functional Abilities Form",
         //   key: "functional_abilties",

@@ -62,7 +62,8 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
   return (
     <>
       <button
-        className="btn btn-sm btn-street-edit d-flex flex-row align-items-center justify-content-center"
+        className="btn btn-sm btn-street-edit radius-12 d-flex flex-row align-items-center justify-content-center p-0"
+        style={{ width: "43px", height: "40px" }}
         onClick={() => setShowModal(true)}
       >
         <Icon icon="tabler:edit" className="text-xl" />

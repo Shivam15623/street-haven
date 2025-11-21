@@ -156,7 +156,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
       <button
         disabled
         type="button"
-        className={`btn d-flex align-items-center justify-content-center radius-12 w-160-px gap-2 text-xs ${
+        className={`btn d-flex align-items-center justify-content-center radius-12 btn-street-lg  gap-2 text-xs ${
           isRegistered ? "btn-success" : "btn-secondary"
         }`}
       >
@@ -170,7 +170,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
         disabled={isFull || isRegistering || isUnregistering}
         type="button"
         onClick={isRegistered ? handleSignout : handleSignup}
-        className={`btn btn-street-primary d-flex align-items-center justify-content-center radius-12 w-160-px gap-2 text-xs ${
+        className={`btn btn-street-primary d-flex align-items-center justify-content-center radius-12 btn-street-lg gap-2 text-xs ${
           isRegistered ? "btn-street-delete" : ""
         }`}
       >
@@ -199,7 +199,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
               {editMode ? (
                 <>
                   <button
-                    className="btn btn-street-primary"
+                    className="btn btn-street-primary btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
                     type="submit"
                     form="Temp-edit-form"
                     disabled={isEditing}
@@ -208,12 +208,12 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                   </button>
                   <button
                     type="button"
-                    className="btn btn-street-neutral"
                     onClick={(e) => {
                       e.preventDefault(); // 🛑 Stops any form submission event
                       e.stopPropagation(); // 🛑 Stops bubbling to parent form
                       setEditMode(false);
                     }}
+                    className="btn btn-street-neutral btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
                   >
                     Cancel
                   </button>
@@ -222,7 +222,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                 <>
                   <button
                     type="button"
-                    className="btn btn-street-primary"
+                    className="btn btn-street-primary  btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
                     onClick={(e) => {
                       e.preventDefault(); // 🛑 Stops any form submission event
                       e.stopPropagation(); // 🛑 Stops bubbling to parent form
@@ -239,7 +239,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
           {!isAdmin && commonActionButton}
           <button
             type="button"
-            className="btn btn-street-neutral"
+            className="btn btn-street-neutral  btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
             onClick={handleClose}
           >
             Close
@@ -343,13 +343,10 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                     <Form.Label>End Time</Form.Label>
                     <TimePicker
                       className={
-                        touched.endTime && errors.endTime
-                          ? "is-invalid"
-                          : ""
+                        touched.endTime && errors.endTime ? "is-invalid" : ""
                       }
                       value={values.endTime}
                       onChange={(val) => setFieldValue("endTime", val)}
-                     
                       onBlur={() => setFieldTouched("endTime", true)} // 👈 handled automatically
                     />
 

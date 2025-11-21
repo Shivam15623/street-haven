@@ -491,3 +491,32 @@ span {
     height: 86px;
   }
 }
+.bg-form-section {
+  background-color: #f7fafc;
+  border-left: 5px solid var(--street-primary-base);
+}
+[data-theme="dark"] .bg-form-section {
+  background-color: #04131d;
+}
+[data-theme="dark"] .btn-street-neutral.switch {
+  background: transparent;
+  border-color: transparent;
+}
+[data-theme="dark"] .btn-street-neutral.switch:hover {
+  background: #242f3b;
+  border-color: #242f3b;
+}
+.table-form tr th {
+  background-color: #f6f8fa;
+  border: 0.5px solid #a5a7a7;
+  color: #000;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 400;
+}
+.table-form tr td {
+  border: 0.5px solid #a5a7a7;
+}
+.calendar-tp .fc {
+  flex: 1;
+}

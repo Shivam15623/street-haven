@@ -11,6 +11,7 @@ import { showSuccess } from "../../../../utills/toastutills";
 import ViewRegistrations from "./ViewRegisterations";
 import ActionsEvent from "./ActionsEvent";
 import useHasPermission from "../../../../hooks/Auth";
+import { Icon } from "@iconify/react/dist/iconify.js";
 
 interface EventCardProps {
   event: EventUpcomingData;
@@ -81,7 +82,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
         <ViewRegistrations eventId={eventId} /> {}{" "}
         <button
           disabled
-          className={`btn d-flex align-items-center justify-content-center radius-12 w-160-px gap-2 text-xs ${
+          className={`btn btn-street-lg d-flex align-items-center justify-content-center radius-12  gap-2 text-xs ${
             isRegistered ? "btn-success" : "btn-secondary"
           }`}
         >
@@ -98,14 +99,29 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
         <button
           disabled={isFull || isRegistering || isUnregistering}
           onClick={isRegistered ? handleSignout : handleSignup}
-          className={`btn btn-street-primary d-flex align-items-center justify-content-center radius-12 w-160-px gap-2 text-xs ${
+          className={`btn btn-street-primary btn-street-lg d-flex align-items-center justify-content-center radius-12  gap-2 text-xs ${
             isRegistered ? "btn-street-delete" : ""
           }`}
         >
           {(isRegistering || isUnregistering) && (
             <Spinner animation="border" size="sm" className="me-2" />
           )}
-          {isFull ? "Full" : isRegistered ? "Cancel Registration" : "Sign Up"}
+          {isRegistered ? (
+            <Icon
+              icon="mdi:calendar-remove"
+              className="d-inline-block d-sm-none text-xl"
+            />
+          ) : (
+            <Icon
+              icon="mdi:calendar-check"
+              className="d-inline-block d-sm-none text-xl"
+            />
+          )}
+
+          <span className="d-none d-sm-inline-block ">
+            {" "}
+            {isFull ? "Full" : isRegistered ? "Cancel Registration" : "Sign Up"}
+          </span>
         </button>
       </div>
     );

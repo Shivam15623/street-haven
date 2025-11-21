@@ -35,7 +35,8 @@ const TownhallMinutesTab = () => {
         <h2 className="text-md sm:text-lg">Event Minutes</h2>{" "}
         {isAdmin && (
           <button
-            className="btn btn-street-primary"
+            className="btn btn-street-primary d-flex text-sm  flex-row align-items-center justify-content-center radius-12 "
+            style={{ minWidth: "43px", minHeight: "40px" }}
             onClick={() => setShowModal(true)}
           >
             Add Event Minute

@@ -60,7 +60,8 @@ const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
             <ViewFileModal attachment={update.attachment} title={title} />
             {isAdmin && (
               <button
-                className="btn btn-street-neutral d-flex align-items-center w-43-px px-8 py-8 px-sm-10 radius-12"
+                className="btn btn-street-neutral d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
+                style={{ width: "43px", height: "40px" }}
                 onClick={() => setShowModal(true)}
               >
                 {" "}
@@ -71,9 +72,10 @@ const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
               <>
                 <button
                   onClick={() => setShowDelete(true)}
-                  className="btn btn-outline-danger d-flex align-items-center w-43-px px-8 py-8 px-sm-10 radius-12"
+                  className="btn btn-street-delete d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
+                  style={{ width: "43px", height: "40px" }}
                 >
-                  Delete
+                  <Icon icon="lucide:trash-2" className="text-sm sm:text-xl" />
                 </button>
 
                 <DeleteHrUpdate
