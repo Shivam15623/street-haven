@@ -29,12 +29,10 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ item }) => {
           item.readAt ? "opacity-75" : ""
         } d-flex flex-row align-items-start gap-8 gap-sm-12`}
       >
-        <div ref={ref} className="d-flex flex-row gap-8 align-items-start w-100">
-          <div
-            className={`w-6-px h-6-px w-sm-8-px h-sm-8-px rounded-circle mt-6 flex-shrink-0 ${
-              item.readAt ? "bg-street-gray" : "bg-street-primary"
-            }`}
-          ></div>
+        <div
+          ref={ref}
+          className="d-flex flex-row gap-8 justify-content-between align-items-start w-100"
+        >
           <div className="flex-grow-1">
             <p className="text-sm sm:text-sm text-street-dark mb-0">
               {item.title}
@@ -46,6 +44,11 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ item }) => {
               {dayjs(item.createdAt).fromNow()}
             </p>
           </div>
+          <div
+            className={`w-6-px h-6-px w-sm-8-px h-sm-8-px rounded-circle mt-6 flex-shrink-0 ${
+              item.readAt ? "bg-secondary" : "bg-street-primary"
+            }`}
+          ></div>
         </div>
       </Dropdown.Item>
       <Dropdown.Divider />

@@ -127,7 +127,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
             className="d-flex  align-items-center gap-2 border-bottom me-0 pe-0 bg-light p-2 sticky-top flex-wrap"
             style={{
               top: 0,
-              zIndex: 10,
+              zIndex: 1,
               marginRight: "0px",
               paddingRight: "0px",
             }}
