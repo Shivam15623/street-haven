@@ -343,7 +343,7 @@ const ClientFeedbackForm = () => {
                     <Form.Control
                       type="text"
                       name="otherComplaintDescription"
-                      value={values.otherComplaintDescription??""}
+                      value={values.otherComplaintDescription ?? ""}
                       onChange={handleChange}
                       onBlur={handleBlur}
                       className="text-xs xs:text-sm"
@@ -435,9 +435,10 @@ const ClientFeedbackForm = () => {
               <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
                 <button
                   type="submit"
+                  disabled={isLoading}
                   className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
                 >
-                  Submit
+                  {isLoading ? "Submitting..." : "Submit"}
                 </button>
               </Card.Body>
             </Card>

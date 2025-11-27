@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Card } from "react-bootstrap";
 import CustomDatePicker from "../../../../../components/child/DatePicker";
 
@@ -54,13 +54,17 @@ const SimpleListBlock = ({
 
 const MediaConsentForm = () => {
   // 🔥 All content stored in JSON → super clean
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    name: string;
+    printedName: string;
+    date: Date | null;
+  }>({
     name: "",
     printedName: "",
     date: null,
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("FORM SUBMITTED:", form);
     alert("Form Submitted");
@@ -189,10 +193,7 @@ const MediaConsentForm = () => {
             items={acknowledegItems}
           />
           <div className="d-flex w-full flex-row gap-20">
-            <div
-              className="d-flex flex-column gap-8"
-             
-            >
+            <div className="d-flex flex-column gap-8">
               <label className="text-xs text-street-dark">Date</label>
               <CustomDatePicker
                 value={form.date}
@@ -208,7 +209,6 @@ const MediaConsentForm = () => {
                 onChange={(e) =>
                   setForm({ ...form, printedName: e.target.value })
                 }
-               
               />
             </div>
           </div>

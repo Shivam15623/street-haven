@@ -41,7 +41,7 @@ const ClientIncidentFormSchema = Yup.object({
         "Actual Physical / Sexual Violence",
         "Threat of Physical / Sexual Violence",
         "Bomb Threat",
-        "Other",
+        "Other",""
       ],
       "Select a valid incident type"
     )
@@ -109,18 +109,28 @@ const ClientIncidentForm = () => {
     }
   };
 
-  const initialValues = {
-    date: new Date(), // Default to current date
-    time: "", // String, e.g., "14:30"
+  const initialValues: ClientIncidentValues = {
+    date: new Date(),
+    time: "",
     place: "",
     affectedClientname: "",
     staffName: "",
     WitnessName: "",
     staffEmail: "",
-    incidentType: "", // One of the allowed types, default empty
-    otherIncidentDescription: "", // Required only if incidentType is "Other"
-    email: "",
-    address: "",
+    incidentType: "" as
+      | "Disaster"
+      | "Drugs"
+      | "Property Destruction"
+      | "Theft"
+      | "Medical / Injury / Health Emergency"
+      | "Intruders"
+      | "Police Action"
+      | "Actual Physical / Sexual Violence"
+      | "Threat of Physical / Sexual Violence"
+      | "Bomb Threat"
+      | "Other"
+      | "", // allow empty initially
+    otherIncidentDescription: "",
     incidentDescription: "",
     ActionTaken: "",
     debrief: "",
@@ -645,9 +655,10 @@ const ClientIncidentForm = () => {
               <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
                 <button
                   type="submit"
+                  disabled={isLoading}
                   className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
                 >
-                  Submit
+                  {isLoading ? "Submitting..." : "Submit"}
                 </button>
               </Card.Body>
             </Card>
