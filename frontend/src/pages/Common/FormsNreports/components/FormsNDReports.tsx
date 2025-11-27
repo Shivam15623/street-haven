@@ -6,6 +6,7 @@ import EmployeeIncidentForm from "./forms/EmployeeIncidentForm";
 import PaymentRequisitionForm from "./forms/PaymentRequisitionForm";
 import ClientIncidentForm from "./forms/ClientIncidentForm";
 import FunctionalAbiltiesForm from "./forms/FunctionalAbiltiesForm";
+import MediaConsentForm from "./forms/MediaConsentForm";
 
 const FormsNDReports = () => {
   return (
@@ -41,11 +42,17 @@ const FormsNDReports = () => {
           label: "Client Incident Report Form",
           key: "client_incident_report",
           content: <ClientIncidentForm />,
-        },{
-          label:"Functional Abilities Form",
-          key:"functional_abilties_form",
-          content:<FunctionalAbiltiesForm/>
-        }
+        },
+        {
+          label: "Functional Abilities Form",
+          key: "functional_abilties_form",
+          content: <FunctionalAbiltiesForm />,
+        },
+        {
+          label: "Media Consent Form",
+          key: "media_consent",
+          content: <MediaConsentForm />,
+        },
         // {
         //   label: "Functional Abilities Form",
         //   key: "functional_abilties",
