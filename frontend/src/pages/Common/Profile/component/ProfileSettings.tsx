@@ -25,7 +25,10 @@ const ProfileSchema = Yup.object({
   timePeriod: Yup.string(),
   workEmail: Yup.string(),
   workPhone: Yup.string()
-    .matches(/^[0-9]+$/, "Must be only digits")
+    .matches(
+      /^(?:\+1\s?)?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
+      "Enter a valid 10-digit Canadian phone number"
+    )
     .required("Work phone is required"),
 });
 type ProfileValues = Yup.InferType<typeof ProfileSchema>;

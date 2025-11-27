@@ -1,65 +1,94 @@
 import { Formik } from "formik";
 
 import * as Yup from "yup";
-import {  Col, Form, Row, Card } from "react-bootstrap";
+import { Col, Form, Row, Card } from "react-bootstrap";
 import CustomDatePicker from "../../../../../components/child/DatePicker";
 import { PatternFormat } from "react-number-format";
+import {
+  useCreateClientFeedbackMutation,
+  type clientFeedbackCredentials,
+} from "../../../../../services/FormApi";
+import { showError, showSuccess } from "../../../../../utills/toastutills";
 
 // SCHEMA
 const ClientFeedBackFormSchema = Yup.object({
-  date: Yup.date().nullable(),
-  location: Yup.string().nullable(),
+  date: Yup.string().required("Visit Date is Required"),
+
+  location: Yup.string().required("location is required"),
+
   name: Yup.string().nullable(),
 
   phone: Yup.string()
-    .required("Phone number is required")
     .matches(
       /^(?:\+1\s?)?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
       "Enter a valid 10-digit Canadian phone number"
-    ),
+    )
+    .nullable(),
 
   email: Yup.string().email("Invalid email format").nullable(),
-  address: Yup.string(),
 
-  natureOfComplaint: Yup.string()
+  address: Yup.string().nullable(),
+
+  natureOfComplaint: Yup.mixed<
+    "Service Issue" | "Product Issue" | "Staff Behaviour" | "Other"
+  >()
     .oneOf(
       ["Service Issue", "Product Issue", "Staff Behaviour", "Other"],
       "Select a valid complaint type"
     )
-    .required("Nature of complaint is required"),
+    .required("complaint Type is required"),
 
-  otherComplaintDescription: Yup.string().when("natureOfComplaint", {
-    is: "Other",
-    then: (schema) => schema.required("Please specify the complaint"),
-    otherwise: (schema) => schema.nullable(),
-  }),
+  otherComplaintDescription: Yup.string().nullable(),
 
-  description: Yup.string().nullable(),
-  impact: Yup.string().nullable(),
-  desiredOutcome: Yup.string().nullable(),
-
-  signature: Yup.mixed()
-    .required("Signature is required")
-    .test("fileRequired", "Signature file is required", (value) => {
-      return value instanceof File;
-    }),
+  description: Yup.string().required("description is required"),
+  impact: Yup.string().required("impact is required"),
+  desiredOutcome: Yup.string().required("desired Outcome is required"),
 });
 
+type ClientFeedbackValues = Yup.InferType<typeof ClientFeedBackFormSchema>;
 const ClientFeedbackForm = () => {
-  const handleSubmit = (values: any) => {
-    console.log("Form Submit:", values);
+  const [createFeedback, { isLoading }] = useCreateClientFeedbackMutation();
+  const handleSubmit = async (values: ClientFeedbackValues) => {
+    try {
+      const payload: clientFeedbackCredentials = {
+        date: new Date(values.date),
+        location: values.location,
+        type: values.natureOfComplaint ?? "",
+        description: values.description,
+        impact: values.impact,
+        outcome: values.desiredOutcome,
+      };
+
+      // Optional fields mapping
+      if (values.name) payload.clientName = values.name;
+      if (values.phone) payload.clientPhone = values.phone;
+      if (values.email) payload.clientEmail = values.email;
+      if (values.address) payload.clientAddress = values.address;
+
+      // "Other" complaint description
+      if (
+        values.natureOfComplaint === "Other" &&
+        values.otherComplaintDescription
+      ) {
+        payload.otherComplaint = values.otherComplaintDescription;
+      }
+
+      const res = await createFeedback(payload).unwrap();
+      if (res.success) {
+        showSuccess(res.message);
+      }
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      showError(err.message ?? "Something went wrong");
+    }
   };
 
   return (
     <div className=" d-flex flex-column gap-24 ">
       {/* Header */}
-       <div className="card">
+      <div className="card">
         <div className="card-body d-flex flex-row gap-20 align-items-center">
-          <img
-            src="/assets/images/StreetHavenform.png"
-            width={144}
-            height={113}
-          />
+          <img src="/assets/images/shForm.png" width={144} height={113} />
           <div className="d-flex flex-column">
             <h4 className="text-lg sm:text-xl text-street-dark fw-semibold mb-2">
               Client Feedback Form
@@ -78,18 +107,17 @@ const ClientFeedbackForm = () => {
         validateOnChange
         validateOnBlur
         initialValues={{
-          date: new Date().toISOString().split("T")[0],
+          date: new Date().toISOString().split("T")[0], // string (YYYY-MM-DD)
           location: "",
           name: "",
           phone: "",
           email: "",
           address: "",
-          natureOfComplaint: "",
+          natureOfComplaint: "Other",
           otherComplaintDescription: "",
           description: "",
           impact: "",
           desiredOutcome: "",
-          signature: null,
         }}
         onSubmit={handleSubmit}
       >
@@ -129,12 +157,12 @@ const ClientFeedbackForm = () => {
                           setFieldTouched("date", true, false); // ← false prevents double validation
                         }}
                         onBlur={handleBlur}
-                        isInvalid={!!errors.date && touched.date}
+                        isInvalid={!!errors.date && !!touched.date}
                       />
 
-                      {errors.date && touched.date && (
+                      {touched.date && errors.date && (
                         <div className="invalid-feedback d-block">
-                          {errors.date}
+                          {String(errors.date)}
                         </div>
                       )}
                     </Form.Group>
@@ -180,7 +208,7 @@ const ClientFeedbackForm = () => {
                   <Form.Control
                     type="text"
                     name="name"
-                    value={values.name}
+                    value={values.name ?? ""}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     className="text-xs xs:text-sm"
@@ -225,7 +253,7 @@ const ClientFeedbackForm = () => {
                       <Form.Control
                         type="email"
                         name="email"
-                        value={values.email}
+                        value={values.email ?? ""}
                         onChange={handleChange}
                         isInvalid={touched.email && !!errors.email}
                       />
@@ -245,7 +273,7 @@ const ClientFeedbackForm = () => {
                     as="textarea"
                     rows={2}
                     name="address"
-                    value={values.address}
+                    value={values.address ?? ""}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     className="text-xs xs:text-sm"
@@ -266,12 +294,12 @@ const ClientFeedbackForm = () => {
                 </h5>
 
                 {/* Nature of Complaint (Checkbox style, single-select) */}
-                <Form.Group className="mb-3">
+                <Form.Group className="d-flex flex-column gap-8">
                   <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
                     Nature of Complaint:
                   </Form.Label>
 
-                  <div className="d-flex flex-column gap-2">
+                  <div className="d-flex flex-row gap-20">
                     {[
                       "Service Issue",
                       "Product Issue",
@@ -315,7 +343,7 @@ const ClientFeedbackForm = () => {
                     <Form.Control
                       type="text"
                       name="otherComplaintDescription"
-                      value={values.otherComplaintDescription}
+                      value={values.otherComplaintDescription ?? ""}
                       onChange={handleChange}
                       onBlur={handleBlur}
                       className="text-xs xs:text-sm"
@@ -407,9 +435,10 @@ const ClientFeedbackForm = () => {
               <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
                 <button
                   type="submit"
+                  disabled={isLoading}
                   className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
                 >
-                  Submit
+                  {isLoading ? "Submitting..." : "Submit"}
                 </button>
               </Card.Body>
             </Card>

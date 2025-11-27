@@ -60,19 +60,18 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
 
     // Create Notification within the session
     const notification = await createNotification(
-      [
-        {
-          type: "mannual_added",
-          title: "New Program Manual Added",
-          message: `${firstname} added a new Program Manual: "${title}"`,
-          link: `/program-manuals/${programmanual[0]._id}`,
-          createdBy: userId,
-          isGlobal: true,
-          expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-          meta: { programManualId: programmanual[0]._id },
-        },
-      ],
-      { session }
+      {
+        type: "mannual_added",
+        title: "New Program Manual Added",
+        message: `${firstname} added a new Program Manual: "${title}"`,
+        link: `/program-manuals/${programmanual[0]._id}`,
+        createdBy: userId,
+        isGlobal: true,
+        expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        meta: { programManualId: programmanual[0]._id },
+      },
+
+      session
     );
 
     // Commit transaction

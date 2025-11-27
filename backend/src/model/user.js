@@ -24,8 +24,8 @@ const UserSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
       match: [
-        /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-        "Please enter a valid email",
+        /^[a-zA-Z0-9._%+-]+@streethaven\.com$/,
+        "Email must be a streethaven.com email",
       ],
     },
     slug: {

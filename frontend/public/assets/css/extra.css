@@ -527,3 +527,6 @@ span {
   font-style: normal !important;
   opacity: 0.5;
 }
+ul ul {
+  padding-left: 1.3rem !important; /* same as ps-4/ps-5 */
+}

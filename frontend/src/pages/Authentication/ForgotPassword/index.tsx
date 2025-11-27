@@ -1,6 +1,6 @@
 import AuthWrapper from "../../../components/Authentication/AuthWrapper";
 import AuthFormWrapper from "../../../components/Authentication/AuthFormWrapper";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Button, Col, Form, Row } from "react-bootstrap";
 import { Formik } from "formik";
@@ -16,12 +16,15 @@ const forgotPasswordSchema = Yup.object({
     .email("Invalid email address"),
 });
 const ForgotPassword = () => {
+  const navigate=useNavigate()
   const [forgotPassword, { isLoading }] = useForgotPasswordMutation();
   const forgotpassword = async (values: ForgotValues) => {
     try {
       const res = await forgotPassword({ email: values.email }).unwrap();
       if (res?.success) {
         showSuccess(res.message);
+        setTimeout(()=> navigate("/login"),800)
+       
       }
     } catch (err:any) {
       showError(err.data.message);

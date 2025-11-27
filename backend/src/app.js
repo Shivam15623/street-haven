@@ -53,6 +53,7 @@ import searchRoutes from "./routes/search.routes.js";
 import notificationRoutes from "./routes/notifications.routes.js";
 import orgNodeRoutes from "./routes/orgNode.routes.js";
 import announcementRoutes from "./routes/announcement.routes.js";
+import formRoutes from "./routes/forms.routes.js";
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/program-manuals", programManualRouter);
@@ -68,6 +69,7 @@ app.use("/api/v1/faq", FAQRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/orgNode", orgNodeRoutes);
 app.use("/api/v1/announcement", announcementRoutes);
+app.use("/api/v1/form",formRoutes)
 app.use(errorHandler);
 
 app.use("/public/attachments", express.static("public/attachments"));
