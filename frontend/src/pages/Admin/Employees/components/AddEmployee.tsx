@@ -25,8 +25,11 @@ const AddEmployeeSchema = Yup.object({
     .min(3, "Last Name must be at least 3 characters")
     .matches(/^[a-zA-Z\s]+$/, "Last Name can only contain letters and spaces"),
   email: Yup.string()
-    .required("Email is required")
-    .email("Invalid email address"),
+    .matches(
+      /^[A-Za-z0-9._%+-]+@streethaven\.com$/,
+      "Email must be from @streethaven.com domain"
+    )
+    .email("Email is required"),
   phone: Yup.string()
     .required("Phone number is required")
     .matches(

@@ -70,3 +70,36 @@ export const GetAllStaffFeedBack = asyncHandler(async (req, res) => {
     })
   );
 });
+
+export const generateComplaintPDF = async (req, res) => {
+  const data = req.body;
+  const finalHTML = renderTemplate(data);
+
+  try {
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+
+    const page = await browser.newPage();
+    await page.setContent(finalHTML, { waitUntil: "networkidle0" });
+
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      margin: { top: "20px", bottom: "20px" },
+    });
+
+    await browser.close();
+
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": "attachment; filename=complaint-form.pdf",
+    });
+
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error("PDF generation failed:", err);
+    res.status(500).json({ message: "Error generating PDF" });
+  }
+};

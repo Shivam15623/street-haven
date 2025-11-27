@@ -1,4 +1,4 @@
-import avatar from "@assets/images/avatar/john.jpg";
+import avatar from "@assets/images/user.png";
 import ImageUploader from "./ImageUploader";
 import { useFetchUserProfileQuery } from "../../../../services/UserApi";
 import dayjs from "dayjs";

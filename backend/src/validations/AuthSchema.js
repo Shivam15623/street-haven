@@ -19,8 +19,8 @@ export const registerUserSchema = yup.object({
   phone: yup
     .string()
     .matches(
-      /^\+?[1-9]\d{7,14}$/,
-      "Please enter a valid international phone number"
+       /^\+1\s?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
+      "Please enter a valid canadian phone number"
     )
     .required("Phone number is required"),
 

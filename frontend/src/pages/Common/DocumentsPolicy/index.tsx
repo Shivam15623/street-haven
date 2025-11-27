@@ -6,7 +6,7 @@ import "@assets/css/PageCss/program.css";
 import { useFetchManualsQuery } from "../../../services/ProgramManualApi";
 import ActionsProgram from "./components/ActionsProgram";
 import useHasPermission from "../../../hooks/Auth";
-import {  useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useDebounce } from "../../../hooks/useDebounce";
 import StreetPaggination from "../../../components/child/StreetPaggination";
 
@@ -74,8 +74,9 @@ const ProgramManuals = () => {
       </div>
 
       {/* Search Input */}
-      <div className="px-20 py-16 program-input radius-12 d-flex flex-row align-items-center gap-8">
+      <div className="px-20 py-16 program-input radius-12 d-flex flex-row align-items-center gap-8 position-relative">
         <Icon icon="proicons:search" className="text-xl opacity-50" />
+
         <input
           className="bg-transparent border-0 text-sm text-street-base d-flex flex-grow-1 fw-semibold"
           placeholder="Search Documents"
@@ -85,6 +86,20 @@ const ProgramManuals = () => {
             setPage(1); // Reset to first page on search
           }}
         />
+
+        {search && (
+          <button
+            type="button"
+            className="position-absolute  text-xl  translate-y-[-50%] text-street-dark opacity-50 hover:opacity-100" style={{right:"4px",top:"50%"}}
+            onClick={() => {
+              handleSearchChange("");
+              setSearch(""); // clear state
+              setPage(1); // reset page if needed
+            }}
+          >
+            ×
+          </button>
+        )}
       </div>
 
       {/* Display manuals */}

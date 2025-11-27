@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Street Haven - Client Feedback Form</title>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 30px;
+      font-family: Arial, Helvetica, sans-serif;
+      background-color: #ffffff;
+      color: #000000;
+      line-height: 1.4;
+      width: 100%;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #ffffff;
+    }
+
+    .header {
+      display: flex;
+      align-items: flex-start;
+      padding-bottom: 15px;
+      border-bottom: 3px solid #000000;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      margin-right: 20px;
+      border: 1px solid #000000;
+    }
+
+    .header-text {
+      flex: 1;
+    }
+
+    .header-text h1 {
+      margin: 0 0 5px 0;
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      color: #000000;
+    }
+
+    .header-text p {
+      margin: 0;
+      font-size: 12px;
+      color: #000000;
+    }
+
+    .intro {
+      margin: 20px 0;
+      padding: 10px 0;
+      font-size: 13px;
+      line-height: 1.5;
+      border-top: 1px solid #000000;
+      border-bottom: 1px solid #000000;
+    }
+
+    .section {
+      margin-bottom: 25px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+      letter-spacing: 1px;
+      color: #000000;
+    }
+
+    .field-row {
+      display: flex;
+      margin-bottom: 15px;
+      align-items: baseline;
+    }
+
+    .field-label {
+      font-size: 12px;
+      font-weight: bold;
+      margin-right: 10px;
+      white-space: nowrap;
+      color: #000000;
+    }
+
+    .field-line {
+      flex: 1;
+      border: none;
+      border-bottom: 1px solid #000000;
+      background-color: transparent;
+      font-size: 12px;
+      padding: 2px 5px;
+      color: #000000;
+    }
+
+    .field-line:focus {
+      outline: none;
+      border-bottom: 2px solid #000000;
+    }
+
+    .two-column {
+      display: flex;
+      gap: 30px;
+      margin-bottom: 15px;
+    }
+
+    .two-column .field-row {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    .checkbox-list {
+      margin-left: 5px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      margin-right: 10px;
+      border: 1px solid #000000;
+      background-color: #ffffff;
+    }
+
+    .checkbox-item label {
+      color: #000000;
+    }
+
+    .inline-field {
+      border-bottom: 1px solid #000000;
+      display: inline-block;
+      min-width: 300px;
+      padding: 2px 5px;
+    }
+
+    .textarea-field {
+      width: 100%;
+      min-height: 100px;
+      border: 1px solid #000000;
+      background-color: #ffffff;
+      padding: 10px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      color: #000000;
+      resize: none;
+      box-sizing: border-box;
+      line-height: 1.6;
+    }
+
+    .textarea-field:focus {
+      outline: none;
+      border: 2px solid #000000;
+    }
+
+    .signature-row {
+      display: flex;
+      gap: 40px;
+      margin-top: 30px;
+      align-items: baseline;
+    }
+
+    .signature-field {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .signature-field label {
+      font-size: 12px;
+      font-weight: bold;
+      white-space: nowrap;
+      color: #000000;
+    }
+
+    .signature-field input {
+      border: none;
+      border-bottom: 1px solid #000000;
+      background-color: transparent;
+      font-size: 12px;
+      padding: 2px 5px;
+      min-width: 250px;
+      color: #000000;
+    }
+
+    .signature-field input:focus {
+      outline: none;
+      border-bottom: 2px solid #000000;
+    }
+
+    .optional {
+      font-size: 11px;
+      font-style: italic;
+      color: #000000;
+      margin-left: 5px;
+    }
+
+    @media print {
+      body {
+        padding: 0;
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="container">
+   <header class="header"><img src="logo.png" alt="Street Haven Logo" class="logo" onerror="this.src=''; this.alt='[LOGO]'; this.style.display='flex'; this.style.alignItems='center'; this.style.justifyContent='center'; this.style.fontSize='12px';">
+    <div class="header-text">
+     <h1>CLIENT FEEDBACK FORM</h1>
+     <p>Street Haven – Client Relations Department</p>
+    </div>
+   </header>
+   <main>
+    <div class="intro">
+     Thank you for visiting Street Haven. We value all our clients and strive to meet everyone's needs.
+    </div>
+    <section class="section">
+     <div class="section-title">
+      Section 1 — Visit Information
+     </div>
+     <div class="two-column">
+      <div class="field-row"><label class="field-label" for="date">Date:</label> <input type="text" id="date" class="field-line" aria-label="Visit date">
+      </div>
+      <div class="field-row"><label class="field-label" for="location">Location:</label> <input type="text" id="location" class="field-line" aria-label="Location">
+      </div>
+     </div>
+    </section>
+    <section class="section">
+     <div class="section-title">
+      Section 2 — Client Information <span class="optional">(Optional)</span>
+     </div>
+     <div class="field-row"><label class="field-label" for="name">Name:</label> <input type="text" id="name" class="field-line" aria-label="Client name">
+     </div>
+     <div class="field-row"><label class="field-label" for="phone">Phone:</label> <input type="text" id="phone" class="field-line" aria-label="Phone number">
+     </div>
+     <div class="field-row"><label class="field-label" for="email">Email:</label> <input type="text" id="email" class="field-line" aria-label="Email address">
+     </div>
+     <div class="field-row"><label class="field-label" for="address">Address:</label> <input type="text" id="address" class="field-line" aria-label="Address">
+     </div>
+     <div class="field-row"><label class="field-label" for="contact-method">Preferred Method of Contact:</label> <input type="text" id="contact-method" class="field-line" aria-label="Preferred contact method">
+     </div>
+    </section>
+    <section class="section">
+     <div class="section-title">
+      Nature of Complaint
+     </div>
+     <div class="checkbox-list">
+      <div class="checkbox-item"><input type="checkbox" id="service-quality" aria-label="Service quality"> <label for="service-quality">☐ Service quality</label>
+      </div>
+      <div class="checkbox-item"><input type="checkbox" id="staff-conduct" aria-label="Staff or volunteer conduct"> <label for="staff-conduct">☐ Staff or volunteer conduct</label>
+      </div>
+      <div class="checkbox-item"><input type="checkbox" id="policies" aria-label="Policies or procedures"> <label for="policies">☐ Policies or procedures</label>
+      </div>
+      <div class="checkbox-item"><input type="checkbox" id="facilities" aria-label="Facilities or accessibility"> <label for="facilities">☐ Facilities / Accessibility</label>
+      </div>
+      <div class="checkbox-item"><input type="checkbox" id="other-check" aria-label="Other"> <label for="other-check">☐ Other:</label> <span class="inline-field"></span>
+      </div>
+     </div>
+    </section>
+    <section class="section">
+     <div class="section-title">
+      Description of Complaint
+     </div><textarea class="textarea-field" aria-label="Description of complaint"></textarea>
+    </section>
+    <section class="section">
+     <div class="section-title">
+      Impact
+     </div><textarea class="textarea-field" aria-label="Impact of complaint"></textarea>
+    </section>
+    <section class="section">
+     <div class="section-title">
+      Desired Outcome
+     </div><textarea class="textarea-field" aria-label="Desired outcome"></textarea>
+    </section>
+    <section class="section">
+     <div class="signature-row">
+      <div class="signature-field"><label for="signature">Signature <span class="optional">(optional)</span>:</label> <input type="text" id="signature" aria-label="Signature">
+      </div>
+      <div class="signature-field"><label for="signature-date">Date:</label> <input type="text" id="signature-date" aria-label="Signature date">
+      </div>
+     </div>
+    </section>
+   </main>
+  </div>
+</html>
