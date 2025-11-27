@@ -4,6 +4,11 @@ import { Card, Col, Form, Row } from "react-bootstrap";
 import CustomDatePicker from "../../../../../components/child/DatePicker";
 import { PatternFormat } from "react-number-format";
 import TimePicker from "../../../../../components/child/TimePicker";
+import {
+  useCreateEmployeeIncidentMutation,
+  type EmployeeIncidentCredentials,
+} from "../../../../../services/FormApi";
+import { showError, showSuccess } from "../../../../../utills/toastutills";
 
 export const EmployeeIncidentFormSchema = Yup.object({
   reportingFor: Yup.string()
@@ -16,7 +21,7 @@ export const EmployeeIncidentFormSchema = Yup.object({
 
   superviserName: Yup.string().required("Supervisor name is required"),
 
-  informedSuperviser: Yup.boolean().required(),
+  informedSuperviser: Yup.boolean().required("please fill this field"),
 
   injuryDate: Yup.date()
     .typeError("Please input a valid date (M/d/yyyy)")
@@ -24,7 +29,7 @@ export const EmployeeIncidentFormSchema = Yup.object({
 
   injuryTime: Yup.string().required("Time is required"),
 
-  witnessName: Yup.string().nullable(),
+  witnessName: Yup.string(),
 
   exactLocation: Yup.string().required("Location is required"),
 
@@ -36,7 +41,7 @@ export const EmployeeIncidentFormSchema = Yup.object({
 
   injuredBodyParts: Yup.string().required("This field is required"),
 
-  doctorVisited: Yup.boolean().required(),
+  doctorVisited: Yup.boolean().required("This Field is Required"),
 
   doctorName: Yup.string().when("doctorVisited", {
     is: true,
@@ -53,15 +58,14 @@ export const EmployeeIncidentFormSchema = Yup.object({
     otherwise: (schema) => schema.nullable(),
   }),
 
-  doctorVisitDate: Yup.date()
-    .nullable()
-    .when("doctorVisited", {
-      is: true,
-      then: (schema) =>
-        schema
-          .required("Date is required")
-          .typeError("Enter a valid date (M/d/yyyy)"),
-    }),
+  doctorVisitDate: Yup.date().when("doctorVisited", {
+    is: true,
+    then: (schema) =>
+      schema
+        .required("Date is required")
+        .typeError("Enter a valid date (M/d/yyyy)"),
+    otherwise: (schema) => schema.nullable(),
+  }),
 
   doctorVisitTime: Yup.string().when("doctorVisited", {
     is: true,
@@ -78,26 +82,78 @@ export const EmployeeIncidentFormSchema = Yup.object({
     otherwise: (schema) => schema.nullable(),
   }),
 });
-
+interface EmployeeIncidentFormValues {
+  reportingFor: string;
+  employeeName: string;
+  jobTitle: string;
+  superviserName: string;
+  informedSuperviser: boolean;
+  injuryDate: Date;
+  injuryTime: string;
+  witnessName: string;
+  exactLocation: string;
+  activityAtTime: string;
+  incidentDescription: string;
+  prevention: string;
+  injuredBodyParts: string;
+  doctorVisited: boolean;
+  doctorName: string;
+  doctorPhone: string;
+  doctorVisitDate?: Date;
+  doctorVisitTime?: string;
+  previousInjury: boolean;
+  previousInjuryDate: string;
+}
 const EmployeeIncidentForm = () => {
-  const handleSubmit = (values: any) => {
-    console.log("Form Submit:", values);
+  const [createIncident, { isLoading }] = useCreateEmployeeIncidentMutation();
+  const handleSubmit = async (values: EmployeeIncidentFormValues) => {
+    try {
+      const payload: EmployeeIncidentCredentials = {
+        type: values.reportingFor,
+        name: values.employeeName,
+        jobTitle: values.jobTitle,
+        supervisor: values.superviserName,
+        informedSupervisor: values.informedSuperviser,
+        injuryDate: values.injuryDate,
+        injuryTime: values.injuryTime,
+
+        location: values.exactLocation,
+        activityAtTime: values.activityAtTime,
+        description: values.incidentDescription,
+        preventionSuggestion: values.prevention,
+        injuredBodyPartOrRisk: values.injuredBodyParts,
+        sawDoctor: values.doctorVisited,
+        previousInjury: values.previousInjury,
+      };
+      if (values.witnessName) {
+        payload.witnessName = values.witnessName;
+      }
+      if (values.doctorVisited === true) {
+        payload.doctorName = values.doctorName;
+        payload.doctorPhone = values.doctorPhone;
+        payload.doctorVisitDate = values.doctorVisitDate;
+        payload.doctorVisitTime = values.doctorVisitTime;
+      }
+      const res = await createIncident(payload).unwrap();
+      if (res.success) {
+        showSuccess(res.message);
+      }
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      showError(err.message ?? "Something went wrong");
+    }
   };
 
   return (
     <div className="d-flex flex-column gap-24 ">
-       <div className="card">
+      <div className="card">
         <div className="card-body d-flex flex-row gap-20 align-items-center">
-          <img
-            src="/assets/images/StreetHavenform.png"
-            width={144}
-            height={113}
-          />
+          <img src="/assets/images/shForm.png" width={144} height={113} />
           <div className="d-flex flex-column">
             <h4 className="text-lg sm:text-xl text-street-dark fw-semibold mb-2">
               Employee Incident Form
             </h4>
-             <p className="text-md text-street-dark fw-semibold">
+            <p className="text-md text-street-dark fw-semibold">
               Thank you for visiting Street Haven. We value all our clients and
               strive to meet everyone’s needs.
             </p>
@@ -116,7 +172,7 @@ const EmployeeIncidentForm = () => {
           jobTitle: "",
           superviserName: "",
           informedSuperviser: false,
-          injuryDate: "",
+          injuryDate: new Date(),
           injuryTime: "",
           witnessName: "",
           exactLocation: "",
@@ -127,7 +183,7 @@ const EmployeeIncidentForm = () => {
           doctorVisited: false,
           doctorName: "",
           doctorPhone: "",
-          doctorVisitDate: "",
+doctorVisitDate:new Date(),
           doctorVisitTime: "",
           previousInjury: false,
           previousInjuryDate: "",
@@ -262,12 +318,7 @@ const EmployeeIncidentForm = () => {
                           type="checkbox"
                           checked={values.informedSuperviser === opt.value}
                           onChange={() =>
-                            setFieldValue(
-                              "informedSuperviser",
-                              values.informedSuperviser === opt.value
-                                ? ""
-                                : opt.value
-                            )
+                            setFieldValue("informedSuperviser", opt.value)
                           }
                           className="form-check-input"
                         />
@@ -309,12 +360,12 @@ const EmployeeIncidentForm = () => {
                           setFieldValue("injuryDate", newDate, true);
                           setFieldTouched("injuryDate", true, false);
                         }}
-                        isInvalid={!!errors.injuryDate && touched.injuryDate}
+                        isInvalid={!!errors.injuryDate && !!touched.injuryDate}
                       />
 
                       {errors.injuryDate && touched.injuryDate && (
                         <div className="invalid-feedback d-block">
-                          {errors.injuryDate}
+                          {String(errors.injuryDate)}
                         </div>
                       )}
                     </Form.Group>
@@ -579,14 +630,14 @@ const EmployeeIncidentForm = () => {
                             }}
                             isInvalid={
                               !!errors.doctorVisitDate &&
-                              touched.doctorVisitDate
+                              !!touched.doctorVisitDate
                             }
                           />
 
                           {errors.doctorVisitDate &&
                             touched.doctorVisitDate && (
                               <div className="invalid-feedback d-block">
-                                {errors.doctorVisitDate}
+                                {String(errors.doctorVisitDate)}
                               </div>
                             )}
                         </Form.Group>
@@ -706,7 +757,10 @@ const EmployeeIncidentForm = () => {
             </Card>
             <Card className="shadow-sm border-0">
               <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
-                <button type="submit" className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm">
+                <button
+                  type="submit"
+                  className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                >
                   Submit
                 </button>
               </Card.Body>

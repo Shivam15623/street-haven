@@ -4,6 +4,8 @@ import * as Yup from "yup";
 import CustomDatePicker from "../../../../../components/child/DatePicker";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import PdfUploader from "../../../../../components/child/PdfUploader";
+import { useCreatePaymentRequistionMutation } from "../../../../../services/FormApi";
+import { showSuccess } from "../../../../../utills/toastutills";
 
 // --------------------
 // TYPES
@@ -60,6 +62,8 @@ const FormSchema = Yup.object({
 });
 
 const PaymentRequisitionForm = () => {
+  const [createpayrequest, { isLoading }] =
+    useCreatePaymentRequistionMutation();
   const initialValues: FormValues = {
     payeeName: "",
     totalAmount: "",
@@ -79,19 +83,70 @@ const PaymentRequisitionForm = () => {
     ],
   };
 
-  const handleSubmit = (values: FormValues) => {
-    console.log("Form Submit:", values);
+  const handleSubmit = async (values: FormValues) => {
+    try {
+      const formData = new FormData();
+
+      // ---------- BASIC FIELDS ----------
+      formData.append("payeeName", values.payeeName);
+      formData.append("requestedBy", values.requestedBy);
+      formData.append("approvedBy", values.approvedBy);
+
+      formData.append(
+        "requestedDate",
+        values.requestedDate ? values.requestedDate.toISOString() : ""
+      );
+
+      formData.append(
+        "approvedDate",
+        values.approvedDate ? values.approvedDate.toISOString() : ""
+      );
+
+      // ---------- PURCHASE DETAILS ----------
+      values.purchaseDetails.forEach((item, index) => {
+        formData.append(
+          `paymentDetails[${index}][purchaseDate]`,
+          item.date ? item.date.toISOString() : ""
+        );
+        formData.append(
+          `paymentDetails[${index}][purchaseNature]`,
+          item.nature
+        );
+        formData.append(
+          `paymentDetails[${index}][department]`,
+          item.department
+        );
+        formData.append(
+          `paymentDetails[${index}][expenseCode]`,
+          item.programExpenseCode
+        );
+        formData.append(
+          `paymentDetails[${index}][amount]`,
+          item.amount.toString()
+        );
+      });
+
+      // ---------- INVOICE PDF ----------
+      if (values.invoices instanceof File) {
+        formData.append("invoiceAttachment", values.invoices); // must match multer field name
+      }
+
+      // ---------- API CALL ----------
+      const response = await createpayrequest(formData).unwrap();
+
+      if (response.success) {
+        showSuccess(response.message);
+      }
+    } catch (err: any) {
+      console.error(err);
+    }
   };
 
   return (
     <div className="d-flex flex-column gap-24 ">
       <div className="card">
         <div className="card-body d-flex flex-row gap-20 align-items-center">
-          <img
-            src="/assets/images/StreetHavenform.png"
-            width={144}
-            height={113}
-          />
+          <img src="/assets/images/shForm.png" width={144} height={113} />
           <div className="d-flex flex-column">
             <h4 className="text-xxl sm:text-xl text-street-dark fw-semibold mb-2">
               Payment Requisition Form
@@ -126,6 +181,54 @@ const PaymentRequisitionForm = () => {
             className="d-flex flex-column gap-24"
           >
             {/* TABLE */}
+            <Card className="shadow-sm border-0">
+              <Card.Body className="d-flex flex-column gap-16 p-20">
+                <Row className="gy-3 gx-4">
+                  {/* PAYEE NAME */}
+                  <Col xs={12} md={6}>
+                    <Form.Group className="d-flex flex-column gap-8">
+                      <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
+                        Payee Name:
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="payeeName"
+                        value={values.payeeName}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className="text-xs xs:text-sm"
+                        isInvalid={touched.payeeName && !!errors.payeeName}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.payeeName}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+
+                  {/* TOTAL AMOUNT */}
+                  <Col xs={12} md={6}>
+                    <Form.Group className="d-flex flex-column gap-8">
+                      <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
+                        Total Amount:
+                      </Form.Label>
+                      <Form.Control
+                        type="number"
+                        name="totalAmount"
+                        disabled
+                        value={values.totalAmount}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className="text-xs xs:text-sm"
+                        isInvalid={touched.totalAmount && !!errors.totalAmount}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.totalAmount}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
             <Card className="shadow-sm border-0">
               <Card.Body className="d-flex flex-column gap-16 p-20">
                 {" "}

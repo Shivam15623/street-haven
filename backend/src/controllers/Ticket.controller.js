@@ -59,18 +59,17 @@ export const createTicket = asyncHandler(async (req, res) => {
       const recipients = admins.map((admin) => ({ userId: admin._id }));
 
       const notification = await createNotification(
-        [
-          {
-            recipients,
-            type: "ticket_created",
-            title: "New Ticket Created",
-            message: `A new ticket "${reqTitle}" has been created by ${req.user.firstname} ${req.user.lastname}.`,
-            link: `/it_facility?tab=track_tickets&status=Open`,
-            createdBy: userId,
-            meta: { ticketId: ticket[0]._id, priority },
-          },
-        ],
-        { session }
+        {
+          recipients,
+          type: "ticket_created",
+          title: "New Ticket Created",
+          message: `A new ticket "${reqTitle}" has been created by ${req.user.firstname} ${req.user.lastname}.`,
+          link: `/it_facility?tab=track_tickets&status=Open`,
+          createdBy: userId,
+          meta: { ticketId: ticket[0]._id, priority },
+        },
+
+        session
       );
 
       // Emit notification via Socket.IO

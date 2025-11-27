@@ -5,6 +5,11 @@ import { Col, Form, Row, Card } from "react-bootstrap";
 import CustomDatePicker from "../../../../../components/child/DatePicker";
 
 import TimePicker from "../../../../../components/child/TimePicker";
+import {
+  useCreateClientincidentMutation,
+  type ClientIncidentCredentials,
+} from "../../../../../services/FormApi";
+import { showError, showSuccess } from "../../../../../utills/toastutills";
 
 const ClientIncidentFormSchema = Yup.object({
   date: Yup.date().required("Date is required"),
@@ -48,12 +53,6 @@ const ClientIncidentFormSchema = Yup.object({
     otherwise: (schema) => schema.notRequired(),
   }),
 
-  email: Yup.string()
-    .email("Invalid reporter email format")
-    .required("Reporter email is required"),
-
-  address: Yup.string().required("Address is required"),
-
   incidentDescription: Yup.string().required(
     "Incident description is required"
   ),
@@ -63,13 +62,53 @@ const ClientIncidentFormSchema = Yup.object({
   debrief: Yup.string().required("Debrief is required"),
 
   reportingStaffName: Yup.string().required("Reporting staff name is required"),
+  repotingDate: Yup.date().required("reporting Date is required"),
 
   reportedTo: Yup.string().required("Reported to (name) is required"),
+  reportedToDate: Yup.date().required("reported Date is required"),
+  followUp: Yup.string().required("Follow Up is required"),
 });
+type ClientIncidentValues = Yup.InferType<typeof ClientIncidentFormSchema>;
 const ClientIncidentForm = () => {
-  const handleSubmit = (values: any) => {
-    console.log("Form Submit:", values);
+  const [createIncident, { isLoading }] = useCreateClientincidentMutation();
+  const handleSubmit = async (values: ClientIncidentValues) => {
+    console.log("dfjvdfjvsavfsd", values);
+    try {
+      const payload: ClientIncidentCredentials = {
+        date: values.date,
+        place: values.place,
+        action: values.ActionTaken,
+        type: values.incidentType,
+        time: values.time,
+        witnessName: values.WitnessName, // ✅ FIXED
+        affectedClient: values.affectedClientname,
+        debrief: values.debrief,
+        description: values.incidentDescription,
+        reportingStaffName: values.reportingStaffName,
+        reportedTo: values.reportedTo,
+        staffEmail: values.staffEmail,
+        staffName: values.staffName,
+        followUp: values.followUp,
+        reportedToDate: values.reportedToDate,
+        reportingDate: values.repotingDate,
+
+        // ✅ You forgot these:
+      };
+
+      if (values.incidentType === "Other" && values.otherIncidentDescription) {
+        payload.otherincidentType = values.otherIncidentDescription;
+      }
+
+      const res = await createIncident(payload).unwrap();
+      if (res.success) {
+        showSuccess(res.message);
+      }
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      showError(err.message ?? "Something went wrong");
+    }
   };
+
   const initialValues = {
     date: new Date(), // Default to current date
     time: "", // String, e.g., "14:30"
@@ -87,22 +126,21 @@ const ClientIncidentForm = () => {
     debrief: "",
     reportingStaffName: "",
     reportedTo: "",
+    repotingDate: new Date(),
+    reportedToDate: new Date(),
+    followUp: "",
   };
 
   return (
     <div className="d-flex flex-column gap-24 ">
       <div className="card">
         <div className="card-body d-flex flex-row gap-20 align-items-center">
-          <img
-            src="/assets/images/StreetHavenform.png"
-            width={144}
-            height={113}
-          />
+          <img src="/assets/images/shForm.png" width={144} height={113} />
           <div className="d-flex flex-column">
             <h4 className="text-lg sm:text-xl text-street-dark fw-semibold mb-2">
               Client Incident Reporting Form
             </h4>
-             <p className="text-md text-street-dark fw-semibold">
+            <p className="text-md text-street-dark fw-semibold">
               Thank you for visiting Street Haven. We value all our clients and
               strive to meet everyone’s needs.
             </p>
@@ -127,7 +165,11 @@ const ClientIncidentForm = () => {
           errors,
           touched,
         }) => (
-          <Form onSubmit={handleSubmit} className="d-flex flex-column gap-24">
+          <Form
+            noValidate
+            onSubmit={handleSubmit}
+            className="d-flex flex-column gap-24"
+          >
             <Card className="shadow-sm border-0">
               <Card.Body className="d-flex flex-column gap-16 p-20">
                 <div
@@ -448,20 +490,153 @@ const ClientIncidentForm = () => {
                 </div>
                 <Form.Group className="d-flex flex-column gap-8">
                   <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                    Action Taken:
+                    Debrief:
                   </Form.Label>
                   <Form.Control
                     as="textarea"
                     rows={2}
-                    name="ActionTaken"
-                    value={values.ActionTaken}
+                    name="debrief"
+                    value={values.debrief}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     className="text-xs xs:text-sm"
-                    isInvalid={touched.ActionTaken && !!errors.ActionTaken}
+                    isInvalid={touched.debrief && !!errors.debrief}
                   />
                   <Form.Control.Feedback type="invalid">
-                    {errors.ActionTaken}
+                    {errors.debrief}
+                  </Form.Control.Feedback>
+                </Form.Group>
+                <Row>
+                  <Col sm={6}>
+                    {" "}
+                    <Form.Group className="d-flex flex-column gap-8">
+                      <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
+                        Reporting Staff Name:
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="reportingStaffName"
+                        value={values.reportingStaffName}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className="text-xs xs:text-sm"
+                        isInvalid={
+                          touched.reportingStaffName &&
+                          !!errors.reportingStaffName
+                        }
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.reportingStaffName}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                  <Col sm={6}>
+                    {" "}
+                    <Form.Group className="d-flex flex-column gap-8">
+                      <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
+                        Reporting Date:
+                      </Form.Label>
+                      <CustomDatePicker
+                        value={
+                          values.repotingDate
+                            ? new Date(values.repotingDate)
+                            : null
+                        }
+                        onChange={(date) => {
+                          setFieldValue("repotingDate", date, true);
+                          setFieldTouched("repotingDate", true, false);
+                        }}
+                        isInvalid={Boolean(
+                          errors.repotingDate && touched.repotingDate
+                        )}
+                      />
+
+                      {errors.repotingDate && touched.repotingDate && (
+                        <div className="invalid-feedback d-block">
+                          {String(errors.repotingDate)}
+                        </div>
+                      )}
+                    </Form.Group>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col sm={6}>
+                    {" "}
+                    <Form.Group className="d-flex flex-column gap-8">
+                      <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
+                        Reported To:
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="reportedTo"
+                        value={values.reportedTo}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className="text-xs xs:text-sm"
+                        isInvalid={touched.reportedTo && !!errors.reportedTo}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.reportedTo}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                  <Col sm={6}>
+                    {" "}
+                    <Form.Group className="d-flex flex-column gap-8">
+                      <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
+                        Reported Date:
+                      </Form.Label>
+                      <CustomDatePicker
+                        value={
+                          values.reportedToDate
+                            ? new Date(values.reportedToDate)
+                            : null
+                        }
+                        onChange={(date) => {
+                          setFieldValue("reportedToDate", date, true);
+                          setFieldTouched("reportedToDate", true, false);
+                        }}
+                        isInvalid={Boolean(
+                          errors.reportedToDate && touched.reportedToDate
+                        )}
+                      />
+
+                      {errors.reportedToDate && touched.reportedToDate && (
+                        <div className="invalid-feedback d-block">
+                          {String(errors.reportedToDate)}
+                        </div>
+                      )}
+                    </Form.Group>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+            <Card className="shadow-sm border-0">
+              <Card.Body className="d-flex flex-column gap-16 p-20">
+                <div
+                  className="text-md sm:text-lg  text-street-dark fw-semibold"
+                  style={{
+                    lineHeight: "normal",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  Section 5: Follow Up (Post Incident) *To be completed by
+                  management
+                </div>
+                <Form.Group className="d-flex flex-column gap-8">
+                  <Form.Control
+                    as="textarea"
+                    rows={5}
+                    name="followUp"
+                    value={values.followUp}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className="text-xs xs:text-sm"
+                    isInvalid={touched.followUp && !!errors.followUp}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.followUp}
                   </Form.Control.Feedback>
                 </Form.Group>
               </Card.Body>
