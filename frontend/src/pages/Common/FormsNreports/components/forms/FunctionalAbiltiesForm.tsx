@@ -180,10 +180,53 @@ const functionalAbilityFormSchema = Yup.object({
     }),
   }),
   restrictions: Yup.object({
-    bendingTwisting: Yup.boolean(),
-    workAboveShoulder: Yup.boolean(),
-    chemicalExposure: Yup.boolean(),
-    environmentalExposure: Yup.boolean(),
+    bendingTwisting: Yup.object({
+      checked: Yup.boolean(),
+      details: Yup.string().when("checked", {
+        is: true,
+        then: (s) => s.required("Please specify details"),
+      }),
+    }),
+
+    chemicalExposure: Yup.object({
+      checked: Yup.boolean(),
+      details: Yup.string().when("checked", {
+        is: true,
+        then: (s) => s.required("Please specify chemical"),
+      }),
+    }),
+
+    environmentalExposure: Yup.object({
+      checked: Yup.boolean(),
+      details: Yup.string().when("checked", {
+        is: true,
+        then: (s) => s.required("Please specify environment type"),
+      }),
+    }),
+
+    operatingMotorizedEquipment: Yup.object({
+      checked: Yup.boolean(),
+      details: Yup.string().when("checked", {
+        is: true,
+        then: (s) => s.required("Specify equipment"),
+      }),
+    }),
+
+    medicationSideEffects: Yup.object({
+      checked: Yup.boolean(),
+      details: Yup.string().when("checked", {
+        is: true,
+        then: (s) => s.required("Specify side effects"),
+      }),
+    }),
+
+    workAboveShoulder: Yup.object({
+      checked: Yup.boolean(),
+      details: Yup.string().when("checked", {
+        is: true,
+        then: (s) => s.required("Specify side or activity"),
+      }),
+    }),
     limitedPushingPulling: Yup.object({
       checked: Yup.boolean(),
       leftArm: Yup.boolean(),
@@ -191,8 +234,7 @@ const functionalAbilityFormSchema = Yup.object({
       other: Yup.boolean(),
       otherText: Yup.string(),
     }),
-    operatingMotorizedEquipment: Yup.boolean(),
-    medicationSideEffects: Yup.boolean(),
+
     exposureToVibration: Yup.object({
       checked: Yup.boolean(),
       wholeBody: Yup.boolean(),
@@ -300,10 +342,22 @@ const FunctionalAbiltiesForm = () => {
       travelToWork: { publicTransit: "", car: "" },
     },
     restrictions: {
-      bendingTwisting: false,
-      workAboveShoulder: false,
-      chemicalExposure: false,
-      environmentalExposure: false,
+      bendingTwisting: {
+        checked: false,
+        details: "",
+      },
+      workAboveShoulder: {
+        checked: false,
+        details: "",
+      },
+      chemicalExposure: {
+        checked: false,
+        details: "",
+      },
+      environmentalExposure: {
+        checked: false,
+        details: "",
+      },
       limitedPushingPulling: {
         checked: false,
         leftArm: false,
@@ -311,8 +365,14 @@ const FunctionalAbiltiesForm = () => {
         other: false,
         otherText: "",
       },
-      operatingMotorizedEquipment: false,
-      medicationSideEffects: false,
+      operatingMotorizedEquipment: {
+        checked: false,
+        details: "",
+      },
+      medicationSideEffects: {
+        checked: false,
+        details: "",
+      },
       exposureToVibration: { checked: false, wholeBody: false, handArm: false },
       limitedUseOfHands: {
         checked: false,
@@ -1558,10 +1618,10 @@ const FunctionalAbiltiesForm = () => {
                         <input
                           type="checkbox"
                           className="form-check-input"
-                          checked={values.restrictions.bendingTwisting}
+                          checked={values.restrictions.bendingTwisting.checked}
                           onChange={(e) =>
                             setFieldValue(
-                              "restrictions.bendingTwisting",
+                              "restrictions.bendingTwisting.checked",
                               e.target.checked
                             )
                           }
@@ -1572,6 +1632,19 @@ const FunctionalAbiltiesForm = () => {
                         </span>
                       </label>
                     </Form.Group>
+                    {values.restrictions.bendingTwisting.checked && (
+                      <Form.Control
+                        type="text"
+                        placeholder="Please specify"
+                        name="restrictions.bendingTwisting.details"
+                        value={
+                          values.restrictions.bendingTwisting.details
+                        }
+                        onChange={handleChange}
+                        className="p-0 ms-2 border-bottom-1 border-top-0 border-end-0 rounded-0 border-start-0"
+                        style={{ height: "auto", width: "200px" }}
+                      />
+                    )}
                   </div>
 
                   {/* 2. WORK ABOVE SHOULDER */}
@@ -1581,10 +1654,12 @@ const FunctionalAbiltiesForm = () => {
                         <input
                           type="checkbox"
                           className="form-check-input"
-                          checked={values.restrictions.workAboveShoulder}
+                          checked={
+                            values.restrictions.workAboveShoulder.checked
+                          }
                           onChange={(e) =>
                             setFieldValue(
-                              "restrictions.workAboveShoulder",
+                              "restrictions.workAboveShoulder.checked",
                               e.target.checked
                             )
                           }
@@ -1594,6 +1669,17 @@ const FunctionalAbiltiesForm = () => {
                         </span>
                       </label>
                     </Form.Group>
+                    {values.restrictions.workAboveShoulder.checked && (
+                      <Form.Control
+                        type="text"
+                        placeholder="Please specify"
+                        name="restrictions.workAboveShoulder.details"
+                        value={values.restrictions.workAboveShoulder.details}
+                        onChange={handleChange}
+                        className="p-0 ms-2 border-bottom-1 border-top-0 border-end-0 rounded-0 border-start-0"
+                        style={{ height: "auto", width: "200px" }}
+                      />
+                    )}
                   </div>
 
                   {/* 3. CHEMICAL EXPOSURE */}
@@ -1603,10 +1689,10 @@ const FunctionalAbiltiesForm = () => {
                         <input
                           type="checkbox"
                           className="form-check-input"
-                          checked={values.restrictions.chemicalExposure}
+                          checked={values.restrictions.chemicalExposure.checked}
                           onChange={(e) =>
                             setFieldValue(
-                              "restrictions.chemicalExposure",
+                              "restrictions.chemicalExposure.checked",
                               e.target.checked
                             )
                           }
@@ -1614,6 +1700,17 @@ const FunctionalAbiltiesForm = () => {
                         <span className="text-xs">Chemical exposure to</span>
                       </label>
                     </Form.Group>
+                    {values.restrictions.chemicalExposure.checked && (
+                      <Form.Control
+                        type="text"
+                        placeholder="Please specify"
+                        name="restrictions.chemicalExposure.details"
+                        value={values.restrictions.chemicalExposure.details}
+                        onChange={handleChange}
+                        className="p-0 ms-2 border-bottom-1 border-top-0 border-end-0 rounded-0 border-start-0"
+                        style={{ height: "auto", width: "200px" }}
+                      />
+                    )}
                   </div>
 
                   {/* 4. ENVIRONMENTAL EXPOSURE */}
@@ -1624,11 +1721,11 @@ const FunctionalAbiltiesForm = () => {
                           type="checkbox"
                           className="form-check-input"
                           checked={
-                            values.restrictions.environmentalExposure
+                            values.restrictions.environmentalExposure.checked
                           }
                           onChange={(e) =>
                             setFieldValue(
-                              "restrictions.environmentalExposure",
+                              "restrictions.environmentalExposure.checked",
                               e.target.checked
                             )
                           }
@@ -1639,6 +1736,19 @@ const FunctionalAbiltiesForm = () => {
                         </span>
                       </label>
                     </Form.Group>
+                    {values.restrictions.environmentalExposure.checked && (
+                      <Form.Control
+                        type="text"
+                        placeholder="Please specify"
+                        name="restrictions.environmentalExposure.details"
+                        value={
+                          values.restrictions.environmentalExposure.details
+                        }
+                        onChange={handleChange}
+                        className="p-0 ms-2 border-bottom-1 border-top-0 border-end-0 rounded-0 border-start-0"
+                        style={{ height: "auto", width: "200px" }}
+                      />
+                    )}
                   </div>
 
                   {/* 5. LIMITED PUSHING / PULLING */}
@@ -1745,10 +1855,11 @@ const FunctionalAbiltiesForm = () => {
                           className="form-check-input"
                           checked={
                             values.restrictions.operatingMotorizedEquipment
+                              .checked
                           }
                           onChange={(e) =>
                             setFieldValue(
-                              "restrictions.operatingMotorizedEquipment",
+                              "restrictions.operatingMotorizedEquipment.checked",
                               e.target.checked
                             )
                           }
@@ -1758,6 +1869,21 @@ const FunctionalAbiltiesForm = () => {
                         </span>
                       </label>
                     </Form.Group>
+                    {values.restrictions.operatingMotorizedEquipment
+                      .checked && (
+                      <Form.Control
+                        type="text"
+                        placeholder="Please specify"
+                        name="restrictions.operatingMotorizedEquipment.details"
+                        value={
+                          values.restrictions.operatingMotorizedEquipment
+                            .details
+                        }
+                        onChange={handleChange}
+                        className="p-0 ms-2 border-bottom-1 border-top-0 border-end-0 rounded-0 border-start-0"
+                        style={{ height: "auto", width: "200px" }}
+                      />
+                    )}
                   </div>
 
                   {/* 7. MEDICATION SIDE EFFECTS */}
@@ -1768,11 +1894,11 @@ const FunctionalAbiltiesForm = () => {
                           type="checkbox"
                           className="form-check-input"
                           checked={
-                            values.restrictions.medicationSideEffects
+                            values.restrictions.medicationSideEffects.checked
                           }
                           onChange={(e) =>
                             setFieldValue(
-                              "restrictions.medicationSideEffects",
+                              "restrictions.medicationSideEffects.checked",
                               e.target.checked
                             )
                           }
@@ -1784,6 +1910,19 @@ const FunctionalAbiltiesForm = () => {
                         </span>
                       </label>
                     </Form.Group>
+                    {values.restrictions.medicationSideEffects.checked && (
+                      <Form.Control
+                        type="text"
+                        placeholder="Please specify"
+                        name="restrictions.medicationSideEffects.details"
+                        value={
+                          values.restrictions.medicationSideEffects.details
+                        }
+                        onChange={handleChange}
+                        className="p-0 ms-2 border-bottom-1 border-top-0 border-end-0 rounded-0 border-start-0"
+                        style={{ height: "auto", width: "200px" }}
+                      />
+                    )}
                   </div>
 
                   {/* 8. EXPOSURE TO VIBRATION */}

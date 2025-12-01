@@ -58,7 +58,6 @@ export const EmployeeColumn: Column<EmployeeData>[] = [
             firstname: row.firstname,
             lastname: row.lastname,
             phoneNo: row.phoneNo,
-            
           }}
         />
         <DeleteEmployee
