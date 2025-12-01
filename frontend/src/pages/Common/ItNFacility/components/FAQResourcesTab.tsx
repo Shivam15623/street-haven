@@ -6,7 +6,7 @@ import {
   useViewEmergencyContactsQuery,
 } from "../../../../services/FAQapi";
 import AddFaqs from "./FAqComponents/AddFaqs";
-import useHasPermission from "../../../../hooks/Auth";
+
 import DeleteCategory from "./FAqComponents/DeleteCategory";
 import EditQuestion from "./FAqComponents/EditQuestion";
 import DeleteQuestion from "./FAqComponents/DeleteQuestion";
@@ -29,11 +29,11 @@ interface FAQCard {
 const FAQResourcesTab = () => {
   const { data } = useAllCategoriesQuery();
   const { data: contacts } = useViewEmergencyContactsQuery();
-  const { isAdmin } = useHasPermission();
+
 
   return (
     <div className="d-flex flex-column gap-4 mb-5">
-      {isAdmin && <AddCategory />}
+      { <AddCategory />}
 
       <Row className="g-3 gy-md-4 gx-md-4">
         {data?.data.map((cat: FAQCard) => (
@@ -42,7 +42,7 @@ const FAQResourcesTab = () => {
             <div className="card">
               <div className="card-body position-relative d-flex flex-column gap-10 gap-sm-16 gap-md-20 rounded-3 p-16 p-sm-24">
                 {/* Add Questions button */}
-                {isAdmin && (
+                { (
                   <div
                     className="position-absolute d-flex flex-row gap-10"
                     style={{ right: 12, top: 12 }}
@@ -69,7 +69,7 @@ const FAQResourcesTab = () => {
                       {faq.answer}
                     </p>
 
-                    {isAdmin && (
+                    { (
                       <div className="position-absolute d-flex flex-row gap-2 top-50 end-0 translate-middle-y me-2 edit-icon">
                         <EditQuestion
                           cid={cat._id}
@@ -96,7 +96,7 @@ const FAQResourcesTab = () => {
         className="p-12 position-relative p-sm-16 p-md-24  help-blur rounded-3 "
         style={{ boxShadow: " 0px 0px 10px 0px #00000012" }}
       >
-        {isAdmin && (
+        {(
           <div
             className="position-absolute"
             style={{ top: "12px", right: "12px" }}
@@ -128,7 +128,7 @@ const FAQResourcesTab = () => {
                       {ct.phone}
                     </span>
                   </p>
-                  {isAdmin && (
+                  {(
                     <div className="d-flex flex-row gap-2 align-items-center">
                       <EmergencyContact
                         id={ct._id}

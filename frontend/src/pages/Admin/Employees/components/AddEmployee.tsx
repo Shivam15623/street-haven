@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAddEmployeeMutation } from "../../../../services/EmployeeApi";
+import { useAddEmployeeMutation, useViewRolesQuery } from "../../../../services/EmployeeApi";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
 import * as Yup from "yup";
 import { Formik } from "formik";
@@ -36,6 +36,7 @@ const AddEmployeeSchema = Yup.object({
       /^(?:\+1\s?)?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
       "Enter a valid 10-digit Canadian phone number"
     ),
+  role: Yup.string().required("Role is required"),
   password: Yup.string()
     .required("Password is required")
     .min(8, "Password must be at least 8 characters")
@@ -47,6 +48,7 @@ const AddEmployeeSchema = Yup.object({
 const AddEmployee = () => {
   const [showModal, setShowModal] = useState(false);
   const [addEmployee, { isLoading }] = useAddEmployeeMutation();
+  const { data: roleData } = useViewRolesQuery({ formOnly: true });
   const handleAddEmployee = async (values: AddEmployeeValues) => {
     try {
       const res = await addEmployee(values).unwrap();
@@ -101,6 +103,7 @@ const AddEmployee = () => {
             email: "",
             phone: "",
             password: "",
+            role: "",
           }}
           validationSchema={AddEmployeeSchema}
           onSubmit={handleAddEmployee}
@@ -178,6 +181,40 @@ const AddEmployee = () => {
                     />
                     <Form.Control.Feedback type="invalid">
                       {errors.email}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+                </Col>
+              </Row>
+              {/* Role Select */}
+              <Row>
+                <Col>
+                  <Form.Group
+                    controlId="roleId"
+                    className="d-flex flex-column gap-1"
+                  >
+                    <Form.Label className="fw-normal m-0">
+                      Select Role
+                    </Form.Label>
+
+                    <Form.Select
+                      name="roleId"
+                      value={values.role}
+                      onChange={handleChange}
+                      className={
+                        touched.role && errors.role ? "is-invalid" : ""
+                      }
+                    >
+                      <option value="">-- Select Role --</option>
+
+                      {roleData?.data?.map((role) => (
+                        <option key={role._id} value={role._id}>
+                          {role.roleName}
+                        </option>
+                      ))}
+                    </Form.Select>
+
+                    <Form.Control.Feedback type="invalid">
+                      {errors.role}
                     </Form.Control.Feedback>
                   </Form.Group>
                 </Col>

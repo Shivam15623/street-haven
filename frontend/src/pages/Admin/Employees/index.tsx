@@ -3,6 +3,7 @@ import { useAllEmployeesQuery } from "../../../services/EmployeeApi";
 import DataTable from "../../../components/child/DataTable";
 import { EmployeeColumn } from "./components/EmployeeColumn";
 import AddEmployee from "./components/AddEmployee";
+import AddRole from "./components/AddRole";
 
 const Employees = () => {
   // 🔹 State for table controls
@@ -51,7 +52,8 @@ const Employees = () => {
               Manage your team members and their roles
             </p>
           </div>
-          <AddEmployee />
+          <div className="d-flex flex-row gap-2"><AddEmployee /><AddRole/></div>
+          
         </div>
       </div>
       <div className="card">

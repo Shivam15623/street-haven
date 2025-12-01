@@ -5,7 +5,6 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import "@assets/css/PageCss/program.css";
 import { useFetchManualsQuery } from "../../../services/ProgramManualApi";
 import ActionsProgram from "./components/ActionsProgram";
-import useHasPermission from "../../../hooks/Auth";
 import { useSearchParams } from "react-router-dom";
 import { useDebounce } from "../../../hooks/useDebounce";
 import StreetPaggination from "../../../components/child/StreetPaggination";
@@ -19,7 +18,7 @@ const ProgramManuals = () => {
   const slugParam = searchParams.get("slug") ?? "";
   const pageSize = 10;
 
-  const { isAdmin } = useHasPermission();
+
   const handleSearchChange = (value: string) => {
     setSearch(value);
 
@@ -63,7 +62,7 @@ const ProgramManuals = () => {
             Access training materials and program documentation
           </p>
         </div>
-        {isAdmin && (
+        {(
           <button
             className="btn btn-street-lg btn-street-primary radius-12 text-sm d-flex align-items-center justify-content-center"
             onClick={() => setShowModal(true)}
@@ -74,7 +73,7 @@ const ProgramManuals = () => {
       </div>
 
       {/* Search Input */}
-      <div className="px-20 py-16 program-input radius-12 d-flex flex-row align-items-center gap-8 position-relative">
+      <div className="px-20 py-16 program-input radius-12 d-flex search-Content  flex-row align-items-center w-100 gap-8 max-w-700-px z-1 position-relative">
         <Icon icon="proicons:search" className="text-xl opacity-50" />
 
         <input
@@ -90,14 +89,17 @@ const ProgramManuals = () => {
         {search && (
           <button
             type="button"
-            className="position-absolute  text-xl  translate-y-[-50%] text-street-dark opacity-50 hover:opacity-100" style={{right:"4px",top:"50%"}}
+            className="  text-xl text-street-dark opacity-50 hover:opacity-100"
             onClick={() => {
               handleSearchChange("");
               setSearch(""); // clear state
               setPage(1); // reset page if needed
             }}
           >
-            ×
+            <Icon
+              icon="ion:close-circle"
+              className="text-xl opacity-50 contentIcon "
+            />
           </button>
         )}
       </div>

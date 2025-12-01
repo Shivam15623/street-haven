@@ -4,11 +4,11 @@ import { useState } from "react";
 import EventListView from "./components/EventListView";
 import EventCalendarView from "./components/EventCalendarView";
 import ActionsEvent from "./components/ActionsEvent";
-import useHasPermission from "../../../hooks/Auth";
+
 
 const Events = () => {
   const [view, setView] = useState("list");
-  const { isAdmin } = useHasPermission();
+
   return (
     <div className="d-flex flex-column gap-8 gap-sm-16 gap-md-24 ">
       {/* Top Info */}
@@ -57,7 +57,7 @@ const Events = () => {
           </div>
         </div>
       </div>
-      {isAdmin && <ActionsEvent />}
+      { <ActionsEvent />}
 
       {view === "list" ? <EventListView /> : <EventCalendarView />}
     </div>

@@ -3,7 +3,10 @@ import { Formik, ErrorMessage } from "formik";
 import * as yup from "yup";
 import { Form as BootstrapForm } from "react-bootstrap";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
-import { useEditEmployeeMutation } from "../../../../services/EmployeeApi";
+import {
+  useEditEmployeeMutation,
+  useViewRolesQuery,
+} from "../../../../services/EmployeeApi";
 import { showSuccess } from "../../../../utills/toastutills";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import FormImageUploader from "./FormProfileUploader";
@@ -12,7 +15,9 @@ import { PatternFormat } from "react-number-format";
 const editEmployeeSchema = yup.object({
   firstname: yup.string().required("First name is required"),
   lastname: yup.string().required("Last name is required"),
-  email: yup.string()
+  role: yup.string().required("Role is required"),
+  email: yup
+    .string()
     .matches(
       /^[A-Za-z0-9._%+-]+@streethaven\.com$/,
       "Email must be from @streethaven.com domain"
@@ -43,7 +48,8 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [editEmployee, { isLoading }] = useEditEmployeeMutation();
-
+  const { data } = useViewRolesQuery({ formOnly: true });
+  console.log("hidfknvjdfknvjdfn", data?.data);
   const handleSave = async (values: EditEmployeeValues) => {
     try {
       const formData = new FormData();
@@ -51,6 +57,7 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
       formData.append("lastname", values.lastname);
       formData.append("email", values.email);
       formData.append("phoneNo", values.phoneNo);
+      formData.append("role", values.role);
 
       if (values.profilePic) {
         formData.append("profilePic", values.profilePic);
@@ -161,6 +168,28 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
                 />
                 <BootstrapForm.Control.Feedback type="invalid">
                   <ErrorMessage name="email" />
+                </BootstrapForm.Control.Feedback>
+              </BootstrapForm.Group>
+              {/* Role */}
+              <BootstrapForm.Group className="d-flex flex-column gap-8">
+                <BootstrapForm.Label>Role</BootstrapForm.Label>
+
+                <BootstrapForm.Select
+                  value={values.role}
+                  isInvalid={!!errors.role && touched.role}
+                  onChange={(e) => setFieldValue("role", e.target.value)}
+                >
+                  <option value="">Select Role</option>
+
+                  {data?.data?.map((role) => (
+                    <option key={role._id} value={role._id}>
+                      {role.roleName}
+                    </option>
+                  ))}
+                </BootstrapForm.Select>
+
+                <BootstrapForm.Control.Feedback type="invalid">
+                  <ErrorMessage name="role" />
                 </BootstrapForm.Control.Feedback>
               </BootstrapForm.Group>
 

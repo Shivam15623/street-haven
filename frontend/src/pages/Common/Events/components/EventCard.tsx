@@ -10,7 +10,7 @@ import type { EventUpcomingData } from "../../../../interfaces/EventInterfaces";
 import { showSuccess } from "../../../../utills/toastutills";
 import ViewRegistrations from "./ViewRegisterations";
 import ActionsEvent from "./ActionsEvent";
-import useHasPermission from "../../../../hooks/Auth";
+
 import { Icon } from "@iconify/react/dist/iconify.js";
 
 interface EventCardProps {
@@ -36,7 +36,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
 
   // ✅ Check if event is in the past
   const isPastEvent = dayjs(eventDate).isBefore(dayjs(), "day");
-  const { isAdmin } = useHasPermission();
+
   const progress = Math.min((totalRegistered / capacity) * 100, 100);
   const formattedDate = dayjs(eventDate).format("MM/DD/YYYY");
   const formattedTimeRange =
@@ -95,7 +95,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
     actionButton = (
       <div className="d-flex flex-row gap-2">
         <ViewRegistrations eventId={eventId} />
-        {isAdmin && <ActionsEvent event={event} />}
+        {<ActionsEvent event={event} />}
         <button
           disabled={isFull || isRegistering || isUnregistering}
           onClick={isRegistered ? handleSignout : handleSignup}

@@ -44,7 +44,7 @@ const ProfileDropdown = () => {
         <Dropdown.Divider />
 
         {/* Menu Items */}
-        <Dropdown.Item onClick={() => navigate(`/${user?.role}/profile`)}>
+        <Dropdown.Item onClick={() => navigate(`/profile`)}>
           <Icon icon="solar:user-linear" width={20} height={20} />
           My Profile
         </Dropdown.Item>

@@ -1,20 +1,43 @@
 import { useSelector } from "react-redux";
 import { selectAuth } from "../redux/AuthSlice";
 
+interface PermissionCheck {
+  moduleKey: string;
+  action?: "access" | "create" | "read" | "update" | "delete";
+  featureKey?: string;
+}
+
 const useHasPermission = () => {
-  const { user } = useSelector(selectAuth);
+  const { Permissions } = useSelector(selectAuth);
 
-  // Function to check if the user has a specific role
- const hasRole = (roles: string[]) => {
-  if (!user || !user.role) return false;
-  return roles.includes(user.role);
-};
+  const hasPermission = ({
+    moduleKey,
+    action = "access",
+    featureKey,
+  }: PermissionCheck) => {
+    if (!Permissions) return false;
 
+    const module = Permissions.find((p) => p.moduleKey === moduleKey);
+    if (!module) return false;
 
-  // Example usage: check if user is admin
-  const isAdmin = hasRole(["admin"]);
+    // Check module access
+    if (action === "access" && !module.access) return false;
 
-  return { hasRole, isAdmin };
+    // CRUD check
+    if (["create", "read", "update", "delete"].includes(action)) {
+      if (!module[action]) return false;
+    }
+
+    // Feature-specific check
+    if (featureKey) {
+      const feat = module.features?.find((f) => f.key === featureKey);
+      if (!feat || !feat.allowed) return false;
+    }
+
+    return true;
+  };
+
+  return { hasPermission };
 };
 
 export default useHasPermission;

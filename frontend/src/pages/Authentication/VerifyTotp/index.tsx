@@ -37,7 +37,7 @@ const VerifyTotp: React.FC = () => {
           lastName: user.lastName,
           phoneNo: user.phoneNo,
           profilePic: user.profilePic,
-          role: user.role,
+          role: user.role.roleName,
           slug: user.slug,
           createdAt: user.createdAt,
         };
@@ -46,7 +46,7 @@ const VerifyTotp: React.FC = () => {
           setLoggedIn({
             accessToken: accessToken,
             UserData: payload,
-          })
+            Permissions:user.role.permissions})
         );
         showSuccess("Logged in successfully");
       }
