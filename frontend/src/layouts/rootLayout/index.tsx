@@ -1,57 +1,56 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { useEffect, useState } from "react";
-import "@assets/css/layout.css";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import ThemeToggleButton from "../../helper/ThemeToggleButton";
-import NotificationDropdown from "../../helper/NotificationDropdown";
-import ProfileDropdown from "../../helper/ProfileDropdown";
+import "@assets/css/layout.css";
+import ThemeToggleButton from "../../helper/ThemeToggleButton.tsx";
 import SiteLogo from "@assets/images/auth/e5fcae70d4835039e473c6b00f4a901799a86cf3.png";
+import ProfileDropdown from "../../helper/ProfileDropdown.tsx";
+import NotificationDropdown from "../../helper/NotificationDropdown.tsx";
 import DashboardIcon from "../../assets/icons/sidebaricons/dashboard.svg?react";
 import AgencyInfo from "../../assets/icons/sidebaricons/Agency.svg?react";
 import Events from "../../assets/icons/sidebaricons/EventsIcon2.svg?react";
 import FormIcon from "../../assets/icons/sidebaricons/Forms.svg?react";
 import ItNFacility from "../../assets/icons/sidebaricons/Facility.svg?react";
 import ProgramIcon from "../../assets/icons/sidebaricons/Program.svg?react";
+import SearchContent from "../../helper/SearchContent.tsx";
 import EmployeesIcon from "../../assets/icons/sidebaricons/Employees.svg?react";
-import SearchContent from "../../helper/SearchContent";
 const menuItems = [
   {
     label: "Dashboard",
-    path: "/admin",
+    path: "/employee",
     icon: DashboardIcon,
   },
-  { label: "Forms", path: "/admin/forms", icon: FormIcon },
+  { label: "Forms", path: "/forms", icon: FormIcon },
   {
     label: "Program & Manuals",
-    path: "/admin/programs&manuals",
+    path: "/programs&manuals",
     icon: ProgramIcon,
   },
   {
     label: "Facility",
-    path: "/admin/it_facility",
+    path: "/it_facility",
     icon: ItNFacility,
   },
   {
     label: "Agency Information",
-    path: "/admin/agency_info",
+    path: "/agency_info",
     icon: AgencyInfo,
   },
   {
     label: "Events",
-    path: "/admin/events",
+    path: "/events",
     icon: Events,
   },
   {
     label: "Employees",
-    path: "/admin/employees",
+    path: "/employees",
     icon: EmployeesIcon,
   },
 ];
-const AdminLayout = () => {
+const RootLayout = () => {
   const [mobileMenu, setMobileMenu] = useState(false);
   const location = useLocation(); // Hook to get the current route
   const [mobileMode, setMobileMode] = useState(false);
-
   useEffect(() => {
     const handleDropdownClick = (event: Event) => {
       event.preventDefault();
@@ -155,7 +154,7 @@ const AdminLayout = () => {
                 Street haven
               </h3>
               <span className="fw-normal text-xxs sm:text-xs text-street-base">
-                Admin Portal
+                Employee Portal
               </span>
             </div>
           </div>
@@ -169,7 +168,7 @@ const AdminLayout = () => {
                 <li key={index}>
                   <NavLink
                     to={item.path}
-                    end={item.path === "/admin"}
+                    end={item.path === "/employee"}
                     className={(navData) =>
                       `${navData.isActive ? "active-page" : ""} `
                     }
@@ -220,15 +219,14 @@ const AdminLayout = () => {
               <div className="d-flex flex-wrap align-items-center gap-3">
                 {!mobileMode && (
                   <button
-                    className="d-md-none btn btn-light-50  p-1 d-flex align-items-center rounded-circle"
-                  
+                    className="d-md-none btn btn-light-50 p-1 d-flex align-items-center rounded-circle "
                     onClick={() => setMobileMode(true)}
                   >
                     <Icon
                       icon="mi:search"
                       className="text-street-base"
-                      width={18}
-                      height={18}
+                      width={20}
+                      height={20}
                     />
                   </button>
                 )}
@@ -261,4 +259,4 @@ const AdminLayout = () => {
   );
 };
 
-export default AdminLayout;
+export default RootLayout;

@@ -6,7 +6,7 @@ interface User {
   lastName: string;
   email: string;
   phoneNo: string;
-  role: "admin" | "employee";
+  role: string;
   profilePic?: string;
   slug: string;
   createdAt: string;
@@ -20,14 +20,41 @@ export interface ChangeUserDetailsPayLoad {
   slug?: string;
   createdAt?: string;
 }
+export interface FeaturePermission {
+  key: string;
+  label: string;
+  allowed: boolean;
+  _id: string;
+}
+
+export interface RoleModulePermission {
+  moduleName: string;
+  moduleKey: string;
+  access: boolean;
+
+  create: boolean;
+  read: boolean;
+  update: boolean;
+  delete: boolean;
+
+  features: FeaturePermission[];
+
+  _id: string;
+}
+
+export interface RolePermission {
+  permissions: RoleModulePermission[];
+}
 export interface AuthState {
   isLoggedIn: boolean;
   accessToken: string;
   user?: User | null;
+  Permissions: RoleModulePermission[];
 }
 export interface SetLoggedInPayload {
   accessToken: string;
   UserData: User;
+  Permissions: RoleModulePermission[];
 }
 
 export interface LoginResponseData {
@@ -38,8 +65,23 @@ export interface LoginVerifyTotpcredentials {
   tempToken: string;
   totpCode: number;
 }
+interface UserVerify {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNo: string;
+  role: {
+    _id: string;
+    roleName: string;
+    permissions: RoleModulePermission[];
+  };
+  profilePic?: string;
+  slug: string;
+  createdAt: string;
+}
 export interface LoginVerifyTotpResponseData {
-  user: User;
+  user: UserVerify;
   refreshToken: string;
   accessToken: string;
 }
@@ -47,9 +89,9 @@ interface GenerateTotpResponseData {
   qrCode: string;
   setupToken: string;
 }
-export interface SetUpTotpResponseCredentials{
-  tempToken:string;
-  totpCode:number
+export interface SetUpTotpResponseCredentials {
+  tempToken: string;
+  totpCode: number;
 }
 
 export interface GenerateTotpCredentials {

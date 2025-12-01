@@ -49,7 +49,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onCancel }) => {
   return (
     <div className="card mb-5 ">
       <div className="card-body d-flex flex-column gap-20 p-16 p-sm-20 p-md-24">
-        <h5 className="text-xl fw-semibold mb-0 ">IT Support Request</h5>
+        <h5 className="text-xl fw-semibold mb-0 ">Support Request</h5>
         <Formik
           initialValues={{
             reqTitle: "",

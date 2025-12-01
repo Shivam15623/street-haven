@@ -94,12 +94,24 @@ export const authApi = api.injectEndpoints({
       onQueryStarted: async (_arg, { dispatch, queryFulfilled }) => {
         try {
           const { data } = await queryFulfilled;
-
+          const { user } = data.data;
+          const payload = {
+            _id: user._id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phoneNo: user.phoneNo,
+            profilePic: user.profilePic,
+            role: user.role.roleName,
+            slug: user.slug,
+            createdAt: user.createdAt,
+          };
           if (data?.data.accessToken) {
             dispatch(
               setLoggedIn({
                 accessToken: data.data.accessToken,
-                UserData: data.data.user,
+                UserData: payload,
+                Permissions: data.data.user.role.permissions,
               })
             );
           }
@@ -120,5 +132,5 @@ export const {
   useResetPasswordMutation,
   useVerifyTotpMutation,
   useGenerateTotpMutation,
-  useSetupTotpMutation
+  useSetupTotpMutation,
 } = authApi;

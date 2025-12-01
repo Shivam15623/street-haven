@@ -1,85 +1,97 @@
 import { useEffect, type ReactNode } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-
 import { selectAuth } from "../redux/AuthSlice";
 
+// ─────────────────────────────
+// Props for Permission-Based Access
+// ─────────────────────────────
 interface RouteGuardProps {
   children: ReactNode;
-  requireRole?: "admin" | "employee";
-  requireAnyRole?: ("admin" | "employee")[];
   isPublic?: boolean;
+
+  requireModule?: string; // moduleKey → "events"
+  requireAction?: // CRUD or access
+  "access" | "create" | "read" | "update" | "delete";
+
+  requireFeatureKey?: string; // optional → "view_registrations"
 }
 
 const RouteGuard: React.FC<RouteGuardProps> = ({
   children,
-  requireRole,
-  requireAnyRole,
   isPublic = false,
+  requireModule,
+  requireAction,
+  requireFeatureKey,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isLoggedIn, user } = useSelector(selectAuth);
 
-  const role = user?.role;
+  const { isLoggedIn, user, Permissions } = useSelector(selectAuth);
 
-  // 🧠 1. Prevent rendering too early
   const isUserReady = isLoggedIn !== undefined && user !== undefined;
 
+  const hasPermission = () => {
+    console.log(requireModule);
+    if (!requireModule) return true; // no permission needed for this route
+
+    const module = Permissions.find((p) => p.moduleKey === requireModule);
+
+    if (!module) return false;
+    console.log(module.moduleKey, module.access);
+    // Access check
+    if (requireAction === "access" && !module.access) return false;
+
+    // CRUD check
+    if (
+      requireAction &&
+      ["create", "read", "update", "delete"].includes(requireAction)
+    ) {
+      if (!module[requireAction]) return false;
+    }
+
+    // Feature-specific check
+    if (requireFeatureKey) {
+      const feat = module.features?.find((f) => f.key === requireFeatureKey);
+      if (!feat || !feat.allowed) return false;
+    }
+
+    return true;
+  };
+
+  // ─────────────────────────────
+  // Redirect Logic
+  // ─────────────────────────────
   useEffect(() => {
     if (!isUserReady) return;
 
-    // 🏠 Special handling for root "/"
     if (location.pathname === "/") {
-
       if (!isLoggedIn) {
         navigate("/login", { replace: true });
-      } else if (role) {
-        const redirectPath = role === "admin" ? "/admin" : "/employee";
-        navigate(redirectPath, { replace: true });
       }
-      return; // stop further checks
+
+      return; // let nested routes load index automatically
     }
 
-    // 🌐 Public routes
-    if (isPublic && isLoggedIn && role) {
-      const redirectPath = role === "admin" ? "/admin" : "/employee";
-      navigate(redirectPath, { replace: true });
+    if (isPublic) {
+      if (isLoggedIn) {
+        navigate("/", { replace: true });
+      }
+      return;
     }
 
-    // 🔒 Protected routes
-    if (!isPublic) {
-      if (!isLoggedIn || !user) {
-        navigate("/login", {
-          state: { from: location.pathname },
-          replace: true,
-        });
-        return;
-      }
-
-      if (requireRole && role !== requireRole) {
-        navigate("/unauthorized", { replace: true });
-        return;
-      }
-
-      if (requireAnyRole && (!role || !requireAnyRole.includes(role))) {
-        navigate("/unauthorized", { replace: true });
-        return;
-      }
+    if (!isLoggedIn) {
+      navigate("/login", { replace: true });
+      return;
     }
-  }, [
-    isLoggedIn,
-    user,
-    role,
-    isPublic,
-    requireRole,
-    requireAnyRole,
-    location.pathname,
-    navigate,
-    isUserReady,
-  ]);
 
-  // ⛔ 3. Wait until auth state is known
+    // ❌ If permission required and user doesn't have it
+    if (!hasPermission()) {
+      navigate("/unauthorized", { replace: true });
+      return;
+    }
+  }, [isUserReady, isLoggedIn, Permissions, location.pathname]);
+
   if (!isUserReady) {
     return (
       <div className="h-screen flex items-center justify-center bg-white text-gray-700">
@@ -88,14 +100,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
     );
   }
 
-  const allowAccess =
-    isPublic ||
-    (isLoggedIn &&
-      user &&
-      (!requireRole || role === requireRole) &&
-      (!requireAnyRole || (role && requireAnyRole.includes(role))));
-
-  return allowAccess ? <>{children}</> : null;
+  return <>{children}</>;
 };
 
 export default RouteGuard;

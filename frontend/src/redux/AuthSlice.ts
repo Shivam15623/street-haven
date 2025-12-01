@@ -11,6 +11,7 @@ const initialState: AuthState = {
   isLoggedIn: false,
   accessToken: "",
   user: null,
+  Permissions:[]
 };
 
 const authSlice = createSlice({
@@ -21,6 +22,7 @@ const authSlice = createSlice({
       state.isLoggedIn = true;
       state.accessToken = action.payload.accessToken;
       state.user = action.payload.UserData;
+      state.Permissions = action.payload.Permissions;
     },
     UpdateUserDetails: (
       state,
@@ -38,7 +40,8 @@ const authSlice = createSlice({
   },
 });
 
-export const { setLoggedIn, setLoggedOut,UpdateUserDetails } = authSlice.actions;
+export const { setLoggedIn, setLoggedOut, UpdateUserDetails } =
+  authSlice.actions;
 export const selectIsLoggedIn = (state: RootState) => state.auth.isLoggedIn;
 export const selectUser = (state: RootState) => state.auth.user;
 export const token = (state: RootState) => state.auth.accessToken;

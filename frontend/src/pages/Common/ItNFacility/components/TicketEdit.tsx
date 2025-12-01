@@ -12,7 +12,7 @@ import { useAllEmployeesQuery } from "../../../../services/EmployeeApi";
 import ImageUpload from "../../../../components/child/Imageupload";
 import { useSelector } from "react-redux";
 import { selectAuth } from "../../../../redux/AuthSlice";
-import useHasPermission from "../../../../hooks/Auth";
+
 import QuillEditor from "../../../../components/child/QuillEditor";
 
 // ✅ Validation Schema
@@ -38,7 +38,7 @@ interface TicketCardProps {
 const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
   const [showModal, setShowModal] = useState(false);
   const { user } = useSelector(selectAuth);
-  const { isAdmin } = useHasPermission();
+
   const isAssigned = ticket.assignedTo?._id === user?._id;
   const isRequester = ticket.createdBy._id === user?._id;
   const [editphoto, seteditphoto] = useState(false);
@@ -173,7 +173,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       type="text"
                       name="requestTitle"
                       value={values.requestTitle}
-                      disabled={!(isAdmin || isRequester)}
+                      disabled={!isRequester}
                       onChange={handleChange}
                       isInvalid={touched.requestTitle && !!errors.requestTitle}
                     />
@@ -222,7 +222,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       size="sm"
                       name="assignedId"
                       value={values.assignedId}
-                      disabled={!isAdmin}
+               
                       onChange={handleChange}
                       isInvalid={touched.assignedId && !!errors.assignedId}
                     >
@@ -257,7 +257,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       size="sm"
                       name="status"
                       value={values.status}
-                      disabled={!(isAdmin || isAssigned)}
+                      disabled={!( isAssigned)}
                       onChange={handleChange}
                       isInvalid={touched.status && !!errors.status}
                     >
@@ -312,7 +312,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                     <QuillEditor
                       content={values.description}
                       onChange={(val) => setFieldValue("description", val)}
-                      disabled={!(isAdmin || isRequester)}
+                      disabled={!( isRequester)}
                       isInvalid={touched.description && !!errors.description}
                       errorMessage={errors.description as string}
                     />
@@ -336,7 +336,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       name="priority"
                       size="sm"
                       value={values.priority}
-                      disabled={!(isAdmin || isRequester)}
+                      disabled={!( isRequester)}
                       onChange={handleChange}
                       className="text-street-base"
                       isInvalid={touched.priority && !!errors.priority}
@@ -367,7 +367,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       size="sm"
                       value={values.category}
                       onChange={handleChange}
-                      disabled={!(isAdmin || isRequester)}
+                      disabled={!( isRequester)}
                       className="text-street-base"
                       isInvalid={touched.category && !!errors.category}
                     >
@@ -398,7 +398,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       type="text"
                       size="sm"
                       name="location"
-                      disabled={!(isAdmin || isRequester)}
+                      disabled={!( isRequester)}
                       value={values.location}
                       onChange={handleChange}
                       isInvalid={touched.location && !!errors.location}
@@ -423,7 +423,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       >
                         {ticket.photo?.fileName}
                       </Link>
-                      {(!isAdmin || !isRequester) && (
+                      {(! !isRequester) && (
                         <Icon
                           icon="mdi:file-edit"
                           className="ms-2 icon-street-edit"

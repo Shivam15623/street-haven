@@ -9,7 +9,6 @@ import type { TicketData } from "../../../../interfaces/Ticket";
 import TicketComment from "./TicketComment";
 import { useSelector } from "react-redux";
 import { selectAuth } from "../../../../redux/AuthSlice";
-import useHasPermission from "../../../../hooks/Auth";
 import DOMPurify from "dompurify";
 interface TicketCardProps {
   ticket: TicketData;
@@ -30,7 +29,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     _id,
   } = ticket;
   const { user } = useSelector(selectAuth);
-  const { isAdmin } = useHasPermission();
+
   const isAssigned = ticket.assignedTo?._id === user?._id;
   const isRequester = ticket.createdBy._id === user?._id;
   // Meta info
@@ -144,9 +143,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
           </div>
           <div className="d-flex flex flex-row gap-2">
             <TicketComment ticket={ticket} />
-            {(isAdmin || isAssigned || isRequester) && (
-              <TicketDetails ticket={ticket} />
-            )}
+            {(isAssigned || isRequester) && <TicketDetails ticket={ticket} />}
           </div>
         </div>
       </div>

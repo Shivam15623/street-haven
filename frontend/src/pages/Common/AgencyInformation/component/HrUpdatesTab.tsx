@@ -4,14 +4,13 @@ import { useSearchParams } from "react-router-dom";
 import HRUpdateCard from "./HRUpdateCard";
 import { useViewhrUpdatesQuery } from "../../../../services/hrUpdatesApi";
 import ActionsHrUpdates from "./ActionsHrUpdates";
-import useHasPermission from "../../../../hooks/Auth";
 import StreetPaggination from "../../../../components/child/StreetPaggination";
 
 const HrUpdatesTab = () => {
   const [search, setSearch] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
   const [showModal, setShowModal] = useState(false);
-  const { isAdmin } = useHasPermission();
+
   const [page, setPage] = useState(1);
 
   // Get slug from URL params
@@ -47,7 +46,7 @@ const HrUpdatesTab = () => {
     <div className="d-flex flex-column gap-24">
       <div className="d-flex flex-row justify-content-between align-items-center">
         <h2 className="text-md sm:text-lg">HR updates</h2>
-        {isAdmin && (
+        { (
           <button
             className="btn btn-street-primary text-sm d-flex  flex-row align-items-center justify-content-center radius-12 "
             style={{ minWidth: "43px", minHeight: "40px" }}
@@ -69,7 +68,7 @@ const HrUpdatesTab = () => {
         />
       </div>
 
-      {isAdmin && (
+      {(
         <ActionsHrUpdates show={showModal} onHide={() => setShowModal(false)} />
       )}
 

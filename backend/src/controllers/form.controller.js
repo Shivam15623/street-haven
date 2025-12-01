@@ -239,3 +239,8 @@ export const createPaymentRequisition = asyncHandler(async (req, res) => {
 });
 
 export const createFAF = asyncHandler(async (req, res) => {});
+const FORM_PDFS = {
+  "joining-form": "/forms/joining_form.pdf",
+  "exit-form": "/forms/exit_form.pdf",
+  "leave-application": "/forms/leave_application.pdf",
+};

@@ -49,10 +49,8 @@ const UserSchema = new mongoose.Schema(
       ],
     },
     role: {
-      type: String,
-      enum: ["admin", "employee"],
-      required: true,
-      lowercase: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Role",
     },
     phoneNo: {
       type: String,
