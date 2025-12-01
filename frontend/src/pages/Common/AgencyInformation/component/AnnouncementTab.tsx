@@ -1,6 +1,6 @@
 import { useState } from "react";
 import ActionsAnnouncement from "./ActionsAnnouncement";
-import useHasPermission from "../../../../hooks/Auth";
+
 import { useViewAnnouncementsQuery } from "../../../../services/AnnouncementApi";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import AnnouncementCard from "./AnnouncementCard";
@@ -8,7 +8,7 @@ import StreetPaggination from "../../../../components/child/StreetPaggination";
 
 const AnnouncementTab = () => {
   const [open, setOpen] = useState(false);
-  const { isAdmin } = useHasPermission();
+
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const limit = 10;
@@ -32,7 +32,7 @@ const AnnouncementTab = () => {
       {/* Add Button */}
       <div className="d-flex flex-row justify-content-between align-items-center">
         <h2 className="text-md sm:text-lg">Announcements</h2>{" "}
-        {isAdmin && (
+   
           <button
             className="btn btn-street-primary text-sm d-flex flex-row align-items-center justify-content-center radius-12 "
             style={{ minWidth: "43px", minHeight: "40px" }}
@@ -40,7 +40,7 @@ const AnnouncementTab = () => {
           >
             Add Announcement
           </button>
-        )}
+  
       </div>
       {/* Search box */}
       <div className="px-20 py-16 program-input bg-base radius-12 d-flex flex-row align-items-center gap-8">
@@ -52,9 +52,9 @@ const AnnouncementTab = () => {
           onChange={(e) => handleSearchChange(e.target.value)}
         />
       </div>
-      {isAdmin && (
+
         <ActionsAnnouncement show={open} onHide={() => setOpen(false)} />
-      )}
+
       {isLoading && <p>Loading...</p>}
       {isError && <p>Something went wrong</p>}
       {data?.data.announcements?.length ? (

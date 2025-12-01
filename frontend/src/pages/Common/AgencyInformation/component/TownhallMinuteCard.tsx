@@ -3,7 +3,7 @@ import { Icon } from "@iconify/react";
 
 import Badge from "../../../../components/child/Badge";
 import type { MeetingMinutesData } from "../../../../interfaces/meetingMinutes";
-import useHasPermission from "../../../../hooks/Auth";
+
 import ActionstownhallMinutes from "./ActionstownhallMinutes";
 import DeleteMeetingMinutes from "./DeleteMeetingMinutes";
 import ViewPdfModal from "../../../../components/child/ViewPdfModal";
@@ -27,7 +27,7 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
     keyTopicsDiscussed,
   } = meeting;
   const [showModal, setShowModal] = useState(false);
-  const { isAdmin } = useHasPermission();
+
   const handleDownload = async (url: string, filename: string) => {
     try {
       const response = await fetch(url);
@@ -96,7 +96,7 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
               <Icon icon="jam:download" className="text-xl" />
               Download
             </button>
-            {isAdmin && (
+     
               <button
                 className="btn btn-street-neutral d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
                 style={{ width: "43px", height: "40px" }}
@@ -105,15 +105,15 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
                 {" "}
                 <Icon icon="mdi:pencil" className="text-sm sm:text-xl" />
               </button>
-            )}
-            {isAdmin && (
+       
+   
               <DeleteMeetingMinutes
                 attachment={attachment}
                 id={meeting._id}
                 meetingDate={meetingDate}
                 title={title}
               />
-            )}
+     
           </div>
         </div>
 
@@ -150,15 +150,15 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
         )}
         <hr className="d-sm-none d-block" />
         <div className="d-flex d-sm-none flex-row justify-content-end gap-8 gap-sm-12">
-          {isAdmin && (
+
             <DeleteMeetingMinutes
               attachment={attachment}
               id={meeting._id}
               meetingDate={meetingDate}
               title={title}
             />
-          )}
-          {isAdmin && (
+    
+
             <button
               className="btn btn-street-neutral"
               onClick={() => setShowModal(true)}
@@ -166,7 +166,7 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
               {" "}
               <Icon icon="mdi:pencil" className="text-sm sm:text-xl" />
             </button>
-          )}
+      
 
           <ViewPdfModal attachment={attachment} title={meeting.title} />
           <button

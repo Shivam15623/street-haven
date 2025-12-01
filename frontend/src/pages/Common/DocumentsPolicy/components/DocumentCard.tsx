@@ -3,7 +3,7 @@ import { Col } from "react-bootstrap";
 import { Icon } from "@iconify/react";
 import Badge from "../../../../components/child/Badge";
 import ActionsProgram from "./ActionsProgram";
-import useHasPermission from "../../../../hooks/Auth";
+
 import DeleteMannuals from "./DeleteMannuals";
 import dayjs from "dayjs";
 import DOMPurify from "dompurify";
@@ -31,7 +31,7 @@ type DocumentCardProps = {
 const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
   const { title, description, tags, type, updatedAt, attachment } = Pdocument;
   const [showEditModal, setShowEditModal] = useState(false);
-  const { isAdmin } = useHasPermission();
+
   const handleDownload = async (url: string, filename: string) => {
     try {
       const response = await fetch(url);
@@ -117,7 +117,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
               </button>
             </div>
           </div>
-          {isAdmin && (
+
             <div
               className="position-absolute z-1 d-flex flex-row gap-2"
               style={{ top: "10px", right: "10px" }}
@@ -135,7 +135,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
                 title={Pdocument.title}
               />
             </div>
-          )}
+
         </div>
       </div>
 

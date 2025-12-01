@@ -32,7 +32,24 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
     if (refreshResult?.data) {
       const { accessToken, user } =
         refreshResult.data as LoginVerifyTotpResponseData;
-      api.dispatch(setLoggedIn({ accessToken, UserData: user }));
+      const payload = {
+        _id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phoneNo: user.phoneNo,
+        profilePic: user.profilePic,
+        role: user.role.roleName,
+        slug: user.slug,
+        createdAt: user.createdAt,
+      };
+      api.dispatch(
+        setLoggedIn({
+          accessToken,
+          UserData: payload,
+          Permissions: user.role.permissions,
+        })
+      );
 
       result = await baseQuery(args, api, extraOptions);
     } else {

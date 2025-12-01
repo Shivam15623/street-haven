@@ -7,11 +7,33 @@ export interface EmployeeData {
   lastname: string;
   email: string;
   phoneNo: string;
-  role: "admin" | "employee";
+  role: { roleName: string; _id: string };
   profilePic: string;
   createdAt: string;
   updatedAt: string;
 }
+export interface RoleForm {
+  roleName: string;
+  description: string;
+  permissions: ModulePermission[];
+}
+export interface Feature {
+  key: string;
+  label: string;
+  allowed: boolean;
+}
+
+export interface ModulePermission {
+  moduleName: string;
+  moduleKey: string;
+  access: boolean;
+  create: boolean;
+  read: boolean;
+  update: boolean;
+  delete: boolean;
+  features: Feature[];
+}
+
 type EmployeesResponse = ApiResponse<{
   employees: EmployeeData[];
   paggination: {
@@ -72,6 +94,39 @@ const EmployeeApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Employees"],
     }),
+    addRole: builder.mutation<ApiGeneralResponse, RoleForm>({
+      query: (credentials) => ({
+        url: "/employees/role/create",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
+    editRole: builder.mutation<
+      ApiGeneralResponse,
+      { id: string; updated: RoleForm }
+    >({
+      query: ({ id, updated }) => ({
+        url: `/employees/role/edit/${id}`,
+        method: "PATCH",
+        body: updated,
+      }),
+    }),
+    deleteRole: builder.mutation<ApiGeneralResponse, { id: string }>({
+      query: ({ id }) => ({
+        url: `/employees/role/delete/${id}`,
+        method: "DELETE",
+      }),
+    }),
+    viewRoles: builder.query<
+      ApiResponse<{ _id: string; roleName: string }[]>,
+      { formOnly: boolean }
+    >({
+      query: ({ formOnly }) => ({
+        url: `/employees/role`,
+        body: { formOnly },
+        method: "POST",
+      }),
+    }),
   }),
 });
 
@@ -80,4 +135,8 @@ export const {
   useEditEmployeeMutation,
   useDeleteEmployeeMutation,
   useAddEmployeeMutation,
+  useAddRoleMutation,
+  useEditRoleMutation,
+  useDeleteRoleMutation,
+  useViewRolesQuery,
 } = EmployeeApi;
