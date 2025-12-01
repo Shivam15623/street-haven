@@ -1,5 +1,5 @@
 import { useState } from "react";
-import useHasPermission from "../../../../hooks/Auth";
+
 import { useFetchMeetingMinutesQuery } from "../../../../services/meetingminutesApi";
 import ActionstownhallMinutes from "./ActionstownhallMinutes";
 import TownhallMinuteCard from "./TownhallMinuteCard";
@@ -27,13 +27,13 @@ const TownhallMinutesTab = () => {
     setPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  const { isAdmin } = useHasPermission();
+
   return (
     <div className="d-flex flex-column gap-24">
       {/* Add Button */}
       <div className="d-flex flex-row justify-content-between align-items-center">
         <h2 className="text-md sm:text-lg">Event Minutes</h2>{" "}
-        {isAdmin && (
+        { (
           <button
             className="btn btn-street-primary d-flex text-sm  flex-row align-items-center justify-content-center radius-12 "
             style={{ minWidth: "43px", minHeight: "40px" }}
@@ -43,7 +43,7 @@ const TownhallMinutesTab = () => {
           </button>
         )}
       </div>
-      {isAdmin && (
+      { (
         <ActionstownhallMinutes
           onHide={() => setShowModal(false)}
           show={showModal}

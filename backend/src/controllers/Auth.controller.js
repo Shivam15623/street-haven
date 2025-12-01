@@ -108,7 +108,7 @@ export const Login = asyncHandler(async (req, res) => {
   }
 
   // 3. Create a short-lived temp token (used for TOTP verification / setup)
- 
+
   const tempToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
     expiresIn: "10m",
   });
@@ -191,9 +191,11 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
     const { accessToken, refreshToken } = await generateTokens(user._id);
 
     // Fetch user again (sanitized fields)
-    const findUser = await User.findById(user._id).select(
-      "-password -refreshToken -updatedAt -createdBy -createdAt -isActive -__v"
-    );
+    const findUser = await User.findById(user._id)
+      .populate("role", "roleName permissions _id")
+      .select(
+        "-password -refreshToken -updatedAt -createdBy -createdAt -isActive -__v"
+      );
 
     const userToSend = {
       _id: findUser._id,
@@ -257,9 +259,11 @@ export const silentAuth = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Token mismatch");
   }
   const { accessToken, refreshToken } = await generateTokens(user._id);
-  const finduser = await User.findById(user._id).select(
-    "-password -refreshToken -updatedAt -createdBy -createdAt -isActive -__v"
-  );
+  const finduser = await User.findById(user._id)
+    .populate("role", "roleName permissions _id")
+    .select(
+      "-password -refreshToken -updatedAt -createdBy -createdAt -isActive -__v"
+    );
   const userToSend = {
     _id: finduser._id,
     firstName: finduser.firstname,
@@ -354,7 +358,10 @@ export const verifyTOTP = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Expired token");
   }
 
-  const user = await User.findById(decoded.userId);
+  const user = await User.findById(decoded.userId).populate(
+    "role",
+    "roleName permissions _id"
+  );
 
   console.log(user.totpSecret);
   const isValid = speakeasy.totp.verify({

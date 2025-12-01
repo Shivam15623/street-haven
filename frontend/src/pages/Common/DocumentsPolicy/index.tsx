@@ -5,7 +5,6 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import "@assets/css/PageCss/program.css";
 import { useFetchManualsQuery } from "../../../services/ProgramManualApi";
 import ActionsProgram from "./components/ActionsProgram";
-import useHasPermission from "../../../hooks/Auth";
 import { useSearchParams } from "react-router-dom";
 import { useDebounce } from "../../../hooks/useDebounce";
 import StreetPaggination from "../../../components/child/StreetPaggination";
@@ -19,7 +18,7 @@ const ProgramManuals = () => {
   const slugParam = searchParams.get("slug") ?? "";
   const pageSize = 10;
 
-  const { isAdmin } = useHasPermission();
+
   const handleSearchChange = (value: string) => {
     setSearch(value);
 
@@ -63,7 +62,7 @@ const ProgramManuals = () => {
             Access training materials and program documentation
           </p>
         </div>
-        {isAdmin && (
+        {(
           <button
             className="btn btn-street-lg btn-street-primary radius-12 text-sm d-flex align-items-center justify-content-center"
             onClick={() => setShowModal(true)}

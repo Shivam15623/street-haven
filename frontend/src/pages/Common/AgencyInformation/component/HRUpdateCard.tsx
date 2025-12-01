@@ -2,14 +2,14 @@ import { useState } from "react";
 
 import { Icon } from "@iconify/react/dist/iconify.js";
 import type { hrUpdateData } from "../../../../interfaces/hrUpdatesInterface";
-import useHasPermission from "../../../../hooks/Auth";
+
 import ActionsHrUpdates from "./ActionsHrUpdates";
 import DeleteHrUpdate from "./deleteHrUpdates";
 import "react-quill/dist/quill.snow.css";
 import ViewFileModal from "../../../../components/child/VIewFileModal";
 const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
   const { title, _id, createdAt, description, createdBy } = update;
-  const { isAdmin } = useHasPermission();
+
   const [showDelete, setShowDelete] = useState(false);
   const [showModal, setShowModal] = useState(false);
   // Format createdAt -> MM/DD/YYYY
@@ -48,17 +48,17 @@ const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
               </p>
             </div>
           </div>
-          {isAdmin && (
+          {
             <ActionsHrUpdates
               show={showModal}
               update={update}
               onHide={() => setShowModal(false)}
             />
-          )}
+          }
 
           <div className="d-flex flex-row gap-8 align-items-start">
             <ViewFileModal attachment={update.attachment} title={title} />
-            {isAdmin && (
+            {
               <button
                 className="btn btn-street-neutral d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
                 style={{ width: "43px", height: "40px" }}
@@ -67,8 +67,8 @@ const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
                 {" "}
                 <Icon icon="mdi:pencil" className="text-sm sm:text-xl" />
               </button>
-            )}
-            {isAdmin && (
+            }
+            {
               <>
                 <button
                   onClick={() => setShowDelete(true)}
@@ -84,7 +84,7 @@ const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
                   onHide={() => setShowDelete(false)}
                 />
               </>
-            )}
+            }
           </div>
         </div>
       </div>

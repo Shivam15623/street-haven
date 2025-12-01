@@ -67,7 +67,7 @@ function DataTable<T extends object>({
           </button>
 
           <ul
-            className="dropdown-menu p-1 radius-8 border-0-5 border-sh-base-50 "
+            className="dropdown-menu z-1 p-1 radius-8 border-0-5 border-sh-base-50 "
             style={{ minWidth: "100%", width: "100%" }}
           >
             {pageSizes.map((size) => (

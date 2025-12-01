@@ -13,10 +13,16 @@ export const LazyForgotPassword = React.lazy(
 export const LazyResetPassword = React.lazy(
   () => import("../pages/Authentication/ResetPassword")
 );
-export const LazyGenereateTotp=React.lazy(()=>import("../pages/Authentication/GenerateTotp"))
-export const LazyVerifyTotp=React.lazy(()=>import("../pages/Authentication/VerifyTotp"))
-export const LazyEmployeeRoot = React.lazy(() => import("../layouts/employee"));
-export const LazyAdminRoot = React.lazy(() => import("../layouts/admin"));
+export const LazyGenereateTotp = React.lazy(
+  () => import("../pages/Authentication/GenerateTotp")
+);
+export const LazyVerifyTotp = React.lazy(
+  () => import("../pages/Authentication/VerifyTotp")
+);
+export const LazyRootLayout = React.lazy(
+  () => import("../layouts/rootLayout")
+);
+
 export const LazyEmployeedashboard = React.lazy(
   () => import("../pages/Employee/Dashboard")
 );

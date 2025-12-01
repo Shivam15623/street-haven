@@ -44,10 +44,11 @@ export const EmployeeColumn: Column<EmployeeData>[] = [
   {
     title: "Role",
     accessorKey: "role",
+    render: (row) => <div>{row.role?.roleName ?? "N/A"}</div>,
   },
   {
     title: "Actions",
-    sortable: false, // actions column is not sortable
+    sortable: false,
     render: (row) => (
       <div className="d-flex gap-2">
         <EditEmployee
@@ -58,6 +59,7 @@ export const EmployeeColumn: Column<EmployeeData>[] = [
             firstname: row.firstname,
             lastname: row.lastname,
             phoneNo: row.phoneNo,
+            role: row.role?._id ?? "", // fallback if role is undefined
           }}
         />
         <DeleteEmployee
@@ -65,7 +67,7 @@ export const EmployeeColumn: Column<EmployeeData>[] = [
             email: row.email,
             firstname: row.firstname,
             lastname: row.lastname,
-            role: row.role,
+            role: row.role?.roleName ?? "N/A", // fallback
             _id: row._id,
           }}
         />

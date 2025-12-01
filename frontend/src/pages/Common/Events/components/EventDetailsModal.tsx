@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import type { EventUpcomingData } from "../../../../interfaces/EventInterfaces";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
-import useHasPermission from "../../../../hooks/Auth";
+
 import dayjs from "dayjs";
 import {
   useEditEventMutation,
@@ -18,6 +18,7 @@ import TimePicker from "../../../../components/child/TimePicker";
 import CustomDatePicker from "../../../../components/child/DatePicker";
 import QuillEditor from "../../../../components/child/QuillEditor";
 import DOMPurify from "dompurify";
+
 interface EventDetailsModalProps {
   event: EventUpcomingData;
   open: boolean;
@@ -73,7 +74,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
   open,
   handleClose,
 }) => {
-  const { isAdmin } = useHasPermission();
+
   const [editMode, setEditMode] = useState(false);
   const [registerEvent, { isLoading: isRegistering }] =
     useSignUpForEventMutation();
@@ -194,49 +195,47 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
       footerClassName="flex justify-end gap-3"
       footer={
         <>
-          {isAdmin && (
-            <>
-              {editMode ? (
-                <>
-                  <button
-                    className="btn btn-street-primary btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
-                    type="submit"
-                    form="Temp-edit-form"
-                    disabled={isEditing}
-                  >
-                    {isEditing ? "Saving" : "Save Changes"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault(); // 🛑 Stops any form submission event
-                      e.stopPropagation(); // 🛑 Stops bubbling to parent form
-                      setEditMode(false);
-                    }}
-                    className="btn btn-street-neutral btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
-                  >
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    className="btn btn-street-primary  btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
-                    onClick={(e) => {
-                      e.preventDefault(); // 🛑 Stops any form submission event
-                      e.stopPropagation(); // 🛑 Stops bubbling to parent form
-                      setEditMode(true);
-                    }}
-                  >
-                    Edit
-                  </button>
-                </>
-              )}
-            </>
-          )}
+          <>
+            {editMode ? (
+              <>
+                <button
+                  className="btn btn-street-primary btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+                  type="submit"
+                  form="Temp-edit-form"
+                  disabled={isEditing}
+                >
+                  {isEditing ? "Saving" : "Save Changes"}
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault(); // 🛑 Stops any form submission event
+                    e.stopPropagation(); // 🛑 Stops bubbling to parent form
+                    setEditMode(false);
+                  }}
+                  className="btn btn-street-neutral btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="btn btn-street-primary  btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+                  onClick={(e) => {
+                    e.preventDefault(); // 🛑 Stops any form submission event
+                    e.stopPropagation(); // 🛑 Stops bubbling to parent form
+                    setEditMode(true);
+                  }}
+                >
+                  Edit
+                </button>
+              </>
+            )}
+          </>
 
-          {!isAdmin && commonActionButton}
+          {commonActionButton}
           <button
             type="button"
             className="btn btn-street-neutral  btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"

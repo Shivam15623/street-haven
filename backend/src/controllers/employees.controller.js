@@ -50,6 +50,7 @@ export const AllEmployees = asyncHandler(async (req, res) => {
 
   // Otherwise, paginated list
   const employees = await User.find(query)
+    .populate("role", "roleName _id")
     .select(selectFields)
     .sort({ [sortBy]: order === "asc" ? 1 : -1 })
     .skip((Number(page) - 1) * Number(limit))
@@ -76,7 +77,7 @@ export const AllEmployees = asyncHandler(async (req, res) => {
   );
 });
 export const AddEmployee = asyncHandler(async (req, res) => {
-  const { firstName, lastName, email, password, phone } = req.body;
+  const { firstName, lastName, email, password, phone, role } = req.body;
 
   const ExistingUser = await User.findOne({
     $or: [{ email: email }, { phoneNo: phone }],
@@ -115,7 +116,7 @@ export const EditEmployee = asyncHandler(async (req, res) => {
     throw new ApiError(404, "No such user found");
   }
 
-  const { firstname, lastname, email, phoneNo } = req.body;
+  const { firstname, lastname, email, phoneNo, role } = req.body;
   const updates = {};
 
   // If profile picture is uploaded → skip equality check and update
@@ -141,7 +142,8 @@ export const EditEmployee = asyncHandler(async (req, res) => {
       (firstname ? firstname === findUser.firstname : true) &&
       (lastname ? lastname === findUser.lastname : true) &&
       (email ? email === findUser.email : true) &&
-      (phoneNo ? phoneNo === findUser.phoneNo : true);
+      (phoneNo ? phoneNo === findUser.phoneNo : true) &&
+      (role ? role === findUser.role : true);
 
     if (isSame) {
       return res
@@ -158,6 +160,7 @@ export const EditEmployee = asyncHandler(async (req, res) => {
   if (lastname && lastname !== findUser.lastname) updates.lastname = lastname;
   if (email && email !== findUser.email) updates.email = email;
   if (phoneNo && phoneNo !== findUser.phoneNo) updates.phoneNo = phoneNo;
+  if (role && role !== findUser.role) updates.role = role;
 
   const updatedUser = await User.findByIdAndUpdate(userId, updates, {
     new: true,
