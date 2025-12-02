@@ -8,6 +8,7 @@ import ActionsProgram from "./components/ActionsProgram";
 import { useSearchParams } from "react-router-dom";
 import { useDebounce } from "../../../hooks/useDebounce";
 import StreetPaggination from "../../../components/child/StreetPaggination";
+import useHasPermission from "../../../hooks/Auth";
 
 const ProgramManuals = () => {
   const [search, setSearch] = useState("");
@@ -18,7 +19,6 @@ const ProgramManuals = () => {
   const slugParam = searchParams.get("slug") ?? "";
   const pageSize = 10;
 
-
   const handleSearchChange = (value: string) => {
     setSearch(value);
 
@@ -28,6 +28,7 @@ const ProgramManuals = () => {
     }
     setSearchParams(params);
   };
+  const { hasPermission } = useHasPermission();
 
   // Fetch manuals using RTK Query
   const { data, isLoading } = useFetchManualsQuery({
@@ -62,7 +63,7 @@ const ProgramManuals = () => {
             Access training materials and program documentation
           </p>
         </div>
-        {(
+        {hasPermission({ moduleKey: "program_manuals", action: "create" }) && (
           <button
             className="btn btn-street-lg btn-street-primary radius-12 text-sm d-flex align-items-center justify-content-center"
             onClick={() => setShowModal(true)}
@@ -115,7 +116,9 @@ const ProgramManuals = () => {
             <DocumentCard key={manual._id} Pdocument={manual} />
           ))}
       </Row>
-      <ActionsProgram onHide={() => setShowModal(false)} show={showModal} />
+      {hasPermission({ moduleKey: "program_manuals", action: "create" }) && (
+        <ActionsProgram onHide={() => setShowModal(false)} show={showModal} />
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (

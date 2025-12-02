@@ -8,6 +8,7 @@ import DeleteMannuals from "./DeleteMannuals";
 import dayjs from "dayjs";
 import DOMPurify from "dompurify";
 import ViewPdfModal from "../../../../components/child/ViewPdfModal";
+import useHasPermission from "../../../../hooks/Auth";
 export type Document = {
   _id: string;
   title: string;
@@ -31,7 +32,7 @@ type DocumentCardProps = {
 const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
   const { title, description, tags, type, updatedAt, attachment } = Pdocument;
   const [showEditModal, setShowEditModal] = useState(false);
-
+  const { hasPermission } = useHasPermission();
   const handleDownload = async (url: string, filename: string) => {
     try {
       const response = await fetch(url);
@@ -118,32 +119,45 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
             </div>
           </div>
 
-            <div
-              className="position-absolute z-1 d-flex flex-row gap-2"
-              style={{ top: "10px", right: "10px" }}
-            >
+          <div
+            className="position-absolute z-1 d-flex flex-row gap-2"
+            style={{ top: "10px", right: "10px" }}
+          >
+            {hasPermission({
+              moduleKey: "program_mannuals",
+              action: "update",
+            }) && (
               <button
                 className="btn btn-street-neutral   p-8 d-flex flex-row align-items-center justify-content-between  radius-12"
                 onClick={() => setShowEditModal(true)}
               >
                 <Icon icon="mdi:pencil" className="text-sm sm:text-xl" />
               </button>
+            )}
+            {hasPermission({
+              moduleKey: "program_mannuals",
+              action: "delete",
+            }) && (
               <DeleteMannuals
                 attachment={attachment}
                 description={description}
                 id={Pdocument._id}
                 title={Pdocument.title}
               />
-            </div>
-
+            )}
+          </div>
         </div>
       </div>
-
-      <ActionsProgram
-        document={Pdocument}
-        show={showEditModal}
-        onHide={() => setShowEditModal(false)}
-      />
+      {hasPermission({
+        moduleKey: "program_manuals",
+        action: "update",
+      }) && (
+        <ActionsProgram
+          document={Pdocument}
+          show={showEditModal}
+          onHide={() => setShowEditModal(false)}
+        />
+      )}
     </Col>
   );
 };

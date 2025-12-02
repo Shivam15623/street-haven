@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { Icon } from "@iconify/react";
 import CardlistWrapper from "./CardListWrapper";
-import { useSelector } from "react-redux";
-import { selectAuth } from "../../../../redux/AuthSlice";
+
 import type { EventUpcomingData } from "../../../../interfaces/EventInterfaces";
 import dayjs from "dayjs";
 import EventDetailspop from "./EventDetailspop";
@@ -17,7 +16,7 @@ const UpcomingEvents: React.FC<UpcomingEventCardProps> = ({
   events,
   loading,
 }) => {
-  const { user } = useSelector(selectAuth);
+ 
 
   // 🔹 Modal state
   const [open, setOpen] = useState(false);
@@ -39,7 +38,7 @@ const UpcomingEvents: React.FC<UpcomingEventCardProps> = ({
     <>
       <CardlistWrapper
         title="Upcoming Events"
-        viewAllLink={`/${user?.role}/events`}
+        viewAllLink={`/events`}
       >
         <div className="d-flex flex-column gap-3">
           {loading &&

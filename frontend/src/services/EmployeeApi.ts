@@ -51,6 +51,12 @@ interface AllEmployeeQuery {
   order?: "asc" | "desc";
   forDropdown?: boolean;
 }
+export interface RoleInfo {
+  _id: string;
+  roleName: string;
+  description: string;
+  permissions: ModulePermission[];
+}
 const EmployeeApi = api.injectEndpoints({
   endpoints: (builder) => ({
     allEmployees: builder.query<EmployeesResponse, AllEmployeeQuery>({
@@ -127,6 +133,12 @@ const EmployeeApi = api.injectEndpoints({
         method: "POST",
       }),
     }),
+    getRolebyId: builder.query<ApiResponse<RoleInfo>, { id: string }>({
+      query: ({ id }) => ({
+        url: `/employees/role/${id}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -139,4 +151,5 @@ export const {
   useEditRoleMutation,
   useDeleteRoleMutation,
   useViewRolesQuery,
+  useGetRolebyIdQuery
 } = EmployeeApi;

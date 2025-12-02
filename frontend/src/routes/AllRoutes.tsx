@@ -85,7 +85,7 @@ export const AllRoutes: RouteObject[] = [
       {
         index: true,
         element: withSuspense(
-          <RouteGuard requireModule="dashboard" requireAction="read">
+          <RouteGuard isPublic={false}>
             <LazyEmployeedashboard />
           </RouteGuard>
         ),
@@ -112,7 +112,7 @@ export const AllRoutes: RouteObject[] = [
       {
         path: "agency_info",
         element: withSuspense(
-          <RouteGuard requireModule="agency_info" requireAction="access">
+          <RouteGuard isPublic={false}>
             <LazyAgencyInfo />
           </RouteGuard>
         ),
@@ -121,7 +121,7 @@ export const AllRoutes: RouteObject[] = [
       {
         path: "it_facility",
         element: withSuspense(
-          <RouteGuard requireModule="it_facility" requireAction="access">
+          <RouteGuard isPublic={false}>
             <LazyHelpDesk />
           </RouteGuard>
         ),
@@ -130,7 +130,7 @@ export const AllRoutes: RouteObject[] = [
       {
         path: "forms",
         element: withSuspense(
-          <RouteGuard requireModule="forms" requireAction="access">
+          <RouteGuard isPublic={false}>
             <LazyFormReports />
           </RouteGuard>
         ),
@@ -139,7 +139,7 @@ export const AllRoutes: RouteObject[] = [
       {
         path: "profile",
         element: withSuspense(
-          <RouteGuard >
+          <RouteGuard isPublic={false}>
             <LazyProfile />
           </RouteGuard>
         ),

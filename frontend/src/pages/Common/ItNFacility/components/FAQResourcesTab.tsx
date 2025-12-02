@@ -13,6 +13,7 @@ import DeleteQuestion from "./FAqComponents/DeleteQuestion";
 import EmergencyContact from "./FAqComponents/ActionContact";
 import DeleteEmergencyContact from "./FAqComponents/DeletePhone";
 import { Col, Row } from "react-bootstrap";
+import useHasPermission from "../../../../hooks/Auth";
 
 interface FAQItem {
   _id: string;
@@ -29,11 +30,14 @@ interface FAQCard {
 const FAQResourcesTab = () => {
   const { data } = useAllCategoriesQuery();
   const { data: contacts } = useViewEmergencyContactsQuery();
-
+  const { hasPermission } = useHasPermission();
 
   return (
     <div className="d-flex flex-column gap-4 mb-5">
-      { <AddCategory />}
+      {hasPermission({
+        moduleKey: "faq_resources",
+        action: "create",
+      }) && <AddCategory />}
 
       <Row className="g-3 gy-md-4 gx-md-4">
         {data?.data.map((cat: FAQCard) => (
@@ -42,15 +46,21 @@ const FAQResourcesTab = () => {
             <div className="card">
               <div className="card-body position-relative d-flex flex-column gap-10 gap-sm-16 gap-md-20 rounded-3 p-16 p-sm-24">
                 {/* Add Questions button */}
-                { (
+                {
                   <div
                     className="position-absolute d-flex flex-row gap-10"
                     style={{ right: 12, top: 12 }}
                   >
-                    <AddFaqs title={cat.title} id={cat._id} />
-                    <DeleteCategory title={cat.title} id={cat._id} />
+                    {hasPermission({
+                      moduleKey: "faq_resources",
+                      action: "create",
+                    }) && <AddFaqs title={cat.title} id={cat._id} />}
+                    {hasPermission({
+                      moduleKey: "faq_resources",
+                      action: "delete",
+                    }) && <DeleteCategory title={cat.title} id={cat._id} />}
                   </div>
-                )}
+                }
 
                 <h5 className="text-md xs:text-lg sm:text-xl mb-0 text-street-dark fw-semibold">
                   {cat.title}
@@ -69,21 +79,31 @@ const FAQResourcesTab = () => {
                       {faq.answer}
                     </p>
 
-                    { (
+                    {
                       <div className="position-absolute d-flex flex-row gap-2 top-50 end-0 translate-middle-y me-2 edit-icon">
-                        <EditQuestion
-                          cid={cat._id}
-                          qid={faq._id}
-                          question={faq.question}
-                          answer={faq.answer}
-                        />
-                        <DeleteQuestion
-                          cid={cat._id}
-                          qid={faq._id}
-                          question={faq.question}
-                        />
+                        {hasPermission({
+                          moduleKey: "faq_resources",
+                          action: "update",
+                        }) && (
+                          <EditQuestion
+                            cid={cat._id}
+                            qid={faq._id}
+                            question={faq.question}
+                            answer={faq.answer}
+                          />
+                        )}
+                        {hasPermission({
+                          moduleKey: "faq_resources",
+                          action: "delete",
+                        }) && (
+                          <DeleteQuestion
+                            cid={cat._id}
+                            qid={faq._id}
+                            question={faq.question}
+                          />
+                        )}
                       </div>
-                    )}
+                    }
                   </div>
                 ))}
               </div>
@@ -96,7 +116,10 @@ const FAQResourcesTab = () => {
         className="p-12 position-relative p-sm-16 p-md-24  help-blur rounded-3 "
         style={{ boxShadow: " 0px 0px 10px 0px #00000012" }}
       >
-        {(
+        {hasPermission({
+          moduleKey: "faq_resources",
+          action: "create",
+        }) && (
           <div
             className="position-absolute"
             style={{ top: "12px", right: "12px" }}
@@ -128,21 +151,31 @@ const FAQResourcesTab = () => {
                       {ct.phone}
                     </span>
                   </p>
-                  {(
+                  {
                     <div className="d-flex flex-row gap-2 align-items-center">
-                      <EmergencyContact
-                        id={ct._id}
-                        initialData={{ label: ct.label, phone: ct.phone }}
-                        trigger={
-                          <Icon
-                            icon="lucide:pencil"
-                            className="text-md icon-street-edit"
-                          />
-                        }
-                      />
-                      <DeleteEmergencyContact id={ct._id} label={ct.label} />
+                      {hasPermission({
+                        moduleKey: "faq_resources",
+                        action: "update",
+                      }) && (
+                        <EmergencyContact
+                          id={ct._id}
+                          initialData={{ label: ct.label, phone: ct.phone }}
+                          trigger={
+                            <Icon
+                              icon="lucide:pencil"
+                              className="text-md icon-street-edit"
+                            />
+                          }
+                        />
+                      )}
+                      {hasPermission({
+                        moduleKey: "faq_resources",
+                        action: "update",
+                      }) && (
+                        <DeleteEmergencyContact id={ct._id} label={ct.label} />
+                      )}
                     </div>
-                  )}
+                  }
                 </div>
               ))}
             </div>

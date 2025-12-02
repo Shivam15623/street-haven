@@ -6,7 +6,7 @@ interface PermissionCheck {
   action?: "access" | "create" | "read" | "update" | "delete";
   featureKey?: string;
 }
-
+export type HasPermissionFn = (args: PermissionCheck) => boolean;
 const useHasPermission = () => {
   const { Permissions } = useSelector(selectAuth);
 

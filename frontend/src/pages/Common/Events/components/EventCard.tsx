@@ -12,6 +12,7 @@ import ViewRegistrations from "./ViewRegisterations";
 import ActionsEvent from "./ActionsEvent";
 
 import { Icon } from "@iconify/react/dist/iconify.js";
+import useHasPermission from "../../../../hooks/Auth";
 
 interface EventCardProps {
   event: EventUpcomingData;
@@ -46,7 +47,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
         )}`
       : "";
   const isFull = totalRegistered >= capacity;
-
+  const { hasPermission } = useHasPermission();
   // Mutations
   const [registerEvent, { isLoading: isRegistering }] =
     useSignUpForEventMutation();
@@ -79,7 +80,11 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
     // For past events — only show registration status
     actionButton = (
       <div className="d-flex flex-row gap-2">
-        <ViewRegistrations eventId={eventId} /> {}{" "}
+        {hasPermission({
+          moduleKey: "events",
+          featureKey: "view_registerations",
+        }) && <ViewRegistrations eventId={eventId} />}
+        {}{" "}
         <button
           disabled
           className={`btn btn-street-lg d-flex align-items-center justify-content-center radius-12  gap-2 text-xs ${
@@ -94,8 +99,13 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
     // For upcoming events — allow signup/cancel
     actionButton = (
       <div className="d-flex flex-row gap-2">
-        <ViewRegistrations eventId={eventId} />
-        {<ActionsEvent event={event} />}
+        {hasPermission({
+          moduleKey: "events",
+          featureKey: "view_registerations",
+        }) && <ViewRegistrations eventId={eventId} />}
+        {hasPermission({ moduleKey: "events", action: "update" }) && (
+          <ActionsEvent event={event} />
+        )}
         <button
           disabled={isFull || isRegistering || isUnregistering}
           onClick={isRegistered ? handleSignout : handleSignup}
