@@ -12,7 +12,7 @@ import { showSuccess } from "../../../../utills/toastutills";
 // ------------------------------
 // MODULE CONFIG
 // ------------------------------
-const MODULES = [
+export  const MODULES = [
   {
     moduleName: "Events",
     moduleKey: "events",
@@ -28,7 +28,7 @@ const MODULES = [
     moduleKey: "program_mannuals",
     features: [],
   },
-  { moduleName: "Ticket", moduleKey: "ticket", features: [] },
+  { moduleName: "Ticket", moduleKey: "ticket", features: ["view_all_tickets"] },
   { moduleName: "FAQ & Resources", moduleKey: "faq_resources", features: [] },
   { moduleName: "Event Minutes", moduleKey: "event_minutes", features: [] },
 ];

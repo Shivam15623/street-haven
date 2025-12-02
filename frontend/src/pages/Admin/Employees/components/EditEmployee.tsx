@@ -18,10 +18,10 @@ const editEmployeeSchema = yup.object({
   role: yup.string().required("Role is required"),
   email: yup
     .string()
-    .matches(
-      /^[A-Za-z0-9._%+-]+@streethaven\.com$/,
-      "Email must be from @streethaven.com domain"
-    )
+    // .matches(
+    //   /^[A-Za-z0-9._%+-]+@streethaven\.com$/,
+    //   "Email must be from @streethaven.com domain"
+    // )
     .required("Email is required"),
   phoneNo: yup
     .string()
