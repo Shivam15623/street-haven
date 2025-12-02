@@ -159,4 +159,5 @@ const FunctionalAbilitySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("FunctionalAbility", FunctionalAbilitySchema);
+const FunctionalAbility= mongoose.model("FunctionalAbility", FunctionalAbilitySchema);
+export default FunctionalAbility;

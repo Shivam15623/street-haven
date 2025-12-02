@@ -43,3 +43,24 @@ export const allRoles = asyncHandler(async (req, res) => {
   }
   return res.status(200).json(new ApiResponse(200, "roles fetched!", allRoles));
 });
+
+export const getRoleById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  // Validate MongoDB ObjectId
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, "Invalid role ID provided"));
+  }
+
+  const role = await Role.findById(id);
+
+  if (!role) {
+    return res.status(404).json(new ApiResponse(404, "Role not found"));
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Role fetched successfully!", role));
+});

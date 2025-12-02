@@ -97,13 +97,13 @@ const AdminDashboard = () => {
           label="Events"
           value={data?.data.events.length ?? 0}
           key={"Events"}
-          link={`/${user?.role}/events`}
+          link={`/events`}
         />
 
         <DashboardCard
           icon="iconamoon:ticket-light"
           label="Open Tickets"
-          link={`/${user?.role}/it_facility?tab=track_tickets&status=Open`}
+          link={`/it_facility?tab=track_tickets&status=Open`}
           value={8}
           key={"Open Tickets"}
         />
@@ -111,7 +111,7 @@ const AdminDashboard = () => {
           icon="lucide:party-popper"
           label="Announcements"
           value={3}
-          link={`/${user?.role}/agency_info?tab=announcements`}
+          link={`/agency_info?tab=announcements`}
           key={"Announcements"}
         />
       </Row>

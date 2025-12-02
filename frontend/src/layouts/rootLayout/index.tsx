@@ -14,43 +14,67 @@ import ItNFacility from "../../assets/icons/sidebaricons/Facility.svg?react";
 import ProgramIcon from "../../assets/icons/sidebaricons/Program.svg?react";
 import SearchContent from "../../helper/SearchContent.tsx";
 import EmployeesIcon from "../../assets/icons/sidebaricons/Employees.svg?react";
+import useHasPermission from "../../hooks/Auth.ts";
 const menuItems = [
   {
     label: "Dashboard",
-    path: "/employee",
+    path: "/",
     icon: DashboardIcon,
+    public: true, // everyone can see
   },
-  { label: "Forms", path: "/forms", icon: FormIcon },
+  {
+    label: "Forms",
+    path: "/forms",
+    icon: FormIcon,
+    public: true, // everyone can see
+  },
   {
     label: "Program & Manuals",
     path: "/programs&manuals",
     icon: ProgramIcon,
+    moduleKey: "program_mannuals",
   },
   {
     label: "Facility",
     path: "/it_facility",
     icon: ItNFacility,
+    public: true, // everyone can see
   },
   {
     label: "Agency Information",
     path: "/agency_info",
     icon: AgencyInfo,
+    public: true, // available for all
   },
   {
     label: "Events",
     path: "/events",
     icon: Events,
+    moduleKey: "events",
   },
   {
     label: "Employees",
     path: "/employees",
     icon: EmployeesIcon,
+    moduleKey: "employees",
   },
 ];
+
 const RootLayout = () => {
   const [mobileMenu, setMobileMenu] = useState(false);
   const location = useLocation(); // Hook to get the current route
   const [mobileMode, setMobileMode] = useState(false);
+  const { hasPermission } = useHasPermission();
+  const filteredMenu = menuItems.filter((item) => {
+    if (item.public) return true; // visible to all
+
+    if (item.moduleKey) {
+      return hasPermission({ moduleKey: item.moduleKey, action: "access" });
+    }
+
+    return false; // if nothing matches, hide
+  });
+
   useEffect(() => {
     const handleDropdownClick = (event: Event) => {
       event.preventDefault();
@@ -162,7 +186,7 @@ const RootLayout = () => {
         <hr className="d-block d-sm-none mb-16" />
         <div className="sidebar-menu-area px-20">
           <ul className="sidebar-menu" id="sidebar-menu">
-            {menuItems.map((item, index) => {
+            {filteredMenu.map((item, index) => {
               const ItemIcon = item.icon;
               return (
                 <li key={index}>

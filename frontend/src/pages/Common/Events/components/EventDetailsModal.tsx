@@ -18,6 +18,7 @@ import TimePicker from "../../../../components/child/TimePicker";
 import CustomDatePicker from "../../../../components/child/DatePicker";
 import QuillEditor from "../../../../components/child/QuillEditor";
 import DOMPurify from "dompurify";
+import useHasPermission from "../../../../hooks/Auth";
 
 interface EventDetailsModalProps {
   event: EventUpcomingData;
@@ -74,13 +75,13 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
   open,
   handleClose,
 }) => {
-
   const [editMode, setEditMode] = useState(false);
   const [registerEvent, { isLoading: isRegistering }] =
     useSignUpForEventMutation();
   const [signOutEvent, { isLoading: isUnregistering }] =
     useSignOutFromEventMutation();
   const [editEvent, { isLoading: isEditing }] = useEditEventMutation();
+  const { hasPermission } = useHasPermission();
   if (!event) return null;
   const {
     _id: eventId,
@@ -220,17 +221,19 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
               </>
             ) : (
               <>
-                <button
-                  type="button"
-                  className="btn btn-street-primary  btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
-                  onClick={(e) => {
-                    e.preventDefault(); // 🛑 Stops any form submission event
-                    e.stopPropagation(); // 🛑 Stops bubbling to parent form
-                    setEditMode(true);
-                  }}
-                >
-                  Edit
-                </button>
+                {hasPermission({ moduleKey: "events", action: "update" }) && (
+                  <button
+                    type="button"
+                    className="btn btn-street-primary  btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+                    onClick={(e) => {
+                      e.preventDefault(); // 🛑 Stops any form submission event
+                      e.stopPropagation(); // 🛑 Stops bubbling to parent form
+                      setEditMode(true);
+                    }}
+                  >
+                    Edit
+                  </button>
+                )}
               </>
             )}
           </>

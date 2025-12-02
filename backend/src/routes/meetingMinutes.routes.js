@@ -12,7 +12,7 @@ import {
   createMeetingMinutesSchema,
   editMeetingMinutesSchema,
 } from "../validations/MeetingMinutesSchema.js";
-import requireAdminRole from "../middleware/AuthRole.js";
+import { authorizePermissions } from "../middleware/AuthRole.js";
 
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
@@ -21,17 +21,23 @@ router
   .route("/create")
   .post(
     upload.single("attachment"),
-    validateRequest(createMeetingMinutesSchema, "body"),requireAdminRole,
+    validateRequest(createMeetingMinutesSchema, "body"),
+    authorizePermissions({ moduleKey: "event_minutes", action: "create" }),
     addMeetingMinutes
   );
 router
   .route("/edit/:id")
   .patch(
     upload.single("attachment"),
-    validateRequest(editMeetingMinutesSchema, "body"),requireAdminRole
-    ,
+    validateRequest(editMeetingMinutesSchema, "body"),
+    authorizePermissions({ moduleKey: "event_minutes", action: "update" }),
     editMeetingMinutes
   );
-router.route("/delete/:id").delete(requireAdminRole,deleteMeetingMinutes);
+router
+  .route("/delete/:id")
+  .delete(
+    authorizePermissions({ moduleKey: "event_minutes", action: "delete" }),
+    deleteMeetingMinutes
+  );
 
-export default router
+export default router;
