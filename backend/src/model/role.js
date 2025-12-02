@@ -47,6 +47,7 @@ const RoleSchema = new mongoose.Schema(
     //     message: "A node cannot report to someone it supervises.",
     //   },
     // },
+    
     // department:String,
     // // 👇 Self-referencing children nodes
     // supervises: [

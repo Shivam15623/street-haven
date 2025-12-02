@@ -256,7 +256,7 @@ const functionalAbilityFormSchema = Yup.object({
       }),
     }),
   }),
-  commentsOnAbilties: Yup.string(),
+  commentsOnAbilities: Yup.string(),
   assessmentDuration: Yup.string().oneOf([
     "1-2 days",
     "3-7 days",
@@ -385,7 +385,7 @@ const FunctionalAbiltiesForm = () => {
         },
       },
     },
-    commentsOnAbilties: "",
+    commentsOnAbilities: "",
     assessmentDuration: "",
     isDiscussRTWtoPatient: false,
     nextAppointmentDate: "",
@@ -1637,9 +1637,7 @@ const FunctionalAbiltiesForm = () => {
                         type="text"
                         placeholder="Please specify"
                         name="restrictions.bendingTwisting.details"
-                        value={
-                          values.restrictions.bendingTwisting.details
-                        }
+                        value={values.restrictions.bendingTwisting.details}
                         onChange={handleChange}
                         className="p-0 ms-2 border-bottom-1 border-top-0 border-end-0 rounded-0 border-start-0"
                         style={{ height: "auto", width: "200px" }}
@@ -2089,13 +2087,13 @@ const FunctionalAbiltiesForm = () => {
                   </Form.Label>
                   <Form.Control
                     style={{ height: "40px" }}
-                    name="commentsOnAbilties"
-                    value={values.commentsOnAbilties}
+                    name="commentsOnAbilities"
+                    value={values.commentsOnAbilities}
                     onChange={handleChange}
                   />
-                  {touched.commentsOnAbilties && errors.commentsOnAbilties && (
+                  {touched.commentsOnAbilities && errors.commentsOnAbilities && (
                     <div className="text-danger text-sm">
-                      {errors.commentsOnAbilties}
+                      {errors.commentsOnAbilities}
                     </div>
                   )}
                 </Form.Group>
