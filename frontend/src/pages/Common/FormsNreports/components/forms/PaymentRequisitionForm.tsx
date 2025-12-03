@@ -34,7 +34,7 @@ interface FormValues {
 // --------------------
 const FormSchema = Yup.object({
   payeeName: Yup.string().required("Payee Name is required"),
-  totalAmount: Yup.number().required("Amount is required"),
+  totalAmount: Yup.number(),
   requestedBy: Yup.string().required("Requested By Name is required"),
   requestedDate: Yup.date().nullable().required("Requested Date is required"),
   approvedBy: Yup.string().required("Approved By Name is required"),
@@ -82,7 +82,26 @@ const PaymentRequisitionForm = () => {
       },
     ],
   };
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch file");
 
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(blobUrl); // Free memory
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
+  };
   const handleSubmit = async (values: FormValues) => {
     try {
       const formData = new FormData();
@@ -519,6 +538,18 @@ const PaymentRequisitionForm = () => {
 
             <Card className="shadow-sm border-0">
               <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleDownload(
+                      "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764756165/Payment_Requisation_Form_xihfsq.pdf",
+                      "Payment Requisition Form"
+                    )
+                  }
+                  className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                >
+                  Download
+                </button>
                 <button
                   type="submit"
                   disabled={isLoading}

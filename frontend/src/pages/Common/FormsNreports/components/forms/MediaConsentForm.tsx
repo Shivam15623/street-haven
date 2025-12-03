@@ -63,6 +63,26 @@ const MediaConsentForm = () => {
     printedName: "",
     date: null,
   });
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch file");
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(blobUrl); // Free memory
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -216,6 +236,17 @@ const MediaConsentForm = () => {
       </div>
       <Card className="shadow-sm border-0">
         <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
+          <button
+            className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+            onClick={() =>
+              handleDownload(
+                "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764757685/Media_Consent_Form_nopwfz.pdf",
+                "Media Consent Form"
+              )
+            }
+          >
+            Download
+          </button>
           <button
             type="submit"
             className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"

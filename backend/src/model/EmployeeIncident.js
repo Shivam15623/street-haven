@@ -31,7 +31,13 @@ const EmployeeIncidentSchema = new mongoose.Schema(
 
     sawDoctor: { type: Boolean, required: true },
     doctorName: { type: String },
-    doctorPhone: { type: String },
+    doctorPhone: {
+      type: String,
+      match: [
+        /^\+1\s?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
+        "Please enter a valid Canadian phone number (e.g. +1 (416) 555-1234)",
+      ],
+    },
 
     doctorVisitDate: { type: Date },
     doctorVisitTime: { type: String },

@@ -77,7 +77,26 @@ type StaffFeedbackFormValues = Yup.InferType<typeof staffFeedbackSchema>;
 
 const StaffFeedbackForm: React.FC = () => {
   const [createStaff, { isLoading }] = useCreateStaffFeedbackMutation();
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch file");
 
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(blobUrl); // Free memory
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
+  };
   const handleSubmit = async (
     values: StaffFeedbackFormValues,
     { resetForm }: { resetForm: () => void }
@@ -133,6 +152,7 @@ const StaffFeedbackForm: React.FC = () => {
             setFieldValue,
             setFieldTouched,
             handleBlur,
+            handleReset,
           }) => {
             console.log("Formik Errors:", errors);
             return (
@@ -380,10 +400,31 @@ const StaffFeedbackForm: React.FC = () => {
 
                   {/* Actions */}
                   <div className="d-flex justify-content-end gap-2 mt-3">
-                    <button type="submit" className="btn btn-street-primary">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleDownload(
+                          "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764759586/staffFeedback_hd8upo.pdf",
+                          "Staff Feedback Form"
+                        )
+                      }
+                      className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                    >
+                      Download
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-street-primary btn-street-lg d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                    >
                       Submit Report
                     </button>
-                    <button className="btn btn-street-neutral">Cancel</button>
+
+                    <button
+                      className="btn btn-street-neutral btn-street-lg d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                      onClick={handleReset}
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </Form>
 

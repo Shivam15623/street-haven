@@ -26,7 +26,7 @@ const StreetTab: React.FC<StreetTabProps> = ({ tabs, defaultActiveKey }) => {
         {tabs.map((tab) => (
           <li className="nav-item" role="presentation" key={tab.key}>
             <button
-              className={`nav-link h-100 text-center px-0 pb-24 text-xs xs:text-sm ${
+              className={`nav-link h-100 text-center px-0 pb-18 text-xs xs:text-sm ${
                 activeKey === tab.key ? "active" : ""
               }`}
               style={{ minWidth: "110px"}}

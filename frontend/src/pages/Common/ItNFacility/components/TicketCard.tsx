@@ -143,7 +143,12 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
           </div>
           <div className="d-flex flex flex-row gap-2">
             <TicketComment ticket={ticket} />
-            {(isAssigned || isRequester) && <TicketDetails ticket={ticket} />}
+            {(isAssigned ||
+              isRequester ||
+              (user &&
+                ["admin", "super_admin", "director", "manager"].includes(
+                  user.role
+                ))) && <TicketDetails ticket={ticket} />}
           </div>
         </div>
       </div>
