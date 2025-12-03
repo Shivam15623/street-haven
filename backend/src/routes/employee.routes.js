@@ -9,43 +9,29 @@ import {
 import { upload } from "../middleware/multer.js";
 import { authorizePermissions } from "../middleware/AuthRole.js";
 import passport from "passport";
-import {
-  allRoles,
-  createRole,
-  deleteRole,
-  editRole,
-  getRoleById,
-} from "../controllers/Role.controller.js";
+import { PERMISSIONS } from "../auth/permissions.js";
+
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
-router
-  .route("/view")
-  .get(
-    authorizePermissions({ moduleKey: "employees", action: "access" }),
-    AllEmployees
-  );
+router.route("/view").get(AllEmployees);
 router.route("/edit/:id").patch(upload.single("profilePic"), EditEmployee);
 router
   .route("/changePassword/:id")
   .patch(
-    authorizePermissions({ moduleKey: "employees", action: "create" }),
+    authorizePermissions({ action: PERMISSIONS.RESET_PASSWORD }),
     EditEmployeePassword
   );
 router
   .route("/delete/:id")
   .delete(
-    authorizePermissions({ moduleKey: "employees", action: "delete" }),
+    authorizePermissions({ action: PERMISSIONS.DELETE_EMPLOYEE }),
     RemoveEmployee
   );
 router
   .route("/add")
   .post(
-    authorizePermissions({ moduleKey: "employees", action: "create" }),
+    authorizePermissions({ action: PERMISSIONS.CREATE_EMPLOYEE }),
     AddEmployee
   );
-router.route("/role/create").post(createRole);
-router.route("/role/edit/:id").patch(editRole);
-router.route("/role/delete/:id").delete(deleteRole);
-router.route("/role").post(allRoles);
-router.route("/role/:id").get(getRoleById);
+
 export default router;

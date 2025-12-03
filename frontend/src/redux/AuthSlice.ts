@@ -11,7 +11,6 @@ const initialState: AuthState = {
   isLoggedIn: false,
   accessToken: "",
   user: null,
-  Permissions:[]
 };
 
 const authSlice = createSlice({
@@ -22,7 +21,6 @@ const authSlice = createSlice({
       state.isLoggedIn = true;
       state.accessToken = action.payload.accessToken;
       state.user = action.payload.UserData;
-      state.Permissions = action.payload.Permissions;
     },
     UpdateUserDetails: (
       state,

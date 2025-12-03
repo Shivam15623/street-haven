@@ -35,8 +35,7 @@ const FAQResourcesTab = () => {
   return (
     <div className="d-flex flex-column gap-4 mb-5">
       {hasPermission({
-        moduleKey: "faq_resources",
-        action: "create",
+        action: "create_faq",
       }) && <AddCategory />}
 
       <Row className="g-3 gy-md-4 gx-md-4">
@@ -52,12 +51,10 @@ const FAQResourcesTab = () => {
                     style={{ right: 12, top: 12 }}
                   >
                     {hasPermission({
-                      moduleKey: "faq_resources",
-                      action: "create",
+                      action: "create_faq",
                     }) && <AddFaqs title={cat.title} id={cat._id} />}
                     {hasPermission({
-                      moduleKey: "faq_resources",
-                      action: "delete",
+                      action: "delete_faq",
                     }) && <DeleteCategory title={cat.title} id={cat._id} />}
                   </div>
                 }
@@ -82,8 +79,7 @@ const FAQResourcesTab = () => {
                     {
                       <div className="position-absolute d-flex flex-row gap-2 top-50 end-0 translate-middle-y me-2 edit-icon">
                         {hasPermission({
-                          moduleKey: "faq_resources",
-                          action: "update",
+                          action: "edit_faq",
                         }) && (
                           <EditQuestion
                             cid={cat._id}
@@ -93,8 +89,7 @@ const FAQResourcesTab = () => {
                           />
                         )}
                         {hasPermission({
-                          moduleKey: "faq_resources",
-                          action: "delete",
+                          action: "delete_faq",
                         }) && (
                           <DeleteQuestion
                             cid={cat._id}
@@ -117,8 +112,7 @@ const FAQResourcesTab = () => {
         style={{ boxShadow: " 0px 0px 10px 0px #00000012" }}
       >
         {hasPermission({
-          moduleKey: "faq_resources",
-          action: "create",
+          action: "create_emergency_contact",
         }) && (
           <div
             className="position-absolute"
@@ -154,8 +148,7 @@ const FAQResourcesTab = () => {
                   {
                     <div className="d-flex flex-row gap-2 align-items-center">
                       {hasPermission({
-                        moduleKey: "faq_resources",
-                        action: "update",
+                        action: "edit_emergency_contact",
                       }) && (
                         <EmergencyContact
                           id={ct._id}
@@ -169,8 +162,7 @@ const FAQResourcesTab = () => {
                         />
                       )}
                       {hasPermission({
-                        moduleKey: "faq_resources",
-                        action: "update",
+                        action: "delete_emergency_contact",
                       }) && (
                         <DeleteEmergencyContact id={ct._id} label={ct.label} />
                       )}

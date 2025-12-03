@@ -3,10 +3,10 @@ import { Handle, Position } from "@xyflow/react";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import type { OrgNodeData } from "../../../../../services/orgApi";
 import DeleteOrgNode from "./DeleteOrgNode";
+import useHasPermission from "../../../../../hooks/Auth";
 
 export type CustomNodeData = {
   node: OrgNodeData;
-
   expanded: boolean; // 👈 we'll pass id from React
 };
 
@@ -22,6 +22,7 @@ export type CustomNodeProps = {
 // 👇 forwardRef so Flow can attach refs
 const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
   ({ id, data, onToggle, fixedHeight, fixedWidth, onEdit }, ref) => {
+    const { hasPermission } = useHasPermission();
     return (
       <div
         ref={ref}
@@ -81,7 +82,7 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
             )}
           </p>
         </div>
-        {onEdit && (
+        {onEdit && hasPermission({ action: "edit_org_chart" }) && (
           <button
             className="btn btn-sm btn-street-edit d-flex text-sm flex-row align-items-center justify-content-center radius-12"
             onClick={(e) => {
@@ -92,7 +93,10 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
             Edit
           </button>
         )}
-        {data.node.reportsTo !== null && <DeleteOrgNode nodedata={data.node} />}
+        {data.node.reportsTo !== null &&
+          hasPermission({ action: "delete_org_chart" }) && (
+            <DeleteOrgNode nodedata={data.node} />
+          )}
 
         {data.node.reportsTo !== null &&
           data.node.supervises &&

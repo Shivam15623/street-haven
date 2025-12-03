@@ -1,4 +1,4 @@
-import type { SignupCredentials } from "../interfaces/AuthInterfaces";
+import type { Role, SignupCredentials } from "../interfaces/AuthInterfaces";
 import type { ApiGeneralResponse, ApiResponse } from "../interfaces/Response";
 import { api } from "../redux/ApiSlice";
 export interface EmployeeData {
@@ -7,7 +7,7 @@ export interface EmployeeData {
   lastname: string;
   email: string;
   phoneNo: string;
-  role: { roleName: string; _id: string };
+  role: Role;
   profilePic: string;
   createdAt: string;
   updatedAt: string;

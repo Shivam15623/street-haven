@@ -3,6 +3,15 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import slugify from "slugify";
 import { customAlphabet } from "nanoid";
+
+export const ROLES = {
+  SUPER_ADMIN: "super_admin",
+  ADMIN: "admin",
+  MANAGER: "manager",
+  EMPLOYEE: "employee",
+  HR: "hr",
+  DIRECTOR: "director",
+};
 const UserSchema = new mongoose.Schema(
   {
     firstname: {
@@ -49,8 +58,9 @@ const UserSchema = new mongoose.Schema(
       ],
     },
     role: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Role",
+      type: String,
+      enum: Object.values(ROLES),
+      default: ROLES.EMPLOYEE,
     },
     phoneNo: {
       type: String,

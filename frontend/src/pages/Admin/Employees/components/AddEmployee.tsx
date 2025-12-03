@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAddEmployeeMutation, useViewRolesQuery } from "../../../../services/EmployeeApi";
+import { useAddEmployeeMutation } from "../../../../services/EmployeeApi";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
 import * as Yup from "yup";
 import { Formik } from "formik";
@@ -8,6 +8,7 @@ import { Col, Form, Row } from "react-bootstrap";
 import PasswordInput from "../../../../components/Authentication/PasswordInput";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { PatternFormat } from "react-number-format";
+import { ROLES } from "../../../../interfaces/AuthInterfaces";
 interface AddEmployeeValues {
   firstName: string;
   lastName: string;
@@ -15,6 +16,7 @@ interface AddEmployeeValues {
   phone: string;
   password: string;
 }
+const roleValues = Object.values(ROLES) as Array<string>;
 const AddEmployeeSchema = Yup.object({
   firstName: Yup.string()
     .required("First Name is required")
@@ -36,7 +38,9 @@ const AddEmployeeSchema = Yup.object({
       /^(?:\+1\s?)?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
       "Enter a valid 10-digit Canadian phone number"
     ),
-  role: Yup.string().required("Role is required"),
+  role: Yup.string()
+    .oneOf(roleValues, "Invalid role selected")
+    .required("Role is required"),
   password: Yup.string()
     .required("Password is required")
     .min(8, "Password must be at least 8 characters")
@@ -48,7 +52,7 @@ const AddEmployeeSchema = Yup.object({
 const AddEmployee = () => {
   const [showModal, setShowModal] = useState(false);
   const [addEmployee, { isLoading }] = useAddEmployeeMutation();
-  const { data: roleData } = useViewRolesQuery({ formOnly: true });
+
   const handleAddEmployee = async (values: AddEmployeeValues) => {
     try {
       const res = await addEmployee(values).unwrap();
@@ -189,7 +193,7 @@ const AddEmployee = () => {
               <Row>
                 <Col>
                   <Form.Group
-                    controlId="roleId"
+                    controlId="role"
                     className="d-flex flex-column gap-1"
                   >
                     <Form.Label className="fw-normal m-0">
@@ -197,7 +201,7 @@ const AddEmployee = () => {
                     </Form.Label>
 
                     <Form.Select
-                      name="roleId"
+                      name="role"
                       value={values.role}
                       onChange={handleChange}
                       className={
@@ -205,10 +209,9 @@ const AddEmployee = () => {
                       }
                     >
                       <option value="">-- Select Role --</option>
-
-                      {roleData?.data?.map((role) => (
-                        <option key={role._id} value={role._id}>
-                          {role.roleName}
+                      {Object.values(ROLES).map((role) => (
+                        <option key={role} value={role}>
+                          {role.replace("_", " ").toUpperCase()}
                         </option>
                       ))}
                     </Form.Select>

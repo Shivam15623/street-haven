@@ -1,43 +1,43 @@
 import { useSelector } from "react-redux";
 import { selectAuth } from "../redux/AuthSlice";
+import type { AllPermissions } from "../utills/auth/permissions";
+import { ROLE_PERMISSIONS } from "../utills/auth/rolePermissions";
 
 interface PermissionCheck {
-  moduleKey: string;
-  action?: "access" | "create" | "read" | "update" | "delete";
-  featureKey?: string;
+  action: AllPermissions;
 }
+
 export type HasPermissionFn = (args: PermissionCheck) => boolean;
+
 const useHasPermission = () => {
-  const { Permissions } = useSelector(selectAuth);
+  const { user } = useSelector(selectAuth);
 
-  const hasPermission = ({
-    moduleKey,
-    action = "access",
-    featureKey,
-  }: PermissionCheck) => {
-    if (!Permissions) return false;
+  // ─────────────────────────────
+  // Check if user has a specific permission
+  // ─────────────────────────────
+  const hasPermission = ({ action }: PermissionCheck) => {
+    if (!user) return false;
 
-    const module = Permissions.find((p) => p.moduleKey === moduleKey);
-    if (!module) return false;
+    const rolePermissions = [...ROLE_PERMISSIONS[user.role]];
+    if (!rolePermissions) return false;
 
-    // Check module access
-    if (action === "access" && !module.access) return false;
-
-    // CRUD check
-    if (["create", "read", "update", "delete"].includes(action)) {
-      if (!module[action]) return false;
-    }
-
-    // Feature-specific check
-    if (featureKey) {
-      const feat = module.features?.find((f) => f.key === featureKey);
-      if (!feat || !feat.allowed) return false;
-    }
-
-    return true;
+    return rolePermissions.includes(action);
   };
 
-  return { hasPermission };
+  // ─────────────────────────────
+  // Check if user has a specific role
+  // ─────────────────────────────
+  const hasRole = (roles: string | string[]) => {
+    if (!user) return false;
+
+    if (typeof roles === "string") {
+      return user.role === roles;
+    }
+
+    return roles.includes(user.role);
+  };
+
+  return { hasPermission, hasRole };
 };
 
 export default useHasPermission;

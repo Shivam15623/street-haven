@@ -10,53 +10,28 @@ interface RouteGuardProps {
   children: ReactNode;
   isPublic?: boolean;
 
-  requireModule?: string; // moduleKey → "events"
-  requireAction?: // CRUD or access
-  "access" | "create" | "read" | "update" | "delete";
-
-  requireFeatureKey?: string; // optional → "view_registrations"
+  requireRole?: string[];
 }
 
 const RouteGuard: React.FC<RouteGuardProps> = ({
   children,
   isPublic = false,
-  requireModule,
-  requireAction,
-  requireFeatureKey,
+  requireRole = [],
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { isLoggedIn, user, Permissions } = useSelector(selectAuth);
+  const { isLoggedIn, user } = useSelector(selectAuth);
 
   const isUserReady = isLoggedIn !== undefined && user !== undefined;
 
   const hasPermission = () => {
-    console.log(requireModule);
-    if (!requireModule) return true; // no permission needed for this route
-
-    const module = Permissions.find((p) => p.moduleKey === requireModule);
-
-    if (!module) return false;
-    console.log(module.moduleKey, module.access);
-    // Access check
-    if (requireAction === "access" && !module.access) return false;
-
-    // CRUD check
-    if (
-      requireAction &&
-      ["create", "read", "update", "delete"].includes(requireAction)
-    ) {
-      if (!module[requireAction]) return false;
+    if (!user) {
+      return false;
     }
+    const result = requireRole.includes(user?.role);
 
-    // Feature-specific check
-    if (requireFeatureKey) {
-      const feat = module.features?.find((f) => f.key === requireFeatureKey);
-      if (!feat || !feat.allowed) return false;
-    }
-
-    return true;
+    return result;
   };
 
   // ─────────────────────────────
@@ -86,11 +61,11 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
     }
 
     // ❌ If permission required and user doesn't have it
-    if (!hasPermission()) {
+    if (requireRole.length && !hasPermission()) {
       navigate("/unauthorized", { replace: true });
       return;
     }
-  }, [isUserReady, isLoggedIn, Permissions, location.pathname]);
+  }, [isUserReady, isLoggedIn, user, location.pathname]);
 
   if (!isUserReady) {
     return (

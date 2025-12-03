@@ -81,8 +81,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
     actionButton = (
       <div className="d-flex flex-row gap-2">
         {hasPermission({
-          moduleKey: "events",
-          featureKey: "view_registerations",
+          action: "view_registerations",
         }) && <ViewRegistrations eventId={eventId} />}
         {}{" "}
         <button
@@ -100,10 +99,9 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
     actionButton = (
       <div className="d-flex flex-row gap-2">
         {hasPermission({
-          moduleKey: "events",
-          featureKey: "view_registerations",
+         action: "view_registerations",
         }) && <ViewRegistrations eventId={eventId} />}
-        {hasPermission({ moduleKey: "events", action: "update" }) && (
+        {hasPermission({ action: "edit_event" }) && (
           <ActionsEvent event={event} />
         )}
         <button

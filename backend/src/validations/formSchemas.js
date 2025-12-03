@@ -23,11 +23,14 @@ export const functionalAbiltiesData = yup.object({
   }),
   typeOfJobAtAccident: yup.string().required(),
   areasOfInjury: yup.string().required(),
-  discussedRTW: yup.boolean(),
-  nodateOfDiscusswill: yup.date(),
+  discussedRTW: yup.boolean().required(),
+  nodateOfDiscusswill: yup.date().when("discussedRTW",{
+    is:false,
+    then:(s) => s.required("nodateOfDiscusswill is required"),
+  }),
   employerContactName: yup.string(),
-  position: yup.string(),
-  designationOfHealthPro: yup.string(),
+  position: yup.string().required(),
+  designationOfHealthPro: yup.string().required(),
   otherDesignation: yup.string().when("designationOfHealthPro", {
     is: "Other",
     then: (s) => s.required("Please specify"),
