@@ -221,7 +221,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
               </>
             ) : (
               <>
-                {hasPermission({ moduleKey: "events", action: "update" }) && (
+                {hasPermission({ action: "edit_event" }) && (
                   <button
                     type="button"
                     className="btn btn-street-primary  btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"

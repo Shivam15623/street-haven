@@ -15,6 +15,7 @@ import ProgramIcon from "../../assets/icons/sidebaricons/Program.svg?react";
 import SearchContent from "../../helper/SearchContent.tsx";
 import EmployeesIcon from "../../assets/icons/sidebaricons/Employees.svg?react";
 import useHasPermission from "../../hooks/Auth.ts";
+
 const menuItems = [
   {
     label: "Dashboard",
@@ -26,13 +27,13 @@ const menuItems = [
     label: "Forms",
     path: "/forms",
     icon: FormIcon,
-    public: true, // everyone can see
+    roles: ["super_admin", "admin", "director"],
   },
   {
     label: "Program & Manuals",
     path: "/programs&manuals",
     icon: ProgramIcon,
-    moduleKey: "program_mannuals",
+    public: true,
   },
   {
     label: "Facility",
@@ -50,13 +51,13 @@ const menuItems = [
     label: "Events",
     path: "/events",
     icon: Events,
-    moduleKey: "events",
+    public: true,
   },
   {
     label: "Employees",
     path: "/employees",
     icon: EmployeesIcon,
-    moduleKey: "employees",
+    public: true,
   },
 ];
 
@@ -64,15 +65,11 @@ const RootLayout = () => {
   const [mobileMenu, setMobileMenu] = useState(false);
   const location = useLocation(); // Hook to get the current route
   const [mobileMode, setMobileMode] = useState(false);
-  const { hasPermission } = useHasPermission();
-  const filteredMenu = menuItems.filter((item) => {
-    if (item.public) return true; // visible to all
-
-    if (item.moduleKey) {
-      return hasPermission({ moduleKey: item.moduleKey, action: "access" });
-    }
-
-    return false; // if nothing matches, hide
+  const { hasRole } = useHasPermission();
+  const filteredMenu = menuItems.filter((m) => {
+    if (m.public) return true; // public items visible to all
+    if (m.roles) return hasRole(m.roles); // check role
+    return false; // hide if neither public nor allowed roles
   });
 
   useEffect(() => {

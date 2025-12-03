@@ -57,9 +57,7 @@ const Events = () => {
           </div>
         </div>
       </div>
-      {hasPermission({ moduleKey: "events", action: "update" }) && (
-        <ActionsEvent />
-      )}
+      {hasPermission({ action: "create_event" }) && <ActionsEvent />}
 
       {view === "list" ? <EventListView /> : <EventCalendarView />}
     </div>

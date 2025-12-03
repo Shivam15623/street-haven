@@ -1,5 +1,7 @@
+import { ROLE_PERMISSIONS } from "../auth/rolePermissions.js";
+
 export const authorizePermissions =
-  ({ moduleKey, action = "access", featureKey }) =>
+  ({ action }) =>
   (req, res, next) => {
     try {
       const role = req.user?.role;
@@ -9,31 +11,19 @@ export const authorizePermissions =
         return res.status(403).json({ message: "Unauthorized Access" });
       }
 
-      const module = role.permissions?.find((m) => m.moduleKey === moduleKey);
+      const rolePermissions = ROLE_PERMISSIONS[role];
 
-      if (!module) {
-        console.warn(
-          `AUTH ERROR: Role "${role.roleName}" does not include module "${moduleKey}"`
-        );
+      if (!rolePermissions) {
+        console.warn("AUTH ERROR: Invalid role");
         return res.status(403).json({ message: "Unauthorized Access" });
       }
 
-      // Combined permission logic
-      const noModuleAccess = action === "access" && module.access === false;
+      // 🔥 Simple permission check
+      const hasPermission = rolePermissions.includes(action);
 
-      const noCrudPermission =
-        ["create", "read", "update", "delete"].includes(action) &&
-        module[action] !== true;
-
-      const noFeaturePermission =
-        featureKey &&
-        !module.features?.some(
-          (f) => f.key === featureKey && f.allowed === true
-        );
-
-      if (noModuleAccess || noCrudPermission || noFeaturePermission) {
+      if (!hasPermission) {
         console.warn(
-          `AUTH ERROR: Permission denied → module=${moduleKey}, action=${action}, feature=${featureKey}`
+          `AUTH ERROR: Permission denied → role=${role}, action=${action}`
         );
         return res.status(403).json({ message: "Unauthorized Access" });
       }

@@ -63,7 +63,7 @@ const ProgramManuals = () => {
             Access training materials and program documentation
           </p>
         </div>
-        {hasPermission({ moduleKey: "program_manuals", action: "create" }) && (
+        {hasPermission({ action: "create_program_manual" }) && (
           <button
             className="btn btn-street-lg btn-street-primary radius-12 text-sm d-flex align-items-center justify-content-center"
             onClick={() => setShowModal(true)}
@@ -116,7 +116,7 @@ const ProgramManuals = () => {
             <DocumentCard key={manual._id} Pdocument={manual} />
           ))}
       </Row>
-      {hasPermission({ moduleKey: "program_manuals", action: "create" }) && (
+      {hasPermission({ action: "create_program_manual" }) && (
         <ActionsProgram onHide={() => setShowModal(false)} show={showModal} />
       )}
 
