@@ -102,7 +102,7 @@ export const authApi = api.injectEndpoints({
             lastName: user.lastName,
             phoneNo: user.phoneNo,
             profilePic: user.profilePic,
-            role: user.role.roleName,
+            role: user.role,
             slug: user.slug,
             createdAt: user.createdAt,
           };
@@ -111,7 +111,6 @@ export const authApi = api.injectEndpoints({
               setLoggedIn({
                 accessToken: data.data.accessToken,
                 UserData: payload,
-                Permissions: data.data.user.role.permissions,
               })
             );
           }

@@ -39,7 +39,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
         lastName: user.lastName,
         phoneNo: user.phoneNo,
         profilePic: user.profilePic,
-        role: user.role.roleName,
+        role: user.role,
         slug: user.slug,
         createdAt: user.createdAt,
       };
@@ -47,7 +47,6 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
         setLoggedIn({
           accessToken,
           UserData: payload,
-          Permissions: user.role.permissions,
         })
       );
 

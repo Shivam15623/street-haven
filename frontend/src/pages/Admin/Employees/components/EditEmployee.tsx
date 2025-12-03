@@ -3,14 +3,12 @@ import { Formik, ErrorMessage } from "formik";
 import * as yup from "yup";
 import { Form as BootstrapForm } from "react-bootstrap";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
-import {
-  useEditEmployeeMutation,
-  useViewRolesQuery,
-} from "../../../../services/EmployeeApi";
+import { useEditEmployeeMutation } from "../../../../services/EmployeeApi";
 import { showSuccess } from "../../../../utills/toastutills";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import FormImageUploader from "./FormProfileUploader";
 import { PatternFormat } from "react-number-format";
+import { ROLES } from "../../../../interfaces/AuthInterfaces";
 
 const editEmployeeSchema = yup.object({
   firstname: yup.string().required("First name is required"),
@@ -48,8 +46,7 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [editEmployee, { isLoading }] = useEditEmployeeMutation();
-  const { data } = useViewRolesQuery({ formOnly: true });
-  console.log("hidfknvjdfknvjdfn", data?.data);
+
   const handleSave = async (values: EditEmployeeValues) => {
     try {
       const formData = new FormData();
@@ -181,9 +178,9 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
                 >
                   <option value="">Select Role</option>
 
-                  {data?.data?.map((role) => (
-                    <option key={role._id} value={role._id}>
-                      {role.roleName}
+                  {Object.values(ROLES).map((role) => (
+                    <option key={role} value={role}>
+                      {role.replace("_", " ").toUpperCase()}
                     </option>
                   ))}
                 </BootstrapForm.Select>

@@ -19,13 +19,9 @@ export const EmployeeColumn = (
         />
       ),
     },
+
     {
-      title: "id",
-      accessorKey: "slug",
-      sortable: true,
-    },
-    {
-      title: "Fullname",
+      title: "Full Name",
       accessorKey: "firstname",
       render: (row) => (
         <div>
@@ -47,15 +43,15 @@ export const EmployeeColumn = (
     {
       title: "Role",
       accessorKey: "role",
-      render: (row) => <div>{row.role?.roleName ?? "N/A"}</div>,
+      render: (row) => <div>{row.role}</div>,
     },
   ];
 
   // -----------------------------------
   // CHECK IF USER HAS ANY ACTION PERMISSION
   // -----------------------------------
-  const canUpdate = hasPermission({ moduleKey: "employees", action: "update" });
-  const canDelete = hasPermission({ moduleKey: "employees", action: "delete" });
+  const canUpdate = hasPermission({ action: "edit_employee" });
+  const canDelete = hasPermission({ action: "delete_employee" });
 
   // If at least one action is allowed → show Actions column
   if (canUpdate || canDelete) {
@@ -73,7 +69,7 @@ export const EmployeeColumn = (
                 firstname: row.firstname,
                 lastname: row.lastname,
                 phoneNo: row.phoneNo,
-                role: row.role?._id ?? "",
+                role: row.role,
               }}
             />
           )}
@@ -84,7 +80,7 @@ export const EmployeeColumn = (
                 email: row.email,
                 firstname: row.firstname,
                 lastname: row.lastname,
-                role: row.role?.roleName ?? "N/A",
+                role: row.role,
                 _id: row._id,
               }}
             />

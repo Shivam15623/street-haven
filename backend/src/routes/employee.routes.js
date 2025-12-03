@@ -18,12 +18,7 @@ import {
 } from "../controllers/Role.controller.js";
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
-router
-  .route("/view")
-  .get(
-    authorizePermissions({ moduleKey: "employees", action: "access" }),
-    AllEmployees
-  );
+router.route("/view").get(AllEmployees);
 router.route("/edit/:id").patch(upload.single("profilePic"), EditEmployee);
 router
   .route("/changePassword/:id")
@@ -43,9 +38,5 @@ router
     authorizePermissions({ moduleKey: "employees", action: "create" }),
     AddEmployee
   );
-router.route("/role/create").post(createRole);
-router.route("/role/edit/:id").patch(editRole);
-router.route("/role/delete/:id").delete(deleteRole);
-router.route("/role").post(allRoles);
-router.route("/role/:id").get(getRoleById);
+
 export default router;

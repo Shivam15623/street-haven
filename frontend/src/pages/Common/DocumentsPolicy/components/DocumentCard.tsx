@@ -124,8 +124,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
             style={{ top: "10px", right: "10px" }}
           >
             {hasPermission({
-              moduleKey: "program_mannuals",
-              action: "update",
+              action: "edit_program_manual",
             }) && (
               <button
                 className="btn btn-street-neutral   p-8 d-flex flex-row align-items-center justify-content-between  radius-12"
@@ -135,8 +134,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
               </button>
             )}
             {hasPermission({
-              moduleKey: "program_mannuals",
-              action: "delete",
+              action: "delete_program_manual",
             }) && (
               <DeleteMannuals
                 attachment={attachment}
@@ -149,8 +147,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
         </div>
       </div>
       {hasPermission({
-        moduleKey: "program_manuals",
-        action: "update",
+        action: "edit_program_manual",
       }) && (
         <ActionsProgram
           document={Pdocument}

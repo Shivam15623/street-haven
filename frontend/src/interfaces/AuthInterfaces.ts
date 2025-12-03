@@ -6,7 +6,7 @@ interface User {
   lastName: string;
   email: string;
   phoneNo: string;
-  role: string;
+  role: Role;
   profilePic?: string;
   slug: string;
   createdAt: string;
@@ -20,42 +20,25 @@ export interface ChangeUserDetailsPayLoad {
   slug?: string;
   createdAt?: string;
 }
-export interface FeaturePermission {
-  key: string;
-  label: string;
-  allowed: boolean;
-  _id: string;
-}
 
-export interface RoleModulePermission {
-  moduleName: string;
-  moduleKey: string;
-  access: boolean;
-
-  create: boolean;
-  read: boolean;
-  update: boolean;
-  delete: boolean;
-
-  features: FeaturePermission[];
-
-  _id: string;
-}
-
-export interface RolePermission {
-  permissions: RoleModulePermission[];
-}
 export interface AuthState {
   isLoggedIn: boolean;
   accessToken: string;
   user?: User | null;
-  Permissions: RoleModulePermission[];
 }
 export interface SetLoggedInPayload {
   accessToken: string;
   UserData: User;
-  Permissions: RoleModulePermission[];
 }
+export const ROLES = {
+  SUPER_ADMIN: "super_admin",
+  ADMIN: "admin",
+  MANAGER: "manager",
+  EMPLOYEE: "employee",
+  HR: "hr",
+  DIRECTOR: "director",
+} as const;
+export type Role = (typeof ROLES)[keyof typeof ROLES];
 
 export interface LoginResponseData {
   status: "TOTP_SETUP_REQUIRED" | "TOTP_REQUIRED";
@@ -71,11 +54,7 @@ interface UserVerify {
   lastName: string;
   email: string;
   phoneNo: string;
-  role: {
-    _id: string;
-    roleName: string;
-    permissions: RoleModulePermission[];
-  };
+  role: Role;
   profilePic?: string;
   slug: string;
   createdAt: string;
