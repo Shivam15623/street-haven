@@ -75,6 +75,26 @@ type IncidentReportFormValues = Yup.InferType<typeof incidentReportSchema>;
 const IncidentreportForm: React.FC = () => {
   const [createIncidentReport, { isLoading }] =
     useCreateIncidentReportMutation();
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch file");
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(blobUrl); // Free memory
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
+  };
   const handleSubmit = async (
     values: IncidentReportFormValues,
     { resetForm }: { resetForm: () => void }
@@ -130,6 +150,7 @@ const IncidentreportForm: React.FC = () => {
             setFieldValue,
             setFieldTouched,
             handleBlur,
+            handleReset,
           }) => {
             return (
               <div
@@ -354,12 +375,28 @@ const IncidentreportForm: React.FC = () => {
                   {/* Actions */}
                   <div className="d-flex justify-content-end gap-2 mt-3">
                     <button
+                      type="button"
+                      onClick={() =>
+                        handleDownload(
+                          "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764759586/Incident_Reporting_mklfum.pdf",
+                          "Incident Reporting Form"
+                        )
+                      }
+                      className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                    >
+                      Download
+                    </button>
+                    <button
                       type="submit"
-                      className="btn btn-street-primary btn-street-lg text-xs xs:text-sm px-8  w-144-px h-40-px fw-medium radius-12"
+                      className="btn btn-street-primarybtn-street-lg d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
                     >
                       Submit Report
                     </button>
-                    <button className="btn btn-street-neutral btn-street-lg text-xs xs:text-sm px-8   w-144-px h-40-px fw-medium border-0 radius-12">
+              
+                    <button
+                      className="btn btn-street-neutral btn-street-lg d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                      onClick={handleReset}
+                    >
                       Cancel
                     </button>
                   </div>

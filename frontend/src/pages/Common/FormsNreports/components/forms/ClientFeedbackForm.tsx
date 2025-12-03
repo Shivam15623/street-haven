@@ -48,6 +48,26 @@ const ClientFeedBackFormSchema = Yup.object({
 type ClientFeedbackValues = Yup.InferType<typeof ClientFeedBackFormSchema>;
 const ClientFeedbackForm = () => {
   const [createFeedback, { isLoading }] = useCreateClientFeedbackMutation();
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch file");
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(blobUrl); // Free memory
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
+  };
   const handleSubmit = async (values: ClientFeedbackValues) => {
     try {
       const payload: clientFeedbackCredentials = {
@@ -433,6 +453,18 @@ const ClientFeedbackForm = () => {
 
             <Card className="shadow-sm border-0">
               <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleDownload(
+                      "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764679476/client_feedback_form_cqmdk2.pdf",
+                      "Employee Incident Report Form"
+                    )
+                  }
+                  className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                >
+                  Download
+                </button>
                 <button
                   type="submit"
                   disabled={isLoading}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 import { Icon } from "@iconify/react";
 
@@ -36,25 +36,40 @@ function DataTable<T extends object>({
   sortBy,
   order,
 }: DataTableProps<T>) {
+  const [search, setSearch] = useState("");
+
   const totalPages = Math.ceil(total / limit);
   const pageSizes = [10, 25, 50, 100];
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    onSearchChange(value);
+    onPageChange(1); // reset to page 1
+  };
 
   return (
     <div className="w-100">
       {/* 🔎 Search + Page Size */}
       <div className="d-flex flex-row justify-content-between mb-3 align-items-center">
-        <div className="position-relative w-50 w-sm-25">
-          <Icon
-            icon="mdi:magnify"
-            className="position-absolute"
-            style={{ top: "50%", left: "10px", transform: "translateY(-50%)" }}
-          />
+        <div className="px-10 py-8 program-input radius-12 d-flex search-Content flex-row align-items-center  gap-8 w-50 z-1 position-relative">
+          <Icon icon="proicons:search" className="text-xl opacity-50" />
+
           <input
-            type="text"
-            placeholder="Search..."
-            className="form-control ps-5"
-            onChange={(e) => onSearchChange(e.target.value)}
+            className="bg-transparent border-0 text-sm text-street-base d-flex flex-grow-1 fw-semibold"
+            placeholder="Search Documents"
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
           />
+
+          {search && (
+            <button
+              type="button"
+              className="text-xl opacity-50 hover:opacity-100"
+              onClick={() => handleSearchChange("")}
+            >
+              <Icon icon="ion:close-circle" className="text-xl contentIcon" />
+            </button>
+          )}
         </div>
         <div className="dropdown">
           <button
@@ -89,7 +104,7 @@ function DataTable<T extends object>({
       </div>
 
       {/* 🔹 Responsive Table */}
-      <div className="table-responsive" style={{ scrollbarWidth: "thin" }}>
+      <div style={{ scrollbarWidth: "thin" }}>
         <table className="table bordered-table mb-0 table-hover align-middle">
           <thead>
             <tr>
