@@ -27,7 +27,7 @@ const menuItems = [
     label: "Forms",
     path: "/forms",
     icon: FormIcon,
-    public: true, // everyone can see
+    roles: ["super_admin", "admin", "director"],
   },
   {
     label: "Program & Manuals",
@@ -51,7 +51,7 @@ const menuItems = [
     label: "Events",
     path: "/events",
     icon: Events,
-    roles: ["super_admin", "admin", "director"],
+    public: true,
   },
   {
     label: "Employees",

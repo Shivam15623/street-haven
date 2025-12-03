@@ -131,7 +131,9 @@ export const AllRoutes: RouteObject[] = [
       {
         path: "forms",
         element: withSuspense(
-          <RouteGuard requireRole={[ROLES.ADMIN, ROLES.DIRECTOR]}>
+          <RouteGuard
+            requireRole={[ROLES.ADMIN, ROLES.DIRECTOR, ROLES.SUPER_ADMIN]}
+          >
             <LazyFormReports />
           </RouteGuard>
         ),

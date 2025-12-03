@@ -43,7 +43,7 @@ export const EmployeeColumn = (
     {
       title: "Role",
       accessorKey: "role",
-      render: (row) => <div>{row.role}</div>,
+      render: (row) => <div>{row.role.replace("_", " ").toUpperCase()}</div>,
     },
   ];
 

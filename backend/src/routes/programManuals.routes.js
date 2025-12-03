@@ -13,6 +13,7 @@ import {
   editProgramManualSchema,
 } from "../validations/ProgramManualSchema.js";
 import { authorizePermissions } from "../middleware/AuthRole.js";
+import { PERMISSIONS } from "../auth/permissions.js";
 
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
@@ -22,7 +23,7 @@ router
   .route("/create")
   .post(
     upload.single("attachment"),
-    authorizePermissions({ moduleKey: "program_mannuals", action: "create" }),
+    authorizePermissions({ action: PERMISSIONS.CREATE_PROGRAM_MANUAL }),
     AddProgramManual
   );
 router
@@ -30,13 +31,13 @@ router
   .patch(
     validateRequest(editProgramManualSchema, "body"),
     upload.single("attachment"),
-    authorizePermissions({ moduleKey: "program_mannuals", action: "update" }),
+    authorizePermissions({ action: PERMISSIONS.EDIT_PROGRAM_MANUAL }),
     EditProgramManual
   );
 router
   .route("/delete/:id")
   .delete(
-    authorizePermissions({ moduleKey: "program_mannuals", action: "delete" }),
+    authorizePermissions({ action: PERMISSIONS.DELETE_PROGRAM_MANUAL }),
     DeleteProgramManual
   );
 

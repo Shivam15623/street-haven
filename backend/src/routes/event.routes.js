@@ -12,6 +12,7 @@ import {
   GetUpcomingEvents,
 } from "../controllers/Event.controller.js";
 import { authorizePermissions } from "../middleware/AuthRole.js";
+import { PERMISSIONS } from "../auth/permissions.js";
 
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
@@ -20,16 +21,21 @@ router.get("/past", GetPastEvents);
 router.get("/details/:slug", EventDetails);
 router.post(
   "/create",
-  authorizePermissions({ moduleKey: "events", action: "create" }),
+  authorizePermissions({ action: PERMISSIONS.CREATE_EVENT }),
   createEvent
 );
 router.patch(
   "/edit/:id",
-  authorizePermissions({ moduleKey: "events", action: "update" }),
+  authorizePermissions({ action: PERMISSIONS.EDIT_EVENT }),
   editEvent
 );
 router.post("/calendar", EventsCalendar);
 router.route("/signup/:id").post(EventSignUp);
 router.route("/signout/:id").patch(EventSignOut);
-router.route("/registrations/:id").get(fetchRegisterations);
+router
+  .route("/registrations/:id")
+  .get(
+    authorizePermissions({ action: PERMISSIONS.VIEW_REGISTERATIONS }),
+    fetchRegisterations
+  );
 export default router;
