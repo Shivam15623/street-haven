@@ -10,6 +10,7 @@ type DashboardCardProps = {
   icon: string; // Iconify icon name
   bg?: string;
   link?:string;
+
 };
 
 const DashboardCard: React.FC<DashboardCardProps> = ({
@@ -23,6 +24,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   return (
     <Col sm={6} lg={4}>
       <div onClick={()=>navigate(link)} className={`card-box cursor-pointer ${bg}`}>
+
         <div className="card-box-left">
           <h3 className="card-box-value">{value}</h3>
           <p className="card-box-label">{label}</p>

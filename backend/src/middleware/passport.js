@@ -16,7 +16,7 @@ const ConPassport = (passport) => {
     new JwtStrategy(options, async (jwt_payload, done) => {
       const userId = jwt_payload._id;
       try {
-        const user = await User.findById(userId).populate("role","roleName permissions");
+        const user = await User.findById(userId);
 
         if (user) {
           return done(null, user);

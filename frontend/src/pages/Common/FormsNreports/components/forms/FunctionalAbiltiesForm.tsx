@@ -52,6 +52,7 @@ import AbilityBlock from "../AbiltyBlock";
 // }
 
 const functionalAbilityFormSchema = Yup.object({
+  claimNo:Yup.string().required("claim No is required"),
   worker: Yup.object({
     firstName: Yup.string().required(),
     lastName: Yup.string().required(),
@@ -270,6 +271,26 @@ const functionalAbilityFormSchema = Yup.object({
 const handleSubmit = () => {
   console.log("uihewfuhweuihf");
 };
+const handleDownload = async (url: string, filename: string) => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Failed to fetch file");
+
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(blobUrl); // Free memory
+  } catch (err) {
+    console.error("Download failed:", err);
+  }
+};
 const HandFields: Array<{
   label: string;
   value: "gripping" | "pinching" | "other";
@@ -288,6 +309,7 @@ const travelWorkField: Array<{ label: string; key: "publicTransit" | "car" }> =
   ];
 const FunctionalAbiltiesForm = () => {
   const initialValues = {
+    claimNo: "",
     worker: {
       firstName: "",
       lastName: "",
@@ -415,10 +437,10 @@ const FunctionalAbiltiesForm = () => {
                 <img src="/assets/images/wsibo.svg" width={273} height={93} />
                 <div className="d-flex flex-row justify-content-between align-items-center flex-grow-1">
                   <div className="d-flex flex-column ">
-                    <h3 className="text-xxl fw-semibold text-street-dark mb-0">
+                    <h3 className="text-lg xl:text-xxl fw-semibold text-street-dark mb-0">
                       Functional Abilities Form
                     </h3>
-                    <p className="text-md fw-semibold text-street-dark">
+                    <p className="text-sm xl:text-md fw-semibold text-street-dark">
                       for Planning Early and Safe Return to Work
                     </p>
                   </div>
@@ -426,28 +448,45 @@ const FunctionalAbiltiesForm = () => {
                     className="d-flex flex-row align-items-center"
                     style={{ gap: 15 }}
                   >
-                    <div className="d-flex flex-column" style={{ gap: 5 }}>
-                      <p className="text-xs text-street-dark fw-normal">
-                        Mail to:
-                      </p>
-                      <p className="text-xs text-street-dark fw-normal">
-                        200 Front Street West
-                      </p>
-                      <p className="text-xs text-street-dark fw-normal">
-                        Toronto ON M5V 3J1
-                      </p>
+                    <div className="d-flex flex-row align-items-center gap-18">
+                      {" "}
+                      <div className="d-flex flex-column" style={{ gap: 5 }}>
+                        <p className="text-xs text-street-dark fw-normal">
+                          Mail to:
+                        </p>
+                        <p className="text-xs text-street-dark fw-normal">
+                          200 Front Street West
+                        </p>
+                        <p className="text-xs text-street-dark fw-normal">
+                          Toronto ON M5V 3J1
+                        </p>
+                      </div>
+                      <div className="d-flex flex-column" style={{ gap: 5 }}>
+                        <p className="text-xs text-street-dark fw-normal">
+                          Or Fax to:
+                        </p>
+                        <p className="text-xs text-street-dark fw-normal">
+                          416-344-4684
+                        </p>
+                        <p className="text-xs text-street-dark fw-normal">
+                          or 1-888-313-7373
+                        </p>
+                      </div>
                     </div>
-                    <div className="d-flex flex-column" style={{ gap: 5 }}>
-                      <p className="text-xs text-street-dark fw-normal">
-                        Or Fax to:
-                      </p>
-                      <p className="text-xs text-street-dark fw-normal">
-                        416-344-4684
-                      </p>
-                      <p className="text-xs text-street-dark fw-normal">
-                        or 1-888-313-7373
-                      </p>
-                    </div>
+                    <Form.Group className="d-flex flex-column gap-10 ">
+                      <Form.Label>claim No:</Form.Label>
+                      <Form.Control
+                        style={{ height: "40px" }}
+                        name="claimNo"
+                        value={values.claimNo}
+                        onChange={handleChange}
+                      />
+                      {touched.worker?.lastName && errors.worker?.lastName && (
+                        <div className="text-danger text-sm">
+                          {errors.worker.lastName}
+                        </div>
+                      )}
+                    </Form.Group>
                   </div>
                 </div>
               </div>
@@ -2091,11 +2130,12 @@ const FunctionalAbiltiesForm = () => {
                     value={values.commentsOnAbilities}
                     onChange={handleChange}
                   />
-                  {touched.commentsOnAbilities && errors.commentsOnAbilities && (
-                    <div className="text-danger text-sm">
-                      {errors.commentsOnAbilities}
-                    </div>
-                  )}
+                  {touched.commentsOnAbilities &&
+                    errors.commentsOnAbilities && (
+                      <div className="text-danger text-sm">
+                        {errors.commentsOnAbilities}
+                      </div>
+                    )}
                 </Form.Group>
                 <Form.Group className="d-flex flex-column gap-2 mb-3">
                   <Form.Label className="text-xs text-street-dark fw-normal">
@@ -2207,7 +2247,19 @@ const FunctionalAbiltiesForm = () => {
               </div>
             </div>
             <div className="card">
-              <div className="card-body d-flex flex-column  gap-20 px-24 py-16"></div>
+              <div className="card-body d-flex flex-column  gap-20 px-24 py-16">
+                <button
+                  className="btn btn-street-outline-primary btn-street-lg d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                  onClick={() =>
+                    handleDownload(
+                      "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764752829/FAF_fab59p.pdf",
+                      "functional abilties Form"
+                    )
+                  }
+                >
+                  Download Form
+                </button>
+              </div>
             </div>
           </Form>
         )}

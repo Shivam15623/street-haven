@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 
 const clientFeedbackSchema = new mongoose.Schema(
   {
- 
     visitDate: {
       type: Date,
       required: true,
@@ -12,20 +11,21 @@ const clientFeedbackSchema = new mongoose.Schema(
       required: true,
     },
 
-
     clientName: {
       type: String,
-   
+
       trim: true,
       index: true,
-      default:null
+      default: null,
     },
 
     clientPhone: {
       type: String,
-
-      match: /^[0-9]{10,15}$/,
-      default:null
+      match: [
+        /^\+1\s?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
+        "Please enter a valid Canadian phone number (e.g. +1 (416) 555-1234)",
+      ],
+      default: null,
     },
 
     clientEmail: {
@@ -33,13 +33,13 @@ const clientFeedbackSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
       match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-      default:null
+      default: null,
     },
 
     clientAddress: {
       type: String,
       trim: true,
-      default:null
+      default: null,
     },
 
     // ======================
@@ -56,7 +56,7 @@ const clientFeedbackSchema = new mongoose.Schema(
     otherComplaintText: {
       type: String,
       trim: true,
-      default: "",
+      default: null,
     },
 
     complaintDescription: {

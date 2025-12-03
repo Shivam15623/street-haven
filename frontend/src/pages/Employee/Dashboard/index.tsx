@@ -7,11 +7,19 @@ import dayjs from "dayjs";
 import { useSelector } from "react-redux";
 import { selectAuth } from "../../../redux/AuthSlice";
 import { useFetchEventsupcomingQuery } from "../../../services/EventApi";
+import { useFetchTicketsQuery } from "../../../services/ticketApi";
 
 const EmployeeDashboard = () => {
   const today = dayjs().format("dddd, MMMM D, YYYY");
   const { user } = useSelector(selectAuth);
-
+  const { data: ticketData } = useFetchTicketsQuery({
+    page: 1,
+    priority: "All",
+    status: "Open",
+    limit: 10,
+    order: "desc",
+    search: "",
+  });
   const { data, isLoading } = useFetchEventsupcomingQuery({
     limit: 5,
     order: "desc",
@@ -105,7 +113,7 @@ const EmployeeDashboard = () => {
           icon="iconamoon:ticket-light"
           label="Open Tickets"
           link={`/it_facility?tab=track_tickets&status=Open`}
-          value={8}
+          value={ticketData?.data.counts.open ?? 0}
           key={"Open Tickets"}
         />
         <DashboardCard

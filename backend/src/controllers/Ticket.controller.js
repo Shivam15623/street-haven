@@ -50,7 +50,7 @@ export const createTicket = asyncHandler(async (req, res) => {
 
     // Create notifications inside transaction
     const admins = await User.find(
-      { role: "admin" },
+      { role: { $in: ["admin", "manager", "director", "super_admin"] } },
       "_id firstname lastname email",
       { session }
     );
@@ -124,7 +124,7 @@ export const editTicket = asyncHandler(async (req, res) => {
 
   // Keep track of fields to update
   let updatedFields = {};
-  if (role === "admin") {
+  if (["admin", "manager", "director", "super_admin"].includes(role)) {
     // Admin can change assigned person
     if (assignedId && assignedId !== ticket.assignedTo?.toString()) {
       updatedFields.assignedTo = assignedId;
@@ -233,7 +233,9 @@ export const FetchTickets = asyncHandler(async (req, res) => {
   }
 
   // ✅ Permission filter
-  if (req.user.role !== "admin") {
+  if (
+    !["admin", "manager", "director", "super_admin"].includes(req.user.role)
+  ) {
     filter.$or = [
       ...(filter.$or || []), // keep existing search filters
       { createdBy: req.user._id },
@@ -257,7 +259,7 @@ export const FetchTickets = asyncHandler(async (req, res) => {
 
   // ✅ Global counts (only admins see global, others see limited counts)
   let counts;
-  if (req.user.role === "admin") {
+  if (["admin", "manager", "director", "super_admin"].includes(req.user.role)) {
     const [open, inProgress, completed, underReview, all] = await Promise.all([
       Ticket.countDocuments({ status: "Open" }),
       Ticket.countDocuments({ status: "In Progress" }),

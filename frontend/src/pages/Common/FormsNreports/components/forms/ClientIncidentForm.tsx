@@ -41,7 +41,8 @@ const ClientIncidentFormSchema = Yup.object({
         "Actual Physical / Sexual Violence",
         "Threat of Physical / Sexual Violence",
         "Bomb Threat",
-        "Other",""
+        "Other",
+        "",
       ],
       "Select a valid incident type"
     )
@@ -139,6 +140,26 @@ const ClientIncidentForm = () => {
     repotingDate: new Date(),
     reportedToDate: new Date(),
     followUp: "",
+  };
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch file");
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(blobUrl); // Free memory
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
   };
 
   return (
@@ -653,6 +674,19 @@ const ClientIncidentForm = () => {
             </Card>
             <Card className="shadow-sm border-0">
               <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
+                
+                <button
+                      type="button"
+                      onClick={() =>
+                        handleDownload(
+                          "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764759062/Client_Incident_Report_Form_bactlw.pdf",
+                          "Client Incident Report Form"
+                        )
+                      }
+                      className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                    >
+                      Download
+                    </button>
                 <button
                   type="submit"
                   disabled={isLoading}
