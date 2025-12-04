@@ -165,18 +165,6 @@ export interface FunctionalAbilityFormValues {
   nextAppointmentDate: Date | string;
 }
 
-interface AbilityField {
-  option: string;
-  otherText?: string;
-}
-
-interface AbilitiesValues {
-  [key: string]: AbilityField | { publicTransit: string; car: string };
-}
-interface RestrictionsValues {
-  [key: string]: any;
-}
-
 const functionalAbilityFormSchema = Yup.object({
   claimNo: Yup.string().required("Please enter the claim number."),
   worker: Yup.object({
@@ -465,128 +453,63 @@ const travelWorkField: Array<{ label: string; key: "publicTransit" | "car" }> =
   ];
 const FunctionalAbiltiesForm = () => {
   const [createFaf, { isLoading }] = useCreateFAfMutation();
-  const abilitiesExtract = (abilities: AbilitiesValues) => {
-    const extracted: Record<
-      string,
-      string | { publicTransit: string; car: string }
-    > = {};
+  const extractAbilities = (
+    abilities: FunctionalAbilityFormValues["abilities"]
+  ) =>
+    Object.fromEntries(
+      Object.entries(abilities).map(([key, value]) => {
+        if (key === "travelToWork") return [key, value]; // keep as is
+        // Narrow the type
+        if ("option" in value) {
+          return [
+            key,
+            value.option === "other" ? value.otherText : value.option,
+          ];
+        }
+        return [key, value]; // fallback
+      })
+    );
 
-    for (const key in abilities) {
-      if (!abilities.hasOwnProperty(key)) continue;
-
-      const field = abilities[key];
-
-      // Handle travelToWork differently since it's not { option, otherText }
-      if (key === "travelToWork" && typeof field === "object") {
-        extracted[key] = {
-          publicTransit: (field as any).publicTransit,
-          car: (field as any).car,
-        };
-        continue;
-      }
-
-      if ((field as AbilityField).option === "other") {
-        extracted[key] = (field as AbilityField).otherText || "";
-      } else {
-        extracted[key] = (field as AbilityField).option;
-      }
-    }
-
-    return extracted;
-  };
-
-  const flattenRestrictions = (restrictions: RestrictionsValues) => {
+  const extractRestrictions = (
+    restrictions: FunctionalAbilityFormValues["restrictions"]
+  ) => {
     const result: Record<string, any> = {};
 
-    for (const key in restrictions) {
-      if (!restrictions.hasOwnProperty(key)) continue;
-
-      const field = restrictions[key];
-
-      // Keep limitedUseOfHands nested only if checked
-      if (key === "limitedUseOfHands") {
-        if (field.checked) {
-          const { checked, ...rest } = field; // remove checked
-          result[key] = rest;
+    Object.entries(restrictions).forEach(([key, value]) => {
+      if (value.checked) {
+        if (
+          key === "limitedUseOfHands" ||
+          key === "limitedPushingPulling" ||
+          key === "exposureToVibration"
+        ) {
+          result[key] = { ...value };
+          delete result[key].checked;
+        } else if ("details" in value) {
+          result[key] = value.details;
         }
-        continue;
       }
-
-      // For limitedPushingPulling and exposureToVibration, store object if checked
-      if (key === "limitedPushingPulling" || key === "exposureToVibration") {
-        if (field.checked) {
-          const { checked, ...rest } = field;
-
-          result[key] = rest;
-        }
-        continue;
-      }
-
-      // For normal restrictions (bendingTwisting, chemicalExposure, etc.)
-      if (field.checked) {
-        result[key] = field.details || "";
-      }
-    }
+    });
 
     return result;
   };
 
   const handleSubmit = async (values: FunctionalAbilityFormValues) => {
     try {
-      let payload = { ...values };
+      const payload: any = { ...values };
 
-      /* ---------------------------------------------
-     * 1. abilities (same logic as before)
-     --------------------------------------------- */
-      if (
-        values.returnToWorkStatus === "withRestrictions" ||
-        values.returnToWorkStatus === "unable"
-      ) {
-        payload.abilities = abilitiesExtract(values.abilities);
+      if (values.returnToWorkStatus === "withRestrictions") {
+        payload.abilities = extractAbilities(values.abilities);
+        payload.restrictions = extractRestrictions(values.restrictions);
       } else {
         delete payload.abilities;
-      }
-
-      /* ---------------------------------------------
-     * 2. restrictions (same logic as before)
-     --------------------------------------------- */
-      if (values.returnToWorkStatus === "withRestrictions") {
-        payload.restrictions = flattenRestrictions(values.restrictions);
-      } else {
         delete payload.restrictions;
       }
 
-      /* ---------------------------------------------
-     * 3. nodateOfDiscusswill (only if NO)
-     --------------------------------------------- */
-      if (values.discussedRTW === false) {
-        // keep it
-      } else {
-        // remove it if discussedRTW = true
-        delete payload.nodateOfDiscusswill;
-      }
-
-      /* ---------------------------------------------
-     * 4. otherDesignation (only if "Other")
-     --------------------------------------------- */
-      if (values.designationOfHealthPro === "Other") {
-        // keep it
-      } else {
+      // Conditional fields
+      if (values.discussedRTW) delete payload.nodateOfDiscusswill;
+      if (values.designationOfHealthPro !== "Other")
         delete payload.otherDesignation;
-      }
-      if (values.iswsibRegistered === true) {
-      } else {
-        delete payload.wsibId;
-      }
-      if (values.hstRegNo === "") {
-        delete payload.hstRegNo;
-      }
-      if (values.hstSrvcCode === "") {
-        delete payload.hstSrvcCode;
-      }
-      if (values.hstAmount === "") {
-        delete payload.hstAmount;
-      }
+      if (!values.iswsibRegistered) delete payload.wsibId;
       const res = await createFaf(payload).unwrap();
       if (res.success) showSuccess(res.message);
     } catch (error) {
@@ -594,7 +517,7 @@ const FunctionalAbiltiesForm = () => {
     }
   };
 
-  const initialValues = {
+  const initialValues: FunctionalAbilityFormValues = {
     claimNo: "",
     worker: {
       firstName: "",
@@ -638,7 +561,7 @@ const FunctionalAbiltiesForm = () => {
     hproPostalCode: "",
     hproFax: "",
     assesmentDate: new Date(),
-    returnToWorkStatus: "",
+    returnToWorkStatus: "noRestrictions", // valid default
     abilities: {
       walking: { option: "", otherText: "" },
       standing: { option: "", otherText: "" },
@@ -650,51 +573,27 @@ const FunctionalAbiltiesForm = () => {
       travelToWork: { publicTransit: "", car: "" },
     },
     restrictions: {
-      bendingTwisting: {
-        checked: false,
-        details: "",
-      },
-      workAboveShoulder: {
-        checked: false,
-        details: "",
-      },
-      chemicalExposure: {
-        checked: false,
-        details: "",
-      },
-      environmentalExposure: {
-        checked: false,
-        details: "",
-      },
+      bendingTwisting: { checked: false, details: "" },
+      workAboveShoulder: { checked: false, details: "" },
+      chemicalExposure: { checked: false, details: "" },
+      environmentalExposure: { checked: false, details: "" },
       limitedPushingPulling: {
         checked: false,
         leftArm: false,
         rightArm: false,
         other: false,
-        otherText: "",
       },
-      operatingMotorizedEquipment: {
-        checked: false,
-        details: "",
-      },
-      medicationSideEffects: {
-        checked: false,
-        details: "",
-      },
+      operatingMotorizedEquipment: { checked: false, details: "" },
+      medicationSideEffects: { checked: false, details: "" },
       exposureToVibration: { checked: false, wholeBody: false, handArm: false },
       limitedUseOfHands: {
         checked: false,
-        left: { gripping: false, pinching: false, other: false, otherText: "" },
-        right: {
-          gripping: false,
-          pinching: false,
-          other: false,
-          otherText: "",
-        },
+        left: { gripping: false, pinching: false, other: false },
+        right: { gripping: false, pinching: false, other: false },
       },
     },
     commentsOnAbilities: "",
-    assessmentDuration: "",
+    assessmentDuration: "1-2 days", // ✅ fixed
     isDiscussRTWtoPatient: false,
     nextAppointmentDate: new Date(),
   };
