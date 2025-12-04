@@ -1,6 +1,7 @@
 import * as yup from "yup";
 
 export const functionalAbiltiesData = yup.object({
+  claimNo: yup.string().required(),
   worker: yup.object({
     firstName: yup.string().required(),
     lastName: yup.string().required(),
@@ -11,8 +12,10 @@ export const functionalAbiltiesData = yup.object({
     postalCode: yup.string().required(),
     dateOfBirth: yup.date().required(),
   }),
+
   dateOfAccident: yup.date().required(),
   employerFaxNo: yup.string().required(),
+
   employer: yup.object({
     fullName: yup.string().required(),
     telephone: yup.string().required(),
@@ -21,13 +24,17 @@ export const functionalAbiltiesData = yup.object({
     province: yup.string().required(),
     postalCode: yup.string().required(),
   }),
+
   typeOfJobAtAccident: yup.string().required(),
   areasOfInjury: yup.string().required(),
+
   discussedRTW: yup.boolean().required(),
-  nodateOfDiscusswill: yup.date().when("discussedRTW",{
-    is:false,
-    then:(s) => s.required("nodateOfDiscusswill is required"),
+  nodateOfDiscusswill: yup.date().when("discussedRTW", {
+    is: false,
+    then: (s) => s.required("Please fill this field"),
+    otherwise: (s) => s.notRequired(),
   }),
+
   employerContactName: yup.string(),
   position: yup.string().required(),
   designationOfHealthPro: yup.string().required(),
@@ -35,6 +42,7 @@ export const functionalAbiltiesData = yup.object({
     is: "Other",
     then: (s) => s.required("Please specify"),
   }),
+
   iswsibRegistered: yup.boolean(),
   wsibId: yup.string(),
   invoiceNo: yup.string(),
@@ -42,180 +50,113 @@ export const functionalAbiltiesData = yup.object({
   hstRegNo: yup.string(),
   hstSrvcCode: yup.string(),
   hstAmount: yup.number(),
+
   healthProfessionalName: yup.string(),
   hproAddress: yup.string(),
   hprocityTown: yup.string(),
   hproProvince: yup.string(),
   hproPostalCode: yup.string(),
   hproFax: yup.string(),
+
   assesmentDate: yup.date().required(),
-  returnToWorkStatus: yup.string().oneOf([
-    "noRestrictions",
-    "withRestrictions",
-    "unable",
-    "",
-  ]),
-  abilities: yup.object({
-    walking: yup.object({
-      option: yup.string().oneOf([
-        "fullAbilities",
-        "upto100",
-        "100to200",
-        "other",
-        "",
-      ]),
-      otherText: yup.string(),
-    }),
-    standing: yup.object({
-      option: yup.string().oneOf([
-        "fullAbilities",
-        "upto15",
-        "15to30",
-        "other",
-        "",
-      ]),
-      otherText: yup.string(),
-    }),
-    sitting: yup.object({
-      option: yup.string().oneOf([
-        "fullAbilities",
-        "upto30",
-        "30to60",
-        "other",
-        "",
-      ]),
-      otherText: yup.string(),
-    }),
-    liftingFloorToWaist: yup.object({
-      option: yup.string().oneOf([
-        "fullAbilities",
-        "upto5kg",
-        "5to10kg",
-        "other",
-        "",
-      ]),
-      otherText: yup.string(),
-    }),
-    liftingWaistToShoulder: yup.object({
-      option: yup.string().oneOf([
-        "fullAbilities",
-        "upto5kg",
-        "5to10kg",
-        "other",
-        "",
-      ]),
-      otherText: yup.string(),
-    }),
-    stairClimbing: yup.object({
-      option: yup.string().oneOf([
-        "fullAbilities",
-        "upto5steps",
-        "5to10steps",
-        "other",
-        "",
-      ]),
-      otherText: yup.string(),
-    }),
-    ladderClimbing: yup.object({
-      option: yup.string().oneOf([
-        "fullAbilities",
-        "1to3steps",
-        "4to6steps",
-        "other",
-        "",
-      ]),
-      otherText: yup.string(),
-    }),
-    travelToWork: yup.object({
-      publicTransit: yup.string().oneOf(["yes", "no", ""]),
-      car: yup.string().oneOf(["yes", "no", ""]),
-    }),
+
+  returnToWorkStatus: yup
+    .string()
+    .oneOf(["noRestrictions", "withRestrictions", "unable"])
+    .required(),
+
+  // ------------------------------
+  // CONDITIONAL FIELDS START HERE
+  // ------------------------------
+  abilities: yup.object().when("returnToWorkStatus", {
+    is: "withRestrictions",
+    then: (schema) =>
+      schema.shape({
+        walking: yup.string().required("walking is required"),
+        standing: yup.string().required("standing is required"),
+        sitting: yup.string().required("sitting is required"),
+        liftingFloorToWaist: yup
+          .string()
+          .required("liftingFloorToWaist is required"),
+        liftingWaistToShoulder: yup
+          .string()
+          .required("liftingWaistToShoulder is required"),
+        stairClimbing: yup.string().required("stair climb is required"),
+        ladderClimbing: yup.string().required("ladder climb is required"),
+        travelToWork: yup.object({
+          publicTransit: yup
+            .string()
+            .oneOf(["yes", "no"])
+            .required("publicTransit answer is required"),
+          car: yup.string().oneOf(["yes", "no"]).required("car is required"),
+        }),
+      }),
+    otherwise: (schema) => schema.strip(),
   }),
-  restrictions: yup.object({
-    bendingTwisting: yup.object({
-      checked: yup.boolean(),
-      details: yup.string().when("checked", {
-        is: true,
-        then: (s) => s.required("Please specify details"),
-      }),
-    }),
 
-    chemicalExposure: yup.object({
-      checked: yup.boolean(),
-      details: yup.string().when("checked", {
-        is: true,
-        then: (s) => s.required("Please specify chemical"),
-      }),
-    }),
+  restrictions: yup.object().when("returnToWorkStatus", {
+    is: "withRestrictions",
+    then: (schema) =>
+      schema.shape({
+        bendingTwisting: yup.string(),
+        chemicalExposure: yup.string(),
+        environmentalExposure: yup.string(),
+        operatingMotorizedEquipment: yup.string(),
+        medicationSideEffects: yup.string(),
+        workAboveShoulder: yup.string(),
 
-    environmentalExposure: yup.object({
-      checked: yup.boolean(),
-      details: yup.string().when("checked", {
-        is: true,
-        then: (s) => s.required("Please specify environment type"),
-      }),
-    }),
+        limitedPushingPulling: yup.object({
+          leftArm: yup.boolean(),
+          rightArm: yup.boolean(),
+          other: yup.boolean(),
+        }),
 
-    operatingMotorizedEquipment: yup.object({
-      checked: yup.boolean(),
-      details: yup.string().when("checked", {
-        is: true,
-        then: (s) => s.required("Specify equipment"),
-      }),
-    }),
+        exposureToVibration: yup.object({
+          wholeBody: yup.boolean(),
+          handArm: yup.boolean(),
+        }),
 
-    medicationSideEffects: yup.object({
-      checked: yup.boolean(),
-      details: yup.string().when("checked", {
-        is: true,
-        then: (s) => s.required("Specify side effects"),
+        limitedUseOfHands: yup.object({
+          left: yup.object({
+            gripping: yup.boolean(),
+            pinching: yup.boolean(),
+            other: yup.boolean(),
+          }),
+          right: yup.object({
+            gripping: yup.boolean(),
+            pinching: yup.boolean(),
+            other: yup.boolean(),
+          }),
+        }),
       }),
-    }),
 
-    workAboveShoulder: yup.object({
-      checked: yup.boolean(),
-      details: yup.string().when("checked", {
-        is: true,
-        then: (s) => s.required("Specify side or activity"),
-      }),
-    }),
-    limitedPushingPulling: yup.object({
-      checked: yup.boolean(),
-      leftArm: yup.boolean(),
-      rightArm: yup.boolean(),
-      other: yup.boolean(),
-      otherText: yup.string(),
-    }),
-
-    exposureToVibration: yup.object({
-      checked: yup.boolean(),
-      wholeBody: yup.boolean(),
-      handArm: yup.boolean(),
-    }),
-    limitedUseOfHands: yup.object({
-      checked: yup.boolean(),
-      left: yup.object({
-        gripping: yup.boolean(),
-        pinching: yup.boolean(),
-        other: yup.boolean(),
-        otherText: yup.string(),
-      }),
-      right: yup.object({
-        gripping: yup.boolean(),
-        pinching: yup.boolean(),
-        other: yup.boolean(),
-        otherText: yup.string(),
-      }),
-    }),
+    otherwise: (schema) => schema.strip(),
   }),
-  commentsOnAbilities: yup.string(),
-  assessmentDuration: yup.string().oneOf([
-    "1-2 days",
-    "3-7 days",
-    "8-14 days",
-    "14+ days",
-    "",
-  ]),
-  isDiscussRTWtoPatient: yup.boolean(),
-  nextAppointmentDate: yup.date(),
+
+  commentsOnAbilities: yup.string().when("returnToWorkStatus", {
+    is: "withRestrictions",
+    then: (s) => s.required("Comments required"),
+    otherwise: (s) => s.strip(),
+  }),
+
+  assessmentDuration: yup
+    .string()
+    .oneOf(["1-2 days", "3-7 days", "8-14 days", "14+ days"])
+    .when("returnToWorkStatus", {
+      is: "withRestrictions",
+      then: (s) => s.required("Assessment duration is required"),
+      otherwise: (s) => s.strip(),
+    }),
+
+  isDiscussRTWtoPatient: yup.boolean().when("returnToWorkStatus", {
+    is: "withRestrictions",
+    then: (s) => s.required(),
+    otherwise: (s) => s.strip(),
+  }),
+
+  nextAppointmentDate: yup.date().when("returnToWorkStatus", {
+    is: "noRestrictions",
+    then: (s) => s.notRequired(),
+    otherwise: (s) => s.required("please fill next Appointment date"),
+  }),
 });

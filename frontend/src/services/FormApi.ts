@@ -93,6 +93,20 @@ const FormApi = api.injectEndpoints({
         body: FormData,
       }),
     }),
+    createFAf: builder.mutation({
+      query: (credentials) => ({
+        url: "/form/functionalAbilties",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
+    createmediaConsent: builder.mutation({
+      query: (credentials) => ({
+        url: "/form/functionalAbilties",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
   }),
 });
 
@@ -101,4 +115,6 @@ export const {
   useCreateClientincidentMutation,
   useCreateEmployeeIncidentMutation,
   useCreatePaymentRequistionMutation,
+  useCreateFAfMutation,
+  useCreatemediaConsentMutation,
 } = FormApi;

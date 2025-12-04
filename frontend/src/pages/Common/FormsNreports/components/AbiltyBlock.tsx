@@ -8,9 +8,11 @@ interface Option {
 
 interface AbilityBlockProps {
   label: string;
-  fieldPath: string; // example: "lifting" or "bending"
+  fieldPath: string;
   options: Option[];
   values: FormikValues;
+  errors: FormikValues;
+  touched: FormikValues;
   setFieldValue: (field: string, value: any) => void;
   handleChange: React.ChangeEventHandler<HTMLInputElement>;
 }
@@ -20,11 +22,16 @@ const AbilityBlock: React.FC<AbilityBlockProps> = ({
   fieldPath,
   options,
   values,
+  errors,
+  touched,
   setFieldValue,
   handleChange,
 }) => {
   const selected: string = values.abilities[fieldPath].option;
   const otherText: string = values.abilities[fieldPath].otherText;
+
+  const fieldErrors = errors?.abilities?.[fieldPath];
+  const fieldTouched = touched?.abilities?.[fieldPath];
 
   return (
     <div className="col">
@@ -51,22 +58,34 @@ const AbilityBlock: React.FC<AbilityBlockProps> = ({
               className="form-check-input"
             />
 
-            <span className="text-xs xs:text-sm">{opt.label}</span>
+            <span className="text-xs ">{opt.label}</span>
 
-            {/* "Other" text input */}
+            {/* Other Option Input */}
             {opt.value === "other" && selected === "other" && (
-              <Form.Control
-                type="text"
-                name={`abilities.${fieldPath}.otherText`}
-                placeholder="Please specify"
-                value={otherText}
-                onChange={handleChange}
-                className="p-0 ms-2 border-bottom-1 border-top-0 border-end-0 rounded-0 border-start-0"
-                style={{ height: "auto", width: "200px" }}
-              />
+              <div className="d-flex flex-column">
+                <Form.Control
+                  type="text"
+                  name={`abilities.${fieldPath}.otherText`}
+                  placeholder="Please specify"
+                  value={otherText}
+                  onChange={handleChange}
+                  className="p-0 ms-2 border-bottom-1 border-top-0 border-end-0 rounded-0 border-start-0"
+                  style={{ height: "auto", width: "200px" }}
+                />
+
+                {/* OTHER INPUT ERROR */}
+                {fieldErrors?.otherText && fieldTouched?.otherText && (
+                  <small className="text-danger">{fieldErrors.otherText}</small>
+                )}
+              </div>
             )}
           </label>
         ))}
+
+        {/* MAIN OPTION ERROR */}
+        {fieldErrors?.option && fieldTouched?.option && (
+          <small className="text-danger">{fieldErrors.option}</small>
+        )}
       </Form.Group>
     </div>
   );
