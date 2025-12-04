@@ -10,21 +10,10 @@ const AddressSchema = {
   postalCode: String,
 };
 
-const AbilityOptionSchema = {
-  option: String, // selected option
-  otherText: String, // when "other" is selected
-};
-
 const HandSideSchema = {
   gripping: Boolean,
   pinching: Boolean,
   other: Boolean,
-  otherText: String,
-};
-
-const RestrictionWithDetailsSchema = {
-  checked: Boolean,
-  details: String, // required if checked
 };
 
 // ------------------------------
@@ -32,6 +21,7 @@ const RestrictionWithDetailsSchema = {
 // ------------------------------
 const FunctionalAbilitySchema = new mongoose.Schema(
   {
+    claimNo: String,
     // ------------------------------
     // SECTION A – Worker
     // ------------------------------
@@ -67,7 +57,6 @@ const FunctionalAbilitySchema = new mongoose.Schema(
     // SECTION C — Health Professional
     // ------------------------------
     designationOfHealthPro: String,
-    otherDesignation: String,
 
     iswsibRegistered: Boolean,
     wsibId: String,
@@ -93,20 +82,20 @@ const FunctionalAbilitySchema = new mongoose.Schema(
     returnToWorkStatus: {
       type: String,
       enum: ["noRestrictions", "withRestrictions", "unable"],
-      required:true
+      required: true,
     },
 
     // ------------------------------
     // SECTION E — Abilities
     // ------------------------------
     abilities: {
-      walking: AbilityOptionSchema,
-      standing: AbilityOptionSchema,
-      sitting: AbilityOptionSchema,
-      liftingFloorToWaist: AbilityOptionSchema,
-      liftingWaistToShoulder: AbilityOptionSchema,
-      stairClimbing: AbilityOptionSchema,
-      ladderClimbing: AbilityOptionSchema,
+      walking: String,
+      standing: String,
+      sitting: String,
+      liftingFloorToWaist: String,
+      liftingWaistToShoulder: String,
+      stairClimbing: String,
+      ladderClimbing: String,
 
       travelToWork: {
         publicTransit: { type: String, enum: ["yes", "no"] },
@@ -118,29 +107,25 @@ const FunctionalAbilitySchema = new mongoose.Schema(
     // SECTION E — Restrictions
     // ------------------------------
     restrictions: {
-      bendingTwisting: RestrictionWithDetailsSchema,
-      chemicalExposure: RestrictionWithDetailsSchema,
-      environmentalExposure: RestrictionWithDetailsSchema,
-      operatingMotorizedEquipment: RestrictionWithDetailsSchema,
-      medicationSideEffects: RestrictionWithDetailsSchema,
-      workAboveShoulder: RestrictionWithDetailsSchema,
+      bendingTwisting: String,
+      chemicalExposure: String,
+      environmentalExposure: String,
+      operatingMotorizedEquipment: String,
+      medicationSideEffects: String,
+      workAboveShoulder: String,
 
       limitedPushingPulling: {
-        checked: Boolean,
         leftArm: Boolean,
         rightArm: Boolean,
         other: Boolean,
-        otherText: String,
       },
 
       exposureToVibration: {
-        checked: Boolean,
         wholeBody: Boolean,
         handArm: Boolean,
       },
 
       limitedUseOfHands: {
-        checked: Boolean,
         left: HandSideSchema,
         right: HandSideSchema,
       },
@@ -159,5 +144,8 @@ const FunctionalAbilitySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const FunctionalAbility= mongoose.model("FunctionalAbility", FunctionalAbilitySchema);
+const FunctionalAbility = mongoose.model(
+  "FunctionalAbility",
+  FunctionalAbilitySchema
+);
 export default FunctionalAbility;

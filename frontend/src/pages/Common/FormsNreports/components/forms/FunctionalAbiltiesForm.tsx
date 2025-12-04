@@ -3,274 +3,417 @@ import * as Yup from "yup";
 import { Col, Form, Row } from "react-bootstrap";
 import CustomDatePicker from "../../../../../components/child/DatePicker";
 import { PatternFormat } from "react-number-format";
-import AbilityBlock from "../AbiltyBlock";
-// type AbilityOption = "fullAbilities" | "upto100" | "100to200" | "other";
-// type StandingOption = "fullAbilities" | "upto15" | "15to30" | "other";
-// type SittingOption = "fullAbilities" | "upto30" | "30to60" | "other";
 
-// interface Ability {
-//   option: AbilityOption | "";
-//   otherText: string;
-// }
+import { useCreateFAfMutation } from "../../../../../services/FormApi";
+import { showSuccess } from "../../../../../utills/toastutills";
 
-// interface TravelToWork {
-//   publicTransit: "yes" | "no" | "";
-//   car: "yes" | "no" | "";
-// }
+import AbilitiesRestrictions from "../AbilitiesRestrictions";
+export interface FunctionalAbilityFormValues {
+  claimNo: string;
 
-// interface LimitedUseHand {
-//   gripping: boolean;
-//   pinching: boolean;
-//   other: boolean;
-//   otherText: string;
-// }
+  worker: {
+    firstName: string;
+    lastName: string;
+    telephone: string;
+    address: string;
+    cityTown: string;
+    province: string;
+    postalCode: string;
+    dateOfBirth: Date | string;
+  };
 
-// interface Restrictions {
-//   bendingTwisting: boolean;
-//   workAboveShoulder: boolean;
-//   chemicalExposure: boolean;
-//   environmentalExposure: boolean;
-//   limitedPushingPulling: {
-//     checked: boolean;
-//     leftArm: boolean;
-//     rightArm: boolean;
-//     other: boolean;
-//     otherText: string;
-//   };
-//   operatingMotorizedEquipment: boolean;
-//   medicationSideEffects: boolean;
-//   exposureToVibration: {
-//     checked: boolean;
-//     wholeBody: boolean;
-//     handArm: boolean;
-//   };
-//   limitedUseOfHands: {
-//     checked: boolean;
-//     left: LimitedUseHand;
-//     right: LimitedUseHand;
-//   };
-// }
+  dateOfAccident: Date | string;
+  employerFaxNo: string;
+
+  employer: {
+    fullName: string;
+    telephone: string;
+    address: string;
+    cityTown: string;
+    province: string;
+    postalCode: string;
+  };
+
+  typeOfJobAtAccident: string;
+  areasOfInjury: string;
+  discussedRTW: boolean;
+
+  nodateOfDiscusswill: Date | string | null;
+
+  employerContactName: string;
+  position: string;
+
+  designationOfHealthPro: string;
+  otherDesignation: string;
+
+  iswsibRegistered: boolean;
+  wsibId: string;
+  invoiceNo: string;
+  srvCode: string;
+  hstRegNo: string;
+  hstSrvcCode: string;
+  hstAmount: number | string;
+
+  healthProfessionalName: string;
+  hproAddress: string;
+  hprocityTown: string;
+  hproProvince: string;
+  hproPostalCode: string;
+  hproFax: string;
+
+  assesmentDate: Date | string;
+
+  returnToWorkStatus: "noRestrictions" | "withRestrictions" | "unable";
+
+  abilities: {
+    walking: {
+      option: string;
+      otherText: string;
+    };
+    standing: {
+      option: string;
+      otherText: string;
+    };
+    sitting: {
+      option: string;
+      otherText: string;
+    };
+    liftingFloorToWaist: {
+      option: string;
+      otherText: string;
+    };
+    liftingWaistToShoulder: {
+      option: string;
+      otherText: string;
+    };
+    stairClimbing: {
+      option: string;
+      otherText: string;
+    };
+    ladderClimbing: {
+      option: string;
+      otherText: string;
+    };
+    travelToWork: {
+      publicTransit: string;
+      car: string;
+    };
+  };
+
+  restrictions: {
+    bendingTwisting: {
+      checked: boolean;
+      details: string;
+    };
+    chemicalExposure: {
+      checked: boolean;
+      details: string;
+    };
+    environmentalExposure: {
+      checked: boolean;
+      details: string;
+    };
+    operatingMotorizedEquipment: {
+      checked: boolean;
+      details: string;
+    };
+    medicationSideEffects: {
+      checked: boolean;
+      details: string;
+    };
+    workAboveShoulder: {
+      checked: boolean;
+      details: string;
+    };
+
+    limitedPushingPulling: {
+      checked: boolean;
+      leftArm: boolean;
+      rightArm: boolean;
+      other: boolean;
+    };
+
+    exposureToVibration: {
+      checked: boolean;
+      wholeBody: boolean;
+      handArm: boolean;
+    };
+
+    limitedUseOfHands: {
+      checked: boolean;
+
+      left: {
+        gripping: boolean;
+        pinching: boolean;
+        other: boolean;
+      };
+
+      right: {
+        gripping: boolean;
+        pinching: boolean;
+        other: boolean;
+      };
+    };
+  };
+
+  commentsOnAbilities: string;
+
+  assessmentDuration: "1-2 days" | "3-7 days" | "8-14 days" | "14+ days";
+
+  isDiscussRTWtoPatient: boolean;
+
+  nextAppointmentDate: Date | string;
+}
 
 const functionalAbilityFormSchema = Yup.object({
-  claimNo:Yup.string().required("claim No is required"),
+  claimNo: Yup.string().required("Please enter the claim number."),
   worker: Yup.object({
-    firstName: Yup.string().required(),
-    lastName: Yup.string().required(),
-    telephone: Yup.string().required(),
-    address: Yup.string().required(),
-    cityTown: Yup.string().required(),
-    province: Yup.string().required(),
-    postalCode: Yup.string().required(),
-    dateOfBirth: Yup.date().required(),
+    firstName: Yup.string().required("First name is required."),
+    lastName: Yup.string().required("Last name is required."),
+    telephone: Yup.string().required("Telephone number is required."),
+    address: Yup.string().required("Address is required."),
+    cityTown: Yup.string().required("City / Town is required."),
+    province: Yup.string().required("Province is required."),
+    postalCode: Yup.string().required("Postal code is required."),
+    dateOfBirth: Yup.date().required("Date of birth is required."),
   }),
-  dateOfAccident: Yup.date().required(),
-  employerFaxNo: Yup.string().required(),
+
+  dateOfAccident: Yup.date().required("Please enter the accident date."),
+  employerFaxNo: Yup.string().required("Fax number is required."),
+
   employer: Yup.object({
-    fullName: Yup.string().required(),
-    telephone: Yup.string().required(),
-    address: Yup.string().required(),
-    cityTown: Yup.string().required(),
-    province: Yup.string().required(),
-    postalCode: Yup.string().required(),
+    fullName: Yup.string().required("Employer name is required."),
+    telephone: Yup.string().required("Employer phone number is required."),
+    address: Yup.string().required("Employer address is required."),
+    cityTown: Yup.string().required("City / Town is required."),
+    province: Yup.string().required("Province is required."),
+    postalCode: Yup.string().required("Postal code is required."),
   }),
-  typeOfJobAtAccident: Yup.string().required(),
-  areasOfInjury: Yup.string().required(),
-  discussedRTW: Yup.boolean(),
-  nodateOfDiscusswill: Yup.date(),
-  employerContactName: Yup.string(),
-  position: Yup.string(),
-  designationOfHealthPro: Yup.string(),
+
+  typeOfJobAtAccident: Yup.string().required(
+    "Type of Job at  Accident is required"
+  ),
+  areasOfInjury: Yup.string().required("please Specify areas of injuries"),
+  discussedRTW: Yup.boolean().required("please answer this field"),
+
+  nodateOfDiscusswill: Yup.date()
+    .when("discussedRTW", {
+      is: false,
+      then: (s) => s.required("Please provide the date of discussion."),
+      otherwise: (s) => s.notRequired(),
+    })
+    .default(null),
+
+  employerContactName: Yup.string().required(),
+  position: Yup.string().required(),
+  designationOfHealthPro: Yup.string().required(),
   otherDesignation: Yup.string().when("designationOfHealthPro", {
     is: "Other",
     then: (s) => s.required("Please specify"),
+    otherwise: (s) => s.notRequired(),
   }),
-  iswsibRegistered: Yup.boolean(),
-  wsibId: Yup.string(),
-  invoiceNo: Yup.string(),
-  srvCode: Yup.string(),
-  hstRegNo: Yup.string(),
-  hstSrvcCode: Yup.string(),
-  hstAmount: Yup.number(),
-  healthProfessionalName: Yup.string(),
-  hproAddress: Yup.string(),
-  hprocityTown: Yup.string(),
-  hproProvince: Yup.string(),
-  hproPostalCode: Yup.string(),
-  hproFax: Yup.string(),
-  assesmentDate: Yup.date().required(),
-  returnToWorkStatus: Yup.string().oneOf([
-    "noRestrictions",
-    "withRestrictions",
-    "unable",
-    "",
-  ]),
-  abilities: Yup.object({
-    walking: Yup.object({
-      option: Yup.string().oneOf([
-        "fullAbilities",
-        "upto100",
-        "100to200",
-        "other",
-        "",
-      ]),
-      otherText: Yup.string(),
-    }),
-    standing: Yup.object({
-      option: Yup.string().oneOf([
-        "fullAbilities",
-        "upto15",
-        "15to30",
-        "other",
-        "",
-      ]),
-      otherText: Yup.string(),
-    }),
-    sitting: Yup.object({
-      option: Yup.string().oneOf([
-        "fullAbilities",
-        "upto30",
-        "30to60",
-        "other",
-        "",
-      ]),
-      otherText: Yup.string(),
-    }),
-    liftingFloorToWaist: Yup.object({
-      option: Yup.string().oneOf([
-        "fullAbilities",
-        "upto5kg",
-        "5to10kg",
-        "other",
-        "",
-      ]),
-      otherText: Yup.string(),
-    }),
-    liftingWaistToShoulder: Yup.object({
-      option: Yup.string().oneOf([
-        "fullAbilities",
-        "upto5kg",
-        "5to10kg",
-        "other",
-        "",
-      ]),
-      otherText: Yup.string(),
-    }),
-    stairClimbing: Yup.object({
-      option: Yup.string().oneOf([
-        "fullAbilities",
-        "upto5steps",
-        "5to10steps",
-        "other",
-        "",
-      ]),
-      otherText: Yup.string(),
-    }),
-    ladderClimbing: Yup.object({
-      option: Yup.string().oneOf([
-        "fullAbilities",
-        "1to3steps",
-        "4to6steps",
-        "other",
-        "",
-      ]),
-      otherText: Yup.string(),
-    }),
-    travelToWork: Yup.object({
-      publicTransit: Yup.string().oneOf(["yes", "no", ""]),
-      car: Yup.string().oneOf(["yes", "no", ""]),
-    }),
+  iswsibRegistered: Yup.boolean().required("please fill this field"),
+  wsibId: Yup.string().when("iswsibRegistered", {
+    is: true,
+    then: (s) => s.required("Please fill This Field"),
+    otherwise: (s) => s.strip(),
   }),
-  restrictions: Yup.object({
-    bendingTwisting: Yup.object({
-      checked: Yup.boolean(),
-      details: Yup.string().when("checked", {
-        is: true,
-        then: (s) => s.required("Please specify details"),
-      }),
-    }),
+  invoiceNo: Yup.string().required("please fill this field"),
+  srvCode: Yup.string().required("please fill this field"),
+  hstRegNo: Yup.string().notRequired(),
+  hstSrvcCode: Yup.string().notRequired(),
+  hstAmount: Yup.string().notRequired(),
+  healthProfessionalName: Yup.string().required("please fill this field"),
+  hproAddress: Yup.string().required("please fill this field"),
+  hprocityTown: Yup.string().required("please fill this field"),
+  hproProvince: Yup.string().required("please fill this field"),
+  hproPostalCode: Yup.string().required("please fill this field"),
+  hproFax: Yup.string().required("please fill this field"),
+  assesmentDate: Yup.date().required().required("please fill this field"),
+  returnToWorkStatus: Yup.string()
+    .oneOf(["noRestrictions", "withRestrictions", "unable"])
+    .required("please fill this field"),
 
-    chemicalExposure: Yup.object({
-      checked: Yup.boolean(),
-      details: Yup.string().when("checked", {
-        is: true,
-        then: (s) => s.required("Please specify chemical"),
+  // --- ABILITIES (Validate only if RTW requires restrictions)
+  abilities: Yup.object().when("returnToWorkStatus", {
+    is: (val: string | undefined) => val === "withRestrictions",
+    then: (schema) =>
+      schema.shape({
+        walking: Yup.object({
+          option: Yup.string().required("please select one"),
+          otherText: Yup.string().when("option", {
+            is: "other",
+            then: (s) => s.required("Please specify walking ability"),
+          }),
+        }),
+        standing: Yup.object({
+          option: Yup.string()
+            .oneOf(["fullAbilities", "upto15", "15to30", "other"])
+            .required("please select one"),
+          otherText: Yup.string().when("option", {
+            is: "other",
+            then: (s) => s.required("Please specify standing ability"),
+          }),
+        }),
+        sitting: Yup.object({
+          option: Yup.string()
+            .oneOf(["fullAbilities", "upto30", "30to60", "other"])
+            .required("please select one"),
+          otherText: Yup.string().when("option", {
+            is: "other",
+            then: (s) => s.required("Please specify sitting ability"),
+          }),
+        }),
+        liftingFloorToWaist: Yup.object({
+          option: Yup.string()
+            .oneOf(["fullAbilities", "upto5kg", "5to10kg", "other"])
+            .required("please select one"),
+          otherText: Yup.string().when("option", {
+            is: "other",
+            then: (s) => s.required("Please specify lifting ability"),
+          }),
+        }),
+        liftingWaistToShoulder: Yup.object({
+          option: Yup.string()
+            .oneOf(["fullAbilities", "upto5kg", "5to10kg", "other"])
+            .required("please select one"),
+          otherText: Yup.string().when("option", {
+            is: "other",
+            then: (s) => s.required("Please specify lifting ability"),
+          }),
+        }),
+        stairClimbing: Yup.object({
+          option: Yup.string()
+            .oneOf(["fullAbilities", "upto5steps", "5to10steps", "other"])
+            .required("please select one"),
+          otherText: Yup.string().when("option", {
+            is: "other",
+            then: (s) => s.required("Please specify stair ability"),
+          }),
+        }),
+        ladderClimbing: Yup.object({
+          option: Yup.string()
+            .oneOf(["fullAbilities", "1to3steps", "4to6steps", "other"])
+            .required("please select one"),
+          otherText: Yup.string().when("option", {
+            is: "other",
+            then: (s) => s.required("Please specify ladder ability"),
+          }),
+        }),
+        travelToWork: Yup.object({
+          publicTransit: Yup.string()
+            .oneOf(["yes", "no"])
+            .required("please select one"),
+          car: Yup.string().oneOf(["yes", "no"]).required("please select one"),
+        }),
       }),
-    }),
 
-    environmentalExposure: Yup.object({
-      checked: Yup.boolean(),
-      details: Yup.string().when("checked", {
-        is: true,
-        then: (s) => s.required("Please specify environment type"),
-      }),
-    }),
-
-    operatingMotorizedEquipment: Yup.object({
-      checked: Yup.boolean(),
-      details: Yup.string().when("checked", {
-        is: true,
-        then: (s) => s.required("Specify equipment"),
-      }),
-    }),
-
-    medicationSideEffects: Yup.object({
-      checked: Yup.boolean(),
-      details: Yup.string().when("checked", {
-        is: true,
-        then: (s) => s.required("Specify side effects"),
-      }),
-    }),
-
-    workAboveShoulder: Yup.object({
-      checked: Yup.boolean(),
-      details: Yup.string().when("checked", {
-        is: true,
-        then: (s) => s.required("Specify side or activity"),
-      }),
-    }),
-    limitedPushingPulling: Yup.object({
-      checked: Yup.boolean(),
-      leftArm: Yup.boolean(),
-      rightArm: Yup.boolean(),
-      other: Yup.boolean(),
-      otherText: Yup.string(),
-    }),
-
-    exposureToVibration: Yup.object({
-      checked: Yup.boolean(),
-      wholeBody: Yup.boolean(),
-      handArm: Yup.boolean(),
-    }),
-    limitedUseOfHands: Yup.object({
-      checked: Yup.boolean(),
-      left: Yup.object({
-        gripping: Yup.boolean(),
-        pinching: Yup.boolean(),
-        other: Yup.boolean(),
-        otherText: Yup.string(),
-      }),
-      right: Yup.object({
-        gripping: Yup.boolean(),
-        pinching: Yup.boolean(),
-        other: Yup.boolean(),
-        otherText: Yup.string(),
-      }),
-    }),
+    otherwise: (schema) => schema.strip(), // ⬅️ removes the whole object if RTW = noRestrictions
   }),
-  commentsOnAbilities: Yup.string(),
-  assessmentDuration: Yup.string().oneOf([
-    "1-2 days",
-    "3-7 days",
-    "8-14 days",
-    "14+ days",
-    "",
-  ]),
-  isDiscussRTWtoPatient: Yup.boolean(),
-  nextAppointmentDate: Yup.date(),
+
+  // --- RESTRICTIONS (Validate only if RTW requires restrictions)
+  restrictions: Yup.object().when("returnToWorkStatus", {
+    is: (val: string | undefined) => val === "withRestrictions",
+    then: (schema) =>
+      schema.shape({
+        bendingTwisting: Yup.object({
+          checked: Yup.boolean(),
+          details: Yup.string().when("checked", {
+            is: true,
+            then: (s) => s.required("Please specify details"),
+          }),
+        }),
+        chemicalExposure: Yup.object({
+          checked: Yup.boolean(),
+          details: Yup.string().when("checked", {
+            is: true,
+            then: (s) => s.required("Please specify chemical"),
+          }),
+        }),
+        environmentalExposure: Yup.object({
+          checked: Yup.boolean(),
+          details: Yup.string().when("checked", {
+            is: true,
+            then: (s) => s.required("Specify environment type"),
+          }),
+        }),
+        operatingMotorizedEquipment: Yup.object({
+          checked: Yup.boolean(),
+          details: Yup.string().when("checked", {
+            is: true,
+            then: (s) => s.required("Specify equipment"),
+          }),
+        }),
+        medicationSideEffects: Yup.object({
+          checked: Yup.boolean(),
+          details: Yup.string().when("checked", {
+            is: true,
+            then: (s) => s.required("Specify side effects"),
+          }),
+        }),
+        workAboveShoulder: Yup.object({
+          checked: Yup.boolean(),
+          details: Yup.string().when("checked", {
+            is: true,
+            then: (s) => s.required("Specify area or activity"),
+          }),
+        }),
+        limitedPushingPulling: Yup.object({
+          checked: Yup.boolean(),
+          leftArm: Yup.boolean(),
+          rightArm: Yup.boolean(),
+          other: Yup.boolean(),
+        }),
+        exposureToVibration: Yup.object({
+          checked: Yup.boolean(),
+          wholeBody: Yup.boolean(),
+          handArm: Yup.boolean(),
+        }),
+        limitedUseOfHands: Yup.object({
+          checked: Yup.boolean(),
+          left: Yup.object({
+            gripping: Yup.boolean(),
+            pinching: Yup.boolean(),
+            other: Yup.boolean(),
+          }),
+          right: Yup.object({
+            gripping: Yup.boolean(),
+            pinching: Yup.boolean(),
+            other: Yup.boolean(),
+          }),
+        }),
+      }),
+
+    otherwise: (schema) => schema.strip(), // ⬅️ remove restrictions if not needed
+  }),
+
+  commentsOnAbilities: Yup.string().when("returnToWorkStatus", {
+    is: "withRestrictions",
+    then: (s) => s.required("Comments are required"),
+    otherwise: (s) => s.strip(),
+  }),
+
+  assessmentDuration: Yup.string()
+    .oneOf(["1-2 days", "3-7 days", "8-14 days", "14+ days"])
+    .when("returnToWorkStatus", {
+      is: "withRestrictions",
+      then: (s) => s.required("Assessment duration required"),
+      otherwise: (s) => s.strip(),
+    }),
+
+  isDiscussRTWtoPatient: Yup.boolean().when("returnToWorkStatus", {
+    is: "withRestrictions",
+    then: (s) => s.required("Please select Yes/No"),
+    otherwise: (s) => s.strip(),
+  }),
+
+  nextAppointmentDate: Yup.date().when("returnToWorkStatus", {
+    is: "noRestrictions",
+    then: (s) => s.notRequired(),
+    otherwise: (s) => s.required("please fill next Appointment date"),
+  }),
 });
-const handleSubmit = () => {
-  console.log("uihewfuhweuihf");
-};
+
 const handleDownload = async (url: string, filename: string) => {
   try {
     const response = await fetch(url);
@@ -291,6 +434,7 @@ const handleDownload = async (url: string, filename: string) => {
     console.error("Download failed:", err);
   }
 };
+
 const HandFields: Array<{
   label: string;
   value: "gripping" | "pinching" | "other";
@@ -308,7 +452,72 @@ const travelWorkField: Array<{ label: string; key: "publicTransit" | "car" }> =
     { key: "car", label: "Ability to drive a car" },
   ];
 const FunctionalAbiltiesForm = () => {
-  const initialValues = {
+  const [createFaf, { isLoading }] = useCreateFAfMutation();
+  const extractAbilities = (
+    abilities: FunctionalAbilityFormValues["abilities"]
+  ) =>
+    Object.fromEntries(
+      Object.entries(abilities).map(([key, value]) => {
+        if (key === "travelToWork") return [key, value]; // keep as is
+        // Narrow the type
+        if ("option" in value) {
+          return [
+            key,
+            value.option === "other" ? value.otherText : value.option,
+          ];
+        }
+        return [key, value]; // fallback
+      })
+    );
+
+  const extractRestrictions = (
+    restrictions: FunctionalAbilityFormValues["restrictions"]
+  ) => {
+    const result: Record<string, any> = {};
+
+    Object.entries(restrictions).forEach(([key, value]) => {
+      if (value.checked) {
+        if (
+          key === "limitedUseOfHands" ||
+          key === "limitedPushingPulling" ||
+          key === "exposureToVibration"
+        ) {
+          result[key] = { ...value };
+          delete result[key].checked;
+        } else if ("details" in value) {
+          result[key] = value.details;
+        }
+      }
+    });
+
+    return result;
+  };
+
+  const handleSubmit = async (values: FunctionalAbilityFormValues) => {
+    try {
+      const payload: any = { ...values };
+
+      if (values.returnToWorkStatus === "withRestrictions") {
+        payload.abilities = extractAbilities(values.abilities);
+        payload.restrictions = extractRestrictions(values.restrictions);
+      } else {
+        delete payload.abilities;
+        delete payload.restrictions;
+      }
+
+      // Conditional fields
+      if (values.discussedRTW) delete payload.nodateOfDiscusswill;
+      if (values.designationOfHealthPro !== "Other")
+        delete payload.otherDesignation;
+      if (!values.iswsibRegistered) delete payload.wsibId;
+      const res = await createFaf(payload).unwrap();
+      if (res.success) showSuccess(res.message);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const initialValues: FunctionalAbilityFormValues = {
     claimNo: "",
     worker: {
       firstName: "",
@@ -318,9 +527,9 @@ const FunctionalAbiltiesForm = () => {
       cityTown: "",
       province: "",
       postalCode: "",
-      dateOfBirth: "",
+      dateOfBirth: new Date(),
     },
-    dateOfAccident: "",
+    dateOfAccident: new Date(),
     employerFaxNo: "",
     employer: {
       fullName: "",
@@ -351,8 +560,8 @@ const FunctionalAbiltiesForm = () => {
     hproProvince: "",
     hproPostalCode: "",
     hproFax: "",
-    assesmentDate: "",
-    returnToWorkStatus: "",
+    assesmentDate: new Date(),
+    returnToWorkStatus: "noRestrictions", // valid default
     abilities: {
       walking: { option: "", otherText: "" },
       standing: { option: "", otherText: "" },
@@ -364,53 +573,29 @@ const FunctionalAbiltiesForm = () => {
       travelToWork: { publicTransit: "", car: "" },
     },
     restrictions: {
-      bendingTwisting: {
-        checked: false,
-        details: "",
-      },
-      workAboveShoulder: {
-        checked: false,
-        details: "",
-      },
-      chemicalExposure: {
-        checked: false,
-        details: "",
-      },
-      environmentalExposure: {
-        checked: false,
-        details: "",
-      },
+      bendingTwisting: { checked: false, details: "" },
+      workAboveShoulder: { checked: false, details: "" },
+      chemicalExposure: { checked: false, details: "" },
+      environmentalExposure: { checked: false, details: "" },
       limitedPushingPulling: {
         checked: false,
         leftArm: false,
         rightArm: false,
         other: false,
-        otherText: "",
       },
-      operatingMotorizedEquipment: {
-        checked: false,
-        details: "",
-      },
-      medicationSideEffects: {
-        checked: false,
-        details: "",
-      },
+      operatingMotorizedEquipment: { checked: false, details: "" },
+      medicationSideEffects: { checked: false, details: "" },
       exposureToVibration: { checked: false, wholeBody: false, handArm: false },
       limitedUseOfHands: {
         checked: false,
-        left: { gripping: false, pinching: false, other: false, otherText: "" },
-        right: {
-          gripping: false,
-          pinching: false,
-          other: false,
-          otherText: "",
-        },
+        left: { gripping: false, pinching: false, other: false },
+        right: { gripping: false, pinching: false, other: false },
       },
     },
     commentsOnAbilities: "",
-    assessmentDuration: "",
+    assessmentDuration: "1-2 days", // ✅ fixed
     isDiscussRTWtoPatient: false,
-    nextAppointmentDate: "",
+    nextAppointmentDate: new Date(),
   };
 
   return (
@@ -481,9 +666,9 @@ const FunctionalAbiltiesForm = () => {
                         value={values.claimNo}
                         onChange={handleChange}
                       />
-                      {touched.worker?.lastName && errors.worker?.lastName && (
+                      {touched.claimNo && errors.claimNo && (
                         <div className="text-danger text-sm">
-                          {errors.worker.lastName}
+                          {errors.claimNo}
                         </div>
                       )}
                     </Form.Group>
@@ -1012,14 +1197,6 @@ const FunctionalAbiltiesForm = () => {
             </div>
 
             <div className="card">
-              <div className="card-body d-flex flex-row align-items-center gap-20 px-24 py-16">
-                <h3 className="text-xl text-street-dark fw-semibold mb-0">
-                  B. Worker's Signature
-                </h3>
-              </div>
-            </div>
-
-            <div className="card">
               <div className="card-body d-flex flex-column  gap-20 px-24 py-16">
                 <h3 className="text-xl text-street-dark fw-semibold mb-0 ">
                   C. Health Professional's Billing Information
@@ -1225,57 +1402,95 @@ const FunctionalAbiltiesForm = () => {
                   <Row>
                     <Col md={4}>
                       <Form.Group className="d-flex flex-column gap-2 mb-3">
-                        <Form.Label>WSIB Provider ID.</Form.Label>
+                        <Form.Label>HST Registration Number</Form.Label>
                         <Form.Control
                           className="h-40-px"
-                          name="wsibId"
+                          name="hstRegNo"
                           style={{ height: "40px" }}
-                          value={values.wsibId}
+                          value={values.hstRegNo}
                           onChange={handleChange}
                         />
-                        {touched.wsibId && errors.wsibId && (
+                        {touched.hstRegNo && errors.hstRegNo && (
                           <div className="text-danger text-sm">
-                            {errors.wsibId}
+                            {errors.hstRegNo}
                           </div>
                         )}
                       </Form.Group>
                     </Col>
                     <Col md={4}>
                       <Form.Group className="d-flex flex-column gap-2 mb-3">
-                        <Form.Label>Your Invoice Number </Form.Label>
+                        <Form.Label> Service Code</Form.Label>
                         <Form.Control
                           className="h-40-px"
-                          name="invoiceNo"
+                          name="hstSrvcCode"
                           style={{ height: "40px" }}
-                          value={values.invoiceNo}
+                          value={values.hstSrvcCode}
                           onChange={handleChange}
                         />
-                        {touched.invoiceNo && errors.invoiceNo && (
+                        {touched.hstSrvcCode && errors.hstSrvcCode && (
                           <div className="text-danger text-sm">
-                            {errors.invoiceNo}
+                            {errors.hstSrvcCode}
                           </div>
                         )}
                       </Form.Group>
                     </Col>
                     <Col md={4}>
                       <Form.Group className="d-flex flex-column gap-2 mb-3">
-                        <Form.Label>Service Code</Form.Label>
+                        <Form.Label> HST Amount Billed</Form.Label>
                         <Form.Control
                           className="h-40-px"
-                          name="srvCode"
+                          name="hstAmount"
                           style={{ height: "40px" }}
-                          value={values.srvCode}
+                          type="number"
+                          value={values.hstAmount}
                           onChange={handleChange}
                         />
-                        {touched.srvCode && errors.srvCode && (
+                        {touched.hstAmount && errors.hstAmount && (
                           <div className="text-danger text-sm">
-                            {errors.srvCode}
+                            {errors.hstAmount}
                           </div>
                         )}
                       </Form.Group>
                     </Col>
                   </Row>
                 </div>
+                <Row>
+                  <Col sm={12} md={6}>
+                    <Form.Group className="d-flex flex-column gap-2 mb-3">
+                      <Form.Label>Health Professional's Name</Form.Label>
+                      <Form.Control
+                        className="h-40-px"
+                        name="healthProfessionalName"
+                        style={{ height: "40px" }}
+                        value={values.healthProfessionalName}
+                        onChange={handleChange}
+                      />
+                      {touched.healthProfessionalName &&
+                        errors.healthProfessionalName && (
+                          <div className="text-danger text-sm">
+                            {errors.healthProfessionalName}
+                          </div>
+                        )}
+                    </Form.Group>
+                  </Col>
+                  <Col sm={12} md={6}>
+                    <Form.Group className="d-flex flex-column gap-2 mb-3">
+                      <Form.Label>Address (No. Street, Apt.)</Form.Label>
+                      <Form.Control
+                        className="h-40-px"
+                        name="hproAddress"
+                        style={{ height: "40px" }}
+                        value={values.hproAddress}
+                        onChange={handleChange}
+                      />
+                      {touched.hproAddress && errors.hproAddress && (
+                        <div className="text-danger text-sm">
+                          {errors.hproAddress}
+                        </div>
+                      )}
+                    </Form.Group>
+                  </Col>
+                </Row>
                 <Row>
                   <Col sm={12} md={8}>
                     <Row>
@@ -1395,7 +1610,9 @@ const FunctionalAbiltiesForm = () => {
                   </Col>
                   <Col sm={12} md={8} className="justify-content-end">
                     <Form.Group className="d-flex flex-column gap-10">
-                      <Form.Label>2</Form.Label>{" "}
+                      <Form.Label>
+                        2. <span> Please check one:</span>
+                      </Form.Label>{" "}
                       <div className="d-flex flex-column flex-sm-row gap-20">
                         <Form.Check
                           type="radio"
@@ -1467,787 +1684,61 @@ const FunctionalAbiltiesForm = () => {
                 </Row>
               </div>
             </div>
+            <AbilitiesRestrictions
+              values={values}
+              setFieldValue={setFieldValue}
+              handleChange={handleChange}
+              touched={touched}
+              errors={errors}
+              HandFields={HandFields}
+              travelWorkField={travelWorkField}
+            />
 
-            <div className="card">
-              <div className="card-body d-flex flex-column gap-20 px-24 py-16">
-                <h3 className="text-xl text-street-dark fw-semibold mb-0">
-                  E. Abilities and/or Restrictions
-                </h3>
-
-                <p className="text-xs text-street-dark fw-normal">
-                  1. Please indicate Abilities that apply. Include additional
-                  details in section 3
-                </p>
-                <div className="row row-cols-1 row-cols-md-3 row-cols-lg-5 g-3">
-                  <AbilityBlock
-                    label="Walking"
-                    fieldPath="walking"
-                    values={values}
-                    setFieldValue={setFieldValue}
-                    handleChange={handleChange}
-                    options={[
-                      { label: "Full abilities", value: "fullAbilities" },
-                      { label: "Up to 100 metres", value: "upto100" },
-                      { label: "100 - 200 metres", value: "100to200" },
-                      { label: "Other", value: "other" },
-                    ]}
-                  />
-
-                  <AbilityBlock
-                    label="Standing"
-                    fieldPath="standing"
-                    values={values}
-                    setFieldValue={setFieldValue}
-                    handleChange={handleChange}
-                    options={[
-                      { label: "Full abilities", value: "fullAbilities" },
-                      { label: "Up to 15 minutes", value: "upto15" },
-                      { label: "15 - 30 minutes", value: "15to30" },
-                      { label: "Other", value: "other" },
-                    ]}
-                  />
-
-                  <AbilityBlock
-                    label="Sitting"
-                    fieldPath="sitting"
-                    values={values}
-                    setFieldValue={setFieldValue}
-                    handleChange={handleChange}
-                    options={[
-                      { label: "Full abilities", value: "fullAbilities" },
-                      { label: "Up to 30 minutes", value: "upto30" },
-                      { label: "30 - 60 minutes", value: "30to60" },
-                      { label: "Other", value: "other" },
-                    ]}
-                  />
-
-                  <AbilityBlock
-                    label="Lifting Floor to Waist"
-                    fieldPath="liftingFloorToWaist"
-                    values={values}
-                    setFieldValue={setFieldValue}
-                    handleChange={handleChange}
-                    options={[
-                      { label: "Full abilities", value: "fullAbilities" },
-                      { label: "Up to 5 kg", value: "upto5kg" },
-                      { label: "5 - 10 kg", value: "5to10kg" },
-                      { label: "Other", value: "other" },
-                    ]}
-                  />
-
-                  <AbilityBlock
-                    label="Lifting Waist to Shoulder"
-                    fieldPath="liftingWaistToShoulder"
-                    values={values}
-                    setFieldValue={setFieldValue}
-                    handleChange={handleChange}
-                    options={[
-                      { label: "Full abilities", value: "fullAbilities" },
-                      { label: "Up to 5 kg", value: "upto5kg" },
-                      { label: "5 - 10 kg", value: "5to10kg" },
-                      { label: "Other", value: "other" },
-                    ]}
-                  />
-                  <AbilityBlock
-                    label="Stair climbing"
-                    fieldPath="stairClimbing"
-                    values={values}
-                    setFieldValue={setFieldValue}
-                    handleChange={handleChange}
-                    options={[
-                      { label: "Full abilities", value: "fullAbilities" },
-                      { label: "Up to 5 steps", value: "upto5steps" },
-                      { label: "5 - 10 steps", value: "5to10steps" },
-                      { label: "Other", value: "other" },
-                    ]}
-                  />
-                  <AbilityBlock
-                    label="Ladder climbing"
-                    fieldPath="ladderClimbing"
-                    values={values}
-                    setFieldValue={setFieldValue}
-                    handleChange={handleChange}
-                    options={[
-                      { label: "Full abilities", value: "fullAbilities" },
-                      { label: "1 to 3 steps", value: "1to3steps" },
-                      { label: "4 - 6 steps", value: "4to6steps" },
-                      { label: "Other", value: "other" },
-                    ]}
-                  />
-
-                  <div className="col">
-                    <Form.Group className="d-flex flex-column gap-10">
+            {(values.returnToWorkStatus === "withRestrictions" ||
+              values.returnToWorkStatus === "unable") && (
+              <div className="card">
+                <div className="card-body d-flex flex-column  gap-20 px-24 py-16">
+                  <h3 className="text-xl text-street-dark fw-semibold mb-0">
+                    F. Date of Next Appointment
+                  </h3>
+                  <Form.Group className="d-flex flex-column gap-2 mb-3">
+                    <Form.Label className="text-xs text-street-dark fw-normal">
                       {" "}
-                      <Form.Label className="fw-medium">
-                        Travel to work
-                      </Form.Label>
-                      <div className="d-flex flex-row gap-8">
-                        {" "}
-                        {travelWorkField.map((item) => (
-                          <div
-                            key={item.key}
-                            className="d-flex flex-column gap-1"
-                          >
-                            <span className="text-xs xs:text-sm fw-medium">
-                              {item.label}
-                            </span>
-
-                            <div className="d-flex flex-column gap-3">
-                              {/* YES */}
-                              <label className="d-flex align-items-center gap-1">
-                                <input
-                                  type="checkbox"
-                                  checked={
-                                    values.abilities.travelToWork[item.key] ===
-                                    "yes"
-                                  }
-                                  onChange={() =>
-                                    setFieldValue(
-                                      `abilities.travelToWork.${item.key}`,
-                                      values.abilities.travelToWork[
-                                        item.key
-                                      ] === "yes"
-                                        ? "" // unselect
-                                        : "yes"
-                                    )
-                                  }
-                                  className="form-check-input"
-                                />
-                                Yes
-                              </label>
-
-                              {/* NO */}
-                              <label className="d-flex align-items-center gap-1">
-                                <input
-                                  type="checkbox"
-                                  checked={
-                                    values.abilities.travelToWork[item.key] ===
-                                    "no"
-                                  }
-                                  onChange={() =>
-                                    setFieldValue(
-                                      `abilities.travelToWork.${item.key}`,
-                                      values.abilities.travelToWork[
-                                        item.key
-                                      ] === "no"
-                                        ? "" // unselect
-                                        : "no"
-                                    )
-                                  }
-                                  className="form-check-input"
-                                />
-                                No
-                              </label>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </Form.Group>
-                  </div>
-                </div>
-                <p className="text-xs text-street-dark fw-normal">
-                  2. Please indicate Restrictions that apply. Include additional
-                  details in section 3
-                </p>
-                <div className="row row-cols-1 row-cols-md-3 row-cols-lg-5 g-3">
-                  {/* 1. BENDING / TWISTING */}
-                  <div className="col">
-                    <Form.Group className="d-flex flex-column gap-2">
-                      <label className="d-flex align-items-center gap-2">
-                        <input
-                          type="checkbox"
-                          className="form-check-input"
-                          checked={values.restrictions.bendingTwisting.checked}
-                          onChange={(e) =>
-                            setFieldValue(
-                              "restrictions.bendingTwisting.checked",
-                              e.target.checked
-                            )
-                          }
-                        />
-                        <span className="text-xs">
-                          Bending/twisting repetitive movement of (please
-                          specify)
-                        </span>
-                      </label>
-                    </Form.Group>
-                    {values.restrictions.bendingTwisting.checked && (
-                      <Form.Control
-                        type="text"
-                        placeholder="Please specify"
-                        name="restrictions.bendingTwisting.details"
-                        value={values.restrictions.bendingTwisting.details}
-                        onChange={handleChange}
-                        className="p-0 ms-2 border-bottom-1 border-top-0 border-end-0 rounded-0 border-start-0"
-                        style={{ height: "auto", width: "200px" }}
-                      />
-                    )}
-                  </div>
-
-                  {/* 2. WORK ABOVE SHOULDER */}
-                  <div className="col">
-                    <Form.Group className="d-flex flex-column gap-2">
-                      <label className="d-flex align-items-center gap-2">
-                        <input
-                          type="checkbox"
-                          className="form-check-input"
-                          checked={
-                            values.restrictions.workAboveShoulder.checked
-                          }
-                          onChange={(e) =>
-                            setFieldValue(
-                              "restrictions.workAboveShoulder.checked",
-                              e.target.checked
-                            )
-                          }
-                        />
-                        <span className="text-xs">
-                          Work at or above shoulder activity
-                        </span>
-                      </label>
-                    </Form.Group>
-                    {values.restrictions.workAboveShoulder.checked && (
-                      <Form.Control
-                        type="text"
-                        placeholder="Please specify"
-                        name="restrictions.workAboveShoulder.details"
-                        value={values.restrictions.workAboveShoulder.details}
-                        onChange={handleChange}
-                        className="p-0 ms-2 border-bottom-1 border-top-0 border-end-0 rounded-0 border-start-0"
-                        style={{ height: "auto", width: "200px" }}
-                      />
-                    )}
-                  </div>
-
-                  {/* 3. CHEMICAL EXPOSURE */}
-                  <div className="col">
-                    <Form.Group className="d-flex flex-column gap-2">
-                      <label className="d-flex align-items-center gap-2">
-                        <input
-                          type="checkbox"
-                          className="form-check-input"
-                          checked={values.restrictions.chemicalExposure.checked}
-                          onChange={(e) =>
-                            setFieldValue(
-                              "restrictions.chemicalExposure.checked",
-                              e.target.checked
-                            )
-                          }
-                        />
-                        <span className="text-xs">Chemical exposure to</span>
-                      </label>
-                    </Form.Group>
-                    {values.restrictions.chemicalExposure.checked && (
-                      <Form.Control
-                        type="text"
-                        placeholder="Please specify"
-                        name="restrictions.chemicalExposure.details"
-                        value={values.restrictions.chemicalExposure.details}
-                        onChange={handleChange}
-                        className="p-0 ms-2 border-bottom-1 border-top-0 border-end-0 rounded-0 border-start-0"
-                        style={{ height: "auto", width: "200px" }}
-                      />
-                    )}
-                  </div>
-
-                  {/* 4. ENVIRONMENTAL EXPOSURE */}
-                  <div className="col">
-                    <Form.Group className="d-flex flex-column gap-2">
-                      <label className="d-flex align-items-center gap-2">
-                        <input
-                          type="checkbox"
-                          className="form-check-input"
-                          checked={
-                            values.restrictions.environmentalExposure.checked
-                          }
-                          onChange={(e) =>
-                            setFieldValue(
-                              "restrictions.environmentalExposure.checked",
-                              e.target.checked
-                            )
-                          }
-                        />
-                        <span className="text-xs">
-                          Environmental exposure to: (e.g. heat, cold, noise or
-                          scents)
-                        </span>
-                      </label>
-                    </Form.Group>
-                    {values.restrictions.environmentalExposure.checked && (
-                      <Form.Control
-                        type="text"
-                        placeholder="Please specify"
-                        name="restrictions.environmentalExposure.details"
+                      Recommended date of next appointment to review Abilities
+                      and/or Restrictions.
+                    </Form.Label>
+                    <div style={{ maxWidth: "300px" }}>
+                      <CustomDatePicker
+                        className="h-40-px"
                         value={
-                          values.restrictions.environmentalExposure.details
+                          values.nextAppointmentDate
+                            ? new Date(values.nextAppointmentDate)
+                            : null
                         }
-                        onChange={handleChange}
-                        className="p-0 ms-2 border-bottom-1 border-top-0 border-end-0 rounded-0 border-start-0"
-                        style={{ height: "auto", width: "200px" }}
+                        onChange={(date) => {
+                          setFieldValue("nextAppointmentDate", date, true);
+                          setFieldTouched("nextAppointmentDate", true, false);
+                        }}
+                        isInvalid={Boolean(
+                          touched.nextAppointmentDate &&
+                            errors.nextAppointmentDate
+                        )}
                       />
-                    )}
-                  </div>
+                    </div>
 
-                  {/* 5. LIMITED PUSHING / PULLING */}
-                  <div className="col">
-                    <Form.Group className="d-flex flex-column gap-2">
-                      <label className="d-flex align-items-center gap-2">
-                        <input
-                          type="checkbox"
-                          className="form-check-input"
-                          checked={
-                            values.restrictions.limitedPushingPulling.checked
-                          }
-                          onChange={(e) =>
-                            setFieldValue(
-                              "restrictions.limitedPushingPulling.checked",
-                              e.target.checked
-                            )
-                          }
-                        />
-                        <span className="text-xs">
-                          Limited Pushing / Pulling
-                        </span>
-                      </label>
-
-                      {values.restrictions.limitedPushingPulling.checked && (
-                        <div className="d-flex flex-column gap-1 ms-3 text-xs">
-                          <label className="d-flex align-items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={
-                                values.restrictions.limitedPushingPulling
-                                  .leftArm
-                              }
-                              onChange={(e) =>
-                                setFieldValue(
-                                  "restrictions.limitedPushingPulling.leftArm",
-                                  e.target.checked
-                                )
-                              }
-                              className="form-check-input"
-                            />
-                            Left Arm
-                          </label>
-
-                          <label className="d-flex align-items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={
-                                values.restrictions.limitedPushingPulling
-                                  .rightArm
-                              }
-                              onChange={(e) =>
-                                setFieldValue(
-                                  "restrictions.limitedPushingPulling.rightArm",
-                                  e.target.checked
-                                )
-                              }
-                              className="form-check-input"
-                            />
-                            Right Arm
-                          </label>
-                          <label className="d-flex flex-row  gap-2">
-                            <input
-                              type="checkbox"
-                              checked={
-                                values.restrictions.limitedPushingPulling.other
-                              }
-                              onChange={(e) =>
-                                setFieldValue(
-                                  "restrictions.limitedPushingPulling.other",
-                                  e.target.checked
-                                )
-                              }
-                              className="form-check-input"
-                            />
-                            <span>Other</span>{" "}
-                            {values.restrictions.limitedPushingPulling.other ===
-                              true && (
-                              <Form.Control
-                                type="text"
-                                placeholder="Other details"
-                                name="restrictions.limitedPushingPulling.otherText"
-                                value={
-                                  values.restrictions.limitedPushingPulling
-                                    .otherText
-                                }
-                                onChange={handleChange}
-                                className="p-0 ms-2 border-bottom-1 border-top-0 border-end-0 rounded-0 border-start-0"
-                                style={{ height: "auto", width: "200px" }}
-                              />
-                            )}
-                          </label>
+                    {touched.nextAppointmentDate &&
+                      errors.nextAppointmentDate && (
+                        <div className="text-danger text-sm">
+                          {String(errors.nextAppointmentDate)}
                         </div>
                       )}
-                    </Form.Group>
-                  </div>
-
-                  {/* 6. OPERATING MOTORIZED EQUIPMENT */}
-                  <div className="col">
-                    <Form.Group className="d-flex flex-column gap-2">
-                      <label className="d-flex align-items-center gap-2">
-                        <input
-                          type="checkbox"
-                          className="form-check-input"
-                          checked={
-                            values.restrictions.operatingMotorizedEquipment
-                              .checked
-                          }
-                          onChange={(e) =>
-                            setFieldValue(
-                              "restrictions.operatingMotorizedEquipment.checked",
-                              e.target.checked
-                            )
-                          }
-                        />
-                        <span className="text-xs">
-                          Operating motorized equipment: (e.g. forklift)
-                        </span>
-                      </label>
-                    </Form.Group>
-                    {values.restrictions.operatingMotorizedEquipment
-                      .checked && (
-                      <Form.Control
-                        type="text"
-                        placeholder="Please specify"
-                        name="restrictions.operatingMotorizedEquipment.details"
-                        value={
-                          values.restrictions.operatingMotorizedEquipment
-                            .details
-                        }
-                        onChange={handleChange}
-                        className="p-0 ms-2 border-bottom-1 border-top-0 border-end-0 rounded-0 border-start-0"
-                        style={{ height: "auto", width: "200px" }}
-                      />
-                    )}
-                  </div>
-
-                  {/* 7. MEDICATION SIDE EFFECTS */}
-                  <div className="col">
-                    <Form.Group className="d-flex flex-column gap-2">
-                      <label className="d-flex align-items-center gap-2">
-                        <input
-                          type="checkbox"
-                          className="form-check-input"
-                          checked={
-                            values.restrictions.medicationSideEffects.checked
-                          }
-                          onChange={(e) =>
-                            setFieldValue(
-                              "restrictions.medicationSideEffects.checked",
-                              e.target.checked
-                            )
-                          }
-                        />
-                        <span className="text-xs">
-                          {" "}
-                          Potential side effects from medications (please
-                          specify) Do not include names of medications.
-                        </span>
-                      </label>
-                    </Form.Group>
-                    {values.restrictions.medicationSideEffects.checked && (
-                      <Form.Control
-                        type="text"
-                        placeholder="Please specify"
-                        name="restrictions.medicationSideEffects.details"
-                        value={
-                          values.restrictions.medicationSideEffects.details
-                        }
-                        onChange={handleChange}
-                        className="p-0 ms-2 border-bottom-1 border-top-0 border-end-0 rounded-0 border-start-0"
-                        style={{ height: "auto", width: "200px" }}
-                      />
-                    )}
-                  </div>
-
-                  {/* 8. EXPOSURE TO VIBRATION */}
-                  <div className="col">
-                    <Form.Group className="d-flex flex-column gap-2">
-                      <label className="d-flex align-items-center gap-2">
-                        <input
-                          type="checkbox"
-                          className="form-check-input"
-                          checked={
-                            values.restrictions.exposureToVibration.checked
-                          }
-                          onChange={(e) =>
-                            setFieldValue(
-                              "restrictions.exposureToVibration.checked",
-                              e.target.checked
-                            )
-                          }
-                        />
-                        <span className="text-xs"> Exposure to Vibration</span>
-                      </label>
-
-                      {values.restrictions.exposureToVibration.checked && (
-                        <div className="d-flex flex-column gap-1 ms-3">
-                          <label className="d-flex align-items-center text-xs gap-2">
-                            <input
-                              type="checkbox"
-                              checked={
-                                values.restrictions.exposureToVibration
-                                  .wholeBody
-                              }
-                              onChange={(e) =>
-                                setFieldValue(
-                                  "restrictions.exposureToVibration.wholeBody",
-                                  e.target.checked
-                                )
-                              }
-                              className="form-check-input"
-                            />
-                            Whole Body
-                          </label>
-
-                          <label className="d-flex align-items-center text-xs gap-2">
-                            <input
-                              type="checkbox"
-                              checked={
-                                values.restrictions.exposureToVibration.handArm
-                              }
-                              onChange={(e) =>
-                                setFieldValue(
-                                  "restrictions.exposureToVibration.handArm",
-                                  e.target.checked
-                                )
-                              }
-                              className="form-check-input "
-                            />
-                            Hand / Arm
-                          </label>
-                        </div>
-                      )}
-                    </Form.Group>
-                  </div>
-
-                  {/* 9. LIMITED USE OF HANDS */}
-                  <div className="col">
-                    <Form.Group className="d-flex flex-column gap-2">
-                      <label className="d-flex align-items-center gap-2">
-                        <input
-                          type="checkbox"
-                          className="form-check-input"
-                          checked={
-                            values.restrictions.limitedUseOfHands.checked
-                          }
-                          onChange={(e) =>
-                            setFieldValue(
-                              "restrictions.limitedUseOfHands.checked",
-                              e.target.checked
-                            )
-                          }
-                        />
-                        <span className="text-xs ">Limited Use Of Hands</span>
-                      </label>
-                      {values.restrictions.limitedUseOfHands.checked === true &&
-                        HandFields.map((field) => (
-                          <div
-                            key={field.label}
-                            className="d-flex align-items-center text-xs justify-content-between my-2"
-                            style={{ width: "260px" }}
-                          >
-                            {/* LEFT CHECKBOX */}
-                            <input
-                              type="checkbox"
-                              className="form-check-input"
-                              checked={
-                                values.restrictions.limitedUseOfHands.left[
-                                  field.value
-                                ]
-                              }
-                              onChange={(e) =>
-                                setFieldValue(
-                                  `restrictions.limitedUseOfHands.left.${field.value}`,
-                                  e.target.checked
-                                )
-                              }
-                            />
-                            {/* LABEL */}{" "}
-                            <span className="text-center flex-grow-1">
-                              {field.label}
-                            </span>
-                            {/* RIGHT CHECKBOX */}
-                            <input
-                              type="checkbox"
-                              className="form-check-input"
-                              checked={
-                                values.restrictions.limitedUseOfHands.right[
-                                  field.value
-                                ]
-                              }
-                              onChange={(e) =>
-                                setFieldValue(
-                                  `restrictions.limitedUseOfHands.right.${field.value}`,
-                                  e.target.checked
-                                )
-                              }
-                            />
-                          </div>
-                        ))}
-
-                      {values.restrictions.limitedUseOfHands.left.other && (
-                        <Form.Control
-                          type="text"
-                          placeholder="Left Hand – Please specify"
-                          name="restrictions.limitedUseOfHands.left.otherText"
-                          value={
-                            values.restrictions.limitedUseOfHands.left.otherText
-                          }
-                          onChange={handleChange}
-                          className="p-0 ms-2 border-bottom-1 border-top-0 border-end-0 rounded-0 border-start-0"
-                          style={{ height: "auto", width: "200px" }}
-                        />
-                      )}
-
-                      {values.restrictions.limitedUseOfHands.right.other && (
-                        <Form.Control
-                          type="text"
-                          placeholder="Right Hand – Please specify"
-                          name="restrictions.limitedUseOfHands.right.otherText"
-                          value={
-                            values.restrictions.limitedUseOfHands.right
-                              .otherText
-                          }
-                          onChange={handleChange}
-                          className="p-0 ms-2 border-bottom-1 border-top-0 border-end-0 rounded-0 border-start-0"
-                          style={{ height: "auto", width: "200px" }}
-                        />
-                      )}
-                    </Form.Group>
-                  </div>
+                  </Form.Group>
                 </div>
-                <Form.Group className="d-flex flex-column gap-2 mb-3">
-                  <Form.Label className="text-xs text-street-dark fw-normal">
-                    {" "}
-                    3. Additional Comments on Abilities and/or Restrictions
-                  </Form.Label>
-                  <Form.Control
-                    style={{ height: "40px" }}
-                    name="commentsOnAbilities"
-                    value={values.commentsOnAbilities}
-                    onChange={handleChange}
-                  />
-                  {touched.commentsOnAbilities &&
-                    errors.commentsOnAbilities && (
-                      <div className="text-danger text-sm">
-                        {errors.commentsOnAbilities}
-                      </div>
-                    )}
-                </Form.Group>
-                <Form.Group className="d-flex flex-column gap-2 mb-3">
-                  <Form.Label className="text-xs text-street-dark fw-normal">
-                    4. From the date of this assessment, the above will apply
-                    for approximately
-                  </Form.Label>
-                  <div className="d-flex flex-row gap-20 align-items-center">
-                    {[
-                      { label: "1-2 days", value: "1-2 days" },
-                      { label: "3-7 days", value: "3-7 days" },
-                      { label: "8-14 days", value: "8-14 days" },
-                      { label: "14+ days", value: "14+ days" },
-                    ].map((opt) => (
-                      <div
-                        key={opt.label}
-                        className="d-flex align-items-center gap-2"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={values.assessmentDuration === opt.value}
-                          onChange={() =>
-                            setFieldValue(
-                              "assessmentDuration",
-                              values.assessmentDuration === opt.value
-                                ? ""
-                                : opt.value
-                            )
-                          }
-                          className="form-check-input"
-                        />
-
-                        <span className="text-xs ">{opt.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </Form.Group>
-                <Form.Group className="d-flex flex-column gap-2 mb-3">
-                  <Form.Label className="text-xs text-street-dark fw-normal">
-                    5. Have you discussed return to work with your patient?
-                  </Form.Label>
-                  <div className="d-flex flex-row gap-20 align-items-center">
-                    {[
-                      { label: "Yes", value: true },
-                      { label: "No", value: false },
-                    ].map((opt) => (
-                      <div
-                        key={opt.label}
-                        className="d-flex align-items-center gap-2"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={values.isDiscussRTWtoPatient === opt.value}
-                          onChange={() =>
-                            setFieldValue(
-                              "assessmentDuration",
-                              values.isDiscussRTWtoPatient === opt.value
-                                ? ""
-                                : opt.value
-                            )
-                          }
-                          className="form-check-input"
-                        />
-
-                        <span className="text-xs ">{opt.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </Form.Group>
               </div>
-            </div>
+            )}
 
             <div className="card">
-              <div className="card-body d-flex flex-column  gap-20 px-24 py-16">
-                <h3 className="text-xl text-street-dark fw-semibold mb-0">
-                  F. Date of Next Appointment
-                </h3>
-                <Form.Group className="d-flex flex-column gap-2 mb-3">
-                  <Form.Label className="text-xs text-street-dark fw-normal">
-                    {" "}
-                    Recommended date of next appointment to review Abilities
-                    and/or Restrictions.
-                  </Form.Label>
-                  <div style={{ maxWidth: "300px" }}>
-                    <CustomDatePicker
-                      className="h-40-px"
-                      value={
-                        values.nextAppointmentDate
-                          ? new Date(values.nextAppointmentDate)
-                          : null
-                      }
-                      onChange={(date) => {
-                        setFieldValue("nextAppointmentDate", date, true);
-                        setFieldTouched("nextAppointmentDate", true, false);
-                      }}
-                      isInvalid={Boolean(
-                        touched.nextAppointmentDate &&
-                          errors.nextAppointmentDate
-                      )}
-                    />
-                  </div>
-
-                  {touched.nextAppointmentDate &&
-                    errors.nextAppointmentDate && (
-                      <div className="text-danger text-sm">
-                        {String(errors.nextAppointmentDate)}
-                      </div>
-                    )}
-                </Form.Group>
-              </div>
-            </div>
-            <div className="card">
-              <div className="card-body d-flex flex-column  gap-20 px-24 py-16">
+              <div className="card-body d-flex flex-row w-100 justify-content-end  gap-20 px-24 py-16">
                 <button
                   className="btn btn-street-outline-primary btn-street-lg d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
                   onClick={() =>
@@ -2258,6 +1749,12 @@ const FunctionalAbiltiesForm = () => {
                   }
                 >
                   Download Form
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                >
+                  {isLoading ? "Submitting..." : "Submit"}
                 </button>
               </div>
             </div>
