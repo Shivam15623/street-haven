@@ -17,6 +17,12 @@ interface AddEmployeeValues {
   password: string;
 }
 const roleValues = Object.values(ROLES) as Array<string>;
+function formatRole(role:string):string {
+  return role
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
 const AddEmployeeSchema = Yup.object({
   firstName: Yup.string()
     .required("First Name is required")
@@ -211,7 +217,7 @@ const AddEmployee = () => {
                       <option value="">-- Select Role --</option>
                       {Object.values(ROLES).map((role) => (
                         <option key={role} value={role}>
-                          {role.replace("_", " ").toUpperCase()}
+                          {formatRole(role)}
                         </option>
                       ))}
                     </Form.Select>

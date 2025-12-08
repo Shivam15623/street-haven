@@ -22,19 +22,16 @@ const SubmitRequestTab = () => {
     <div className="d-flex flex-column gap-4">
       <Row className="g-3 gy-md-0 gx-md-4">
         <Col sm={12}>
-          <div
-            className={`request-form-card card cursor-pointer`}
-            onClick={() => setActive(!active)}
-          >
+          <div className={`request-form-card card cursor-pointer`}>
             <div
               className={`card-body p-12 p-sm-24 rounded-3 ${
-                active ? "border-sh-primary-1" : ""
+                active ? "border-sh-primary-1" : "shadow-sm"
               }`}
             >
               <div className="d-flex flex-column gap-16 gap-sm-20">
                 <div className="d-flex flex-row align-items-center gap-12">
-                  <div className="w-40-px h-40-px req-icon  d-flex align-items-center justify-content-center rounded-3 p-2">
-                    <Icon icon={card.icon} className="text-xxl " />
+                  <div className="w-40-px h-40-px req-icon d-flex align-items-center justify-content-center rounded-3 p-2">
+                    <Icon icon={card.icon} className="text-xxl" />
                   </div>
                   <div className="d-flex flex-column gap-1">
                     <p className="text-xs xs:text-sm fw-semibold">
@@ -62,6 +59,14 @@ const SubmitRequestTab = () => {
                     ))}
                   </ul>
                 </div>
+
+                {/* Create Ticket Button */}
+                <button
+                  className="btn btn-street-primary w-100 text-sm fw-semibold radius-12 "
+                  onClick={() => setActive(!active)}
+                >
+                  Create Ticket
+                </button>
               </div>
             </div>
           </div>

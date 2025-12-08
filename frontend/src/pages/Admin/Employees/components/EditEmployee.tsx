@@ -9,7 +9,12 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import FormImageUploader from "./FormProfileUploader";
 import { PatternFormat } from "react-number-format";
 import { ROLES } from "../../../../interfaces/AuthInterfaces";
-
+function formatRole(role:string):string {
+  return role
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
 const editEmployeeSchema = yup.object({
   firstname: yup.string().required("First name is required"),
   lastname: yup.string().required("Last name is required"),
@@ -180,7 +185,7 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
 
                   {Object.values(ROLES).map((role) => (
                     <option key={role} value={role}>
-                      {role.replace("_", " ").toUpperCase()}
+                      {formatRole(role)}
                     </option>
                   ))}
                 </BootstrapForm.Select>
