@@ -24,7 +24,7 @@ const SimpleTable = <T extends unknown>({
   onPageChange,
 }: TableProps<T>) => {
   const totalPages = Math.ceil(total / limit);
-
+  console.log("Total Pages:", totalPages, page);
   return (
     <div className="card-body">
       <div className="table-responsive w-100">
@@ -85,7 +85,7 @@ const SimpleTable = <T extends unknown>({
 
                   <button
                     className="btn btn-sm btn-outline-primary"
-                    disabled={page === totalPages}
+                    disabled={page === totalPages || totalPages === 0}
                     onClick={() => onPageChange(page + 1)}
                   >
                     Next
