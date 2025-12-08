@@ -73,7 +73,7 @@ type ClientIncidentValues = Yup.InferType<typeof ClientIncidentFormSchema>;
 const ClientIncidentForm = () => {
   const [createIncident, { isLoading }] = useCreateClientincidentMutation();
   const handleSubmit = async (values: ClientIncidentValues) => {
-    console.log("dfjvdfjvsavfsd", values);
+ 
     try {
       const payload: ClientIncidentCredentials = {
         date: values.date,
