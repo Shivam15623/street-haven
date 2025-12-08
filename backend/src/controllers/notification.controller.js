@@ -155,12 +155,18 @@ export const MarkNotificationsAsRead = asyncHandler(async (req, res) => {
   }
 
   const now = new Date();
+  const expireAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // +7 days
 
   // Upsert UserNotification entries for all provided notification IDs
   const bulkOps = ids.map((notificationId) => ({
     updateOne: {
       filter: { userId, notificationId },
-      update: { $set: { readAt: now } },
+      update: {
+        $set: {
+          readAt: now,
+          expireAt, // <-- Set expireAt on create/update
+        },
+      },
       upsert: true,
     },
   }));

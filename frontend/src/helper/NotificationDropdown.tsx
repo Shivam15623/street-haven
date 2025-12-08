@@ -28,7 +28,8 @@ const NotificationDropdown = () => {
 
     socket.emit("joinUserRoom", { userId: user?._id });
 
-    socket.on("newNotification", (notification: notificationData) => {
+    socket.on("newNotification", (notification: notificationData) => { 
+
       setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((prev) => prev + 1);
     });
