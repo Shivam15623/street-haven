@@ -102,11 +102,12 @@ const FormApi = api.injectEndpoints({
     }),
     createmediaConsent: builder.mutation({
       query: (credentials) => ({
-        url: "/form/functionalAbilties",
+        url: "/form/mediaConsent",
         method: "POST",
         body: credentials,
       }),
     }),
+    
   }),
 });
 
