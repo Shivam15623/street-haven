@@ -77,7 +77,7 @@ export const api = createApi({
     "Employees",
     "OrgNode",
     "Notification",
-    "Announcement",
+    "Announcement","Agreement"
   ],
   endpoints: () => ({}),
 });

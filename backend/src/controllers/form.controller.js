@@ -2,6 +2,7 @@ import ClientFeedback from "../model/clientFeedback.js";
 import ClientIncident from "../model/clientIncidentReport.js";
 import EmployeeIncidentReport from "../model/EmployeeIncident.js";
 import FunctionalAbility from "../model/functionalAbilties.js";
+import MediaConsent from "../model/mediaConsent.js";
 import PaymentRequisition from "../model/PaymentRequistion.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
@@ -242,15 +243,27 @@ export const createPaymentRequisition = asyncHandler(async (req, res) => {
 export const createFAF = asyncHandler(async (req, res) => {
   const data = req.body;
   const fafNew = await FunctionalAbility.create(data);
-  if(!fafNew){
-    throw new ApiError(500,"Server Side Error!")
+  if (!fafNew) {
+    throw new ApiError(500, "Server Side Error!");
   }
   return res
     .status(201)
     .json(new ApiResponse(201, "Form Submitted Successfully!"));
 });
-const FORM_PDFS = {
-  "joining-form": "/forms/joining_form.pdf",
-  "exit-form": "/forms/exit_form.pdf",
-  "leave-application": "/forms/leave_application.pdf",
-};
+
+export const createMediaConsent = asyncHandler(async (req, res) => {
+  const { date, name, printedname } = req.body;
+  const payload = {
+    date: date,
+    name: name,
+    printedname: printedname,
+  };
+  const mediaConsent = await MediaConsent.create(payload);
+
+  if (!mediaConsent) {
+    throw new ApiError(500, "Server Side Error");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Media Consent Form Submitted Successfully!"));
+});

@@ -1,7 +1,22 @@
-import { useState } from "react";
+import { Formik, type FormikHelpers } from "formik";
+import * as Yup from "yup";
+import { Form } from "react-bootstrap";
 import { Card } from "react-bootstrap";
 import CustomDatePicker from "../../../../../components/child/DatePicker";
+import { useCreatemediaConsentMutation } from "../../../../../services/FormApi";
+import { showSuccess } from "../../../../../utills/toastutills";
 
+// ------------------ VALIDATION SCHEMA ------------------
+const MediaConsentSchema = Yup.object().shape({
+  name: Yup.string().required("Required"),
+  printedName: Yup.string().required("Printed name is required"),
+  date: Yup.date().required("Date is required").nullable(),
+});
+type MediaConsentFormValues = {
+  name: string;
+  printedName: string;
+  date: Date | null;
+};
 // Reusable bullet section with nested items
 const BulletSection = ({
   title,
@@ -29,7 +44,7 @@ const BulletSection = ({
   </li>
 );
 
-// Generic list block used for “I understand that:” & “This consent:”
+// Generic list block
 const SimpleListBlock = ({
   heading,
   items,
@@ -39,7 +54,6 @@ const SimpleListBlock = ({
 }) => (
   <ul>
     <li className="text-street-dark fw-semibold text-sm mb-12">{heading}</li>
-
     <li>
       <ul className="text-sm" style={{ listStyleType: "disc" }}>
         {items.map((item, i) => (
@@ -53,16 +67,29 @@ const SimpleListBlock = ({
 );
 
 const MediaConsentForm = () => {
-  // 🔥 All content stored in JSON → super clean
-  const [form, setForm] = useState<{
-    name: string;
-    printedName: string;
-    date: Date | null;
-  }>({
-    name: "",
-    printedName: "",
-    date: null,
-  });
+  const [createMediaConsent, { isLoading }] = useCreatemediaConsentMutation();
+  const handleSubmit = async (
+    values: MediaConsentFormValues,
+    { resetForm }: FormikHelpers<MediaConsentFormValues>
+  ) => {
+    try {
+      const payload = {
+        name: values.name,
+        printedname: values.printedName,
+        date: values.date,
+      };
+
+      const res = await createMediaConsent(payload).unwrap();
+
+      if (res.success) {
+        showSuccess("Media Consent form submitted successfully");
+        resetForm(); // 🔥 typesafe reset
+      }
+    } catch (error) {
+      console.error("Error submitting Media Consent form:", error);
+    }
+  };
+
   const handleDownload = async (url: string, filename: string) => {
     try {
       const response = await fetch(url);
@@ -78,16 +105,10 @@ const MediaConsentForm = () => {
       link.click();
       document.body.removeChild(link);
 
-      URL.revokeObjectURL(blobUrl); // Free memory
+      URL.revokeObjectURL(blobUrl);
     } catch (err) {
       console.error("Download failed:", err);
     }
-  };
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log("FORM SUBMITTED:", form);
-    alert("Form Submitted");
   };
 
   const mediaSections = [
@@ -143,6 +164,7 @@ const MediaConsentForm = () => {
     "Will be reviewed annually or upon significant role changes.",
     "May be limited by the organization for safety or operational reasons.",
   ];
+
   const acknowledegItems = [
     "I have read and understood this consent form",
     "I have been given the opportunity to ask questions",
@@ -153,109 +175,145 @@ const MediaConsentForm = () => {
   ];
 
   return (
-    <form onSubmit={handleSubmit} className="d-flex flex-column gap-24">
-      {" "}
-      {/* Header Card */}
-      <div className="card">
-        <div className="card-body d-flex gap-20 align-items-center">
-          <img src="/assets/images/shForm.png" width={144} height={113} />
-          <div>
-            <h4 className="text-xxl sm:text-xl text-street-dark fw-semibold mb-2">
-              MEDIA CONSENT FORM
-            </h4>
-          </div>
-        </div>
-      </div>
-      {/* Form Card */}
-      <div className="card">
-        <div className="card-body d-flex flex-column gap-20 px-24 py-16">
-          {/* Input Sentence */}
-          <div className="d-flex align-items-center gap-8 text-street-dark text-sm fw-semibold">
-            <span>I</span>
-            <input
-              className="form-control h-40-px"
-              style={{ maxWidth: "588px" }}
-            />
-            <span>
-              , understand that I may be asked to participate in various
-              media-related activities including but not limited to
-            </span>
-          </div>
-
-          {/* Media Sections */}
-          <ul
-            className="text-street-dark text-sm ms-3"
-            style={{ listStyleType: "disc" }}
-          >
-            {mediaSections.map((section, i) => (
-              <BulletSection key={i} {...section} />
-            ))}
-          </ul>
-
-          {/* Understanding Block */}
-          <SimpleListBlock
-            heading="I understand that:"
-            items={understandItems}
-          />
-
-          {/* Consent Block */}
-          <SimpleListBlock heading="This consent:" items={consentItems} />
-        </div>
-      </div>
-      {/* Footer */}
-      <div className="card">
-        <div className="card-body d-flex flex-column gap-20 px-24 py-16">
-          <h4 className="mb-0 text-xl text-street-dark fw-semibold">
-            STAFF ACKNOWLEDGMENT
-          </h4>
-          <SimpleListBlock
-            heading="By signing below, I acknowledge that:"
-            items={acknowledegItems}
-          />
-          <div className="d-flex w-full flex-row gap-20">
-            <div className="d-flex flex-column gap-8">
-              <label className="text-xs text-street-dark">Date</label>
-              <CustomDatePicker
-                value={form.date}
-                onChange={(date) => setForm({ ...form, date })}
-              />
+    <Formik<MediaConsentFormValues>
+      initialValues={{
+        name: "",
+        printedName: "",
+        date: null,
+      }}
+      validationSchema={MediaConsentSchema}
+      onSubmit={handleSubmit}
+    >
+      {({ values, errors, touched, setFieldValue, handleSubmit }) => (
+        <Form className="d-flex flex-column gap-24" onSubmit={handleSubmit}>
+          {/* Header Card */}
+          <div className="card">
+            <div className="card-body d-flex gap-20 align-items-center">
+              <img src="/assets/images/shForm.png" width={144} height={113} />
+              <div>
+                <h4 className="text-xxl sm:text-xl text-street-dark fw-semibold mb-2">
+                  MEDIA CONSENT FORM
+                </h4>
+              </div>
             </div>
+          </div>
 
-            <div className="d-flex flex-column gap-8">
-              <label className="text-xs text-street-dark">Printed Name</label>
-              <input
-                className="form-control h-40-px"
-                value={form.printedName}
-                onChange={(e) =>
-                  setForm({ ...form, printedName: e.target.value })
+          {/* Form Card */}
+          <div className="card">
+            <div className="card-body d-flex flex-column gap-20 px-24 py-16">
+              <div className="d-flex align-items-center gap-8 text-street-dark text-sm fw-semibold">
+                <span>I</span>
+
+                <div className="d-flex flex-column">
+                  <input
+                    className="form-control h-40-px"
+                    style={{ maxWidth: "588px" }}
+                    value={values.name}
+                    onChange={(e) => setFieldValue("name", e.target.value)}
+                  />
+                  {errors.name && touched.name && (
+                    <small className="text-danger">{errors.name}</small>
+                  )}
+                </div>
+
+                <span>
+                  , understand that I may be asked to participate in various
+                  media-related activities including but not limited to
+                </span>
+              </div>
+
+              <ul
+                className="text-street-dark text-sm ms-3"
+                style={{ listStyleType: "disc" }}
+              >
+                {mediaSections.map((section, i) => (
+                  <BulletSection key={i} {...section} />
+                ))}
+              </ul>
+
+              <SimpleListBlock
+                heading="I understand that:"
+                items={understandItems}
+              />
+
+              <SimpleListBlock heading="This consent:" items={consentItems} />
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="card">
+            <div className="card-body d-flex flex-column gap-20 px-24 py-16">
+              <h4 className="mb-0 text-xl text-street-dark fw-semibold">
+                STAFF ACKNOWLEDGMENT
+              </h4>
+
+              <SimpleListBlock
+                heading="By signing below, I acknowledge that:"
+                items={acknowledegItems}
+              />
+
+              <div className="d-flex w-full flex-row gap-20">
+                <div className="d-flex flex-column gap-8">
+                  <label className="text-xs text-street-dark">Date</label>
+
+                  <CustomDatePicker
+                    value={values.date}
+                    onChange={(date) => setFieldValue("date", date)}
+                  />
+
+                  {errors.date && touched.date && (
+                    <small className="text-danger">{errors.date}</small>
+                  )}
+                </div>
+
+                <div className="d-flex flex-column gap-8">
+                  <label className="text-xs text-street-dark">
+                    Printed Name
+                  </label>
+
+                  <input
+                    className="form-control h-40-px"
+                    value={values.printedName}
+                    onChange={(e) =>
+                      setFieldValue("printedName", e.target.value)
+                    }
+                  />
+
+                  {errors.printedName && touched.printedName && (
+                    <small className="text-danger">{errors.printedName}</small>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <Card className="shadow-sm border-0">
+            <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
+              <button
+                className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                type="button"
+                onClick={() =>
+                  handleDownload(
+                    "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764757685/Media_Consent_Form_nopwfz.pdf",
+                    "Media Consent Form"
+                  )
                 }
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-      <Card className="shadow-sm border-0">
-        <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
-          <button
-            className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-            onClick={() =>
-              handleDownload(
-                "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764757685/Media_Consent_Form_nopwfz.pdf",
-                "Media Consent Form"
-              )
-            }
-          >
-            Download
-          </button>
-          <button
-            type="submit"
-            className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-          >
-            Submit
-          </button>
-        </Card.Body>
-      </Card>
-    </form>
+              >
+                Download
+              </button>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+              >
+                {isLoading ? "Submitting..." : "Submit"}
+              </button>
+            </Card.Body>
+          </Card>
+        </Form>
+      )}
+    </Formik>
   );
 };
 
