@@ -6,6 +6,12 @@ import {
   createFAF,
   createMediaConsent,
   createPaymentRequisition,
+  GetAllClientFeedback,
+  GetAllClientIncidents,
+  GetAllEmployeeIncidents,
+  GetAllFunctionalAbilities,
+  GetAllMediaConsent,
+  GetAllPaymentRequisitions,
 } from "../controllers/form.controller.js";
 import { upload } from "../middleware/multer.js";
 import { functionalAbiltiesData } from "../validations/formSchemas.js";
@@ -23,4 +29,23 @@ router
   .route("/functionalAbilties")
   .post(validateRequest(functionalAbiltiesData, "body"), createFAF);
 router.route("/mediaConsent").post(createMediaConsent);
+
+// -------------------- GET routes --------------------
+// Client Feedback
+router.route("/clientFeedback").get(GetAllClientFeedback);
+
+// Client Incident
+router.route("/clientIncident").get(GetAllClientIncidents);
+
+// Employee Incident
+router.route("/employeeIncident").get(GetAllEmployeeIncidents);
+
+// Functional Abilities
+router.route("/functionalAbilties").get(GetAllFunctionalAbilities);
+
+// Media Consent
+router.route("/mediaConsent").get(GetAllMediaConsent);
+
+// Payment Requisition
+router.route("/paymentRequistion").get(GetAllPaymentRequisitions);
 export default router;

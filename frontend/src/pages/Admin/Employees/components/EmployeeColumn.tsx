@@ -4,6 +4,12 @@ import userimage from "@assets/images/user.png";
 import EditEmployee from "./EditEmployee";
 import DeleteEmployee from "./DeleteEmployee";
 import type { HasPermissionFn } from "../../../../hooks/Auth";
+function formatRole(role: string): string {
+  return role
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
 export const EmployeeColumn = (
   hasPermission: HasPermissionFn
 ): Column<EmployeeData>[] => {
@@ -43,7 +49,7 @@ export const EmployeeColumn = (
     {
       title: "Role",
       accessorKey: "role",
-      render: (row) => <div>{row.role.replace("_", " ").toUpperCase()}</div>,
+      render: (row) => <div>{formatRole(row.role)}</div>,
     },
   ];
 

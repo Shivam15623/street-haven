@@ -6,7 +6,7 @@ import CustomDatePicker from "../../../../../components/child/DatePicker";
 import { PatternFormat } from "react-number-format";
 import {
   useCreateClientFeedbackMutation,
-  type clientFeedbackCredentials,
+  type ClientFeedbackCredentials,
 } from "../../../../../services/FormApi";
 import { showError, showSuccess } from "../../../../../utills/toastutills";
 
@@ -70,7 +70,7 @@ const ClientFeedbackForm = () => {
   };
   const handleSubmit = async (values: ClientFeedbackValues) => {
     try {
-      const payload: clientFeedbackCredentials = {
+      const payload: ClientFeedbackCredentials = {
         date: new Date(values.date),
         location: values.location,
         type: values.natureOfComplaint ?? "",

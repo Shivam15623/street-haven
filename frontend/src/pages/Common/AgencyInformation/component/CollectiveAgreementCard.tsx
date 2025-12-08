@@ -65,7 +65,7 @@ const CollectiveAgreementCard = ({
                 <div className="d-flex flex-row flex-wrap text-xxs xs:text-xs fw-normal gap-1 gap-sm-8">
                   {" "}
                   <span>{attachment.totalPages} pages </span>•
-                  <span>{formatFileSize(attachment.size)} MB</span>•
+                  <span>{formatFileSize(attachment.size)}</span>•
                   <span>
                     {" "}
                     {updatedAt === createdAt ? (

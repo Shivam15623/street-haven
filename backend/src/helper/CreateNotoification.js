@@ -20,6 +20,8 @@ import UserNotification from "../model/notificationTrack.js";
  * @param {Date} [options.expireAt]
  * @param {mongoose.ClientSession} [session]
  */
+
+
 export const createNotification = async (options, session = null) => {
   const {
     type,
@@ -30,13 +32,19 @@ export const createNotification = async (options, session = null) => {
     isGlobal = false,
     recipients = [],
     createdBy,
-    expireAt,
+    expireAt, // optional
   } = options;
 
   if (!type || !title || !message)
     throw new Error("Type, title, and message are required.");
 
-  // 1️⃣ Create the notification
+  // 1️⃣ Calculate default expiration (30 days)
+  const now = new Date();
+  const defaultExpireAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  const notificationExpireAt = expireAt || defaultExpireAt;
+
+  // 2️⃣ Create the notification
   const [notification] = await Notification.create(
     [
       {
@@ -46,19 +54,25 @@ export const createNotification = async (options, session = null) => {
         link,
         meta,
         isGlobal,
-        expireAt,
+        expireAt: notificationExpireAt, // always set value
         createdBy,
       },
     ],
     session ? { session } : {}
   );
 
-  // 2️⃣ Only create mapping entries for targeted notifications
+  // 3️⃣ Create UserNotification mapping for targeted notifications
   if (!isGlobal && recipients.length > 0) {
     const bulkOps = recipients.map((userId) => ({
       updateOne: {
         filter: { userId, notificationId: notification._id },
-        update: { $setOnInsert: { userId, notificationId: notification._id } },
+        update: {
+          $setOnInsert: {
+            userId,
+            notificationId: notification._id,
+            expiresAt: notificationExpireAt, // 30-day global expiry
+          },
+        },
         upsert: true,
       },
     }));
@@ -81,7 +95,8 @@ export const createNotification = async (options, session = null) => {
     _id: notification._id.toString(),
     readAt: null,
     isRead: false,
-    isGlobal: isGlobal,
+    isGlobal,
   };
+
   return passNotification;
 };

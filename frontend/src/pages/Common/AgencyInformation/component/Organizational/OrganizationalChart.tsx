@@ -351,6 +351,7 @@ function Flow() {
       {" "}
       <div
         ref={containerRef}
+        onWheel={(e) => e.stopPropagation()}
         style={{
           width: "100%",
           height: "80vh", // fixed height (no dancing)
@@ -369,6 +370,7 @@ function Flow() {
             panOnDrag={false}
             zoomOnScroll={false}
             zoomOnPinch={false}
+            panOnScroll={false}
             zoomOnDoubleClick={false}
             minZoom={0.5}
             maxZoom={2}

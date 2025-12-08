@@ -13,6 +13,7 @@ const UserNotificationSchema = new mongoose.Schema(
       required: true,
     },
     readAt: { type: Date, default: null },
+    expireAt: Date,
   },
   { timestamps: true }
 );
@@ -22,7 +23,7 @@ UserNotificationSchema.index(
   { userId: 1, notificationId: 1 },
   { unique: true }
 );
-
+UserNotificationSchema.index({ expireAt: 1 }, { expireAfterSeconds: 0 });
 // Optimize for user fetch
 UserNotificationSchema.index({ userId: 1, readAt: 1 });
 

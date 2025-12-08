@@ -152,6 +152,7 @@ export const createEmployeeIncident = asyncHandler(async (req, res) => {
     sawDoctor,
     previousInjury,
   };
+  
   if (witnessName) payload.witnessName === witnessName;
   if (sawDoctor === true) {
     payload.doctorName = doctorName;
@@ -266,4 +267,229 @@ export const createMediaConsent = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, "Media Consent Form Submitted Successfully!"));
+});
+
+export const GetAllClientFeedback = asyncHandler(async (req, res) => {
+  const {
+    page = 1,
+    limit = 10,
+    search = "",
+    sortBy = "createdAt",
+    order = "desc",
+  } = req.query;
+
+  const query = {};
+  if (search) {
+    query.$or = [
+      { clientName: { $regex: search, $options: "i" } },
+      { clientEmail: { $regex: search, $options: "i" } },
+      { visitLocation: { $regex: search, $options: "i" } },
+      { complaintDescription: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  const data = await ClientFeedback.find(query)
+    .sort({ [sortBy]: order === "asc" ? 1 : -1 })
+    .skip((page - 1) * limit)
+    .limit(Number(limit));
+
+  const totalCount = await ClientFeedback.countDocuments(query);
+
+  res.status(200).json(
+    new ApiResponse(200, "Client Feedback fetched successfully", {
+      allfeedbackSubmissions:data,
+      pagination: {
+        total: totalCount,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    })
+  );
+});
+
+export const GetAllClientIncidents = asyncHandler(async (req, res) => {
+  const {
+    page = 1,
+    limit = 10,
+    search = "",
+    sortBy = "incidentDate",
+    order = "desc",
+  } = req.query;
+
+  const query = {};
+  if (search) {
+    query.$or = [
+      { affectedPerson: { $regex: search, $options: "i" } },
+      { staffName: { $regex: search, $options: "i" } },
+      { description: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  const data = await ClientIncident.find(query)
+    .sort({ [sortBy]: order === "asc" ? 1 : -1 })
+    .skip((page - 1) * limit)
+    .limit(Number(limit));
+
+  const totalCount = await ClientIncident.countDocuments(query);
+
+  res.status(200).json(
+    new ApiResponse(200, "Client Incidents fetched successfully", {
+      data,
+      pagination: {
+        total: totalCount,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    })
+  );
+});
+
+export const GetAllEmployeeIncidents = asyncHandler(async (req, res) => {
+  const {
+    page = 1,
+    limit = 10,
+    search = "",
+    sortBy = "injuryDate",
+    order = "desc",
+  } = req.query;
+
+  const query = {};
+  if (search) {
+    query.$or = [
+      { name: { $regex: search, $options: "i" } },
+      { location: { $regex: search, $options: "i" } },
+      { description: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  const data = await EmployeeIncidentReport.find(query)
+    .sort({ [sortBy]: order === "asc" ? 1 : -1 })
+    .skip((page - 1) * limit)
+    .limit(Number(limit));
+
+  const totalCount = await EmployeeIncidentReport.countDocuments(query);
+
+  res.status(200).json(
+    new ApiResponse(200, "Employee Incidents fetched successfully", {
+      data,
+      pagination: {
+        total: totalCount,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    })
+  );
+});
+
+export const GetAllFunctionalAbilities = asyncHandler(async (req, res) => {
+  const {
+    page = 1,
+    limit = 10,
+    search = "",
+    sortBy = "createdAt",
+    order = "desc",
+  } = req.query;
+
+  const query = {};
+  if (search) {
+    query.$or = [
+      { workerName: { $regex: search, $options: "i" } },
+      { description: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  const data = await FunctionalAbility.find(query)
+    .sort({ [sortBy]: order === "asc" ? 1 : -1 })
+    .skip((page - 1) * limit)
+    .limit(Number(limit));
+
+  const totalCount = await FunctionalAbility.countDocuments(query);
+
+  res.status(200).json(
+    new ApiResponse(200, "Functional Abilities fetched successfully", {
+      data,
+      pagination: {
+        total: totalCount,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    })
+  );
+});
+
+export const GetAllMediaConsent = asyncHandler(async (req, res) => {
+  const {
+    page = 1,
+    limit = 10,
+    search = "",
+    sortBy = "date",
+    order = "desc",
+  } = req.query;
+
+  const query = {};
+  if (search) {
+    query.$or = [
+      { name: { $regex: search, $options: "i" } },
+      { printedname: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  const data = await MediaConsent.find(query)
+    .sort({ [sortBy]: order === "asc" ? 1 : -1 })
+    .skip((page - 1) * limit)
+    .limit(Number(limit));
+
+  const totalCount = await MediaConsent.countDocuments(query);
+
+  res.status(200).json(
+    new ApiResponse(200, "Media Consent forms fetched successfully", {
+      data,
+      pagination: {
+        total: totalCount,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    })
+  );
+});
+export const GetAllPaymentRequisitions = asyncHandler(async (req, res) => {
+  const {
+    page = 1,
+    limit = 10,
+    search = "",
+    sortBy = "requestedDate",
+    order = "desc",
+  } = req.query;
+
+  const query = {};
+  if (search) {
+    query.$or = [
+      { payeeName: { $regex: search, $options: "i" } },
+      { requestedBy: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  const data = await PaymentRequisition.find(query)
+    .sort({ [sortBy]: order === "asc" ? 1 : -1 })
+    .skip((page - 1) * limit)
+    .limit(Number(limit));
+
+  const totalCount = await PaymentRequisition.countDocuments(query);
+
+  res.status(200).json(
+    new ApiResponse(200, "Payment Requisitions fetched successfully", {
+      data,
+      pagination: {
+        total: totalCount,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    })
+  );
 });
