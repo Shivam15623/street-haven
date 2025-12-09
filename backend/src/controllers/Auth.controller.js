@@ -10,35 +10,47 @@ import otplib from "otplib";
 import speakeasy from "speakeasy";
 import qrcode from "qrcode";
 export const RegisterEmployee = asyncHandler(async (req, res) => {
-  const { firstName, lastName, email, password, phone } = req.body;
+  const { firstName, lastName, email, password, phone, role } = req.body;
 
-  const ExistingUser = await User.findOne({
+  // Check if role is invalid
+  const forbiddenRoles = ["super_admin", "admin", "director"];
+  if (role && forbiddenRoles.includes(role.toLowerCase())) {
+    throw new ApiError(400, `Role cannot be ${role}`);
+  }
+
+  // Check for existing user
+  const existingUser = await User.findOne({
     $or: [{ email: email }, { phoneNo: phone }],
   });
-  if (ExistingUser) {
-    if (ExistingUser.email === email) {
+
+  if (existingUser) {
+    if (existingUser.email === email) {
       throw new ApiError(400, "User already exists with this email");
-    } else if (ExistingUser.phoneNo === phone) {
+    } else if (existingUser.phoneNo === phone) {
       throw new ApiError(400, "User already exists with this phone number");
     }
   }
 
+  // Create user
   const newUser = await User.create({
     firstname: firstName,
     lastname: lastName,
     email: email,
     password: password,
     phoneNo: phone,
-    role: "employee",
+    role: role ? role.toLowerCase() : "employee", // default to employee
   });
+
   const findUser = await User.findById(newUser._id);
   if (!findUser) {
     throw new ApiError(500, "Account not created due to server error");
   }
+
   return res
     .status(201)
     .json(new ApiResponse(201, "Account created successfully"));
 });
+
 export const RegisterAdmin = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, password, phone } = req.body;
 

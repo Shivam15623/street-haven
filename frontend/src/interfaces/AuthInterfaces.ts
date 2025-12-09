@@ -86,6 +86,7 @@ export interface SignupCredentials {
   email: string;
   phone: string;
   password: string;
+  role: Role;
 }
 export interface ForgotPasswordcredential {
   token: string;
