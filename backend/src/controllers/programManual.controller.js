@@ -12,33 +12,31 @@ import { createNotification } from "../helper/CreateNotoification.js";
 import { addActivityLog } from "../helper/addActivityLogs.js";
 
 export const AddProgramManual = asyncHandler(async (req, res) => {
+  const { title, description, tags, type } = req.body;
+  const { _id: userId, firstname, lastname } = req.user;
+  const attachmentpath = req?.file?.path; // Fix typo
+
+  if (!attachmentpath) throw new ApiError(400, "Attachment file is missing");
+
+  // Phase 1: Parallel file processing (non-blocking)
+  const [totalPages, uploadedFile] = await Promise.all([
+    getPdfPageCount(attachmentpath), // Optimize this lib if possible [web:23]
+    uploadOnCloudinary(attachmentpath),
+  ]);
+
+  if (!uploadedFile?.url) throw new ApiError(500, "Attachment upload failed");
+
+  const attachmentData = {
+    fileName: uploadedFile.original_filename || "manual",
+    fileUrl: uploadedFile.secure_url,
+    size: uploadedFile.bytes,
+    totalPages,
+  };
+
+  // Phase 2: Minimal transaction - DB only
   const session = await mongoose.startSession();
-  session.startTransaction();
   try {
-    const { title, description, tags, type } = req.body;
-    const { _id: userId, firstname, lastname } = req.user;
-    const atttchmentpath = req?.file?.path;
-
-    if (!atttchmentpath) {
-      throw new ApiError(400, "Attachment file is missing");
-    }
-
-    const [totalPages, uploadedFile] = await Promise.all([
-      getPdfPageCount(atttchmentpath),
-      uploadOnCloudinary(atttchmentpath),
-    ]);
-
-    if (!uploadedFile?.url) {
-      throw new ApiError(500, "Attachment upload failed");
-    }
-
-    const attachmentData = {
-      fileName: uploadedFile.original_filename || "manual",
-      fileUrl: uploadedFile.secure_url,
-      size: uploadedFile.bytes,
-      totalPages,
-    };
-
+    session.startTransaction();
     // Create Program Manual within the session
     const programmanual = await ProgramManual.create(
       [
@@ -110,6 +108,8 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
     await session.abortTransaction();
     session.endSession();
     throw error;
+  } finally {
+    session.endSession();
   }
 });
 
@@ -141,10 +141,8 @@ export const EditProgramManual = asyncHandler(async (req, res) => {
 
   // If a new file is uploaded
   if (req?.file?.path) {
-    const [totalPages, uploadedFile] = await Promise.all([
-      getPdfPageCount(req.file.path),
-      uploadOnCloudinary(req.file.path),
-    ]);
+    const totalPages = await getPdfPageCount(req.file.path);
+    const uploadedFile = await uploadOnCloudinary(req.file.path);
 
     if (!uploadedFile?.url) {
       throw new ApiError(500, "Attachment upload failed");

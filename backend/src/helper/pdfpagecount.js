@@ -1,8 +1,8 @@
 import fs from "fs";
-import pdf from "pdf-parse";
+import { PDFDocument } from "pdf-lib";
 
 export const getPdfPageCount = async (filePath) => {
-  const dataBuffer = fs.readFileSync(filePath);
-  const data = await pdf(dataBuffer);
-  return data.numpages; // total pages
+  const existingPdfBytes = await fs.promises.readFile(filePath);
+  const pdfDoc = await PDFDocument.load(existingPdfBytes);
+  return pdfDoc.getPageCount(); // Instant for metadata only
 };

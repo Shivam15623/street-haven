@@ -152,7 +152,7 @@ export const createEmployeeIncident = asyncHandler(async (req, res) => {
     sawDoctor,
     previousInjury,
   };
-  
+
   if (witnessName) payload.witnessName === witnessName;
   if (sawDoctor === true) {
     payload.doctorName = doctorName;
@@ -176,6 +176,8 @@ export const createEmployeeIncident = asyncHandler(async (req, res) => {
       )
     );
 });
+
+
 export const createPaymentRequisition = asyncHandler(async (req, res) => {
   const {
     paymentDetails,
@@ -184,10 +186,9 @@ export const createPaymentRequisition = asyncHandler(async (req, res) => {
     requestedDate,
     approvedDate,
     payeeName,
-    totalAmount, // optional – we will re-calc below
   } = req.body;
 
-  // Validate paymentDetails array
+  // Validate purchase details array
   if (
     !paymentDetails ||
     !Array.isArray(paymentDetails) ||
@@ -196,48 +197,58 @@ export const createPaymentRequisition = asyncHandler(async (req, res) => {
     throw new ApiError(400, "At least one purchase detail is required");
   }
 
-  // If invoice file is uploaded (multer)
-  let invoiceAttachment = null;
-  if (req.file) {
-    // or req.file.filename based on config
-    const temp = await uploadOnCloudinary(req.file.path);
-    if (!temp.secure_url) {
-      throw new ApiError(500, "Error while uploading profile picture");
-    }
-    invoiceAttachment = temp.secure_url;
-  }
-
-  if (!invoiceAttachment) {
+  // Upload invoice if exists
+  if (!req.file) {
     throw new ApiError(400, "Invoice attachment is required");
   }
 
-  // Auto-calc total amount for safety
-  const calculatedTotal = paymentDetails.reduce(
-    (sum, item) => sum + Number(item.amount || 0),
+  const uploadedInvoice = await uploadOnCloudinary(req.file.path);
+  if (!uploadedInvoice?.secure_url) {
+    throw new ApiError(500, "Invoice upload failed");
+  }
+
+  // Ensure each purchase detail has netAmount, hst, totalAmount
+  const normalizedDetails = paymentDetails.map((item) => {
+    const netAmount = Number(item.netAmount || item.amount || 0);
+    const hst = Number(item.hst || 0);
+    return {
+      purchaseDate: item.purchaseDate,
+      purchaseNature: item.purchaseNature,
+      program: item.program,
+      expenseCode: item.expenseCode,
+      netAmount,
+      hst,
+      totalAmount: netAmount + hst,
+    };
+  });
+
+  // Recalculate totalAmount
+  const totalAmount = normalizedDetails.reduce(
+    (sum, item) => sum + item.totalAmount,
     0
   );
 
   const payload = {
-    paymentDetails,
+    paymentDetails: normalizedDetails,
     requestedBy,
     approvedBy,
     requestedDate,
     approvedDate,
     payeeName,
-    totalAmount: calculatedTotal, // overrides any user-provided amount
-    invoiceAttachment,
+    totalAmount,
+    invoiceAttachment: uploadedInvoice.secure_url,
   };
 
   const cPayment = await PaymentRequisition.create(payload);
 
-  if (!cPayment) {
-    throw new ApiError(500, "Server Side Error");
-  }
-
   return res
     .status(200)
     .json(
-      new ApiResponse(200, "Payment Requisition Form Submitted Successfully!")
+      new ApiResponse(
+        200,
+        "Payment Requisition Form Submitted Successfully!",
+        cPayment
+      )
     );
 });
 
@@ -297,7 +308,7 @@ export const GetAllClientFeedback = asyncHandler(async (req, res) => {
 
   res.status(200).json(
     new ApiResponse(200, "Client Feedback fetched successfully", {
-      allfeedbackSubmissions:data,
+      allfeedbackSubmissions: data,
       pagination: {
         total: totalCount,
         page: Number(page),

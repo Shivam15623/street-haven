@@ -11,7 +11,7 @@ const PurchaseDetailSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    department: {
+    program: {
       type: String,
       required: true,
       trim: true,
@@ -21,10 +21,20 @@ const PurchaseDetailSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    amount: {
+    netAmount: {
       type: Number,
       required: true,
       min: 1,
+    },
+    hst: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    totalAmount: {
+      type: Number,
+      required: true,
+      min: 0,
     },
   },
   { _id: false }
