@@ -151,6 +151,80 @@ const FuctionalAbiltiesDetail = ({
               )}
             />
           </DetailSection>
+          {details.abilities && (
+            <DetailSection title="🧩 Functional Abilities">
+              <DetailItem label="Walking" value={details.abilities.walking} />
+              <DetailItem label="Standing" value={details.abilities.standing} />
+              <DetailItem label="Sitting" value={details.abilities.sitting} />
+              <DetailItem
+                label="Lifting (Waist to Shoulder)"
+                value={details.abilities.liftingWaistToShoulder}
+              />
+              <DetailItem
+                label="Ladder Climbing"
+                value={details.abilities.ladderClimbing}
+              />
+              <DetailItem
+                label="Lifting (Floor to Waist)"
+                value={details.abilities.liftingFloorToWaist}
+              />
+
+              <DetailItem
+                label="Travel to Work (Public Transit)"
+                value={details.abilities.travelToWork.publicTransit}
+              />
+              <DetailItem
+                label="Travel to Work (Car)"
+                value={details.abilities.travelToWork.car}
+              />
+            </DetailSection>
+          )}
+
+          {details.restrictions && (
+            <DetailSection title="⚠️ Restrictions">
+              {details.restrictions.bendingTwisting && (
+                <DetailItem
+                  label="Bending / Twisting"
+                  value={details.restrictions.bendingTwisting}
+                />
+              )}
+
+              {details.restrictions.chemicalExposure && (
+                <DetailItem
+                  label="Chemical Exposure"
+                  value={details.restrictions.chemicalExposure}
+                />
+              )}
+
+              {details.restrictions.environmentalExposure && (
+                <DetailItem
+                  label="Environmental Exposure"
+                  value={details.restrictions.environmentalExposure}
+                />
+              )}
+
+              {details.restrictions.medicationSideEffects && (
+                <DetailItem
+                  label="Medication Side Effects"
+                  value={details.restrictions.medicationSideEffects}
+                />
+              )}
+
+              {details.restrictions.operatingMotorizedEquipment && (
+                <DetailItem
+                  label="Operating Motorized Equipment"
+                  value={details.restrictions.operatingMotorizedEquipment}
+                />
+              )}
+
+              {details.restrictions.workAboveShoulder && (
+                <DetailItem
+                  label="Work Above Shoulder"
+                  value={details.restrictions.workAboveShoulder}
+                />
+              )}
+            </DetailSection>
+          )}
         </div>
       </ModalWrapper>
     </>

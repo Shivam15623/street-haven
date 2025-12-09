@@ -65,6 +65,7 @@ export interface EmployeeIncidentCredentials {
   previousInjuryDate?: Date;
 }
 export interface clientFeedbackData {
+  _id:string;
   visitDate: Date;
   visitLocation: string;
   clientName: string | null;

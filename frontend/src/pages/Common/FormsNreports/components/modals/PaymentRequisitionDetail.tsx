@@ -1,0 +1,124 @@
+import React, { useState } from "react";
+import ModalWrapper from "../../../../../components/child/ModalWrapper";
+import type { PaymentRequisition } from "../../../../../services/FormApi";
+
+const LabelValue = ({ label, value }: { label: string; value: string }) => (
+  <div className="col-md-4 d-flex flex-column gap-1 mb-3">
+    <div className="text-sm text-street-base">{label}</div>
+    <div className="text-sm text-street-dark">{value || "N/A"}</div>
+  </div>
+);
+
+const Section = ({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) => (
+  <div className="p-16">
+    <div className="text-lg xl:text-xl mb-2">{title}</div>
+    <div className="row g-3">{children}</div>
+  </div>
+);
+
+const PaymentRequisitionDetail = ({
+  detail,
+}: {
+  detail: PaymentRequisition;
+}) => {
+  const [showModal, setShowModal] = useState(false);
+
+  return (
+    <>
+      <button
+        className="btn btn-street-primary d-flex text-sm flex-row align-items-center justify-content-center radius-12 gap-2"
+        onClick={() => setShowModal(true)}
+      >
+        View Details
+      </button>
+
+      <ModalWrapper
+        show={showModal}
+        title="Payment Requisition Details"
+        size="lg"
+        headerClassName="text-xl p-0 pb-20 text-street-dark"
+        className="p-20 p-sm-24 p-md-32 gap-16 gap-sm-20"
+        bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
+        footerClassName="pt-16 pt-sm-20 px-0 pb-0"
+        onHide={() => setShowModal(false)}
+      >
+        <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
+          {/* General Info */}
+          <Section title="📝 General Information">
+            <LabelValue
+              label="Requested Date"
+              value={new Date(detail.requestedDate).toLocaleDateString("en-IN")}
+            />
+            <LabelValue
+              label="Approved Date"
+              value={new Date(detail.approvedDate).toLocaleDateString("en-IN")}
+            />
+            <LabelValue label="Requested By" value={detail.requestedBy} />
+            <LabelValue label="Approved By" value={detail.approvedBy} />
+            <LabelValue label="Payee Name" value={detail.payeeName} />
+            <LabelValue label="Total Amount" value={`₹${detail.totalAmount}`} />
+          </Section>
+
+          {/* Invoice Attachment */}
+          <Section title="📄 Invoice Attachment">
+            <div className="col-12">
+              {detail.invoiceAttachment ? (
+                <a
+                  href={detail.invoiceAttachment}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-outline-primary text-sm"
+                >
+                  View Invoice
+                </a>
+              ) : (
+                <div className="text-sm text-street-dark">No Attachment</div>
+              )}
+            </div>
+          </Section>
+
+          {/* Payment Details */}
+          <Section title="💰 Payment Details">
+            <div className="col-12">
+              <table className="table table-bordered text-sm">
+                <thead className="table-light">
+                  <tr>
+                    <th>Purchase Date</th>
+                    <th>Nature of Purchase</th>
+                    <th>Department</th>
+                    <th>Expense Code</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {detail.paymentDetails?.map((item, index) => (
+                    <tr key={index}>
+                      <td>
+                        {new Date(item.purchaseDate).toLocaleDateString(
+                          "en-IN"
+                        )}
+                      </td>
+                      <td>{item.purchaseNature}</td>
+                      <td>{item.department}</td>
+                      <td>{item.expenseCode}</td>
+                      <td>₹{item.amount}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Section>
+        </div>
+      </ModalWrapper>
+    </>
+  );
+};
+
+export default PaymentRequisitionDetail;
