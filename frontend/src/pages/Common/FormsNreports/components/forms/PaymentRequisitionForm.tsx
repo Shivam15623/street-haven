@@ -1,4 +1,10 @@
-import { Field, FieldArray, Formik, type FormikErrors } from "formik";
+import {
+  Field,
+  FieldArray,
+  Formik,
+  type FormikErrors,
+  type FormikTouched,
+} from "formik";
 import { Card, Col, Form, Row, Table } from "react-bootstrap";
 import * as Yup from "yup";
 import CustomDatePicker from "../../../../../components/child/DatePicker";
@@ -13,9 +19,11 @@ import { showSuccess } from "../../../../../utills/toastutills";
 interface PurchaseDetail {
   date: Date | null;
   nature: string;
-  department: string;
-  programExpenseCode: string;
-  amount: string;
+  program: string;
+  expenseCode: string;
+  netAmount: number;
+  hst: number;
+  totalAmount: number;
 }
 
 interface FormValues {
@@ -44,9 +52,11 @@ const FormSchema = Yup.object({
       Yup.object().shape({
         date: Yup.date().nullable().required("Date is required"),
         nature: Yup.string().required("Nature is required"),
-        department: Yup.string().required("Department is required"),
-        programExpenseCode: Yup.string().required("Expense Code required"),
-        amount: Yup.number().required("Amount is required"),
+        program: Yup.string().required("Department is required"),
+        expenseCode: Yup.string().required("Expense Code required"),
+        netAmount: Yup.number().required("Net Amount is required"),
+        hst: Yup.number().required("HST is required"),
+        totalAmount: Yup.number().required("Total Amount is required"),
       })
     )
     .min(1, "At least one Purchase Detail is required"),
@@ -60,6 +70,7 @@ const FormSchema = Yup.object({
       return value.size <= 16 * 1024 * 1024;
     }),
 });
+
 
 const PaymentRequisitionForm = () => {
   const [createpayrequest, { isLoading }] =
@@ -76,9 +87,11 @@ const PaymentRequisitionForm = () => {
       {
         date: null,
         nature: "",
-        department: "",
-        programExpenseCode: "",
-        amount: "",
+        program: "",
+        expenseCode: "",
+        netAmount: 0,
+        totalAmount: 0,
+        hst: 0,
       },
     ],
   };
@@ -131,17 +144,14 @@ const PaymentRequisitionForm = () => {
           `paymentDetails[${index}][purchaseNature]`,
           item.nature
         );
-        formData.append(
-          `paymentDetails[${index}][department]`,
-          item.department
-        );
+        formData.append(`paymentDetails[${index}][program]`, item.program);
         formData.append(
           `paymentDetails[${index}][expenseCode]`,
-          item.programExpenseCode
+          item.expenseCode
         );
         formData.append(
           `paymentDetails[${index}][amount]`,
-          item.amount.toString()
+          item.netAmount.toString()
         );
       });
 
@@ -257,30 +267,32 @@ const PaymentRequisitionForm = () => {
                       bordered
                       responsive
                       className="table-form"
-                      style={{ minWidth: "800px" }}
+                      style={{ minWidth: "900px" }}
                     >
                       <thead>
                         <tr>
                           <th>#</th>
                           <th>Date</th>
-                          <th>Nature of Purchase</th>
-                          <th>Department</th>
-                          <th>Program Expense Code</th>
-                          <th>Amount</th>
-                          {/* <th>Action</th> */}
+                          <th>Nature</th>
+                          <th>Program</th>
+                          <th>Expense Code</th>
+                          <th>Net Amount</th>
+                          <th>HST</th>
+                          <th>Total</th>
+                          <th>Action</th>
                         </tr>
                       </thead>
 
-                      <tbody style={{ minWidth: "750px" }}>
-                        {values.purchaseDetails.map((_, index) => {
-                          // SAFELY access nested errors
+                      <tbody>
+                        {values.purchaseDetails.map((row, index) => {
                           const rowErrors =
                             (
                               errors.purchaseDetails as FormikErrors<PurchaseDetail>[]
                             )?.[index] || {};
-
                           const rowTouched =
-                            (touched.purchaseDetails as any)?.[index] || {};
+                            (
+                              touched.purchaseDetails as FormikTouched<PurchaseDetail>[]
+                            )?.[index] || {};
 
                           return (
                             <tr key={index}>
@@ -289,24 +301,20 @@ const PaymentRequisitionForm = () => {
                               {/* DATE */}
                               <td>
                                 <CustomDatePicker
-                                  value={values.purchaseDetails[index].date}
-                                  onChange={(date: Date | null) => {
+                                  value={row.date}
+                                  onChange={(date) => {
                                     setFieldValue(
                                       `purchaseDetails[${index}].date`,
                                       date
                                     );
-                                    setFieldTouched(
-                                      `purchaseDetails[${index}].date`,
-                                      true
-                                    );
                                   }}
                                   isInvalid={
-                                    !!rowErrors.date && rowTouched.date
+                                    rowTouched.date && !!rowErrors.date
                                   }
                                 />
-                                {rowErrors.date && rowTouched.date && (
+                                {rowTouched.date && rowErrors.date && (
                                   <div className="text-danger small">
-                                    {rowErrors.date}
+                                    {String(rowErrors.date)}
                                   </div>
                                 )}
                               </td>
@@ -315,110 +323,139 @@ const PaymentRequisitionForm = () => {
                               <td>
                                 <Field
                                   name={`purchaseDetails[${index}].nature`}
-                                  className="form-control border-0 bg-transparent"
+                                  className="form-control"
                                   placeholder="Nature"
                                 />
-                                {rowErrors.nature && rowTouched.nature && (
-                                  <div className="text-danger small">
-                                    {rowErrors.nature}
-                                  </div>
-                                )}
                               </td>
 
-                              {/* DEPT */}
+                              {/* PROGRAM */}
                               <td>
                                 <Field
-                                  name={`purchaseDetails[${index}].department`}
-                                  className="form-control bg-transparent border-0"
-                                  placeholder="Department"
+                                  name={`purchaseDetails[${index}].program`}
+                                  className="form-control"
+                                  placeholder="Program"
                                 />
-                                {rowErrors.department &&
-                                  rowTouched.department && (
-                                    <div className="text-danger small">
-                                      {rowErrors.department}
-                                    </div>
-                                  )}
                               </td>
 
-                              {/* EXP CODE */}
+                              {/* EXPENSE CODE */}
                               <td>
                                 <Field
-                                  name={`purchaseDetails[${index}].programExpenseCode`}
-                                  className="form-control border-0 bg-transparent"
+                                  name={`purchaseDetails[${index}].expenseCode`}
+                                  className="form-control"
                                   placeholder="Expense Code"
                                 />
-                                {rowErrors.programExpenseCode &&
-                                  rowTouched.programExpenseCode && (
-                                    <div className="text-danger small">
-                                      {rowErrors.programExpenseCode}
-                                    </div>
-                                  )}
                               </td>
-                              {/* AMOUNT */}
-                              <td className="pe-1">
-                                <div className="d-flex flex-row align-items-center  h-100 flex-grow-1 justify-content-between">
-                                  <div>
-                                    {" "}
-                                    <Field
-                                      name={`purchaseDetails[${index}].amount`}
-                                      type="number"
-                                      className="form-control border-0 bg-transparent"
-                                      placeholder="Amount"
-                                    />
-                                    {rowErrors.amount && rowTouched.amount && (
-                                      <div className="text-danger small">
-                                        {rowErrors.amount}
-                                      </div>
-                                    )}
-                                  </div>{" "}
-                                  <div className="d-flex gap-1 flex-column">
-                                    {values.purchaseDetails.length !== 1 && (
-                                      <button
-                                        type="button"
-                                        className="btn btn-street-primary p-0 d-flex align-items-center justify-content-center rounded-circle"
-                                        style={{
-                                          width: "22px",
-                                          height: "22px",
-                                        }}
-                                        onClick={() => remove(index)}
-                                        disabled={
-                                          values.purchaseDetails.length === 1
-                                        }
-                                      >
-                                        <Icon
-                                          icon={"mynaui:minus"}
-                                          className="text-sm "
-                                        />
-                                      </button>
-                                    )}
-                                    {(values.purchaseDetails.length === 1 ||
-                                      values.purchaseDetails.length ===
-                                        index + 1) && (
-                                      <button
-                                        className="btn btn-street-primary p-0 d-flex align-items-center justify-content-center rounded-circle"
-                                        style={{
-                                          width: "22px",
-                                          height: "22px",
-                                        }}
-                                        type="button"
-                                        onClick={() =>
-                                          push({
-                                            date: "",
-                                            nature: "",
-                                            department: "",
-                                            programExpenseCode: "",
-                                            amount: "",
-                                          })
-                                        }
-                                      >
-                                        <Icon
-                                          icon={"tabler:plus"}
-                                          className="text-sm"
-                                        />
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>{" "}
+
+                              {/* NET AMOUNT */}
+                              <td>
+                                <Field
+                                  name={`purchaseDetails[${index}].netAmount`}
+                                  type="number"
+                                  className="form-control"
+                                  placeholder="Net Amount"
+                                  onChange={(
+                                    e: React.ChangeEvent<HTMLInputElement>
+                                  ) => {
+                                    const amount = Number(e.target.value);
+                                    const hst = Number(
+                                      values.purchaseDetails[index].hst
+                                    );
+                                    setFieldValue(
+                                      `purchaseDetails[${index}].netAmount`,
+                                      amount
+                                    );
+                                    setFieldValue(
+                                      `purchaseDetails[${index}].totalAmount`,
+                                      amount + hst
+                                    );
+                                  }}
+                                />
+                              </td>
+
+                              {/* HST */}
+                              <td>
+                                <Field
+                                  name={`purchaseDetails[${index}].hst`}
+                                  type="number"
+                                  className="form-control"
+                                  placeholder="HST"
+                                  onChange={(
+                                    e: React.ChangeEvent<HTMLInputElement>
+                                  ) => {
+                                    const hst = Number(e.target.value);
+                                    const amount = Number(
+                                      values.purchaseDetails[index].netAmount
+                                    );
+                                    setFieldValue(
+                                      `purchaseDetails[${index}].hst`,
+                                      hst
+                                    );
+                                    setFieldValue(
+                                      `purchaseDetails[${index}].totalAmount`,
+                                      amount + hst
+                                    );
+                                  }}
+                                />
+                              </td>
+
+                              {/* TOTAL */}
+                              <td>
+                                <Form.Control
+                                  disabled
+                                  value={
+                                    values.purchaseDetails[index].totalAmount
+                                  }
+                                />
+                              </td>
+
+                              {/* ACTION */}
+                              <td>
+                                <div className="d-flex flex-column gap-1">
+                                  {values.purchaseDetails.length > 1 && (
+                                    <button
+                                      type="button"
+                                      className="btn btn-street-primary p-0 d-flex align-items-center justify-content-center rounded-circle"
+                                      style={{
+                                        width: "22px",
+                                        height: "22px",
+                                      }}
+                                      onClick={() => remove(index)}
+                                    >
+                                      <Icon
+                                        icon={"mynaui:minus"}
+                                        className="text-sm "
+                                      />
+                                    </button>
+                                  )}
+
+                                  {index ===
+                                    values.purchaseDetails.length - 1 && (
+                                    <button
+                                      type="button"
+                                      className="btn btn-street-primary p-0 d-flex align-items-center justify-content-center rounded-circle"
+                                      style={{
+                                        width: "22px",
+                                        height: "22px",
+                                      }}
+                                      onClick={() =>
+                                        push({
+                                          date: null,
+                                          nature: "",
+                                          program: "",
+                                          expenseCode: "",
+                                          netAmount: 0,
+                                          hst: 0,
+                                          totalAmount: 0,
+                                        })
+                                      }
+                                    >
+                                      <Icon
+                                        icon={"tabler:plus"}
+                                        className="text-sm"
+                                      />
+                                    </button>
+                                  )}
+                                </div>
                               </td>
                             </tr>
                           );
