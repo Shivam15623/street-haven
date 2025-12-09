@@ -1,77 +1,91 @@
 import CardlistWrapper from "./CardListWrapper";
-import { Icon } from "@iconify/react/dist/iconify.js";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import {
+  useFetchActivityLogsQuery,
+  type ActivityLogData,
+} from "../../../../services/notificationApi";
+import { useEffect, useState } from "react";
+import { useSocket } from "../../../../hooks/useSocket";
+import { useSelector } from "react-redux";
+import { selectAuth } from "../../../../redux/AuthSlice";
 
 dayjs.extend(relativeTime);
 
 const RecentActivity = () => {
-  const announcements = [
-    {
-      id: 1,
-      title: "New Safety Protocol uploaded by HR",
-      author: "Sarah Johnson",
-      date: "2025-08-21T09:40:00", // Example ISO datetime
-    },
-    {
-      id: 2,
-      title: "Event meeting scheduled for Friday",
-      author: "Leadership Team",
-      date: "2025-08-20T14:30:00",
-    },
-    {
-      id: 3,
-      title: "Amanda completed 2 years at Street Haven!",
-      author: "HR Team",
-      date: "2025-08-21T09:40:00", // Example ISO datetime
-    },
-    {
-      id: 4,
-      title: "IT ticket resolved - Network connectivity",
-      author: "Tech Support",
-      date: "2025-08-20T14:30:00",
-    },
-    {
-      id: 5,
-      title: "Housing manual updated with new procedures",
-      author: "Tech Support",
-      date: "2025-08-21T09:40:00", // Example ISO datetime
-    },
-  ];
+  const { data, isLoading } = useFetchActivityLogsQuery({ limit: 5, page: 1 });
+  const { socket } = useSocket();
+  const { user } = useSelector(selectAuth);
+  const [activityLogs, setActivityLogs] = useState<ActivityLogData[]>([]);
+
+  useEffect(() => {
+    setActivityLogs(data?.data.logs ?? []);
+  }, [data?.data.logs]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.emit("joinUserRoom", { userId: user?._id });
+
+    socket.on("activity:new", (newactivity: ActivityLogData) => {
+      setActivityLogs((prev) => [newactivity, ...prev]);
+    });
+
+    return () => {
+      socket.emit("leaveUserRoom", { userId: user?._id });
+      socket.off("activity:new");
+    };
+  }, [socket, user?._id]);
 
   return (
     <CardlistWrapper title="Recent Activity">
       <div className="d-flex flex-column gap-3">
-        {announcements.map((item) => {
-          const now = dayjs();
-          const createdAt = dayjs(item.date);
-          const diffMinutes = now.diff(createdAt, "minute");
-
-          const timeText = diffMinutes < 10 ? "Just now" : createdAt.fromNow();
-
-          return (
-            <div
-              key={item.id}
-              className="d-flex flex-row align-items-center justify-content-between gap-3 p-8 p-sm-12 border-0-5 rounded-2"
-              style={{
-                borderColor: "#AAAAAA",
-              }}
-            >
-              <div className="d-flex flex-column justify-content-center gap-1 gap-sm-8">
-                <h3 className="fw-semibold mb-0 text-xs xs:text-sm text-street-dark">
-                  {item.title}
-                </h3>
-                <div className="text-xxs d-flex text-street-base flex-row gap-8 xs:text-xs fw-normal">
-                  <span>{item.author}</span>•<span>{timeText}</span>
+        {isLoading
+          ? // Bootstrap loading placeholders
+            Array.from({ length: 5 }).map((_, idx) => (
+              <div
+                key={idx}
+                className="d-flex align-items-center justify-content-between p-2 p-sm-3 border rounded"
+              >
+                <div className="flex-grow-1">
+                  <div className="placeholder-glow w-100">
+                    <span className="placeholder col-8"></span>
+                  </div>
+                  <div className="placeholder-glow mt-1">
+                    <span className="placeholder col-6"></span>
+                  </div>
                 </div>
+                <div
+                  className="placeholder rounded-circle"
+                  style={{ width: "12px", height: "12px" }}
+                ></div>
               </div>
-              <Icon
-                icon="simple-line-icons:arrow-right"
-                className="w-12-px h-12-px "
-              />
-            </div>
-          );
-        })}
+            ))
+          : activityLogs.map((item) => {
+              const now = dayjs();
+              const createdAt = dayjs(item.createdAt);
+              const diffMinutes = now.diff(createdAt, "minute");
+
+              const timeText =
+                diffMinutes < 10 ? "Just now" : createdAt.fromNow();
+
+              return (
+                <div
+                  key={item._id}
+                  className="d-flex flex-row align-items-center justify-content-between gap-3 p-2 p-sm-3 border rounded"
+                  style={{ borderColor: "#AAAAAA" }}
+                >
+                  <div className="d-flex flex-column justify-content-center gap-1 gap-sm-2">
+                    <h3 className="fw-semibold mb-1 small text-dark">
+                      {item.message}
+                    </h3>
+                    <div className="text-muted small">
+                      {item.performedBy.name} • {timeText}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
       </div>
     </CardlistWrapper>
   );
