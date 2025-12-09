@@ -12,14 +12,12 @@ import {
 import mongoose from "mongoose";
 import { addActivityLog } from "../helper/addActivityLogs.js";
 
-
 export const createCollectiveAgreement = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
-  session.startTransaction();
 
   try {
     const { title, startDate, endDate } = req.body;
-    const {firstname, lastname} = req.user;
+    const { firstname, lastname } = req.user;
     const attachmentPath = req?.file?.path;
 
     if (!attachmentPath) {
@@ -27,10 +25,10 @@ export const createCollectiveAgreement = asyncHandler(async (req, res) => {
     }
 
     // Count pages
-    const totalPages = await getPdfPageCount(attachmentPath);
-
-    // Upload to Cloudinary
-    const uploadedFile = await uploadOnCloudinary(attachmentPath);
+    const [totalPages, uploadedFile] = await Promise.all([
+      getPdfPageCount(attachmentPath),
+      uploadOnCloudinary(attachmentPath),
+    ]);
     if (!uploadedFile?.url) {
       throw new ApiError(500, "Attachment upload failed");
     }
@@ -42,7 +40,7 @@ export const createCollectiveAgreement = asyncHandler(async (req, res) => {
       totalPages,
       publicId: uploadedFile.public_id,
     };
-
+    session.startTransaction();
     // Save in DB (inside transaction)
     const newAgreement = await CollectiveAgreement.create(
       [
@@ -138,9 +136,10 @@ export const editCollectiveAgreement = asyncHandler(async (req, res) => {
     if (agreement.attachment?.publicId) {
       await deleteFromCloudinary(agreement.attachment.publicId);
     }
-    const totalPages = await getPdfPageCount(attachmentPath);
-    // Upload new file
-    const uploadedFile = await uploadOnCloudinary(attachmentPath);
+    const [totalPages, uploadedFile] = await Promise.all([
+      getPdfPageCount(attachmentPath),
+      uploadOnCloudinary(attachmentPath),
+    ]);
 
     updatedAttachment = {
       fileName: uploadedFile.original_filename || "manual",
