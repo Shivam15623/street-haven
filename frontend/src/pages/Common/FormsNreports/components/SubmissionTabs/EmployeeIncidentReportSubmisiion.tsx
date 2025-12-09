@@ -5,7 +5,7 @@ import {
   useGetAllEmployeeIncidentsQuery,
   type employeeIncidentReport,
 } from "../../../../../services/FormApi";
-
+import EmployeeIncidentReportDetails from "../modals/EmployeeIncidentReportDetails";
 
 interface Column {
   header: string;
@@ -39,14 +39,7 @@ const columns: Column[] = [
   },
   {
     header: "Actions",
-    accessor: (row) => (
-      <button
-        className="btn btn-primary text-sm px-12 py-6 radius-8"
-        onClick={() => alert(JSON.stringify(row, null, 2))} // You can replace with a modal later
-      >
-        View Details
-      </button>
-    ),
+    accessor: (row) => <EmployeeIncidentReportDetails detail={row} />,
   },
 ];
 
