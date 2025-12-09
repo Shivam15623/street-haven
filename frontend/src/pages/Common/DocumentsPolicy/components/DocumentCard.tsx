@@ -56,44 +56,46 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
 
   return (
     <Col lg={4} md={6}>
-      <div className="card">
-        <div className="p-16 p-sm-20 card-body position-relative doc-card p-md-24 d-flex flex-column rounded-2 gap-10 gap-sm-12">
+      <div className="card" style={{ height: "100%" }}>
+        <div className="p-16 p-sm-20 card-body position-relative doc-card p-md-24 d-flex flex-column rounded-2 justify-content-between ">
           {/* Icon + Title + Description */}
           <div className="d-flex flex-column gap-10 gap-sm-12">
-            <div className="d-flex align-items-center justify-content-center doc-icon rounded-3 p-2 w-48-px h-48-px">
-              <Icon icon="heroicons:document" className="text-xxl" />
+            <div className="d-flex flex-column gap-10 gap-sm-12">
+              <div className="d-flex align-items-center justify-content-center doc-icon rounded-3 p-2 w-48-px h-48-px">
+                <Icon icon="heroicons:document" className="text-xxl" />
+              </div>
+              <div className="d-flex flex-column gap-2">
+                <p className="text-xs xs:text-sm text-street-dark fw-semibold">
+                  {title}
+                </p>
+                <div
+                  className="parse Te"
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(description),
+                  }}
+                />
+              </div>
             </div>
-            <div className="d-flex flex-column gap-2">
-              <p className="text-xs xs:text-sm text-street-dark fw-semibold">
-                {title}
-              </p>
-              <div
-                className="parse Te"
-                dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(description),
-                }}
-              />
+            <div className="d-flex flex-row gap-8 gap-sm-10">
+              {tags.map((tag, idx) => (
+                <Badge key={idx} variant="primary-soft">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+
+            {/* Category */}
+            <div>
+              <Badge
+                className="px-10 sm:text-xs radius-8"
+                variant="secondary-soft"
+              >
+                {type}
+              </Badge>
             </div>
           </div>
 
           {/* Tags */}
-          <div className="d-flex flex-row gap-8 gap-sm-10">
-            {tags.map((tag, idx) => (
-              <Badge key={idx} variant="primary-soft">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-
-          {/* Category */}
-          <div>
-            <Badge
-              className="px-10 sm:text-xs radius-8"
-              variant="secondary-soft"
-            >
-              {type}
-            </Badge>
-          </div>
 
           {/* Footer */}
           <div className="d-flex  flex-row gap-3  align-items-center  justify-content-between">

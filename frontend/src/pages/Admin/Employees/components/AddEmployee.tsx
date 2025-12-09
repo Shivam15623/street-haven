@@ -8,13 +8,14 @@ import { Col, Form, Row } from "react-bootstrap";
 import PasswordInput from "../../../../components/Authentication/PasswordInput";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { PatternFormat } from "react-number-format";
-import { ROLES } from "../../../../interfaces/AuthInterfaces";
+import { ROLES, type Role } from "../../../../interfaces/AuthInterfaces";
 interface AddEmployeeValues {
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
   password: string;
+  role:Role;
 }
 const roleValues = Object.values(ROLES) as Array<string>;
 function formatRole(role:string):string {
@@ -113,7 +114,7 @@ const AddEmployee = () => {
             email: "",
             phone: "",
             password: "",
-            role: "",
+            role: "employee",
           }}
           validationSchema={AddEmployeeSchema}
           onSubmit={handleAddEmployee}

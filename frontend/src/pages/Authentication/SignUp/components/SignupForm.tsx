@@ -7,12 +7,14 @@ import { useRegisterEmployeeMutation } from "../../../../services/AuthApi";
 import { showError, showSuccess } from "../../../../utills/toastutills";
 import PasswordInput from "../../../../components/Authentication/PasswordInput";
 import { PatternFormat } from "react-number-format";
+import type { Role } from "../../../../interfaces/AuthInterfaces";
 interface SignupValues {
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
   password: string;
+  role: Role;
 }
 const signupSchema = Yup.object({
   firstName: Yup.string()
@@ -29,6 +31,9 @@ const signupSchema = Yup.object({
       "Email must be from @streethaven.com domain"
     )
     .email("Email is required"),
+  role: Yup.string()
+    .required("Role is required")
+    .oneOf(["manager", "employee", "hr"], "Invalid role"),
   phone: Yup.string()
     .required("Phone number is required")
     .matches(
@@ -67,6 +72,7 @@ const SignupForm = () => {
           email: "",
           phone: "",
           password: "",
+          role: "employee",
         }}
         validationSchema={signupSchema}
         onSubmit={handleSignup}
@@ -202,7 +208,38 @@ const SignupForm = () => {
                   </Form.Group>
                 </Col>
               </Row>
+              <Row>
+                <Col>
+                  <Form.Group
+                    controlId="role"
+                    className="d-flex flex-column gap-1"
+                  >
+                    <Form.Label className="fw-normal m-0">Role</Form.Label>
+                    <Form.Select
+                      name="role"
+                      value={values.role}
+                      onChange={handleChange}
+                      className={`form-control d-flex align-items-center h-50-px ${
+                        touched.role && errors.role ? "is-invalid" : ""
+                      }`}
+                      style={{
+                        backgroundColor: "#F2F0EC",
+                        borderColor: "#E2E8F0",
+                        borderRadius: "15px",
+                      }}
+                    >
+                      <option value="">Select Role</option>
+                      <option value="manager">Manager</option>
+                      <option value="employee">Employee</option>
+                      <option value="hr">HR</option>
+                    </Form.Select>
 
+                    <Form.Control.Feedback type="invalid">
+                      {errors.role}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+                </Col>
+              </Row>
               {/* Password */}
               <Row>
                 <Col>
