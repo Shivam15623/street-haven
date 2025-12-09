@@ -65,7 +65,7 @@ export interface EmployeeIncidentCredentials {
   previousInjuryDate?: Date;
 }
 export interface clientFeedbackData {
-  _id:string;
+  _id: string;
   visitDate: Date;
   visitLocation: string;
   clientName: string | null;
@@ -122,12 +122,14 @@ export interface employeeIncidentReport {
   previousInjuryDate?: string;
   previousInjury: boolean;
 }
-export interface PurchaseDetail {
+interface PurchaseDetail {
   purchaseDate: Date;
   purchaseNature: string;
-  department: string;
+  program: string;
   expenseCode: string;
-  amount: number;
+  netAmount: number;
+  hst: number;
+  totalAmount: number;
 }
 
 export interface PaymentRequisition {
@@ -168,7 +170,6 @@ export interface FunctionalAbility {
 
   claimNo: string;
 
-
   worker: {
     firstName: string;
     lastName: string;
@@ -179,7 +180,6 @@ export interface FunctionalAbility {
 
   dateOfAccident: Date;
   employerFaxNo: string;
-
 
   employer: {
     fullName: string;
@@ -193,7 +193,6 @@ export interface FunctionalAbility {
   nodateOfDiscusswill?: Date;
   employerContactName: string;
   position: string;
-
 
   designationOfHealthPro: string;
 
@@ -213,7 +212,6 @@ export interface FunctionalAbility {
   hproPostalCode: string;
   hproFax: string;
 
-
   assesmentDate: Date;
 
   returnToWorkStatus: "noRestrictions" | "withRestrictions" | "unable";
@@ -232,7 +230,6 @@ export interface FunctionalAbility {
       car: "yes" | "no";
     };
   };
-
 
   restrictions?: {
     bendingTwisting?: string;

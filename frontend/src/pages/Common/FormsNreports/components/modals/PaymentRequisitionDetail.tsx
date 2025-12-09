@@ -93,7 +93,9 @@ const PaymentRequisitionDetail = ({
                     <th>Nature of Purchase</th>
                     <th>Department</th>
                     <th>Expense Code</th>
-                    <th>Amount</th>
+                    <th>Net Amount</th>
+                    <th>HST</th>
+                    <th>Total</th>
                   </tr>
                 </thead>
 
@@ -106,9 +108,11 @@ const PaymentRequisitionDetail = ({
                         )}
                       </td>
                       <td>{item.purchaseNature}</td>
-                      <td>{item.department}</td>
+                      <td>{item.program}</td>
                       <td>{item.expenseCode}</td>
-                      <td>₹{item.amount}</td>
+                      <td>₹{item.netAmount}</td>
+                      <td>₹{item.hst}</td>
+                      <td>₹{item.totalAmount}</td>
                     </tr>
                   ))}
                 </tbody>
