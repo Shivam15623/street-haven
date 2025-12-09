@@ -55,6 +55,9 @@ import orgNodeRoutes from "./routes/orgNode.routes.js";
 import announcementRoutes from "./routes/announcement.routes.js";
 import formRoutes from "./routes/forms.routes.js";
 import collectiveAgreementRoutes from "./routes/agreement.routes.js";
+import activityLogRoutes from "./routes/activitylogs.routes.js";
+
+app.use("/api/v1/activity-logs", activityLogRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/program-manuals", programManualRouter);

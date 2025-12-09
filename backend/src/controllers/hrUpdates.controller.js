@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+import { addActivityLog } from "../helper/addActivityLogs.js";
 import { getPdfPageCount } from "../helper/pdfpagecount.js";
 import HRupdate from "../model/hrupdate.js";
 import { ApiError } from "../utills/ApiError.js";
@@ -10,38 +12,81 @@ import {
 
 export const createhrUpdate = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
-  const { _id: userId } = req.user;
-  const atttchmentpath = req?.file?.path;
-  if (!atttchmentpath) {
-    throw new ApiError(400, "attachment file is missing");
-  }
-  const totalPages = await getPdfPageCount(atttchmentpath);
+  const { _id: userId, firstname, lastname } = req.user;
 
-  const uploadedFile = await uploadOnCloudinary(atttchmentpath);
-
-  if (!uploadedFile?.url) {
-    throw new ApiError(500, "attachment upload failed");
+  const attachmentPath = req?.file?.path;
+  if (!attachmentPath) {
+    throw new ApiError(400, "Attachment file is missing");
   }
 
-  const attachmentData = {
-    fileName: uploadedFile.original_filename || "manual",
-    fileUrl: uploadedFile.secure_url,
-    size: uploadedFile.bytes, // Cloudinary gives bytes
-    totalPages: totalPages,
-  };
-  const hrupdate = await HRupdate.create({
-    title: title,
-    description: description,
-    attachment: attachmentData,
-    createdBy: userId,
-  });
-  if (!hrupdate) {
-    throw new ApiError(500, "Server Error");
+  // Start MongoDB session
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Count PDF pages
+    const totalPages = await getPdfPageCount(attachmentPath);
+
+    // Upload file to Cloudinary
+    const uploadedFile = await uploadOnCloudinary(attachmentPath);
+    if (!uploadedFile?.secure_url) {
+      throw new ApiError(500, "Attachment upload failed");
+    }
+
+    const attachmentData = {
+      fileName: uploadedFile.original_filename || "manual",
+      fileUrl: uploadedFile.secure_url,
+      size: uploadedFile.bytes,
+      totalPages,
+    };
+
+    // Create HR Update
+    const hrUpdate = await HRupdate.create(
+      [
+        {
+          title,
+          description,
+          attachment: attachmentData,
+          createdBy: userId,
+        },
+      ],
+      { session }
+    );
+    const hrUpdateDoc = hrUpdate[0];
+
+    // Add Activity Log
+    await addActivityLog(
+      {
+        actionType: "HR_UPDATE_CREATED",
+        performedBy: {
+          id: userId,
+          name: `${firstname} ${lastname}`,
+          type: "user",
+        },
+        message: `A new HR update has been added: ${title}`,
+        meta: {
+          recordId: hrUpdateDoc._id,
+          moduleName: "HRupdate",
+          attachment: attachmentData,
+        },
+      },
+      session
+    );
+
+    // Commit transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    return res
+      .status(201)
+      .json(new ApiResponse(201, "HR Update Added Successfully"));
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new ApiError(500, error.message || "Something went wrong!");
   }
-  return res
-    .status(200)
-    .json(new ApiResponse(201, "hr Update Added Successfully "));
 });
+
 // Edit HR Update
 export const edithrUpdate = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -59,7 +104,6 @@ export const edithrUpdate = asyncHandler(async (req, res) => {
       await deleteFromCloudinary(hrupdate.attachment.fileUrl);
     }
 
-  
     const uploadedFile = await uploadOnCloudinary(req.file.path);
 
     if (!uploadedFile?.url) {
@@ -70,7 +114,6 @@ export const edithrUpdate = asyncHandler(async (req, res) => {
       fileName: uploadedFile.original_filename || "manual",
       fileUrl: uploadedFile.secure_url,
       size: uploadedFile.bytes,
-      
     };
   }
 

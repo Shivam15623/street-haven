@@ -14,28 +14,32 @@ const CollectiveAgreementTab = () => {
 
   const agreements = data?.data || [];
 
-  if (agreements.length === 0) {
-    return <div>No Agreements found.</div>;
-  }
+
 
   return (
     <div className="d-flex flex-column gap-24">
       <div className="d-flex flex-row justify-content-between align-items-center">
         <h2 className="text-md sm:text-lg">Collective Agreement</h2>
+        
         {hasPermission({ action: "create_collective_agreement" }) && (
           <button
             className="btn btn-street-primary   radius-12 text-xxs sm:text-xs radius-12 "
             style={{ minWidth: "43px", minHeight: "40px" }}
-            onClick={()=>setOpen(true)}
+            onClick={() => setOpen(true)}
           >
             {" "}
             + Add Collective Agreement
           </button>
         )}
       </div>
-      {agreements.map((agreement) => (
-        <CollectiveAgreementCard key={agreement._id} agreement={agreement} />
-      ))}
+
+      {agreements.length === 0 ? (
+        <div>No Agreements found.</div>
+      ) : (
+        agreements.map((agreement) => (
+          <CollectiveAgreementCard key={agreement._id} agreement={agreement} />
+        ))
+      )}
       {open === true && (
         <ActionsAgreement show={open} onHide={() => setOpen(false)} />
       )}

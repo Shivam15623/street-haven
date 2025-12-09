@@ -9,6 +9,7 @@ import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import { uploadOnCloudinary } from "../utills/cloudinary.js";
 import { createNotification } from "../helper/CreateNotoification.js";
+import { addActivityLog } from "../helper/addActivityLogs.js";
 
 export const AddProgramManual = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
@@ -73,7 +74,23 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
 
       session
     );
+    await addActivityLog(
+      {
+        actionType: "PROGRAM_MANNUAL_CREATED",
+        performedBy: {
+          id: req.user?._id,
+          name: `${firstname} ${lastname}`,
+          type: "user",
+        },
+        message: `A new program manual has been created: ${title}`,
 
+        meta: {
+          recordId: programmanual._id,
+          moduleName: "ProgramManual",
+        },
+      },
+      session // <-- pass session
+    );
     // Commit transaction
     await session.commitTransaction();
     session.endSession();

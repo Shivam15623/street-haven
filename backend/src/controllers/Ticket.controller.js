@@ -108,7 +108,6 @@ export const editTicket = asyncHandler(async (req, res) => {
 
   // Find the ticket
   const ticket = await Ticket.findById(ticketId);
-  let notifymessages = [];
   if (!ticket) {
     throw new ApiError(404, "No Such Ticket found");
   }
