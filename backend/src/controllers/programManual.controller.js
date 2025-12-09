@@ -16,7 +16,7 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
   session.startTransaction();
   try {
     const { title, description, tags, type } = req.body;
-    const { _id: userId, firstname } = req.user;
+    const { _id: userId, firstname, lastname } = req.user;
     const atttchmentpath = req?.file?.path;
 
     if (!atttchmentpath) {
@@ -56,13 +56,10 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
       throw new ApiError(500, "Server Error");
     }
 
-    // Fetch all other users
-    const allUsers = await User.find({ _id: { $ne: userId } }).session(session);
-
     // Create Notification within the session
     const notification = await createNotification(
       {
-        type: "mannual_added",
+        type: "manual_added",
         title: "New Program Manual Added",
         message: `${firstname} added a new Program Manual: "${title}"`,
         link: `/program-manuals/${programmanual[0]._id}`,
@@ -96,9 +93,8 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
     session.endSession();
 
     // Emit real-time notifications outside transaction
-    allUsers.forEach((u) => {
-      io.to(`user_${u._id.toString()}`).emit("newNotification", notification);
-    });
+
+    io.emit("newNotification", notification);
 
     return res
       .status(200)
@@ -152,7 +148,7 @@ export const EditProgramManual = asyncHandler(async (req, res) => {
 
     const attachmentData = {
       fileName: uploadedFile.original_filename || "manual",
-      fileUrl: uploadedFile.url,
+      fileUrl: uploadedFile.secure_url,
       size: uploadedFile.bytes,
       totalPages,
     };
