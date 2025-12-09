@@ -18,5 +18,5 @@ router.route("/").get(fetchCollectiveAgreements);
 router
   .route("/edit/:id")
   .patch(upload.single("attachment"), editCollectiveAgreement);
-router.route("/delete/:id").patch(deleteCollectiveAgreement);
+router.route("/delete/:id").delete(deleteCollectiveAgreement);
 export default router;

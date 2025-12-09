@@ -6,6 +6,7 @@ import { asyncHandler } from "../utills/AsyncHandler.js";
 
 import { io } from "../index.js";
 import { createNotification } from "../helper/CreateNotoification.js";
+import { addActivityLog } from "../helper/addActivityLogs.js";
 export const createEvent = asyncHandler(async (req, res) => {
   const {
     title,
@@ -63,6 +64,23 @@ export const createEvent = asyncHandler(async (req, res) => {
     );
 
     io.emit("newNotification", notification);
+    await addActivityLog(
+      {
+        actionType: "EVENT_CREATED",
+        performedBy: {
+          id: req.user?._id,
+          name: `${firstname} ${lastname}`,
+          type: "user",
+        },
+        message: `A new event has been created: ${title}`,
+
+        meta: {
+          recordId: newEvent._id,
+          moduleName: "event",
+        },
+      },
+      session // <-- pass session
+    );
 
     await session.commitTransaction();
     session.endSession();

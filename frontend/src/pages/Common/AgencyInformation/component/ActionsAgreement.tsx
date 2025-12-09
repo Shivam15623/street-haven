@@ -82,9 +82,14 @@ const ActionsAgreement: React.FC<ActionsAgreementProps> = ({
   ) => {
     try {
       const formData = new FormData();
+
       formData.append("title", values.title);
-      formData.append("startDate", values.startDate!.toISOString());
-      formData.append("endDate", values.endDate!.toISOString());
+      if (values.startDate) {
+        formData.append("startDate", values.startDate.toISOString());
+      }
+      if (values.endDate) {
+        formData.append("endDate", values.endDate.toISOString());
+      }
 
       if (values.attachment) {
         formData.append("attachment", values.attachment);
@@ -193,8 +198,7 @@ const ActionsAgreement: React.FC<ActionsAgreementProps> = ({
                 name="startDate"
                 value={values.startDate ? new Date(values.startDate) : null}
                 onChange={(date) => {
-                  const newDate = date ? date.toISOString().split("T")[0] : "";
-                  setFieldValue("startDate", newDate, true); // ← Add true to validate immediately
+                  setFieldValue("startDate", date, true); // ← Add true to validate immediately
                   setFieldTouched("startDate", true, false); // ← false prevents double validation
                 }}
                 onBlur={handleBlur}
@@ -215,8 +219,7 @@ const ActionsAgreement: React.FC<ActionsAgreementProps> = ({
                 name="endDate"
                 value={values.endDate ? new Date(values.endDate) : null}
                 onChange={(date) => {
-                  const newDate = date ? date.toISOString().split("T")[0] : "";
-                  setFieldValue("endDate", newDate, true); // ← Add true to validate immediately
+                  setFieldValue("endDate", date, true); // ← Add true to validate immediately
                   setFieldTouched("endDate", true, false); // ← false prevents double validation
                 }}
                 onBlur={handleBlur}

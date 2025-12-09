@@ -15,6 +15,26 @@ export interface notificationData {
   isGlobal: boolean;
   expireAt: string;
 }
+export interface ActivityLogData {
+  _id: string;
+  actionType: string;
+
+  performedBy: {
+    id: string | null;
+    name: string | null;
+    type: "system" | "user";
+  };
+
+  message: string;
+
+  meta: Record<string, any>; // 👈 dynamic metadata (ANY object)
+
+  createdAt: string;
+  updatedAt: string;
+  expiresAt?: string;
+
+  __v?: number;
+}
 
 type NotificationResponse = ApiResponse<{
   notifications: notificationData[];
@@ -30,6 +50,14 @@ interface AllNotificationsQuery {
   limit?: number;
   type: "global" | "personal" | undefined;
   readStatus: "read" | "unread" | "all";
+}
+interface ActivityLogQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sort?: string;
+  order?: "asc" | "desc";
+  type?: "system" | "user" | "all";
 }
 const notificationApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -54,8 +82,36 @@ const notificationApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Notification"],
     }),
+    fetchActivityLogs: builder.query<
+      ApiResponse<{
+        paggination: {
+          total: number;
+          totalPages: number;
+          limit: number;
+          page: number;
+        };
+        logs: ActivityLogData[];
+      }>,
+      ActivityLogQuery
+    >({
+      query: ({
+        page = 1,
+        limit = 10,
+        search = "",
+        sort = "createdAt",
+        order = "desc",
+        type = "all",
+      }) => ({
+        url: "/activity-logs",
+        method: "GET",
+        params: { limit, page, type, sort, order, search },
+      }),
+    }),
   }),
 });
 
-export const { useFetchNotifyQuery, useMarkNotificationsAsReadMutation } =
-  notificationApi;
+export const {
+  useFetchNotifyQuery,
+  useMarkNotificationsAsReadMutation,
+  useFetchActivityLogsQuery,
+} = notificationApi;

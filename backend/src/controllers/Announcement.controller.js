@@ -7,6 +7,7 @@ import { uploadOnCloudinary } from "../utills/cloudinary.js";
 import path from "path";
 import { createNotification } from "../helper/CreateNotoification.js";
 import { io } from "../index.js";
+import { addActivityLog } from "../helper/addActivityLogs.js";
 
 // ----------------------------------------
 // Create Announcement
@@ -78,6 +79,22 @@ export const createAnnouncement = asyncHandler(async (req, res) => {
     );
 
     io.emit("newNotification", notification);
+    await addActivityLog(
+      {
+        actionType: "ANNOUNCEMENT_CREATED",
+        performedBy: {
+          id: req.user?._id,
+          name: `${firstname} ${lastname}`,
+          type: "user",
+        },
+        message: `A new announcement has been created: ${title}`,
+        meta: {
+          recordId: announcement._id,
+          moduleName: "Announcement",
+        },
+      },
+      session // <-- pass session
+    );
     await session.commitTransaction();
     session.endSession();
     return res
