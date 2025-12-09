@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { getPdfPageCount } from "../helper/pdfpagecount.js";
-import {  io } from "../index.js";
+import { io } from "../index.js";
 
 import ProgramManual from "../model/programManuals.js";
 
@@ -23,8 +23,10 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
       throw new ApiError(400, "Attachment file is missing");
     }
 
-    const totalPages = await getPdfPageCount(atttchmentpath);
-    const uploadedFile = await uploadOnCloudinary(atttchmentpath);
+    const [totalPages, uploadedFile] = await Promise.all([
+      getPdfPageCount(atttchmentpath),
+      uploadOnCloudinary(atttchmentpath),
+    ]);
 
     if (!uploadedFile?.url) {
       throw new ApiError(500, "Attachment upload failed");
@@ -139,8 +141,10 @@ export const EditProgramManual = asyncHandler(async (req, res) => {
 
   // If a new file is uploaded
   if (req?.file?.path) {
-    const totalPages = await getPdfPageCount(req.file.path);
-    const uploadedFile = await uploadOnCloudinary(req.file.path);
+    const [totalPages, uploadedFile] = await Promise.all([
+      getPdfPageCount(req.file.path),
+      uploadOnCloudinary(req.file.path),
+    ]);
 
     if (!uploadedFile?.url) {
       throw new ApiError(500, "Attachment upload failed");
