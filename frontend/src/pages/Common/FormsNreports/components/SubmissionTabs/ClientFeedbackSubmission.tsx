@@ -6,6 +6,7 @@ import {
   useGetAllClientFeedbackQuery,
   type clientFeedbackData,
 } from "../../../../../services/FormApi";
+import { OverlayTrigger, Tooltip } from "react-bootstrap";
 
 interface Column {
   header: string;
@@ -41,7 +42,29 @@ const columns: Column[] = [
   },
   {
     header: "Complaint Nature",
-    accessor: (row) => row.complaintNature,
+    accessor: (row) => {
+      if (row.complaintNature === "Other") {
+        return (
+          <OverlayTrigger
+            placement="top"
+            overlay={
+              <Tooltip id={`tooltip-${row._id}`}>
+                {row.otherComplaintText || "No additional details"}
+              </Tooltip>
+            }
+          >
+            <span
+              className=" text-street-primary "
+              style={{ cursor: "pointer" }}
+            >
+              Other
+            </span>
+          </OverlayTrigger>
+        );
+      }
+
+      return row.complaintNature;
+    },
   },
   {
     header: "Complaint Description",
@@ -60,10 +83,6 @@ const columns: Column[] = [
   {
     header: "Impact",
     accessor: (row) => row.impact,
-  },
-  {
-    header: "Other Complaint",
-    accessor: (row) => row.otherComplaintText || "N/A",
   },
 ];
 

@@ -5,6 +5,7 @@ import {
   useGetAllPaymentRequisitionsQuery,
   type PaymentRequisition,
 } from "../../../../../services/FormApi";
+import PaymentRequisitionDetail from "../modals/PaymentRequisitionDetail";
 
 interface Column {
   header: string;
@@ -39,14 +40,7 @@ const columns: Column[] = [
   },
   {
     header: "Action",
-    accessor: (row) => (
-      <button
-        className="btn btn-sm btn-primary radius-8 px-12 py-6"
-        onClick={() => alert("Open view modal for ID: " + row._id)}
-      >
-        View Details
-      </button>
-    ),
+    accessor: (row) => <PaymentRequisitionDetail detail={row} />,
   },
 ];
 
