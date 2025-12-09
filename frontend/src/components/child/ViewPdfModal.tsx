@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Document, Page, pdfjs } from "react-pdf";
 import "pdfjs-dist/web/pdf_viewer.css";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker?url";
 import ModalWrapper from "./ModalWrapper";
-
 
 // Worker setup
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -18,6 +17,41 @@ type Props = {
     size: number;
     totalPages: number;
   };
+};
+const LazyPage = ({ pageNumber }: { pageNumber: number }) => {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setVisible(true);
+            observer.disconnect(); // stop observing after visible
+          }
+        });
+      },
+      { rootMargin: "200px" }
+    );
+
+    if (ref.current) observer.observe(ref.current);
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} style={{ marginBottom: "24px", minHeight: "300px" }}>
+      {visible && (
+        <Page
+          pageNumber={pageNumber}
+          width={Math.min(window.innerWidth * 0.8, 450)}
+          renderAnnotationLayer={false}
+          renderTextLayer={false}
+        />
+      )}
+    </div>
+  );
 };
 
 const ViewPdfModal = ({ attachment, title }: Props) => {
@@ -89,15 +123,7 @@ const ViewPdfModal = ({ attachment, title }: Props) => {
             error={<p>Failed to load PDF</p>}
           >
             {Array.from({ length: attachment.totalPages }, (_, index) => (
-              <Page
-                key={`page_${index + 1}`}
-                pageNumber={index + 1}
-                width={Math.min(window.innerWidth * 0.8, 453)}
-                height={640}
-                renderAnnotationLayer={false}
-                renderTextLayer={false}
-                className="mb-4"
-              />
+              <LazyPage key={`page_${index + 1}`} pageNumber={index + 1} />
             ))}
           </Document>
         </div>
