@@ -72,14 +72,14 @@ const RecentActivity = () => {
               return (
                 <div
                   key={item._id}
-                  className="d-flex flex-row align-items-center justify-content-between gap-3 p-2 p-sm-3 border rounded"
+                  className="d-flex flex-row align-items-center justify-content-between gap-3 radius-8 p-12 border "
                   style={{ borderColor: "#AAAAAA" }}
                 >
                   <div className="d-flex flex-column justify-content-center gap-1 gap-sm-2">
-                    <h3 className="fw-semibold mb-1 small text-dark">
+                    <h3 className="fw-semibold text-sm fw-semibold mb-1 text-street-dark">
                       {item.message}
                     </h3>
-                    <div className="text-muted small">
+                    <div className="text-street-base text-xs fw-normal">
                       {item.performedBy.name} • {timeText}
                     </div>
                   </div>
