@@ -12,6 +12,8 @@ import { showSuccess } from "../../../../utills/toastutills";
 import PdfField from "../../../../components/child/PdfField";
 import type { Document } from "./DocumentCard";
 import QuillEditor from "../../../../components/child/QuillEditor";
+import UploadProgress from "../../../../components/child/uploadProgress";
+import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 
 // 🔹 Schema generator (avoids duplication)
 const programManualSchema = (isEdit: boolean) =>
@@ -98,6 +100,7 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
 
       if (res.success) {
         showSuccess(res.message);
+        setProgress(0);
         resetForm();
         onSuccess?.();
         onHide();
@@ -142,6 +145,15 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
         </div>
       }
     >
+      <div className="position-relative">
+        <FormSubmissionLoader
+          isLoading={isLoading||isEditing}
+          variant="spinner" // spinner | dots | pulse | progress
+          message="Saving changes..."
+          subMessage="Please wait"
+          progress={progress} // only for progress variant
+        />
+      </div>
       <Formik
         initialValues={initialValues}
         validationSchema={programManualSchema(isEdit)}
@@ -272,16 +284,11 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
               isEdit={isEdit}
             />
             {progress > 0 && (
-              <div className="mt-2">
-                <label>Uploading PDF: {progress}%</label>
-                <div className="progress" style={{ height: "10px" }}>
-                  <div
-                    className="progress-bar bg-success"
-                    role="progressbar"
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                </div>
-              </div>
+              <UploadProgress
+                progress={progress}
+                fileName={"Attachment"}
+                isComplete={progress === 100}
+              />
             )}
           </BootstrapForm>
         )}
