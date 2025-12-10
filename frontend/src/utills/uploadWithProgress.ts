@@ -26,7 +26,7 @@ export const uploadWithProgress =
           onProgress?.(percent);
         },
       });
-      console.log("Response:", response);
+
       return { data: response.data };
     } catch (error: any) {
       return {
