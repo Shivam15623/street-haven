@@ -11,6 +11,7 @@ import {
 import QuillEditor from "../../../../components/child/QuillEditor";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
 import { showSuccess } from "../../../../utills/toastutills";
+import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 // ✅ Schema
 const AnnouncementsFormSchema = () =>
   yup.object().shape({
@@ -61,7 +62,7 @@ const ActionsAnnouncement: React.FC<ActionsAnnouncementsProps> = ({
 
   const [createUpdate, { isLoading }] = useCreateAnnouncementMutation();
   const [editUpdate, { isLoading: isEditing }] = useEditAnnouncementMutation();
-
+  const [progress, setProgress] = React.useState<number>(0);
   const initialValues = {
     title: update?.title || "",
     message: update?.message ?? "",
@@ -77,14 +78,15 @@ const ActionsAnnouncement: React.FC<ActionsAnnouncementsProps> = ({
       const formData = buildFormData(values);
 
       const res = isEdit
-        ? await editUpdate({ id: update!._id, formData: formData }).unwrap()
-        : await createUpdate(formData).unwrap();
+        ? await editUpdate({ id: update!._id, formData: formData ,onProgress:(p)=>setProgress(p)}).unwrap()
+        : await createUpdate({data:formData,onProgress:(p:number)=>setProgress(p)}).unwrap();
 
       if (res.success) {
         showSuccess(res.message);
         resetForm();
         onSuccess?.();
         onHide();
+        setProgress(0);
       }
     } catch (error) {
       console.error("Failed to save HR update:", error);
@@ -101,6 +103,16 @@ const ActionsAnnouncement: React.FC<ActionsAnnouncementsProps> = ({
       bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
       footerClassName="pt-16 pt-sm-20 px-0 pb-0"
       onHide={onHide}
+      ModalLoader={
+        <FormSubmissionLoader
+          isLoading={isLoading || isEditing}
+          variant="progress" // spinner | dots | pulse | progress
+          message="Saving changes..."
+          subMessage="Please wait"
+          progress={progress} // only for progress variant
+        />
+      }
+      isLoading={isLoading || isEditing}
       footer={
         <div className="d-flex gap-2 justify-content-end">
           <button

@@ -1,5 +1,6 @@
 import type { ApiGeneralResponse, ApiResponse } from "../interfaces/Response";
 import { api } from "../redux/ApiSlice";
+import { uploadWithProgress } from "../utills/uploadWithProgress";
 export interface AnnouncementData {
   _id: string;
   isActive: boolean;
@@ -40,23 +41,31 @@ export const announcementApi = api.injectEndpoints({
       }),
       providesTags: ["Announcement"],
     }),
-    createAnnouncement: builder.mutation<ApiGeneralResponse, FormData>({
-      query: (formData) => ({
-        url: "/announcement/create",
-        method: "POST",
-        body: formData,
-      }),
+    createAnnouncement: builder.mutation({
+      queryFn: ({ data, onProgress }) =>
+        uploadWithProgress(
+          "/announcement/create",
+          "POST"
+        )({
+          data,
+          onProgress,
+        }),
+
       invalidatesTags: ["Announcement"],
     }),
     editAnnouncement: builder.mutation<
       ApiGeneralResponse,
-      { id: string; formData: FormData }
+      { id: string; formData: FormData; onProgress?: (p: number) => void }
     >({
-      query: ({ id, formData }) => ({
-        url: `/announcement/edit/${id}`,
-        method: "PATCH",
-        body: formData,
-      }),
+      queryFn: ({ id, formData, onProgress }) =>
+        uploadWithProgress(
+          `/announcement/edit/${id}`,
+          "PATCH"
+        )({
+          data: formData,
+          onProgress,
+        }),
+
       invalidatesTags: ["Announcement"],
     }),
 

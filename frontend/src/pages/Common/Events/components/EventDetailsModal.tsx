@@ -19,6 +19,7 @@ import CustomDatePicker from "../../../../components/child/DatePicker";
 import QuillEditor from "../../../../components/child/QuillEditor";
 import DOMPurify from "dompurify";
 import useHasPermission from "../../../../hooks/Auth";
+import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 
 interface EventDetailsModalProps {
   event: EventUpcomingData;
@@ -194,6 +195,14 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
       className="p-6"
       bodyClassName="flex flex-col gap-4"
       footerClassName="flex justify-end gap-3"
+      ModalLoader={
+        <FormSubmissionLoader
+          isLoading={isEditing}
+          variant="spinner" // spinner | dots | pulse | progress
+          message="Saving changes..."
+          subMessage="Please wait"
+        />
+      }
       footer={
         <>
           <>

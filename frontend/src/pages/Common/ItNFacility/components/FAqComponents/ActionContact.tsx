@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import {Form as BootstrapForm } from "react-bootstrap";
+import { Form as BootstrapForm } from "react-bootstrap";
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import {
   useAddEmergencyContactMutation,
   useEditEmergencyContactMutation,
 } from "../../../../../services/FAQapi";
 import { showSuccess } from "../../../../../utills/toastutills";
+import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
 
 interface EmergencyFormValues {
   label: string;
@@ -27,8 +28,8 @@ const EmergencyContact: React.FC<EmergencyContactModalProps> = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
 
-  const [addContact] = useAddEmergencyContactMutation();
-  const [editContact] = useEditEmergencyContactMutation();
+  const [addContact,{isLoading}] = useAddEmergencyContactMutation();
+  const [editContact,{isLoading:isEditing}] = useEditEmergencyContactMutation();
 
   const isEdit = !!initialData;
 
@@ -57,13 +58,15 @@ const EmergencyContact: React.FC<EmergencyContactModalProps> = ({
       }
       setShowModal(false);
     } catch (err) {
-       alert(err|| "Something went wrong");
+      alert(err || "Something went wrong");
     }
   };
 
   return (
     <>
-      <span className="w-fit" onClick={() => setShowModal(true)}>{trigger}</span>
+      <span className="w-fit" onClick={() => setShowModal(true)}>
+        {trigger}
+      </span>
 
       <ModalWrapper
         show={showModal}
@@ -74,6 +77,14 @@ const EmergencyContact: React.FC<EmergencyContactModalProps> = ({
         bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
         footerClassName="pt-16 pt-sm-20 px-0 pb-0 "
         className="p-20 p-sm-24 p-md-32 gap-16 gap-sm-20"
+        ModalLoader={
+          <FormSubmissionLoader
+            isLoading={isLoading || isEditing}
+            variant="spinner" // spinner | dots | pulse | progress
+            message="Saving changes..."
+            subMessage="Please wait"
+          />
+        }
         footer={
           <button
             type="submit"

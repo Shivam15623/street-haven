@@ -10,6 +10,7 @@ import {
   type OrgNodeData,
 } from "../../../../../services/orgApi";
 import { showSuccess } from "../../../../../utills/toastutills";
+import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
 
 interface OrgNodeOption {
   _id: string;
@@ -82,6 +83,15 @@ const ActionOrgNode: React.FC<ActionOrgNodeProps> = ({
       bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
       footerClassName="pt-16 pt-sm-20 px-0 pb-0"
       onHide={onHide}
+      ModalLoader={
+        <FormSubmissionLoader
+          isLoading={isLoading || isEditing}
+          variant="spinner" // spinner | dots | pulse | progress
+          message="Saving changes..."
+          subMessage="Please wait"
+        />
+      }
+      isLoading={isLoading || isEditing}
       footer={
         <div className="d-flex gap-2 justify-content-end">
           <button

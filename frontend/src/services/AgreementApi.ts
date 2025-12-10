@@ -1,5 +1,6 @@
 import { api } from "../redux/ApiSlice";
 import type { ApiGeneralResponse, ApiResponse } from "../interfaces/Response";
+import { uploadWithProgress } from "../utills/uploadWithProgress";
 
 export interface AgreementData {
   _id: string;
@@ -19,23 +20,30 @@ type AgreementResponse = ApiResponse<AgreementData[]>;
 
 const AgreementApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    createAgreement: builder.mutation<ApiGeneralResponse, FormData>({
-      query: (formData) => ({
-        url: "/collective-agreements/create",
-        method: "POST",
-        body: formData,
-      }),
+    createAgreement: builder.mutation({
+      queryFn: ({ data, onProgress }) =>
+        uploadWithProgress(
+          "/collective-agreements/create",
+          "POST"
+        )({
+          data,
+          onProgress,
+        }),
       invalidatesTags: ["Agreement"],
     }),
     editAgreement: builder.mutation<
       ApiGeneralResponse,
-      { id: string; formData: FormData }
+      { id: string; formData: FormData; onProgress?: (p: number) => void }
     >({
-      query: ({ id, formData }) => ({
-        url: `/collective-agreements/edit/${id}`,
-        method: "PATCH",
-        body: formData,
-      }),
+      queryFn: ({ id, formData, onProgress }) =>
+        uploadWithProgress(
+          `/collective-agreements/edit/${id}`,
+          "PATCH"
+        )({
+          data: formData,
+          onProgress,
+        }),
+
       invalidatesTags: ["Agreement"],
     }),
     fetchAgreements: builder.query<AgreementResponse, void>({

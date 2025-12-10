@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { Formik, Form, FieldArray, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { Form as BootstrapForm} from "react-bootstrap";
+import { Form as BootstrapForm } from "react-bootstrap";
 
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import { useCreateCategoryMutation } from "../../../../../services/FAQapi";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
 
 interface QuestCredentials {
   question: string;
@@ -19,7 +20,7 @@ interface FaqCredentials {
 
 const AddCategory: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
-  const [createCategory] = useCreateCategoryMutation();
+  const [createCategory, { isLoading }] = useCreateCategoryMutation();
 
   const initialValues: FaqCredentials = {
     title: "",
@@ -66,6 +67,14 @@ const AddCategory: React.FC = () => {
         bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
         footerClassName="pt-16 pt-sm-20 px-0 pb-0 "
         className="p-20 p-sm-24 p-md-32 gap-16 gap-sm-20"
+        ModalLoader={
+          <FormSubmissionLoader
+            isLoading={isLoading}
+            variant="spinner" // spinner | dots | pulse | progress
+            message="Saving changes..."
+            subMessage="Please wait"
+          />
+        }
         footer={
           <>
             <button

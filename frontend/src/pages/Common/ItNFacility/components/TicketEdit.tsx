@@ -14,6 +14,7 @@ import { useSelector } from "react-redux";
 import { selectAuth } from "../../../../redux/AuthSlice";
 
 import QuillEditor from "../../../../components/child/QuillEditor";
+import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 
 // ✅ Validation Schema
 const TicketSchema = Yup.object({
@@ -113,6 +114,14 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
         className="p-20 p-sm-24 p-md-32 gap-16 gap-sm-20"
         bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
         footerClassName="pt-16 pt-sm-20 px-0 pb-0 "
+        ModalLoader={
+          <FormSubmissionLoader
+            isLoading={isLoading}
+            variant="spinner" // spinner | dots | pulse | progress
+            message="Saving changes..."
+            subMessage="Please wait"
+          />
+        }
         footer={
           <>
             <button
@@ -222,7 +231,6 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       size="sm"
                       name="assignedId"
                       value={values.assignedId}
-               
                       onChange={handleChange}
                       isInvalid={touched.assignedId && !!errors.assignedId}
                     >
@@ -257,7 +265,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       size="sm"
                       name="status"
                       value={values.status}
-                      disabled={!( isAssigned)}
+                      disabled={!isAssigned}
                       onChange={handleChange}
                       isInvalid={touched.status && !!errors.status}
                     >
@@ -312,7 +320,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                     <QuillEditor
                       content={values.description}
                       onChange={(val) => setFieldValue("description", val)}
-                      disabled={!( isRequester)}
+                      disabled={!isRequester}
                       isInvalid={touched.description && !!errors.description}
                       errorMessage={errors.description as string}
                     />
@@ -336,7 +344,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       name="priority"
                       size="sm"
                       value={values.priority}
-                      disabled={!( isRequester)}
+                      disabled={!isRequester}
                       onChange={handleChange}
                       className="text-street-base"
                       isInvalid={touched.priority && !!errors.priority}
@@ -367,7 +375,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       size="sm"
                       value={values.category}
                       onChange={handleChange}
-                      disabled={!( isRequester)}
+                      disabled={!isRequester}
                       className="text-street-base"
                       isInvalid={touched.category && !!errors.category}
                     >
@@ -398,7 +406,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       type="text"
                       size="sm"
                       name="location"
-                      disabled={!( isRequester)}
+                      disabled={!isRequester}
                       value={values.location}
                       onChange={handleChange}
                       isInvalid={touched.location && !!errors.location}
@@ -423,7 +431,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       >
                         {ticket.photo?.fileName}
                       </Link>
-                      {(! !isRequester) && (
+                      {!!isRequester && (
                         <Icon
                           icon="mdi:file-edit"
                           className="ms-2 icon-street-edit"
