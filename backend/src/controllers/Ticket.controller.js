@@ -127,6 +127,8 @@ export const editTicket = asyncHandler(async (req, res) => {
     // Admin can change assigned person
     if (assignedId && assignedId !== ticket.assignedTo?.toString()) {
       updatedFields.assignedTo = assignedId;
+    }else if(!assignedId&& ticket.assignedTo===null){
+      updatedFields.assignedTo = null;
     }
     // Admin can change status freely
     if (status && status !== ticket.status) {

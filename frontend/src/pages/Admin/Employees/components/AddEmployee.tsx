@@ -20,6 +20,7 @@ interface AddEmployeeValues {
 }
 const roleValues = Object.values(ROLES) as Array<string>;
 function formatRole(role: string): string {
+  if (role === "hr") return "HR";
   return role
     .split("_")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
