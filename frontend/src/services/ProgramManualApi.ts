@@ -4,6 +4,7 @@ import type {
 } from "../interfaces/programMannuals";
 import type { ApiGeneralResponse } from "../interfaces/Response";
 import { api } from "../redux/ApiSlice";
+import { uploadWithProgress } from "../utills/uploadWithProgress";
 
 const programManualsApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -12,24 +13,20 @@ const programManualsApi = api.injectEndpoints({
         page = 1,
         limit = 10,
         search = "",
-        slug="",
+        slug = "",
         type,
         sortBy = "createdAt",
         order = "desc",
       }) => ({
         url: "/program-manuals/view",
         method: "GET",
-        params: { page, limit, search, type,slug, sortBy, order },
+        params: { page, limit, search, type, slug, sortBy, order },
       }),
-      providesTags:["Manual"]
+      providesTags: ["Manual"],
     }),
-    createManuals: builder.mutation<ApiGeneralResponse, FormData>({
-      query: (credentials) => ({
-        url: "/program-manuals/create",
-        method: "POST",
-        body: credentials,
-      }),
-      invalidatesTags:["Manual"]
+    createManuals: builder.mutation({
+      queryFn: uploadWithProgress("/program-manuals/create", "POST"),
+      invalidatesTags: ["Manual"],
     }),
     editManuals: builder.mutation<
       ApiGeneralResponse,
@@ -40,14 +37,14 @@ const programManualsApi = api.injectEndpoints({
         method: "PATCH",
         body: data,
       }),
-      invalidatesTags:["Manual"]
+      invalidatesTags: ["Manual"],
     }),
     deleteManuals: builder.mutation({
       query: (id: string) => ({
         url: `/program-manuals/delete/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags:["Manual"]
+      invalidatesTags: ["Manual"],
     }),
   }),
 });
