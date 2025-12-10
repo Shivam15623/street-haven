@@ -91,10 +91,14 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
     try {
       const formData = buildFormData(values);
       const res = isEdit
-        ? await editManual({ id: document!._id, data: formData }).unwrap()
+        ? await editManual({
+            id: document!._id,
+            data: formData,
+            onProgress: (p: number) => setProgress(p),
+          }).unwrap()
         : await createManual({
             data: formData,
-            onProgress: (p) => setProgress(p),
+            onProgress: (p: number) => setProgress(p),
           }).unwrap();
       console.log("Response:", res);
 
@@ -120,6 +124,16 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
       bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
       footerClassName="pt-16 pt-sm-20 px-0 pb-0"
       onHide={onHide}
+      ModalLoader={
+        <FormSubmissionLoader
+          isLoading={isLoading || isEditing}
+          variant="progress" // spinner | dots | pulse | progress
+          message="Saving changes..."
+          subMessage="Please wait"
+          progress={progress} // only for progress variant
+        />
+      }
+      isLoading={true}
       footer={
         <div className="d-flex gap-2 justify-content-end">
           <button
@@ -145,15 +159,6 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
         </div>
       }
     >
-      <div className="position-relative">
-        <FormSubmissionLoader
-          isLoading={isLoading||isEditing}
-          variant="spinner" // spinner | dots | pulse | progress
-          message="Saving changes..."
-          subMessage="Please wait"
-          progress={progress} // only for progress variant
-        />
-      </div>
       <Formik
         initialValues={initialValues}
         validationSchema={programManualSchema(isEdit)}

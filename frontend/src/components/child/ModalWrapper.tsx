@@ -17,6 +17,8 @@ export interface ModalWrapperProps {
   headerClassName?: string;
   bodyClassName?: string;
   footerClassName?: string;
+  isLoading?: boolean;
+  ModalLoader?: React.ReactNode;
 }
 
 const ModalWrapper: React.FC<ModalWrapperProps> = ({
@@ -34,6 +36,8 @@ const ModalWrapper: React.FC<ModalWrapperProps> = ({
   headerClassName,
   bodyClassName,
   footerClassName,
+  isLoading,
+  ModalLoader,
 }) => {
   return (
     <Modal
@@ -41,48 +45,52 @@ const ModalWrapper: React.FC<ModalWrapperProps> = ({
       onHide={onHide}
       size={size}
       aria-labelledby="modal-wrapper-title"
+      className="overflow-hidden"
       centered={centered}
       backdrop={backdrop}
       keyboard={keyboard}
-      contentClassName={className}
+     contentClassName="overflow"
     >
-      {title && (
-        <Modal.Header closeButton={false} className={headerClassName}>
-          <div className="d-flex flex-column gap-1 gap-sm-8 gap-md-10 flex-grow-1">
-            <Modal.Title
-              id="modal-wrapper-title"
-              className="text-md sm:text-xl mb-0 text-street-dark fw-semibold"
-            >
-              {title}
-            </Modal.Title>
-            {subtitle && (
-              <p className="text-xxs sm:text-xs fw-normal text-street-dark m-0">
-                {subtitle}
-              </p>
-            )}
-          </div>
+      <div className={`position-relative d-flex flex-column ${className}`}>
+        {isLoading && ModalLoader}
+        {title && (
+          <Modal.Header closeButton={false} className={headerClassName}>
+            <div className="d-flex flex-column gap-1 gap-sm-8 gap-md-10 flex-grow-1">
+              <Modal.Title
+                id="modal-wrapper-title"
+                className="text-md sm:text-xl mb-0 text-street-dark fw-semibold"
+              >
+                {title}
+              </Modal.Title>
+              {subtitle && (
+                <p className="text-xxs sm:text-xs fw-normal text-street-dark m-0">
+                  {subtitle}
+                </p>
+              )}
+            </div>
 
-          {/* Custom Close Button */}
+            {/* Custom Close Button */}
 
-          <Icon
-            icon="mdi:close"
-            className="text-lg sm:text-xxl"
-            onClick={onHide}
-          />
-        </Modal.Header>
-      )}
+            <Icon
+              icon="mdi:close"
+              className="text-lg sm:text-xxl"
+              onClick={onHide}
+            />
+          </Modal.Header>
+        )}
 
-      <Modal.Body className={bodyClassName}>{children}</Modal.Body>
+        <Modal.Body className={bodyClassName}>{children}</Modal.Body>
 
-      {footer !== undefined ? (
-        <Modal.Footer className={footerClassName}>{footer}</Modal.Footer>
-      ) : (
-        <Modal.Footer className={footerClassName}>
-          <Button variant="secondary" onClick={onHide}>
-            Close
-          </Button>
-        </Modal.Footer>
-      )}
+        {footer !== undefined ? (
+          <Modal.Footer className={footerClassName}>{footer}</Modal.Footer>
+        ) : (
+          <Modal.Footer className={footerClassName}>
+            <Button variant="secondary" onClick={onHide}>
+              Close
+            </Button>
+          </Modal.Footer>
+        )}
+      </div>
     </Modal>
   );
 };

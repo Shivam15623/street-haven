@@ -31,7 +31,7 @@ const FormSubmissionLoader: React.FC<FormSubmissionLoaderProps> = ({
 
   return (
     <div
-      className={`position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center ${className}`}
+      className={`position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center ${className}`}
       style={{
         background: "rgba(0,0,0,0.45)",
         backdropFilter: "blur(4px)",
@@ -39,16 +39,18 @@ const FormSubmissionLoader: React.FC<FormSubmissionLoaderProps> = ({
       }}
     >
       <div
-        className="bg-white rounded-4 shadow-lg p-4 d-flex flex-column align-items-center text-center border"
+        className="card rounded-4 shadow-lg p-24 d-flex flex-column align-items-center justify-content-center gap-10 text-center border"
         style={{
           minWidth: "260px",
+          width:"50%",
           animation: "fadeScale 0.25s ease-out",
+          minHeight: "180px",
         }}
       >
         {/* Spinner Variant */}
         {variant === "spinner" && (
           <div
-            className="spinner-border text-primary mb-3"
+            className="spinner-border text-street-primary mb-3"
             role="status"
             style={{ width: sizes.spinner, height: sizes.spinner }}
           ></div>
@@ -60,7 +62,7 @@ const FormSubmissionLoader: React.FC<FormSubmissionLoaderProps> = ({
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="rounded-circle bg-primary"
+                className="rounded-circle bg-street-primary"
                 style={{
                   width: sizes.dots,
                   height: sizes.dots,
@@ -75,7 +77,7 @@ const FormSubmissionLoader: React.FC<FormSubmissionLoaderProps> = ({
         {/* Pulse Variant */}
         {variant === "pulse" && (
           <div
-            className="rounded-circle bg-primary mb-3"
+            className="rounded-circle bg-street-primary mb-3"
             style={{
               width: sizes.spinner,
               height: sizes.spinner,
@@ -87,16 +89,16 @@ const FormSubmissionLoader: React.FC<FormSubmissionLoaderProps> = ({
 
         {/* Progress Variant */}
         {variant === "progress" && (
-          <div className="w-100 mb-3">
+          <div className="w-100 d-flex flex-column gap-12 ">
             <div className="progress" style={{ height: "8px" }}>
               <div
-                className="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+                className="progress-bar progress-bar-striped progress-bar-animated bg-street-primary"
                 role="progressbar"
                 style={{ width: `${progress ?? 0}%` }}
               ></div>
             </div>
             <div
-              className="fw-semibold mt-2"
+              className="fw-semibold mt-2 text-street-dark"
               style={{ fontSize: sizes.text }}
             >
               {Math.round(progress || 0)}%
@@ -106,15 +108,18 @@ const FormSubmissionLoader: React.FC<FormSubmissionLoaderProps> = ({
 
         {/* Message */}
         <div
-          className="fw-semibold"
-          style={{ fontSize: sizes.text, color: "#333" }}
+          className="fw-semibold text-street-base"
+          style={{ fontSize: sizes.text }}
         >
           {message}
         </div>
 
         {/* Sub Message */}
         {subMessage && (
-          <div className="text-muted mt-1" style={{ fontSize: "0.85rem" }}>
+          <div
+            className="text-street-base mt-1"
+            style={{ fontSize: "0.85rem" }}
+          >
             {subMessage}
           </div>
         )}
