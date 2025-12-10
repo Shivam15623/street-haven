@@ -143,7 +143,7 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
           }).unwrap()
         : await createmeeting({
             data: formData,
-            onProgress: (p) => setProgress(p),
+            onProgress: (p:number) => setProgress(p),
           }).unwrap();
 
       if (res.success) {
