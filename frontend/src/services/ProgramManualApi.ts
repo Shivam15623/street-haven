@@ -25,20 +25,32 @@ const programManualsApi = api.injectEndpoints({
       providesTags: ["Manual"],
     }),
     createManuals: builder.mutation({
-      queryFn: uploadWithProgress("/program-manuals/create", "POST"),
+      queryFn: ({ data, onProgress }) =>
+        uploadWithProgress(
+          "/program-manuals/create",
+          "POST"
+        )({
+          data,
+          onProgress,
+        }),
       invalidatesTags: ["Manual"],
     }),
+
     editManuals: builder.mutation<
       ApiGeneralResponse,
-      { id: string; data: FormData }
+      { id: string; data: FormData; onProgress?: (p: number) => void }
     >({
-      query: ({ id, data }) => ({
-        url: `/program-manuals/edit/${id}`,
-        method: "PATCH",
-        body: data,
-      }),
+      queryFn: ({ id, data, onProgress }) =>
+        uploadWithProgress(
+          `/program-manuals/edit/${id}`,
+          "PATCH"
+        )({
+          data,
+          onProgress,
+        }),
       invalidatesTags: ["Manual"],
     }),
+
     deleteManuals: builder.mutation({
       query: (id: string) => ({
         url: `/program-manuals/delete/${id}`,
