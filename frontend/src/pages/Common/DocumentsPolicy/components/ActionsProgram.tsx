@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Formik, FieldArray, ErrorMessage } from "formik";
 import {
   useCreateManualsMutation,
@@ -70,7 +70,7 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
 
   const [createManual, { isLoading }] = useCreateManualsMutation();
   const [editManual, { isLoading: isEditing }] = useEditManualsMutation();
-
+  const [progress, setProgress] = useState(0);
   // 🔹 Initial values
   const initialValues = {
     title: document?.title || "",
@@ -90,7 +90,11 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
       const formData = buildFormData(values);
       const res = isEdit
         ? await editManual({ id: document!._id, data: formData }).unwrap()
-        : await createManual(formData).unwrap();
+        : await createManual({
+            data: formData,
+            onProgress: (p) => setProgress(p),
+          }).unwrap();
+      console.log("Response:", res);
 
       if (res.success) {
         showSuccess(res.message);
@@ -267,6 +271,18 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
               name="attachment"
               isEdit={isEdit}
             />
+            {progress > 0 && (
+              <div className="mt-2">
+                <label>Uploading PDF: {progress}%</label>
+                <div className="progress" style={{ height: "10px" }}>
+                  <div
+                    className="progress-bar bg-success"
+                    role="progressbar"
+                    style={{ width: `${progress}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
           </BootstrapForm>
         )}
       </Formik>
