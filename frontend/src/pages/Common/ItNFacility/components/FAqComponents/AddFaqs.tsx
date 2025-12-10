@@ -5,6 +5,7 @@ import { Form as BootstrapForm } from "react-bootstrap";
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import { useAddQuestionMutation } from "../../../../../services/FAQapi";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
 
 interface QuestCredentials {
   question: string;
@@ -18,7 +19,7 @@ interface AddFaqsProps {
 
 const AddFaqs: React.FC<AddFaqsProps> = ({ title, id }) => {
   const [showModal, setShowModal] = useState(false);
-  const [addQuestions] = useAddQuestionMutation();
+  const [addQuestions,{isLoading}] = useAddQuestionMutation();
 
   const initialValues = {
     faqs: [{ question: "", answer: "" }],
@@ -64,6 +65,14 @@ const AddFaqs: React.FC<AddFaqsProps> = ({ title, id }) => {
         className="p-20 p-sm-24 p-md-32 gap-16 gap-sm-20"
         bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
         footerClassName="pt-16 pt-sm-20 px-0 pb-0"
+        ModalLoader={
+          <FormSubmissionLoader
+            isLoading={isLoading }
+            variant="spinner" // spinner | dots | pulse | progress
+            message="Saving changes..."
+            subMessage="Please wait"
+          />
+        }
         footer={
           <>
             <button

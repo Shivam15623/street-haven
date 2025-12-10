@@ -4,6 +4,7 @@ import {
 } from "../interfaces/hrUpdatesInterface";
 import type { ApiGeneralResponse } from "../interfaces/Response";
 import { api } from "../redux/ApiSlice";
+import { uploadWithProgress } from "../utills/uploadWithProgress";
 
 const hrUpdateApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -22,22 +23,30 @@ const hrUpdateApi = api.injectEndpoints({
       providesTags: ["HrUpdates"],
     }),
     createhrUpdates: builder.mutation({
-      query: (credentials) => ({
-        url: "/hr-updates/create",
-        method: "POST",
-        body: credentials,
-      }),
+      queryFn: ({ data, onProgress }) =>
+        uploadWithProgress(
+          "/hr-updates/create",
+          "POST"
+        )({
+          data,
+          onProgress,
+        }),
+
       invalidatesTags: ["HrUpdates"],
     }),
     edithrupdates: builder.mutation<
       ApiGeneralResponse,
-      { id: string; data: FormData }
+      { id: string; data: FormData; onProgress?: (p: number) => void }
     >({
-      query: ({ id, data }) => ({
-        url: `/hr-updates/edit/${id}`,
-        method: "PATCH",
-        body: data,
-      }),
+      queryFn: ({ id, data, onProgress }) =>
+        uploadWithProgress(
+          `/hr-updates/edit/${id}`,
+          "PATCH"
+        )({
+          data,
+          onProgress,
+        }),
+
       invalidatesTags: ["HrUpdates"],
     }),
     deletehrupdates: builder.mutation<ApiGeneralResponse, string>({
