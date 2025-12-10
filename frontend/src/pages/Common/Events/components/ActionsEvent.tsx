@@ -148,6 +148,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
             message="Saving changes..."
             subMessage="Please wait"
           />
+          isLoading={isLoading || isEditLoading}
         }
         footer={
           <>

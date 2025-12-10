@@ -122,6 +122,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
             subMessage="Please wait"
           />
         }
+        isLoading={isLoading}
         footer={
           <>
             <button
@@ -447,25 +448,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                   )}
                 </Row>
 
-                {isLoading && (
-                  <div
-                    className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center "
-                    style={{ zIndex: 10 }}
-                  >
-                    <Spinner
-                      animation="border"
-                      role="status"
-                      style={{
-                        width: "3rem",
-                        height: "3rem",
-                        borderWidth: "0.25rem",
-                        color: "var(--street-primary-base)",
-                      }}
-                    >
-                      <span className="visually-hidden">Loading...</span>
-                    </Spinner>
-                  </div>
-                )}
+              
               </div>
             </Form>
           )}

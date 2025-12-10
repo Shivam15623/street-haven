@@ -67,6 +67,7 @@ const AddCategory: React.FC = () => {
         bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
         footerClassName="pt-16 pt-sm-20 px-0 pb-0 "
         className="p-20 p-sm-24 p-md-32 gap-16 gap-sm-20"
+        isLoading={isLoading}
         ModalLoader={
           <FormSubmissionLoader
             isLoading={isLoading}

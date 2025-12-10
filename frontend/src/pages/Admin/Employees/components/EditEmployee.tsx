@@ -11,6 +11,7 @@ import { PatternFormat } from "react-number-format";
 import { ROLES } from "../../../../interfaces/AuthInterfaces";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 function formatRole(role: string): string {
+  if (role === "hr") return "HR";
   return role
     .split("_")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
