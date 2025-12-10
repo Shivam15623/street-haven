@@ -30,7 +30,7 @@ const TicketSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ["IT Help Desk", "Facilities"],
+      enum: ["IT Help Desk", "Property Maintenance"],
       required: true,
     },
     photo: {
@@ -48,7 +48,6 @@ const TicketSchema = new mongoose.Schema(
     latestComment: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Comment", // who raised the ticket
-    
     },
   },
   { timestamps: true } // adds createdAt & updatedAt automatically
