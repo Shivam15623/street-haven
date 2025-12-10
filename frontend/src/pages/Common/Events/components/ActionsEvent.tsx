@@ -13,6 +13,7 @@ import TimePicker from "../../../../components/child/TimePicker";
 import QuillEditor from "../../../../components/child/QuillEditor";
 import type { EventUpcomingData } from "../../../../interfaces/EventInterfaces";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 
 const EventFormSchema = Yup.object().shape({
   title: Yup.string().required("Title is required"),
@@ -140,6 +141,14 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
         className="p-20 p-sm-24 p-md-32 gap-16 gap-sm-20"
         bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
         footerClassName="pt-16 pt-sm-20 px-0 pb-0 "
+        ModalLoader={
+          <FormSubmissionLoader
+            isLoading={isLoading || isEditLoading}
+            variant="spinner" // spinner | dots | pulse | progress
+            message="Saving changes..."
+            subMessage="Please wait"
+          />
+        }
         footer={
           <>
             <button

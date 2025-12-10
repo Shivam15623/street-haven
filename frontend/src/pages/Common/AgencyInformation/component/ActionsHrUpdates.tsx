@@ -12,6 +12,7 @@ import {
 } from "../../../../services/hrUpdatesApi";
 import QuillEditor from "../../../../components/child/QuillEditor";
 import FileField from "../../../../components/child/FileField";
+import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 
 // ✅ Schema
 const HrUpdatesFormSchema = () =>
@@ -64,12 +65,12 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
 
   const [createUpdate, { isLoading }] = useCreatehrUpdatesMutation();
   const [editUpdate, { isLoading: isEditing }] = useEdithrupdatesMutation();
-
+  const [progress, setProgress] = React.useState<number>(0);
   const initialValues = {
     title: update?.title || "",
     description: update?.description ?? "",
     createdAt: update?.createdAt
-      ? new Date(update.createdAt).toISOString().split("T")[0] // YYYY-MM-DD
+      ? new Date(update.createdAt) // YYYY-MM-DD
       : "",
     attachment: null,
   };
@@ -82,8 +83,15 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
       const formData = buildFormData(values);
 
       const res = isEdit
-        ? await editUpdate({ id: update!._id, data: formData }).unwrap()
-        : await createUpdate(formData).unwrap();
+        ? await editUpdate({
+            id: update!._id,
+            data: formData,
+            onProgress: (p) => setProgress(p),
+          }).unwrap()
+        : await createUpdate({
+            data: formData,
+            onProgress: (p: number) => setProgress(p),
+          }).unwrap();
 
       if (res.success) {
         showSuccess(res.message);
@@ -106,6 +114,16 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
       bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
       footerClassName="pt-16 pt-sm-20 px-0 pb-0"
       onHide={onHide}
+      ModalLoader={
+        <FormSubmissionLoader
+          isLoading={isLoading || isEditing}
+          variant="progress" // spinner | dots | pulse | progress
+          message="Saving changes..."
+          subMessage="Please wait"
+          progress={progress} // only for progress variant
+        />
+      }
+      isLoading={isLoading || isEditing}
       footer={
         <div className="d-flex gap-2 justify-content-end">
           <button

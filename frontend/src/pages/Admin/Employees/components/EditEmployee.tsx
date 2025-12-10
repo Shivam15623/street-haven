@@ -9,7 +9,8 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import FormImageUploader from "./FormProfileUploader";
 import { PatternFormat } from "react-number-format";
 import { ROLES } from "../../../../interfaces/AuthInterfaces";
-function formatRole(role:string):string {
+import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
+function formatRole(role: string): string {
   return role
     .split("_")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
@@ -92,6 +93,10 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
         bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
         footerClassName="pt-16 pt-sm-20 px-0 pb-0"
         onHide={() => setShowModal(false)}
+        isLoading={isLoading}
+        ModalLoader={
+          <FormSubmissionLoader isLoading={isLoading} variant="spinner" />
+        }
         footer={
           <div className="d-flex gap-2 justify-content-end">
             <button

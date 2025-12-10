@@ -6,6 +6,7 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import { useEditQuestionMutation } from "../../../../../services/FAQapi";
 import { showSuccess } from "../../../../../utills/toastutills";
+import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
 
 interface EditQuestionProps {
   cid: string;
@@ -61,6 +62,14 @@ const EditQuestion: React.FC<EditQuestionProps> = ({
         bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
         footerClassName="pt-16 pt-sm-20 px-0 pb-0"
         className="p-20 p-sm-24 p-md-32 gap-16 gap-sm-20"
+        ModalLoader={
+          <FormSubmissionLoader
+            isLoading={isLoading}
+            variant="spinner" // spinner | dots | pulse | progress
+            message="Saving changes..."
+            subMessage="Please wait"
+          />
+        }
         footer={
           <>
             <button

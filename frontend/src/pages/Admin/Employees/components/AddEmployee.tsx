@@ -9,16 +9,17 @@ import PasswordInput from "../../../../components/Authentication/PasswordInput";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { PatternFormat } from "react-number-format";
 import { ROLES, type Role } from "../../../../interfaces/AuthInterfaces";
+import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 interface AddEmployeeValues {
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
   password: string;
-  role:Role;
+  role: Role;
 }
 const roleValues = Object.values(ROLES) as Array<string>;
-function formatRole(role:string):string {
+function formatRole(role: string): string {
   return role
     .split("_")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
@@ -88,6 +89,10 @@ const AddEmployee = () => {
         bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
         footerClassName="pt-16 pt-sm-20 px-0 pb-0"
         onHide={() => setShowModal(false)}
+        isLoading={isLoading}
+        ModalLoader={
+          <FormSubmissionLoader isLoading={isLoading} variant="spinner" />
+        }
         footer={
           <div className="d-flex gap-2 justify-content-end">
             <button

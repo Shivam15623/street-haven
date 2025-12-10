@@ -13,6 +13,7 @@ import {
 import { showError, showSuccess } from "../../../../utills/toastutills";
 import CustomDatePicker from "../../../../components/child/DatePicker";
 import PdfField from "../../../../components/child/PdfField";
+import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 
 // -------------------------------------------------------
 // ✅ Validation Schema
@@ -58,7 +59,7 @@ const ActionsAgreement: React.FC<ActionsAgreementProps> = ({
 
   const [createAgreement, { isLoading }] = useCreateAgreementMutation();
   const [editAgreement, { isLoading: isEditing }] = useEditAgreementMutation();
-
+  const [progress, setProgress] = React.useState<number>(0);
   // -------------------------------------------------------
   // Initial Values
   // -------------------------------------------------------
@@ -99,8 +100,12 @@ const ActionsAgreement: React.FC<ActionsAgreementProps> = ({
         ? await editAgreement({
             id: agreementToEdit!._id,
             formData,
+            onProgress: (p) => setProgress(p),
           }).unwrap()
-        : await createAgreement(formData).unwrap();
+        : await createAgreement({
+            data: formData,
+            onProgress: (p:number) => setProgress(p)
+          }).unwrap();
 
       if (res.success) {
         showSuccess(res.message);
@@ -127,6 +132,16 @@ const ActionsAgreement: React.FC<ActionsAgreementProps> = ({
       bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
       footerClassName="pt-16 pt-sm-20 px-0 pb-0"
       onHide={onHide}
+      ModalLoader={
+        <FormSubmissionLoader
+          isLoading={isLoading || isEditing}
+          variant="progress" // spinner | dots | pulse | progress
+          message="Saving changes..."
+          subMessage="Please wait"
+          progress={progress} // only for progress variant
+        />
+      }
+      isLoading={isLoading || isEditing}
       footer={
         <div className="d-flex gap-2 justify-content-end">
           <button

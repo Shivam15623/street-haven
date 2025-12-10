@@ -15,6 +15,7 @@ import PdfField from "../../../../components/child/PdfField";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import CustomDatePicker from "../../../../components/child/DatePicker";
+import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 dayjs.extend(utc);
 // ✅ Schema
 const TownhallMinutesFormSchema = (isEdit: boolean) =>
@@ -108,7 +109,7 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
   const [createmeeting, { isLoading }] = useCreatemeetingMinutesMutation();
   const [editMeeting, { isLoading: isEditing }] =
     useEditmeetingMinutesMutation();
-
+  const [progress, setProgress] = React.useState<number>(0);
   const initialValues = {
     title: meeting?.title || "",
     attendees: meeting?.attendees || 0,
@@ -135,8 +136,15 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
 
       const formData = buildFormData(values);
       const res = isEdit
-        ? await editMeeting({ id: meeting!._id, data: formData }).unwrap()
-        : await createmeeting(formData).unwrap();
+        ? await editMeeting({
+            id: meeting!._id,
+            data: formData,
+            onProgress: (p) => setProgress(p),
+          }).unwrap()
+        : await createmeeting({
+            data: formData,
+            onProgress: (p:number) => setProgress(p),
+          }).unwrap();
 
       if (res.success) {
         showSuccess(res.message);
@@ -159,6 +167,16 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
       bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
       footerClassName="pt-16 pt-sm-20 px-0 pb-0"
       onHide={onHide}
+      ModalLoader={
+        <FormSubmissionLoader
+          isLoading={isLoading || isEditing}
+          variant="progress" // spinner | dots | pulse | progress
+          message="Saving changes..."
+          subMessage="Please wait"
+          progress={progress} // only for progress variant
+        />
+      }
+      isLoading={isLoading || isEditing}
       footer={
         <div className="d-flex gap-2 justify-content-end">
           <button

@@ -133,7 +133,7 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
           progress={progress} // only for progress variant
         />
       }
-      isLoading={true}
+      isLoading={isLoading || isEditing}
       footer={
         <div className="d-flex gap-2 justify-content-end">
           <button
