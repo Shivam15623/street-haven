@@ -76,6 +76,13 @@ export const announcementApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Announcement"],
     }),
+    recentAnnouncementcount: builder.query<ApiResponse<number>, void>({
+      query: () => ({
+        url: `/announcement/recent-count`,
+        method: "GET",
+      }),
+      providesTags: ["Announcement"],
+    }),
   }),
 });
 
@@ -84,4 +91,5 @@ export const {
   useCreateAnnouncementMutation,
   useEditAnnouncementMutation,
   useDeleteAnnouncementMutation,
+  useRecentAnnouncementcountQuery,
 } = announcementApi;

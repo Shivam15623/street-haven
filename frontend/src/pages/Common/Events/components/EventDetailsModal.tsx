@@ -83,6 +83,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
     useSignOutFromEventMutation();
   const [editEvent, { isLoading: isEditing }] = useEditEventMutation();
   const { hasPermission } = useHasPermission();
+
   if (!event) return null;
   const {
     _id: eventId,

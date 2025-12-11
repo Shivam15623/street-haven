@@ -74,7 +74,11 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
         formData.append("location", values.location);
       if (values.status && values.status !== ticket.status)
         formData.append("status", values.status);
-      if (values.assignedId && values.assignedId !== ticket.assignedTo?._id)
+      if (
+        values.assignedId &&
+        values.assignedId !== ticket.assignedTo?._id &&
+        values.assignedId !== "Unassigned"
+      )
         formData.append("assignedId", values.assignedId);
       if (values.photo) {
         formData.append("photo", values.photo);
@@ -447,8 +451,6 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                     </Col>
                   )}
                 </Row>
-
-              
               </div>
             </Form>
           )}
