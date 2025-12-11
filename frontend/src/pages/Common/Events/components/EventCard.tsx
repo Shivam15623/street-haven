@@ -227,7 +227,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
       </div>
       <EventDocuments
         eventName={event.title}
-        files={event.documents}
+        files={event.documents??[]}
         onOpenChange={setOpen}
         open={open}
       />
