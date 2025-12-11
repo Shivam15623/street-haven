@@ -11,6 +11,17 @@ export interface EventCredentials {
   startTime: Date;
   endTime: Date;
 }
+type FileType =
+  | "image"
+  | "video"
+  | "audio"
+  | "pdf"
+  | "doc"
+  | "ppt"
+  | "excel"
+  | "zip"
+  | "other";
+
 export interface EventUpcomingData {
   _id: string;
   title: string;
@@ -29,6 +40,14 @@ export interface EventUpcomingData {
   status: "upcoming" | "completed" | "cancelled"; // extend as per your app logic
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
+  documents: {
+    _id: string;
+    fileName: string;
+    fileType: FileType;
+    fileUrl: string;
+    uploadedAt: Date;
+    uploadedBy: string;
+  }[];
 }
 export interface EventCalendarCredentials {
   startDate: string;

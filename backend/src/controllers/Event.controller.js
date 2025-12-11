@@ -3,10 +3,11 @@ import Event from "../model/event.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
-
+import path from "path";
 import { io } from "../index.js";
 import { createNotification } from "../helper/CreateNotoification.js";
 import { addActivityLog } from "../helper/addActivityLogs.js";
+import { uploadOnCloudinary } from "../utills/cloudinary.js";
 export const createEvent = asyncHandler(async (req, res) => {
   const {
     title,
@@ -466,4 +467,106 @@ export const EventDetails = asyncHandler(async (req, res) => {
         findevent
       )
     );
+});
+
+export const uploadEventDocuments = asyncHandler(async (req, res) => {
+  const { id: eventId } = req.params;
+  const userId = req.user?._id;
+  const files = req.files || [];
+
+  // 1. Fetch event once
+  const event = await Event.findById(eventId);
+  if (!event) throw new ApiError(404, "Event not found");
+
+  const now = new Date();
+
+  // 2. Auto-update status if event is completed
+  if (event.endTime < now && event.status !== "completed") {
+    event.status = "completed";
+    await event.save();
+  }
+
+  // 3. Block uploads if event is NOT completed
+  if (event.endTime > now) {
+    throw new ApiError(400, "Event is not completed yet");
+  }
+
+  // 4. If no files, return directly
+  if (files.length === 0) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "No files uploaded", event));
+  }
+
+  // 5. File type map (faster lookup)
+  const typeMap = {
+    image: [".jpg", ".jpeg", ".png", ".gif", ".webp"],
+    video: [".mp4", ".mov", ".avi", ".mkv"],
+    audio: [".mp3", ".wav", ".ogg"],
+    pdf: [".pdf"],
+    doc: [".doc", ".docx"],
+    ppt: [".ppt", "pptx"],
+    excel: [".xls", ".xlsx"],
+    zip: [".zip", ".rar"],
+  };
+
+  const detectFileType = (ext) => {
+    return (
+      Object.keys(typeMap).find((key) => typeMap[key].includes(ext)) || "other"
+    );
+  };
+
+  // 6. Upload all files in parallel
+  const attachments = await Promise.all(
+    files.map(async (file) => {
+      const uploaded = await uploadOnCloudinary(file.path);
+
+      if (!uploaded?.secure_url) {
+        throw new ApiError(500, `Upload failed for ${file.originalname}`);
+      }
+
+      const ext = path.extname(file.originalname).toLowerCase();
+
+      return {
+        fileName: uploaded.original_filename,
+        fileUrl: uploaded.secure_url,
+        size: uploaded.bytes,
+        fileType: detectFileType(ext),
+        uploadedAt: new Date(),
+        uploadedBy: userId,
+      };
+    })
+  );
+
+  // 7. Merge new attachments with old ones
+  event.documents = [...event.documents, ...attachments];
+  await event.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Attachments uploaded", event));
+});
+
+export const deleteEventDocument = asyncHandler(async (req, res) => {
+  const { eventId, docId } = req.params;
+  const userId = req.user?._id;
+
+  const event = await Event.findById(eventId);
+  if (!event) throw new ApiError(404, "Event not found");
+
+  const document = event.documents.id(docId);
+  if (!document) throw new ApiError(404, "Document not found");
+
+  // Optional: allow deleting only own uploaded docs
+  // if (String(document.uploadedBy) !== String(userId)) {
+  //   throw new ApiError(403, "You cannot delete this document");
+  // }
+
+  // Delete file locally from array
+  document.deleteOne();
+  await event.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Document deleted successfully", event));
 });

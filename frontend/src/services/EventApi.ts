@@ -8,6 +8,7 @@ import type {
 } from "../interfaces/EventInterfaces";
 import type { ApiGeneralResponse } from "../interfaces/Response";
 import { api } from "../redux/ApiSlice";
+import { uploadWithProgress } from "../utills/uploadWithProgress";
 
 export const EventApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -101,6 +102,21 @@ export const EventApi = api.injectEndpoints({
         method: "GET",
       }),
     }),
+    eventuploadDocument: builder.mutation<
+      ApiGeneralResponse,
+      { eventId: string; formData: FormData; onProgress?: (p: number) => void }
+    >({
+      queryFn: ({ eventId, formData, onProgress }) =>
+        uploadWithProgress(
+          `/events/${eventId}/documents`,
+          "POST"
+        )({
+          data: formData,
+          onProgress,
+        }),
+
+      invalidatesTags: ["Event"],
+    }),
   }),
 });
 
@@ -112,5 +128,7 @@ export const {
   useSignUpForEventMutation,
   useSignOutFromEventMutation,
   useFetchEventsPastQuery,
-  useGetEventRegistrationsQuery,useGetEventDetailQuery
+  useGetEventRegistrationsQuery,
+  useGetEventDetailQuery,
+  useEventuploadDocumentMutation
 } = EventApi;

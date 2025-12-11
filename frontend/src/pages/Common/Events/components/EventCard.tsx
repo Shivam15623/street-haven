@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Spinner } from "react-bootstrap";
 import AnnouncementCardWrapper from "./AnnouncementCardWrapper";
 import dayjs from "dayjs";
@@ -13,6 +13,8 @@ import ActionsEvent from "./ActionsEvent";
 
 import { Icon } from "@iconify/react/dist/iconify.js";
 import useHasPermission from "../../../../hooks/Auth";
+import EventDocsUploader from "./EventDocsUploader";
+import EventDocuments from "./EventDocuments";
 
 interface EventCardProps {
   event: EventUpcomingData;
@@ -53,7 +55,8 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
     useSignUpForEventMutation();
   const [signOutEvent, { isLoading: isUnregistering }] =
     useSignOutFromEventMutation();
-
+  const [docopen, setDocOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   // Handle Register
   const handleSignup = async () => {
     try {
@@ -83,6 +86,32 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
         {hasPermission({
           action: "view_registerations",
         }) && <ViewRegistrations eventId={eventId} />}
+        {hasPermission({
+          action: "view_registerations",
+        }) && (
+          <button
+            className="btn btn-street-edit d-flex flex-column align-items-center justify-content-center radius-12"
+            onClick={() => setDocOpen(true)}
+          >
+            <Icon icon="lucide:upload" className="text-xl" />
+          </button>
+        )}
+        <button
+          className="btn btn-street-outline-primary d-flex flex-column align-items-center justify-content-center radius-12"
+          onClick={() => setOpen(true)}
+        >
+          <Icon icon="lucide:paperclip" className="text-xl" />
+        </button>
+        {hasPermission({
+          action: "view_registerations",
+        }) && (
+          <EventDocsUploader
+            open={docopen}
+            eventId={event._id}
+            onOpenChange={setDocOpen}
+            eventName={event.title}
+          />
+        )}
         {}{" "}
         <button
           disabled
@@ -99,7 +128,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
     actionButton = (
       <div className="d-flex flex-row gap-2">
         {hasPermission({
-         action: "view_registerations",
+          action: "view_registerations",
         }) && <ViewRegistrations eventId={eventId} />}
         {hasPermission({ action: "edit_event" }) && (
           <ActionsEvent event={event} />
@@ -196,6 +225,12 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
           />
         </div>
       </div>
+      <EventDocuments
+        eventName={event.title}
+        files={event.documents}
+        onOpenChange={setOpen}
+        open={open}
+      />
     </AnnouncementCardWrapper>
   );
 };

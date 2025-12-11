@@ -8,6 +8,7 @@ import { useSelector } from "react-redux";
 import { selectAuth } from "../../../redux/AuthSlice";
 import { useFetchEventsupcomingQuery } from "../../../services/EventApi";
 import { useFetchTicketsQuery } from "../../../services/ticketApi";
+import { useRecentAnnouncementcountQuery } from "../../../services/AnnouncementApi";
 
 const EmployeeDashboard = () => {
   const today = dayjs().format("dddd, MMMM D, YYYY");
@@ -25,6 +26,9 @@ const EmployeeDashboard = () => {
     order: "desc",
     page: 1,
   });
+
+  const { data: recentAnnouncement } = useRecentAnnouncementcountQuery();
+
   return (
     <div className="d-flex flex-column gap-4 ">
       <div className="d-flex flex-row justify-content-between">
@@ -119,7 +123,7 @@ const EmployeeDashboard = () => {
         <DashboardCard
           icon="lucide:party-popper"
           label="Announcements"
-          value={3}
+          value={recentAnnouncement?.data ?? 0}
           link={`/agency_info?tab=announcements`}
           key={"Announcements"}
         />
