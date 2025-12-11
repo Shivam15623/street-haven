@@ -227,3 +227,18 @@ export const fetchAnnouncement = asyncHandler(async (req, res) => {
     })
   );
 });
+export const recentAnnouncementCount = asyncHandler(async (req, res) => {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  // Set to midnight 00:00:00.000
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+
+  const count = await Announcement.countDocuments({
+    createdAt: { $gte: sevenDaysAgo },
+  });
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, `Recent Announcements fetched Successfully`,count));
+});

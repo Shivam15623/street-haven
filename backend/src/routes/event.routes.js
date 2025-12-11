@@ -10,9 +10,11 @@ import {
   fetchRegisterations,
   GetPastEvents,
   GetUpcomingEvents,
+  uploadEventDocuments,
 } from "../controllers/Event.controller.js";
 import { authorizePermissions } from "../middleware/AuthRole.js";
 import { PERMISSIONS } from "../auth/permissions.js";
+import { upload } from "../middleware/multer.js";
 
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
@@ -38,4 +40,8 @@ router
     authorizePermissions({ action: PERMISSIONS.VIEW_REGISTERATIONS }),
     fetchRegisterations
   );
+router.route("/:id/documents").post(
+  upload.array("documents", 14), // multer middleware
+  uploadEventDocuments
+);
 export default router;
