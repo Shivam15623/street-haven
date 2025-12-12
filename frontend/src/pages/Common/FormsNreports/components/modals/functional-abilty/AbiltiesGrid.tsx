@@ -10,7 +10,6 @@ const abilityItems = [
   { key: "walking", label: "Walking", icon: "mdi:walk" },
   { key: "standing", label: "Standing", icon: "mdi:human-male" },
   { key: "sitting", label: "Sitting", icon: "mdi:seat-passenger" },
-
   {
     key: "liftingFloorToWaist",
     label: "Lifting (Floor to Waist)",

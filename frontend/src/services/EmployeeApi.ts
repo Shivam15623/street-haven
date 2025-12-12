@@ -11,6 +11,12 @@ export interface EmployeeData {
   profilePic: string;
   createdAt: string;
   updatedAt: string;
+  title: string;
+  hireDate: Date;
+  timePeriod: {
+    value: number;
+    unit: "days" | "weeks" | "months" | "years";
+  };
 }
 export interface RoleForm {
   roleName: string;
@@ -151,5 +157,5 @@ export const {
   useEditRoleMutation,
   useDeleteRoleMutation,
   useViewRolesQuery,
-  useGetRolebyIdQuery
+  useGetRolebyIdQuery,
 } = EmployeeApi;
