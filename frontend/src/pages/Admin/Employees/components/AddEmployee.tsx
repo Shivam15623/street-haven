@@ -10,6 +10,7 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import { PatternFormat } from "react-number-format";
 import { ROLES, type Role } from "../../../../interfaces/AuthInterfaces";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
+import CustomDatePicker from "../../../../components/child/DatePicker";
 interface AddEmployeeValues {
   firstName: string;
   lastName: string;
@@ -17,7 +18,14 @@ interface AddEmployeeValues {
   phone: string;
   password: string;
   role: Role;
+  title: string;
+  hireDate: string; // <-- keep as string for HTML input
+  timePeriod: {
+    value: number | string; 
+    unit: "days" | "weeks" | "months" | "years"; // <-- exact string union
+  };
 }
+
 const roleValues = Object.values(ROLES) as Array<string>;
 function formatRole(role: string): string {
   if (role === "hr") return "HR";
@@ -41,6 +49,9 @@ const AddEmployeeSchema = Yup.object({
       "Email must be from @streethaven.com domain"
     )
     .email("Email is required"),
+  title: Yup.string()
+    .required("Title is required")
+    .matches(/^[a-zA-Z\s]+$/, "Title can only contain letters and spaces"),
   phone: Yup.string()
     .required("Phone number is required")
     .matches(
@@ -57,6 +68,13 @@ const AddEmployeeSchema = Yup.object({
     .matches(/[a-z]/, "Must contain at least one lowercase letter")
     .matches(/\d/, "Must contain at least one number")
     .matches(/[@$!%*?&#]/, "Must contain at least one special character"),
+  hireDate: Yup.date().required("Hire Date is required"),
+  timePeriod: Yup.object({
+    value: Yup.number()
+      .typeError("Time Period value must be a number")
+      .required("Time Period value is required"),
+    unit: Yup.string().required("Time Period unit is required"),
+  }),
 });
 const AddEmployee = () => {
   const [showModal, setShowModal] = useState(false);
@@ -69,10 +87,12 @@ const AddEmployee = () => {
         showSuccess(res.message);
         setShowModal(false);
       }
-    } catch (error: any) {
-      showError(error.data.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) showError(error.message);
+      else showError("Something went wrong");
     }
   };
+
   return (
     <>
       <button
@@ -120,13 +140,25 @@ const AddEmployee = () => {
             email: "",
             phone: "",
             password: "",
+            title: "",
             role: "employee",
+            hireDate: "",
+            timePeriod: { value: "", unit: "months" },
           }}
           validationSchema={AddEmployeeSchema}
           onSubmit={handleAddEmployee}
           disabled={isLoading}
         >
-          {({ handleSubmit, handleChange, values, touched, errors }) => (
+          {({
+            handleSubmit,
+            handleChange,
+            values,
+            touched,
+            errors,
+            handleBlur,
+            setFieldTouched,
+            setFieldValue,
+          }) => (
             <Form
               noValidate
               id="add-employee-form"
@@ -264,6 +296,108 @@ const AddEmployee = () => {
                     />
                     <Form.Control.Feedback type="invalid">
                       {errors.phone}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+                </Col>
+              </Row>
+              <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
+                {/* Title */}
+                <Col md={6}>
+                  <Form.Group
+                    controlId="title"
+                    className="d-flex flex-column gap-1"
+                  >
+                    <Form.Label className="fw-normal m-0">Title</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="title"
+                      placeholder="Title"
+                      value={values.title}
+                      onChange={handleChange}
+                      isInvalid={touched.title && !!errors.title}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.title}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+                </Col>
+
+                {/* Hire Date */}
+                <Col md={6}>
+                  <Form.Group
+                    controlId="hireDate"
+                    className="d-flex flex-column gap-1"
+                  >
+                    <Form.Label className="fw-normal m-0">Hire Date</Form.Label>
+                    <CustomDatePicker
+                      name="hireDate"
+                      value={values.hireDate ? new Date(values.hireDate) : null}
+                      onChange={(date) => {
+                        const str = date ? date.toISOString() : "";
+                        setFieldValue("hireDate", str, true); // ← Add true to validate immediately
+                        setFieldTouched("hireDate", true, false); // ← false prevents double validation
+                      }}
+                      onBlur={handleBlur}
+                      isInvalid={!!errors.hireDate && touched.hireDate}
+                    />
+                    {errors.hireDate && touched.hireDate && (
+                      <div className="invalid-feedback d-block">
+                        {errors.hireDate}
+                      </div>
+                    )}
+                  </Form.Group>
+                </Col>
+              </Row>
+
+              {/* Time Period */}
+              <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
+                <Col md={6}>
+                  <Form.Group
+                    controlId="timePeriodValue"
+                    className="d-flex flex-column gap-1"
+                  >
+                    <Form.Label className="fw-normal m-0">
+                      Time Period
+                    </Form.Label>
+                    <Form.Control
+                      type="number"
+                      name="timePeriod.value"
+                      placeholder="Enter number"
+                      value={values.timePeriod.value}
+                      onChange={handleChange}
+                      isInvalid={
+                        touched.timePeriod?.value && !!errors.timePeriod?.value
+                      }
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.timePeriod?.value}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+                </Col>
+
+                <Col md={6}>
+                  <Form.Group
+                    controlId="timePeriodUnit"
+                    className="d-flex flex-column gap-1"
+                  >
+                    <Form.Label className="fw-normal m-0">Unit</Form.Label>
+                    <Form.Select
+                      name="timePeriod.unit"
+                      value={values.timePeriod.unit}
+                      onChange={handleChange}
+                      className={
+                        touched.timePeriod?.unit && errors.timePeriod?.unit
+                          ? "is-invalid"
+                          : ""
+                      }
+                    >
+                      <option value="days">Days</option>
+                      <option value="weeks">Weeks</option>
+                      <option value="months">Months</option>
+                      <option value="years">Years</option>
+                    </Form.Select>
+                    <Form.Control.Feedback type="invalid">
+                      {errors.timePeriod?.unit}
                     </Form.Control.Feedback>
                   </Form.Group>
                 </Col>

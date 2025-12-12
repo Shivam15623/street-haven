@@ -50,7 +50,6 @@ export const AllEmployees = asyncHandler(async (req, res) => {
 
   // Otherwise, paginated list
   const employees = await User.find(query)
-    .populate("role", "roleName _id")
     .select(selectFields)
     .sort({ [sortBy]: order === "asc" ? 1 : -1 })
     .skip((Number(page) - 1) * Number(limit))
@@ -77,15 +76,27 @@ export const AllEmployees = asyncHandler(async (req, res) => {
   );
 });
 export const AddEmployee = asyncHandler(async (req, res) => {
-  const { firstName, lastName, email, password, phone, role } = req.body;
+  const {
+    firstName,
+    lastName,
+    email,
+    password,
+    phone,
+    role,
+    title,
+    hireDate,
+    timePeriod,
+  } = req.body;
 
   const ExistingUser = await User.findOne({
     $or: [{ email: email }, { phoneNo: phone }],
   });
+
   if (ExistingUser) {
     if (ExistingUser.email === email) {
       throw new ApiError(400, "User already exists with this email");
-    } else if (ExistingUser.phoneNo === phone) {
+    }
+    if (ExistingUser.phoneNo === phone) {
       throw new ApiError(400, "User already exists with this phone number");
     }
   }
@@ -93,22 +104,30 @@ export const AddEmployee = asyncHandler(async (req, res) => {
   const newUser = await User.create({
     firstname: firstName,
     lastname: lastName,
-    email: email,
-    password: password,
+    email,
+    password,
     phoneNo: phone,
-    role: "employee",
+    role: role || "employee",
+    title,
+    hireDate: hireDate || new Date(),
+    timePeriod: {
+      value: timePeriod?.value || 3,
+      unit: timePeriod?.unit || "months",
+    },
     totpSecret: null,
     isTOTPEnabled: false,
     isTOTPVerified: false,
   });
-  const findUser = await User.findById(newUser._id);
-  if (!findUser) {
+
+  if (!newUser) {
     throw new ApiError(500, "Account not created due to server error");
   }
+
   return res
     .status(201)
     .json(new ApiResponse(201, "Employee Account created successfully"));
 });
+
 export const EditEmployee = asyncHandler(async (req, res) => {
   const { id: userId } = req.params;
   const findUser = await User.findById(userId);
@@ -116,21 +135,36 @@ export const EditEmployee = asyncHandler(async (req, res) => {
     throw new ApiError(404, "No such user found");
   }
 
-  const { firstname, lastname, email, phoneNo, role } = req.body;
+  const {
+    firstname,
+    lastname,
+    email,
+    phoneNo,
+    role,
+    title,
+    hireDate,
+    timePeriod,
+  } = req.body;
+  console.log("tm", req.body, typeof timePeriod);
   const updates = {};
-
+  let parsedTimePeriod = timePeriod;
+  if (typeof timePeriod === "string") {
+    try {
+      parsedTimePeriod = JSON.parse(timePeriod);
+    } catch (err) {
+      console.error("Invalid timePeriod JSON", err);
+    }
+  }
   // If profile picture is uploaded → skip equality check and update
   if (req.file && req.file.path) {
-    // ✅ Delete old profilePic from Cloudinary if it exists
     if (findUser.profilePic) {
       try {
-        await deleteFromCloudinary(findUser.profilePic); // pass old URL
+        await deleteFromCloudinary(findUser.profilePic); // delete old picture
       } catch (err) {
         console.error("Error deleting old profile picture:", err.message);
       }
     }
 
-    // ✅ Upload new profile pic
     const uploadedPic = await uploadOnCloudinary(req.file.path);
     if (!uploadedPic.secure_url) {
       throw new ApiError(500, "Error while uploading profile picture");
@@ -143,7 +177,15 @@ export const EditEmployee = asyncHandler(async (req, res) => {
       (lastname ? lastname === findUser.lastname : true) &&
       (email ? email === findUser.email : true) &&
       (phoneNo ? phoneNo === findUser.phoneNo : true) &&
-      (role ? role === findUser.role : true);
+      (role ? role === findUser.role : true) &&
+      (title ? title === findUser.title : true) &&
+      (hireDate
+        ? new Date(hireDate).toISOString() === findUser.hireDate.toISOString()
+        : true) &&
+      (timePeriod !== undefined && timePeriod !== null
+        ? parsedTimePeriod.value == findUser.timePeriod?.value &&
+          parsedTimePeriod.unit == findUser.timePeriod?.unit
+        : true);
 
     if (isSame) {
       return res
@@ -161,7 +203,28 @@ export const EditEmployee = asyncHandler(async (req, res) => {
   if (email && email !== findUser.email) updates.email = email;
   if (phoneNo && phoneNo !== findUser.phoneNo) updates.phoneNo = phoneNo;
   if (role && role !== findUser.role) updates.role = role;
+  if (title && title !== findUser.title) updates.title = title;
+  if (
+    hireDate &&
+    new Date(hireDate).toISOString() !== findUser.hireDate.toISOString()
+  )
+    updates.hireDate = new Date(hireDate);
 
+  if (parsedTimePeriod !== undefined && parsedTimePeriod !== null) {
+    const oldTP = findUser.timePeriod || {};
+
+    if (
+      parsedTimePeriod.value != oldTP.value ||
+      parsedTimePeriod.unit != oldTP.unit
+    ) {
+      updates.timePeriod = {
+        value: Number(parsedTimePeriod.value),
+        unit: parsedTimePeriod.unit,
+      };
+    }
+  }
+
+  console.log(updates);
   const updatedUser = await User.findByIdAndUpdate(userId, updates, {
     new: true,
     runValidators: true,
@@ -175,6 +238,7 @@ export const EditEmployee = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, "Employee profile updated successfully"));
 });
+
 export const EditEmployeePassword = asyncHandler(async (req, res) => {});
 export const RemoveEmployee = asyncHandler(async (req, res) => {
   const { id: userId } = req.params;
