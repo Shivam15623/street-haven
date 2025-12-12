@@ -66,8 +66,13 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ url, name }) => {
       ) : (
         <iframe
           src={`${url}#toolbar=0&navpanes=0`}
-          className="flex-grow-1 w-100 rounded"
-          style={{ border: "none", minHeight: "400px" }}
+          className="flex-grow-1 mx-auto rounded"
+          style={{
+            border: "none",
+            minHeight: "400px",
+            maxWidth: "90vw",
+            minWidth: "90vw",
+          }}
           title={name}
           onLoad={() => setIsLoading(false)}
           onError={() => {

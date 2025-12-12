@@ -22,7 +22,10 @@ const DocViewer: React.FC<DOCViewerProps> = ({ url, name }) => {
           style={{ zIndex: 10 }}
         >
           <div className="d-flex flex-column align-items-center">
-            <div className="spinner-border text-street-primary mb-2" role="status">
+            <div
+              className="spinner-border text-street-primary mb-2"
+              role="status"
+            >
               <span className="visually-hidden">Loading...</span>
             </div>
             <span className="text-street-base small">Loading Document...</span>
@@ -67,8 +70,13 @@ const DocViewer: React.FC<DOCViewerProps> = ({ url, name }) => {
           src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
             url
           )}#toolbar=0&navpanes=0`}
-          className="flex-grow-1 w-100 rounded"
-          style={{ border: "none", minHeight: "400px" }}
+          className="flex-grow-1 mx-auto  rounded"
+          style={{
+            border: "none",
+            minHeight: "400px",
+            maxWidth: "90vw",
+            minWidth: "90vw",
+          }}
           title={name}
           onLoad={() => setIsLoading(false)}
           onError={() => {

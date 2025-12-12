@@ -2,6 +2,7 @@ import { Router } from "express";
 import passport from "passport";
 import {
   createEvent,
+  deleteEventDocument,
   editEvent,
   EventDetails,
   EventsCalendar,
@@ -44,4 +45,5 @@ router.route("/:id/documents").post(
   upload.array("documents", 14), // multer middleware
   uploadEventDocuments
 );
+router.route("/:eventId/delete/document/:docId").delete(deleteEventDocument);
 export default router;
