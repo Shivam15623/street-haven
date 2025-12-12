@@ -76,6 +76,9 @@ export const EmployeeColumn = (
                 lastname: row.lastname,
                 phoneNo: row.phoneNo,
                 role: row.role,
+                hireDate: row.hireDate,
+                timePeriod: row.timePeriod,
+                title: row.title,
               }}
             />
           )}

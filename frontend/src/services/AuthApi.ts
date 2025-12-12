@@ -105,6 +105,9 @@ export const authApi = api.injectEndpoints({
             role: user.role,
             slug: user.slug,
             createdAt: user.createdAt,
+            title: user.title || "",
+            hireDate: user.hireDate ? new Date(user.hireDate) : new Date(),
+            timePeriod: user.timePeriod || { value: 0, unit: "months" },
           };
           if (data?.data.accessToken) {
             dispatch(

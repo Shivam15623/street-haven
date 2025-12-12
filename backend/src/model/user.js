@@ -37,6 +37,13 @@ const UserSchema = new mongoose.Schema(
         "Email must be a streethaven.com email",
       ],
     },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+      default: "none",
+      match: [/^[A-Za-z]+$/, "Last name must contain only letters"],
+    },
     slug: {
       type: String,
       required: true,
@@ -70,6 +77,23 @@ const UserSchema = new mongoose.Schema(
         /^\+1\s?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
         "Please enter a valid Canadian phone number (e.g. +1 (416) 555-1234)",
       ],
+    },
+    hireDate: {
+      type: Date,
+      required: true,
+      default: new Date(),
+    },
+    timePeriod: {
+      value: {
+        type: Number,
+        required: true,
+        min: 1,
+      },
+      unit: {
+        type: String,
+        enum: ["days", "weeks", "months", "years"],
+        required: true,
+      },
     },
     // TOTP secret for Microsoft Authenticator
     totpSecret: {
