@@ -505,7 +505,7 @@ export const uploadEventDocuments = asyncHandler(async (req, res) => {
     audio: [".mp3", ".wav", ".ogg"],
     pdf: [".pdf"],
     doc: [".doc", ".docx"],
-    ppt: [".ppt", "pptx"],
+    ppt: [".ppt", ".pptx"],
     excel: [".xls", ".xlsx"],
     zip: [".zip", ".rar"],
   };
@@ -526,6 +526,7 @@ export const uploadEventDocuments = asyncHandler(async (req, res) => {
       }
 
       const ext = path.extname(file.originalname).toLowerCase();
+      console.log("type",ext)
 
       return {
         fileName: uploaded.original_filename,
@@ -554,16 +555,18 @@ export const deleteEventDocument = asyncHandler(async (req, res) => {
   const event = await Event.findById(eventId);
   if (!event) throw new ApiError(404, "Event not found");
 
+  // Find the document inside the event's documents array
   const document = event.documents.id(docId);
   if (!document) throw new ApiError(404, "Document not found");
 
-  // Optional: allow deleting only own uploaded docs
+  // Optional: restrict document deletion to uploader
   // if (String(document.uploadedBy) !== String(userId)) {
   //   throw new ApiError(403, "You cannot delete this document");
   // }
 
-  // Delete file locally from array
+  // Remove the document from array
   document.deleteOne();
+
   await event.save();
 
   return res

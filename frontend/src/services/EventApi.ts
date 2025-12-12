@@ -117,6 +117,16 @@ export const EventApi = api.injectEndpoints({
 
       invalidatesTags: ["Event"],
     }),
+    eventdeleteDocument: builder.mutation<
+      ApiGeneralResponse,
+      { eventId: string; documentId: string }
+    >({
+      query: ({ eventId, documentId }) => ({
+        url: `/events/${eventId}/delete/document/${documentId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Event"],
+    }),
   }),
 });
 
@@ -130,5 +140,6 @@ export const {
   useFetchEventsPastQuery,
   useGetEventRegistrationsQuery,
   useGetEventDetailQuery,
-  useEventuploadDocumentMutation
+  useEventuploadDocumentMutation,
+  useEventdeleteDocumentMutation,
 } = EventApi;
