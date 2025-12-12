@@ -284,10 +284,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
                   name="eventDate"
                   value={values.eventDate ? new Date(values.eventDate) : null}
                   onChange={(date) => {
-                    const newDate = date
-                      ? date.toISOString().split("T")[0]
-                      : "";
-                    setFieldValue("eventDate", newDate, true); // ← Add true to validate immediately
+                    setFieldValue("eventDate", date, true); // ← Add true to validate immediately
                     setFieldTouched("eventDate", true, false); // ← false prevents double validation
                   }}
                   onBlur={handleBlur}

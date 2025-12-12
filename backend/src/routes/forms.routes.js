@@ -14,8 +14,9 @@ import {
   GetAllPaymentRequisitions,
 } from "../controllers/form.controller.js";
 import { upload } from "../middleware/multer.js";
-import { functionalAbiltiesData } from "../validations/formSchemas.js";
+
 import { validateRequest } from "../middleware/validate.js";
+import { functionalAbilitiesSchema } from "../validations/formSchemas.js";
 
 const router = Router();
 
@@ -27,7 +28,7 @@ router
   .post(upload.single("invoiceAttachment"), createPaymentRequisition);
 router
   .route("/functionalAbilties")
-  .post(validateRequest(functionalAbiltiesData, "body"), createFAF);
+  .post(validateRequest(functionalAbilitiesSchema, "body"), createFAF);
 router.route("/mediaConsent").post(createMediaConsent);
 
 // -------------------- GET routes --------------------

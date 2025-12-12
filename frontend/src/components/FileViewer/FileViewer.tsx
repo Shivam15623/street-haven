@@ -29,7 +29,6 @@ const FileViewer: React.FC<FileViewerProps> = ({
   const currentFile = files[currentIndex];
 
   const fileType = currentFile.fileType;
-  console.log("fileType", fileType);
 
   const hasMultipleFiles = files.length > 1;
 
@@ -74,17 +73,6 @@ const FileViewer: React.FC<FileViewerProps> = ({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
-  const handleDownload = () => {
-    if (currentFile) {
-      const link = document.createElement("a");
-      link.href = currentFile.fileUrl;
-      link.download = currentFile.fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
-
   const renderViewer = () => {
     if (!currentFile) return null;
 
@@ -114,6 +102,27 @@ const FileViewer: React.FC<FileViewerProps> = ({
     }
   };
 
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch file");
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(blobUrl); // Free memory
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
+  };
+
   if (!open) return null;
 
   return (
@@ -134,7 +143,7 @@ const FileViewer: React.FC<FileViewerProps> = ({
           transition={{ delay: 0.1, duration: 0.2 }}
         >
           <div className="d-flex flex-row align-items-center flex-grow-1 gap-20 text-truncate">
-           <FileIconWithBackground fileType={fileType} size={28}/>
+            <FileIconWithBackground fileType={fileType} size={28} />
             <div className="text-truncate">
               <h5 className="mb-0 text-xl text-street-dark text-truncate">
                 {currentFile?.fileName}
@@ -151,14 +160,18 @@ const FileViewer: React.FC<FileViewerProps> = ({
 
           <div className="d-flex align-items-center gap-2">
             <button
-              onClick={handleDownload}
+              onClick={() =>
+                handleDownload(currentFile.fileUrl, currentFile.fileName)
+              }
               className="btn radius-12 btn-street-lg  btn-street-outline-primary d-none d-sm-inline-flex align-items-center justify-content-center gap-1"
             >
               <Icon icon="mdi:download" width={18} height={18} />
               <span className="small">Download</span>
             </button>
             <button
-              onClick={handleDownload}
+              onClick={() =>
+                handleDownload(currentFile.fileUrl, currentFile.fileName)
+              }
               className="btn radius-12 btn-street-outline-primary d-inline-flex d-sm-none"
             >
               <Icon icon="mdi:download" width={18} height={18} />
