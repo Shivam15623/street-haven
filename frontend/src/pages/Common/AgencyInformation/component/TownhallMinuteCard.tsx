@@ -6,7 +6,7 @@ import type { MeetingMinutesData } from "../../../../interfaces/meetingMinutes";
 
 import ActionstownhallMinutes from "./ActionstownhallMinutes";
 import DeleteMeetingMinutes from "./DeleteMeetingMinutes";
-import ViewPdfModal from "../../../../components/child/ViewPdfModal";
+import ViewFileModal from "../../../../components/child/VIewFileModal";
 
 export type TownhallMinuteCardProps = {
   meeting: MeetingMinutesData;
@@ -73,19 +73,24 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
                 />
                 {attendees} attendees
               </span>
-              <span className="d-flex align-items-center gap-1 gap-sm-6">
-                <Icon
-                  icon="famicons:document-sharp"
-                  className="text-street-primary text-xxs xs:text-xs"
-                />
-                {attachment.totalPages} pages
-              </span>
+              {attachment.fileType && (
+                <span className="d-flex align-items-center gap-1 gap-sm-6">
+                  <Icon
+                    icon="famicons:document-sharp"
+                    className="text-street-primary text-xxs xs:text-xs"
+                  />
+                  {attachment.fileType}
+                </span>
+              )}
+
               <span>• {formatFileSize(attachment.size)}</span>
             </div>
           </div>
 
           <div className="d-none d-sm-flex flex-row gap-6 gap-sm-12">
-            <ViewPdfModal attachment={attachment} title={meeting.title} />
+            {attachment && (
+              <ViewFileModal attachment={attachment} title={title} />
+            )}
             <button
               className="btn btn-street-primary btn-street-lg p-8 px-sm-24 px-md-32 radius-12 text-xxs sm:text-xs radius-12 p-0"
               style={{ minWidth: "43px", minHeight: "40px" }}
@@ -96,24 +101,22 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
               <Icon icon="jam:download" className="text-xl" />
               Download
             </button>
-     
-              <button
-                className="btn btn-street-neutral d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
-                style={{ width: "43px", height: "40px" }}
-                onClick={() => setShowModal(true)}
-              >
-                {" "}
-                <Icon icon="mdi:pencil" className="text-sm sm:text-xl" />
-              </button>
-       
-   
-              <DeleteMeetingMinutes
-                attachment={attachment}
-                id={meeting._id}
-                meetingDate={meetingDate}
-                title={title}
-              />
-     
+
+            <button
+              className="btn btn-street-neutral d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
+              style={{ width: "43px", height: "40px" }}
+              onClick={() => setShowModal(true)}
+            >
+              {" "}
+              <Icon icon="mdi:pencil" className="text-sm sm:text-xl" />
+            </button>
+
+            <DeleteMeetingMinutes
+              attachment={attachment}
+              id={meeting._id}
+              meetingDate={meetingDate}
+              title={title}
+            />
           </div>
         </div>
 
@@ -150,25 +153,24 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
         )}
         <hr className="d-sm-none d-block" />
         <div className="d-flex d-sm-none flex-row justify-content-end gap-8 gap-sm-12">
+          <DeleteMeetingMinutes
+            attachment={attachment}
+            id={meeting._id}
+            meetingDate={meetingDate}
+            title={title}
+          />
 
-            <DeleteMeetingMinutes
-              attachment={attachment}
-              id={meeting._id}
-              meetingDate={meetingDate}
-              title={title}
-            />
-    
+          <button
+            className="btn btn-street-neutral"
+            onClick={() => setShowModal(true)}
+          >
+            {" "}
+            <Icon icon="mdi:pencil" className="text-sm sm:text-xl" />
+          </button>
 
-            <button
-              className="btn btn-street-neutral"
-              onClick={() => setShowModal(true)}
-            >
-              {" "}
-              <Icon icon="mdi:pencil" className="text-sm sm:text-xl" />
-            </button>
-      
-
-          <ViewPdfModal attachment={attachment} title={meeting.title} />
+          {attachment && (
+            <ViewFileModal attachment={attachment} title={title} />
+          )}
           <button
             className="btn btn-street-primary btn-street-lg p-8 px-sm-24 px-md-32 radius-12 text-xxs sm:text-xs"
             onClick={() =>

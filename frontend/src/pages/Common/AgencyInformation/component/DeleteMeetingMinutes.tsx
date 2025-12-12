@@ -14,7 +14,7 @@ type DeleteMeetingProps = {
     fileName: string;
     fileUrl: string;
     size: number; // bytes
-    totalPages: number;
+    fileType: string;
   };
 };
 
@@ -95,7 +95,7 @@ const DeleteMeetingMinutes: React.FC<DeleteMeetingProps> = ({
               <p className="mb-0">
                 <span className="fw-semibold">File:</span> {attachment.fileName}{" "}
                 ({(attachment.size / 1024 / 1024).toFixed(2)} MB,{" "}
-                {attachment.totalPages} pages)
+                {attachment.fileType} )
               </p>
             )}
           </div>

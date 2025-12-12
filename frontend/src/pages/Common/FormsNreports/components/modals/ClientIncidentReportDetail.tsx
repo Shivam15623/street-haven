@@ -17,7 +17,7 @@ const Section = ({
   children: React.ReactNode;
 }) => (
   <div className="p-16">
-    <div className="text-lg xl:text-xl mb-3">{title}</div>
+    <div className="text-lg xl:text-xl mb-10">{title}</div>
     <div className="row g-3">{children}</div>
   </div>
 );

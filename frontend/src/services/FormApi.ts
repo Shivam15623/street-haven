@@ -164,7 +164,44 @@ export interface HandSide {
   pinching?: boolean;
   other?: boolean;
 }
+export interface Abilites {
+  walking: string;
+  standing: string;
+  sitting: string;
+  liftingFloorToWaist: string;
+  liftingWaistToShoulder: string;
+  stairClimbing: string;
+  ladderClimbing: string;
 
+  travelToWork: {
+    publicTransit: "yes" | "no";
+    car: "yes" | "no";
+  };
+}
+export interface Restrictions {
+  bendingTwisting?: string;
+  chemicalExposure?: string;
+  environmentalExposure?: string;
+  operatingMotorizedEquipment?: string;
+  medicationSideEffects?: string;
+  workAboveShoulder?: string;
+
+  limitedPushingPulling?: {
+    leftArm?: boolean;
+    rightArm?: boolean;
+    other?: boolean;
+  };
+
+  exposureToVibration?: {
+    wholeBody?: boolean;
+    handArm?: boolean;
+  };
+
+  limitedUseOfHands?: {
+    left?: HandSide;
+    right?: HandSide;
+  };
+}
 export interface FunctionalAbility {
   _id?: string;
 
@@ -216,45 +253,9 @@ export interface FunctionalAbility {
 
   returnToWorkStatus: "noRestrictions" | "withRestrictions" | "unable";
 
-  abilities?: {
-    walking: string;
-    standing: string;
-    sitting: string;
-    liftingFloorToWaist: string;
-    liftingWaistToShoulder: string;
-    stairClimbing: string;
-    ladderClimbing: string;
+  abilities?: Abilites;
 
-    travelToWork: {
-      publicTransit: "yes" | "no";
-      car: "yes" | "no";
-    };
-  };
-
-  restrictions?: {
-    bendingTwisting?: string;
-    chemicalExposure?: string;
-    environmentalExposure?: string;
-    operatingMotorizedEquipment?: string;
-    medicationSideEffects?: string;
-    workAboveShoulder?: string;
-
-    limitedPushingPulling?: {
-      leftArm?: boolean;
-      rightArm?: boolean;
-      other?: boolean;
-    };
-
-    exposureToVibration?: {
-      wholeBody?: boolean;
-      handArm?: boolean;
-    };
-
-    limitedUseOfHands?: {
-      left?: HandSide;
-      right?: HandSide;
-    };
-  };
+  restrictions?: Restrictions;
 
   commentsOnAbilties?: string;
 

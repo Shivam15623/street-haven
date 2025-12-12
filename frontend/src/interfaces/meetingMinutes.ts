@@ -21,7 +21,7 @@ export interface MeetingMinutesData {
     fileName: string;
     fileUrl: string;
     size: number; // Cloudinary gives bytes
-    totalPages: number; // null if not a PDF
+    fileType: string;
   };
   createdBy: {
     _id: string;

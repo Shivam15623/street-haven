@@ -1,46 +1,84 @@
-import { getPdfPageCount } from "../helper/pdfpagecount.js";
 import MeetingMinutes from "../model/meetingminutes.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import { uploadOnCloudinary } from "../utills/cloudinary.js";
+import path from "path";
 
+/** -----------------------------------------
+ *  Common File-Type Detection Utility
+ * ----------------------------------------- */
+const typeMap = {
+  image: [".jpg", ".jpeg", ".png", ".gif", ".webp"],
+  video: [".mp4", ".mov", ".avi", ".mkv"],
+  audio: [".mp3", ".wav", ".ogg"],
+  pdf: [".pdf"],
+  doc: [".doc", ".docx"],
+  ppt: [".ppt", ".pptx"],
+  excel: [".xls", ".xlsx"],
+  zip: [".zip", ".rar"],
+};
+
+const detectFileType = (ext) => {
+  return (
+    Object.keys(typeMap).find((key) => typeMap[key].includes(ext)) || "other"
+  );
+};
+
+/** -----------------------------------------
+ *  Upload File Helper
+ * ----------------------------------------- */
+const uploadAttachment = async (filePath) => {
+  const uploaded = await uploadOnCloudinary(filePath);
+  if (!uploaded || !uploaded.secure_url) {
+    throw new ApiError(500, "Attachment upload failed");
+  }
+
+  const ext = path.extname(uploaded?.originalname || "").toLowerCase();
+  return {
+    fileName: uploaded.original_filename || "file",
+    fileUrl: uploaded.secure_url,
+    size: uploaded.bytes,
+    fileType: detectFileType(ext),
+  };
+};
+
+/** -----------------------------------------
+ *  Add Meeting Minutes
+ * ----------------------------------------- */
 export const addMeetingMinutes = asyncHandler(async (req, res) => {
   const { _id: userId } = req.user;
   const { title, attendees, keyTopicsDiscussed, meetingDate, keyHighlights } =
     req.body;
-  const atttchmentpath = req?.file?.path;
-  if (!atttchmentpath) {
-    throw new ApiError(400, "attachment file is missing");
-  }
-  const totalPages = await getPdfPageCount(atttchmentpath);
 
-  const uploadedFile = await uploadOnCloudinary(atttchmentpath);
-
-  if (!uploadedFile?.url) {
-    throw new ApiError(500, "attachment upload failed");
+  if (!req?.file?.path) {
+    throw new ApiError(400, "Attachment file is missing");
   }
 
-  const attachmentData = {
-    fileName: uploadedFile.original_filename || "manual",
-    fileUrl: uploadedFile.secure_url,
-    size: uploadedFile.bytes, // Cloudinary gives bytes
-    totalPages: totalPages,
-  };
-  const meetingminutes = await MeetingMinutes.create({
-    title: title,
-    attendees: attendees,
+  const attachmentData = await uploadAttachment(req.file.path);
+
+  const meetingMinutes = await MeetingMinutes.create({
+    title,
+    attendees,
     createdBy: userId,
-    keyHighlights: keyHighlights,
-    meetingDate: meetingDate,
-    keyTopicsDiscussed: keyTopicsDiscussed,
+    keyTopicsDiscussed,
+    meetingDate,
+    keyHighlights,
     attachment: attachmentData,
   });
-  if (!meetingminutes) {
-    throw new ApiError(500, "Server side Error");
+
+  if (!meetingMinutes) {
+    throw new ApiError(500, "Server error while creating meeting minutes");
   }
-  return res.status(200).json(new ApiResponse(201, "Event minutes created"));
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, "Meeting minutes created successfully"));
 });
+
+/** -----------------------------------------
+ *  Edit Meeting Minutes
+ * ----------------------------------------- */
 export const editMeetingMinutes = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { title, attendees, keyTopicsDiscussed, meetingDate, keyHighlights } =
@@ -53,48 +91,48 @@ export const editMeetingMinutes = asyncHandler(async (req, res) => {
 
   const updates = {};
 
-  // Only update if value has changed
   if (title && title !== meetingMinutes.title) updates.title = title;
-  if (attendees && attendees !== meetingMinutes.attendees)
+
+  if (
+    attendees &&
+    JSON.stringify(attendees) !== JSON.stringify(meetingMinutes.attendees)
+  )
     updates.attendees = attendees;
 
   if (
     keyTopicsDiscussed &&
     JSON.stringify(keyTopicsDiscussed) !==
       JSON.stringify(meetingMinutes.keyTopicsDiscussed)
-  ) {
+  )
     updates.keyTopicsDiscussed = keyTopicsDiscussed;
-  }
 
-  if (meetingDate && meetingDate !== meetingMinutes.meetingDate) {
+  if (meetingDate && meetingDate !== meetingMinutes.meetingDate)
     updates.meetingDate = meetingDate;
-  }
 
   if (
     keyHighlights &&
     JSON.stringify(keyHighlights) !==
       JSON.stringify(meetingMinutes.keyHighlights)
-  ) {
+  )
     updates.keyHighlights = keyHighlights;
-  }
 
-  // Handle new file upload if provided
+  // Handle new file upload
   if (req?.file?.path) {
-    const totalPages = await getPdfPageCount(req.file.path);
-    const uploadedFile = await uploadOnCloudinary(req.file.path);
-
-    if (!uploadedFile?.url) {
-      throw new ApiError(500, "Attachment upload failed");
+    const newAttachment = await uploadAttachment(req.file.path);
+    if (newAttachment) {
+      const fileUrl = meetingMinutes?.attachment?.fileUrl;
+      if (fileUrl) {
+        try {
+          await deleteFromCloudinary(fileUrl);
+        } catch (err) {
+          console.error("Error deleting from Cloudinary:", err.message);
+          // ❓ Choice: abort vs continue
+          // If you want to block deletion when Cloudinary fails, uncomment below:
+          // throw new ApiError(500, "Failed to delete file from Cloudinary");
+        }
+      }
     }
 
-    const newAttachment = {
-      fileName: uploadedFile.original_filename || "meeting-minutes",
-      fileUrl: uploadedFile.secure_url,
-      size: uploadedFile.bytes,
-      totalPages: totalPages,
-    };
-
-    // Only update if file changed
     if (
       !meetingMinutes.attachment ||
       meetingMinutes.attachment.fileUrl !== newAttachment.fileUrl
@@ -103,7 +141,7 @@ export const editMeetingMinutes = asyncHandler(async (req, res) => {
     }
   }
 
-  // ✅ No changes → skip DB write
+  // If no changes
   if (Object.keys(updates).length === 0) {
     return res
       .status(200)

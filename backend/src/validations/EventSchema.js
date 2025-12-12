@@ -1,36 +1,67 @@
-import * as yup from "yup";
+import Joi from "joi";
 
-const createEventSchema = yup.object({
-  title: yup.string().required("title is required"),
-  description: yup.string().required("description is required"),
-  location: yup.string().required("location is required"),
-  facilitator: yup.string().required("facilitator is required"),
-  capacity: yup
-    .number()
-    .typeError("capacity must be a number")
-    .min(1, "capacity must be greater than 0")
-    .required("capacity is required"),
+export const createEventSchema = Joi.object({
+  title: Joi.string()
+    .required()
+    .messages({
+      "string.empty": "Title is required",
+      "any.required": "Title is required",
+    }),
 
-  // ✅ If you're still using eventDate (single day events)
-  eventDate: yup
-    .date()
-    .required("event date is required")
-    .typeError("invalid date format")
-    .min(new Date(), "event date cannot be in the past"),
+  description: Joi.string()
+    .required()
+    .messages({
+      "string.empty": "Description is required",
+      "any.required": "Description is required",
+    }),
 
-  // ✅ Start and End Times (as Date objects)
-  startTime: yup
-    .date()
-    .required("start time is required")
-    .typeError("invalid start time")    .min(new Date(), "start Time cannot be in the past"),
+  location: Joi.string()
+    .required()
+    .messages({
+      "string.empty": "Location is required",
+      "any.required": "Location is required",
+    }),
 
-  endTime: yup
-    .date()
-    .required("end time is required")
-    .typeError("invalid end time")
-    .min(yup.ref("startTime"), "end time must be after start time"),
+  facilitator: Joi.string()
+    .required()
+    .messages({
+      "string.empty": "Facilitator is required",
+      "any.required": "Facilitator is required",
+    }),
+
+  capacity: Joi.number()
+    .min(1)
+    .required()
+    .messages({
+      "number.base": "Capacity must be a number",
+      "number.min": "Capacity must be greater than 0",
+      "any.required": "Capacity is required",
+    }),
+
+  eventDate: Joi.date()
+    .min("now")
+    .required()
+    .messages({
+      "date.base": "Invalid date format",
+      "date.min": "Event date cannot be in the past",
+      "any.required": "Event date is required",
+    }),
+
+  startTime: Joi.date()
+    .min("now")
+    .required()
+    .messages({
+      "date.base": "Invalid start time",
+      "date.min": "Start time cannot be in the past",
+      "any.required": "Start time is required",
+    }),
+
+  endTime: Joi.date()
+    .greater(Joi.ref("startTime"))
+    .required()
+    .messages({
+      "date.base": "Invalid end time",
+      "date.greater": "End time must be after start time",
+      "any.required": "End time is required",
+    }),
 });
-
-
-
-export default createEventSchema;
