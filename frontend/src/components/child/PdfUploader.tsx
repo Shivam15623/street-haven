@@ -59,9 +59,18 @@ const PdfUploader: React.FC<PDFUploadProps> = ({ name, label }) => {
         onDrop={handleDrop}
       >
         {field.value ? (
-          <p className="fw-normal text-sm img-upload-text">
+          <p className="fw-normal text-sm img-upload-text d-flex align-items-center">
             Selected file:
-            <span className="text-street-primary"> {field.value.name}</span>
+            <span
+              className="text-street-primary text-truncate d-inline-block ms-1"
+              style={{
+                maxWidth: "150px",
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {field.value.name}
+            </span>
           </p>
         ) : isDragging ? (
           <p className="fw-normal text-sm img-upload-text">Drop file here</p>

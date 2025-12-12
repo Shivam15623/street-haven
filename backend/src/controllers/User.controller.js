@@ -1,12 +1,9 @@
-import HRupdate from "../model/hrupdate.js";
-import MeetingMinutes from "../model/meetingminutes.js";
-import ProgramManual from "../model/programManuals.js";
 import User from "../model/user.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import { uploadOnCloudinary } from "../utills/cloudinary.js";
-import Event from "./../model/event.js";
+
 
 export const editUserDetails = asyncHandler(async (req, res) => {
   const { _id: userId } = req.user;
@@ -15,7 +12,7 @@ export const editUserDetails = asyncHandler(async (req, res) => {
     throw new ApiError(404, "No such user found");
   }
 
-  const { firstname, lastname, email, phoneNo } = req.body;
+  const { firstname, lastname, phoneNo } = req.body;
   const updates = {};
 
   // If profile picture is uploaded → skip equality check and update
@@ -40,7 +37,6 @@ export const editUserDetails = asyncHandler(async (req, res) => {
     const isSame =
       (firstname ? firstname === findUser.firstname : true) &&
       (lastname ? lastname === findUser.lastname : true) &&
-      (email ? email === findUser.email : true) &&
       (phoneNo ? phoneNo === findUser.phoneNo : true);
 
     if (isSame) {
@@ -56,7 +52,6 @@ export const editUserDetails = asyncHandler(async (req, res) => {
   if (firstname && firstname !== findUser.firstname)
     updates.firstname = firstname;
   if (lastname && lastname !== findUser.lastname) updates.lastname = lastname;
-  if (email && email !== findUser.email) updates.email = email;
   if (phoneNo && phoneNo !== findUser.phoneNo) updates.phoneNo = phoneNo;
 
   const updatedUser = await User.findByIdAndUpdate(userId, updates, {

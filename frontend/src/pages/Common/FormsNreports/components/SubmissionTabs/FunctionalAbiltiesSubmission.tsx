@@ -6,7 +6,7 @@ import {
   useGetAllFAFQuery,
   type FunctionalAbility,
 } from "../../../../../services/FormApi";
-import FuctionalAbiltiesDetail from "../modals/fuctionalAbiltiesDetail";
+import { FunctionalAbilityDetail } from "../modals/functional-abilty/FunctionalAbilty";
 
 // ------------------------------
 // Columns
@@ -44,7 +44,7 @@ const columns: Column[] = [
   },
   {
     header: "Actions",
-    accessor: (row) => <FuctionalAbiltiesDetail details={row} />,
+    accessor: (row) => <FunctionalAbilityDetail details={row} />,
   },
 ];
 

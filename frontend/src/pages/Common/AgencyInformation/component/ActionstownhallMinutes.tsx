@@ -11,14 +11,15 @@ import { showSuccess } from "../../../../utills/toastutills";
 import Badge from "../../../../components/child/Badge";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import type { MeetingMinutesData } from "../../../../interfaces/meetingMinutes";
-import PdfField from "../../../../components/child/PdfField";
+
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import CustomDatePicker from "../../../../components/child/DatePicker";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
+import FileField from "../../../../components/child/FileField";
 dayjs.extend(utc);
 // ✅ Schema
-const TownhallMinutesFormSchema = (isEdit: boolean) =>
+const TownhallMinutesFormSchema = () =>
   yup.object().shape({
     title: yup
       .string()
@@ -42,22 +43,10 @@ const TownhallMinutesFormSchema = (isEdit: boolean) =>
       .of(yup.string().trim().required("Highlight cannot be empty"))
       .min(1, "At least 1 highlight is required")
       .max(3, "You can add at most 3 highlights"),
-    meetingDate: yup
-      .string()
-      .nullable()
-      .test(
-        "valid-date",
-        "Invalid date format",
-        (value) => !value || !isNaN(Date.parse(value))
-      )
-      .required("Meeting date is required"),
+    meetingDate: yup.date().nullable().required("Meeting date is required"),
     attachment: yup
       .mixed<File>()
       .nullable()
-      .test("fileType", "Only PDF files are allowed", (value) => {
-        if (!value) return isEdit; // required in create, optional in edit
-        return value instanceof File && value.type === "application/pdf";
-      })
       .test("fileSize", "File size must be less than 16MB", (value) => {
         if (!value) return true;
         return value.size <= 16 * 1024 * 1024;
@@ -68,7 +57,7 @@ interface TownHallMinuteValues {
   attendees: number;
   keyTopicsDiscussed: string[];
   keyHighlights: string[];
-  meetingDate: string;
+  meetingDate: Date | null;
   attachment: File | null;
   newHighlight: string;
   newTopic: string;
@@ -79,7 +68,7 @@ const buildFormData = (values: TownHallMinuteValues) => {
   const formData = new FormData();
   formData.append("title", values.title);
   formData.append("attendees", values.attendees.toString());
-  formData.append("meetingDate", new Date(values.meetingDate).toISOString());
+  formData.append("meetingDate", new Date(values.meetingDate!).toISOString());
   if (values.attachment) formData.append("attachment", values.attachment);
 
   values.keyHighlights.forEach((highlight: string, index: number) => {
@@ -115,8 +104,8 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
     attendees: meeting?.attendees || 0,
     keyTopicsDiscussed: meeting?.keyTopicsDiscussed || [],
     meetingDate: meeting?.meetingDate
-      ? new Date(meeting.meetingDate).toISOString().split("T")[0] // YYYY-MM-DD
-      : "",
+      ? new Date(meeting.meetingDate) // YYYY-MM-DD
+      : null,
     keyHighlights: meeting?.keyHighlights || [],
     attachment: null,
     newHighlight: "",
@@ -143,7 +132,7 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
           }).unwrap()
         : await createmeeting({
             data: formData,
-            onProgress: (p:number) => setProgress(p),
+            onProgress: (p: number) => setProgress(p),
           }).unwrap();
 
       if (res.success) {
@@ -204,7 +193,7 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
     >
       <Formik
         initialValues={initialValues}
-        validationSchema={TownhallMinutesFormSchema(isEdit)}
+        validationSchema={TownhallMinutesFormSchema()}
         onSubmit={handleSave}
       >
         {({
@@ -258,8 +247,7 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
               <CustomDatePicker
                 value={values.meetingDate ? new Date(values.meetingDate) : null}
                 onChange={(date) => {
-                  const newDate = date ? date.toISOString().split("T")[0] : "";
-                  setFieldValue("meetingDate", newDate, true); // ← Add true to validate immediately
+                  setFieldValue("meetingDate", date, true); // ← Add true to validate immediately
                   setFieldTouched("meetingDate", true, false); // ← false prevents double validation
                 }}
                 onBlur={handleBlur}
@@ -388,8 +376,8 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
             </BootstrapForm.Group>
 
             {/* Attachment */}
-            <PdfField
-              existingPdf={
+            <FileField
+              existingFile={
                 isEdit && meeting?.attachment
                   ? {
                       fileName: meeting.attachment.fileName,

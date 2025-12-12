@@ -1,17 +1,20 @@
 import { ApiError } from "../utills/ApiError.js";
 import fs from "fs";
+
 export const validateRequest = (schema, property = "body") => {
   return async (req, res, next) => {
     try {
-
-      const validatedData = await schema.validate(req[property], {
-        abortEarly: false, // return all errors, not just the first
-        stripUnknown: true, // remove any unknown fields not defined in schema
+      // Validate using Joi
+      const validatedData = await schema.validateAsync(req[property], {
+        abortEarly: false, // return all errors
+        stripUnknown: true, // remove unknown fields
       });
-      // Overwrite the original req.body (or req.query/req.params) with validated & cleaned data
+
+      // Overwrite request property with validated data
       req[property] = validatedData;
       next();
     } catch (err) {
+      // Helper to delete uploaded file(s)
       const deleteFile = (filePath) => {
         if (!filePath) return;
         fs.unlink(filePath, (unlinkErr) => {
@@ -19,16 +22,15 @@ export const validateRequest = (schema, property = "body") => {
         });
       };
 
-      // 🧹 Delete single uploaded file
-      if (req.file?.path) {
-        deleteFile(req.file.path);
-      }
+      // Delete single uploaded file
+      if (req.file?.path) deleteFile(req.file.path);
 
-      // 🧹 Delete multiple uploaded files
+      // Delete multiple uploaded files
       if (Array.isArray(req.files)) {
         req.files.forEach((file) => deleteFile(file.path));
       }
 
+      // Delete files in object format (e.g., multiple fields)
       if (
         req.files &&
         typeof req.files === "object" &&
@@ -40,7 +42,9 @@ export const validateRequest = (schema, property = "body") => {
           }
         });
       }
-      const messages = err.inner?.map((e) => e.message) || [err.message];
+
+      // Extract Joi error messages
+      const messages = err.details?.map((e) => e.message) || [err.message];
       next(new ApiError(400, "Validation failed", messages));
     }
   };
