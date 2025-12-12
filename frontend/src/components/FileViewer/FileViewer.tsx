@@ -7,54 +7,15 @@ import VideoViewer from "./videoViewer";
 
 import PDFViewer from "./PdfViewer";
 import DocViewer from "./docViewer";
-export type FileType =
-  | "image" // jpg, png, gif, svg, etc.
-  | "video" // mp4, mov, webm, etc.
-  | "audio" // mp3, wav, etc.
-  | "pdf" // pdf files
-  | "text" // txt, log, etc.
-  | "code" // js, ts, html, css, json, etc.
-  | "spreadsheet" // xls, xlsx, csv, ods
-  | "presentation" // ppt, pptx, odp
-  | "document" // doc, docx, odt
-  | "archive" // zip, rar, tar, 7z
-  | "vector" // svg, ai, eps
-  | "font" // ttf, otf, woff
-  | "unknown"; // any other unsupported type
+import { getFileIcon, type FileItem } from "../../interfaces/fileinterface";
+import { FileIconWithBackground } from "../child/FileIcon";
 
-export interface ViewerFile {
-  id: string;
-  name: string;
-  url: string;
-  type: string;
-  size?: number;
-}
 interface FileViewerProps {
-  files: ViewerFile[];
+  files: FileItem[];
   initialIndex?: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const getFileIcon = (type: string): string => {
-  switch (type) {
-    case "image":
-      return "mdi:image";
-    case "video":
-      return "mdi:video";
-    case "audio":
-      return "mdi:music";
-    case "pdf":
-      return "mdi:file-pdf-box";
-    case "code":
-      return "mdi:code-braces";
-    case "text":
-      return "mdi:file-document";
-    default:
-      return "mdi:file";
-  }
-};
-
 
 const FileViewer: React.FC<FileViewerProps> = ({
   files,
@@ -66,8 +27,9 @@ const FileViewer: React.FC<FileViewerProps> = ({
   const [direction, setDirection] = useState(0);
 
   const currentFile = files[currentIndex];
-  console.log("cFile", currentFile.type);
-  const fileType = currentFile.type;
+
+  const fileType = currentFile.fileType;
+  console.log("fileType", fileType);
 
   const hasMultipleFiles = files.length > 1;
 
@@ -115,8 +77,8 @@ const FileViewer: React.FC<FileViewerProps> = ({
   const handleDownload = () => {
     if (currentFile) {
       const link = document.createElement("a");
-      link.href = currentFile.url;
-      link.download = currentFile.name;
+      link.href = currentFile.fileUrl;
+      link.download = currentFile.fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -128,18 +90,25 @@ const FileViewer: React.FC<FileViewerProps> = ({
 
     switch (fileType) {
       case "image":
-        return <ImageViewer url={currentFile.url} name={currentFile.name} />;
+        return (
+          <ImageViewer url={currentFile.fileUrl} name={currentFile.fileName} />
+        );
       case "video":
-        return <VideoViewer url={currentFile.url} name={currentFile.name} />;
+        return (
+          <VideoViewer url={currentFile.fileUrl} name={currentFile.fileName} />
+        );
 
       case "pdf":
-        return <PDFViewer url={currentFile.url} name={currentFile.name} />;
+        return (
+          <PDFViewer url={currentFile.fileUrl} name={currentFile.fileName} />
+        );
 
       case "doc":
-      case "docx":
       case "ppt":
       case "excel":
-        return <DocViewer url={currentFile.url} name={currentFile.name} />;
+        return (
+          <DocViewer url={currentFile.fileUrl} name={currentFile.fileName} />
+        );
       default:
         return "dff";
     }
@@ -165,20 +134,10 @@ const FileViewer: React.FC<FileViewerProps> = ({
           transition={{ delay: 0.1, duration: 0.2 }}
         >
           <div className="d-flex flex-row align-items-center flex-grow-1 gap-20 text-truncate">
-            <div
-              className="d-flex  align-items-center justify-content-center flex-shrink-0  rounded bg-primary bg-opacity-25 me-2"
-              style={{ width: "40px", height: "40px" }}
-            >
-              <Icon
-                icon={getFileIcon(fileType)}
-                className="text-primary"
-                width={20}
-                height={20}
-              />
-            </div>
+           <FileIconWithBackground fileType={fileType} size={28}/>
             <div className="text-truncate">
               <h5 className="mb-0 text-xl text-street-dark text-truncate">
-                {currentFile?.name}
+                {currentFile?.fileName}
               </h5>
               <small className="text-street-base">
                 {hasMultipleFiles && (
@@ -243,7 +202,7 @@ const FileViewer: React.FC<FileViewerProps> = ({
           {/* File Viewer */}
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
-              key={currentFile?.id}
+              key={currentFile?._id}
               className="flex-grow-1 w-100 h-100 p-3"
               custom={direction}
               initial={{ opacity: 0, x: direction * 50 }}
@@ -265,12 +224,12 @@ const FileViewer: React.FC<FileViewerProps> = ({
             transition={{ delay: 0.1, duration: 0.2 }}
           >
             {files.map((file, index) => {
-              const type = file.type;
+              const type = file.fileType;
               const isActive = index === currentIndex;
 
               return (
                 <button
-                  key={file.id}
+                  key={file._id}
                   onClick={() => {
                     setDirection(index > currentIndex ? 1 : -1);
                     setCurrentIndex(index);
@@ -282,8 +241,8 @@ const FileViewer: React.FC<FileViewerProps> = ({
                 >
                   {type === "image" ? (
                     <img
-                      src={file.url}
-                      alt={file.name}
+                      src={file.fileUrl}
+                      alt={file.fileName}
                       className="w-100 h-100 object-fit-cover"
                     />
                   ) : (

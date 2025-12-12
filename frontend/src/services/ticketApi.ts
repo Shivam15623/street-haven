@@ -1,3 +1,4 @@
+import type { FileType } from "../interfaces/fileinterface";
 import type { ApiGeneralResponse, ApiResponse } from "../interfaces/Response";
 import type {
   TicketFetchQuery,
@@ -7,22 +8,13 @@ import { api } from "../redux/ApiSlice";
 
 export interface commentData {
   _id: string;
-  attachments?: [
-    {
-      size: number;
-      fileName: string;
-      fileUrl: string;
-      type:
-        | "image"
-        | "video"
-        | "audio"
-        | "pdf"
-        | "doc"
-        | "excel"
-        | "zip"
-        | "other";
-    }
-  ];
+  attachments?: {
+    _id: string;
+    size: number;
+    fileName: string;
+    fileUrl: string;
+    type: FileType;
+  }[];
   message: string;
   userId: {
     firstname: string;

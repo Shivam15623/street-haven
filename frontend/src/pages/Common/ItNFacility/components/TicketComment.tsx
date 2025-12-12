@@ -14,6 +14,8 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
 import QuillEditor from "../../../../components/child/QuillEditor";
+import FileViewer from "../../../../components/FileViewer/FileViewer";
+import type { FileItem, FileType } from "../../../../interfaces/fileinterface";
 
 dayjs.extend(relativeTime);
 
@@ -28,7 +30,8 @@ interface DateGroupedComments {
   groups: CommentGroup[];
 }
 interface Attachment {
-  type: "image" | "video" | "audio" | "pdf" | "doc" | "excel" | "zip" | "other";
+  _id: string;
+  type: FileType;
   fileName: string;
   size: number;
   fileUrl: string;
@@ -42,7 +45,13 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + " " + sizes[i];
 };
 
-const AttachmentPreview = ({ attachment }: { attachment: Attachment }) => {
+const AttachmentPreview = ({
+  attachment,
+  onClick,
+}: {
+  attachment: Attachment;
+  onClick: () => void;
+}) => {
   // 📸 Image Preview
   const readableSize = formatFileSize(attachment.size);
   const getFileIcon = (type: string) => {
@@ -97,7 +106,10 @@ const AttachmentPreview = ({ attachment }: { attachment: Attachment }) => {
 
   if (attachment.type === "image") {
     return (
-      <div className="position-relative overflow-hidden rounded-3 cursor-pointer">
+      <div
+        className="position-relative overflow-hidden rounded-3 cursor-pointer"
+        onClick={onClick}
+      >
         <img
           src={attachment.fileUrl}
           alt={attachment.fileName}
@@ -120,7 +132,10 @@ const AttachmentPreview = ({ attachment }: { attachment: Attachment }) => {
   // 🎥 Video Preview
   if (attachment.type === "video") {
     return (
-      <div className="position-relative overflow-hidden rounded-3 cursor-pointer">
+      <div
+        className="position-relative overflow-hidden rounded-3 cursor-pointer"
+        onClick={onClick}
+      >
         <img
           src={attachment.thumbnail || "/placeholder-video.jpg"}
           alt={attachment.fileName}
@@ -163,7 +178,10 @@ const AttachmentPreview = ({ attachment }: { attachment: Attachment }) => {
 
   // 📄 Document (PDF, DOC, etc.)
   return (
-    <div className="d-flex align-items-center gap-3 p-3 border rounded-3 bg-white hover-shadow-sm cursor-pointer">
+    <div
+      className="d-flex align-items-center gap-3 p-3 border rounded-3 bg-white hover-shadow-sm cursor-pointer"
+      onClick={onClick}
+    >
       <div
         className="d-flex align-items-center justify-content-center bg-light rounded-3"
         style={{ width: "48px", height: "48px" }}
@@ -194,7 +212,9 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
 
   const [attachments, setAttachments] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerFiles, setViewerFiles] = useState<FileItem[]>([]);
+  const [viewerIndex, setViewerIndex] = useState(0);
   const handleAddAttachments = (files: FileList) => {
     const newFiles = Array.from(files).slice(0, 7 - attachments.length); // max 7
     setAttachments((prev) => [...prev, ...newFiles]);
@@ -347,7 +367,10 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
       placement="end"
       bodyclassName="p-0"
       trigger={
-        <button className="btn btn-street-primary d-flex align-items-center justify-content-center radius-12 p-0"   style={{ width: "43px", height: "40px" }}>
+        <button
+          className="btn btn-street-primary d-flex align-items-center justify-content-center radius-12 p-0"
+          style={{ width: "43px", height: "40px" }}
+        >
           <Icon icon="mdi:chat-outline" className="text-xl" />
         </button>
       }
@@ -416,6 +439,19 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
                               <AttachmentPreview
                                 key={idx}
                                 attachment={attachment}
+                                onClick={() => {
+                                  setViewerFiles(
+                                    msg.attachments?.map((a) => ({
+                                      _id:a._id,
+                                      fileUrl: a.fileUrl,
+                                      fileType: a.type,
+                                      fileName: a.fileName,
+                                      size: a.size,
+                                    })) || []
+                                  );
+                                  setViewerIndex(idx);
+                                  setViewerOpen(true);
+                                }}
                               />
                             ))}
                           </div>
@@ -533,6 +569,14 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
           </div>
         </form>
       </div>
+      {viewerOpen && (
+        <FileViewer
+          files={viewerFiles}
+          initialIndex={viewerIndex}
+          open={viewerOpen}
+          onOpenChange={setViewerOpen}
+        />
+      )}
     </Sheet>
   );
 };

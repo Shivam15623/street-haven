@@ -1,31 +1,77 @@
 import React from "react";
-
-import type { FileItem } from "../../pages/Common/Events/components/EventDocuments";
 import { FileIconWithBackground } from "./FileIcon";
+import { Icon } from "@iconify/react/dist/iconify.js";
+import type { FileItem } from "../../interfaces/fileinterface";
+import { useEventdeleteDocumentMutation } from "../../services/EventApi";
+import { showSuccess } from "../../utills/toastutills";
 
 interface FileCardProps {
   file: FileItem;
   onClick: () => void;
+  eventId: string;
 }
 
-const FileCard: React.FC<FileCardProps> = ({ file, onClick }) => {
+const FileCard: React.FC<FileCardProps> = ({ file, onClick, eventId }) => {
   const isImage = file.fileType === "image";
   const extension = file.fileType;
+  const [deleteDoc, { isLoading }] = useEventdeleteDocumentMutation();
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // prevent card click
+    try {
+      const res = await deleteDoc({
+        eventId,
+        documentId: file._id,
+      }).unwrap();
+
+      if (res.success) {
+        showSuccess(res.message);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <div
-      onClick={onClick}
+      onClick={!isLoading ? onClick : undefined}
       className="
-        card 
+        card file-card
+        position-relative
         shadow-sm 
         border 
         rounded 
         h-100 
-        cursor-pointer 
-        file-card-hover 
+        cursor-pointer
       "
-      style={{ cursor: "pointer" }}
+      style={{
+        cursor: isLoading ? "not-allowed" : "pointer",
+        opacity: isLoading ? 0.6 : 1,
+        pointerEvents: isLoading ? "none" : "auto",
+      }}
     >
+      <button
+        onClick={handleDelete}
+        disabled={isLoading}
+        className="delete-btn position-absolute rounded-circle p-8 btn btn-street-delete d-flex align-items-center justify-content-center"
+        title="Delete file"
+        style={{
+          right: 5,
+          top: 5,
+          zIndex: 10,
+          cursor: isLoading ? "not-allowed" : "pointer",
+        }}
+      >
+        {isLoading ? (
+          <div
+            className="spinner-border spinner-border-sm text-light"
+            role="status"
+          ></div>
+        ) : (
+          <Icon icon="lucide:trash-2" className="text-sm" />
+        )}
+      </button>
+
       {/* IMAGE PREVIEW */}
       {isImage ? (
         <div
@@ -39,7 +85,6 @@ const FileCard: React.FC<FileCardProps> = ({ file, onClick }) => {
           />
         </div>
       ) : (
-        /* ICON PREVIEW */
         <div
           className="
             d-flex flex-column 
@@ -50,7 +95,9 @@ const FileCard: React.FC<FileCardProps> = ({ file, onClick }) => {
           style={{ aspectRatio: "4 / 3" }}
         >
           <FileIconWithBackground fileType={file.fileType} size={28} />
-          <span className="badge bg-secondary bg-opacity-50 mt-2">{extension}</span>
+          <span className="badge bg-secondary bg-opacity-50 mt-2">
+            {extension}
+          </span>
         </div>
       )}
 

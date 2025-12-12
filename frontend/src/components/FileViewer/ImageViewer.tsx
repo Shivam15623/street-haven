@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 
@@ -13,27 +13,35 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ url, name }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
   const dragStart = useRef({ x: 0, y: 0 });
+  const lastPosition = useRef({ x: 0, y: 0 });
 
-  const handleZoomIn = useCallback(
-    () => setScale((prev) => Math.min(prev + 0.25, 5)),
-    []
-  );
+  const handleZoomIn = useCallback(() => {
+    setScale((prev) => Math.min(prev + 0.25, 5));
+  }, []);
+
   const handleZoomOut = useCallback(() => {
     setScale((prev) => {
       const newScale = Math.max(prev - 0.25, 0.5);
-      if (newScale <= 1) setPosition({ x: 0, y: 0 });
+      if (newScale <= 1) {
+        setPosition({ x: 0, y: 0 });
+        lastPosition.current = { x: 0, y: 0 };
+      }
       return newScale;
     });
   }, []);
+
   const handleReset = useCallback(() => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
+    lastPosition.current = { x: 0, y: 0 };
   }, []);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if (scale > 1) {
+        e.preventDefault();
         setIsDragging(true);
         dragStart.current = {
           x: e.clientX - position.x,
@@ -47,98 +55,147 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ url, name }) => {
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
       if (isDragging && scale > 1) {
-        setPosition({
-          x: e.clientX - dragStart.current.x,
-          y: e.clientY - dragStart.current.y,
-        });
+        const newX = e.clientX - dragStart.current.x;
+        const newY = e.clientY - dragStart.current.y;
+        setPosition({ x: newX, y: newY });
+        lastPosition.current = { x: newX, y: newY };
       }
     },
     [isDragging, scale]
   );
 
-  const handleMouseUp = useCallback(() => setIsDragging(false), []);
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
 
-  const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
-      if (e.deltaY < 0) {
-        handleZoomIn();
-      } else {
-        handleZoomOut();
-      }
-    },
-    [handleZoomIn, handleZoomOut]
-  );
+      e.stopPropagation();
+
+      const delta = e.deltaY < 0 ? 0.2 : -0.2;
+
+      setScale((prevScale) => {
+        const newScale = Math.min(Math.max(prevScale + delta, 0.5), 5);
+
+        if (newScale <= 1) {
+          setPosition({ x: 0, y: 0 });
+          lastPosition.current = { x: 0, y: 0 };
+        }
+
+        return newScale;
+      });
+    };
+
+    container.addEventListener("wheel", handleWheel, { passive: false });
+    return () => container.removeEventListener("wheel", handleWheel);
+  }, []);
 
   return (
-    <div className="position-relative flex-grow-1 h-100 d-flex flex-column">
+    <div
+      className="position-relative d-flex flex-column flex-grow-1 h-100"
+      style={{ minHeight: "0px" }}
+    >
       {/* Image Container */}
       <div
         ref={containerRef}
-        className="flex-grow-1 overflow-hidden d-flex align-items-center justify-content-center"
+        className="flex-grow-1 overflow-hidden d-flex align-items-center justify-content-center bg-black rounded mx-auto"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        onWheel={handleWheel}
         style={{
           cursor: scale > 1 ? (isDragging ? "grabbing" : "grab") : "default",
+          touchAction: "none",
+          minHeight: "0px",
+          maxWidth: "90vw",
+          minWidth: "90vw",
         }}
       >
         {!isLoaded && (
           <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
             <div
-              className="spinner-border text-primary"
-              role="status"
-              style={{ width: "2.5rem", height: "2.5rem" }}
-            >
-              <span className="visually-hidden">Loading...</span>
-            </div>
+              className="spinner-border"
+              style={{ width: "40px", height: "40px" }}
+            />
           </div>
         )}
 
         <motion.img
+          ref={imageRef}
           src={url}
           alt={name}
           className="img-fluid"
           style={{
-            transform: `scale(${scale}) translate(${position.x / scale}px, ${
-              position.y / scale
-            }px)`,
-            opacity: isLoaded ? 1 : 0,
-            transition: isDragging ? "none" : "transform 0.2s ease-out",
+            maxWidth: "100%",
+            maxHeight: "100%",
+            objectFit: "contain",
+            userSelect: "none",
+            pointerEvents: "none",
+            transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+            transition: isDragging ? "none" : "transform 0.15s ease-out",
           }}
           onLoad={() => setIsLoaded(true)}
           draggable={false}
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: isLoaded ? 1 : 0, scale: 1 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isLoaded ? 1 : 0 }}
           transition={{ duration: 0.3 }}
         />
       </div>
 
       {/* Zoom Controls */}
-      <div className="position-absolute bottom-0 start-50 translate-middle-x mb-3 d-flex align-items-center bg-light rounded p-2 shadow">
+      <div
+        className="position-absolute d-flex align-items-center gap-2 p-10 shadow rounded-pill bg-light border"
+        style={{
+          bottom: "1rem",
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 10,
+        }}
+      >
         <button
-          onClick={handleZoomOut}
-          className="btn btn-outline-secondary btn-sm"
+          type="button"
+          className="btn btn-light p-2 d-flex align-items-center justify-content-center rounded-circle"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleZoomOut();
+          }}
           disabled={scale <= 0.5}
         >
           <Icon icon="mdi:minus" width={16} height={16} />
         </button>
-        <span className="mx-2 small text-center" style={{ minWidth: "60px" }}>
+
+        <span className="text-center" style={{ minWidth: "60px" }}>
           {Math.round(scale * 100)}%
         </span>
+
         <button
-          onClick={handleZoomIn}
-          className="btn btn-outline-secondary btn-sm"
+          type="button"
+          className="btn btn-light p-2 d-flex align-items-center justify-content-center rounded-circle"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleZoomIn();
+          }}
           disabled={scale >= 5}
         >
           <Icon icon="mdi:plus" width={16} height={16} />
         </button>
-        <div className="vr mx-2"></div>
+
+        <div className="vr mx-1"></div>
+
         <button
-          onClick={handleReset}
-          className="btn btn-outline-secondary btn-sm"
+          type="button"
+          className="btn btn-light p-2 d-flex align-items-center justify-content-center rounded-circle"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleReset();
+          }}
         >
           <Icon icon="mdi:fit-to-screen" width={16} height={16} />
         </button>

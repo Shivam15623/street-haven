@@ -1,14 +1,16 @@
 import { Icon } from "@iconify/react";
-import type { FileItem } from "../../pages/Common/Events/components/EventDocuments";
+
 import FileCard from "./FileCard";
+import type { FileItem } from "../../interfaces/fileinterface";
 
 type Props = {
   files: FileItem[];
   handleOpenFile: (file: FileItem) => void;
   tab: string;
+  eventId: string;
 };
 
-const FileTab = ({ files, tab, handleOpenFile }: Props) => {
+const FileTab = ({ files, tab, handleOpenFile, eventId }: Props) => {
   return (
     <div className="p-3">
       {files.length === 0 ? (
@@ -37,6 +39,7 @@ const FileTab = ({ files, tab, handleOpenFile }: Props) => {
                 key={`${file.fileUrl}-${i}`}
                 file={file}
                 onClick={() => handleOpenFile(file)}
+                eventId={eventId}
               />
             </div>
           ))}

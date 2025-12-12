@@ -550,3 +550,14 @@ ul ul {
     font-size: 14px;
   }
 }
+
+.file-card:hover .delete-btn {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.delete-btn {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}

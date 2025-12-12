@@ -1,39 +1,24 @@
 import React, { useState } from "react";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
-import type { ViewerFile } from "../../../../components/FileViewer/FileViewer";
+
 import FileViewer from "../../../../components/FileViewer/FileViewer";
 import StreetTab from "../../../../components/StreetTab";
 import FileTab from "../../../../components/child/FileTab";
-type FileType =
-  | "image"
-  | "video"
-  | "audio"
-  | "pdf"
-  | "doc"
-  | "ppt"
-  | "excel"
-  | "zip"
-  | "other";
-
-export interface FileItem {
-  fileName: string;
-  fileUrl: string;
-  fileType: FileType; // image, pdf, docx, video, etc.
-}
+import type { FileItem } from "../../../../interfaces/fileinterface";
 
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   eventName: string;
+  eventId: string;
   files: FileItem[];
 }
-
-
 const EventDocuments: React.FC<Props> = ({
   open,
   onOpenChange,
   eventName,
   files,
+  eventId,
 }) => {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -47,14 +32,6 @@ const EventDocuments: React.FC<Props> = ({
   const others = files.filter(
     (f) => !images.includes(f) && !docs.includes(f) && !videos.includes(f)
   );
-
-  // Create Viewer Compatible Array
-  const viewerFiles: ViewerFile[] = files.map((f, index) => ({
-    id: String(index),
-    name: f.fileName,
-    url: f.fileUrl,
-    type: f.fileType,
-  }));
 
   // --- OPEN CORRECT FILE IN VIEWER ---
   const handleOpenFile = (file: FileItem) => {
@@ -99,6 +76,7 @@ const EventDocuments: React.FC<Props> = ({
                 files={getCurrentTabFiles("images")}
                 tab="Images"
                 handleOpenFile={handleOpenFile}
+                eventId={eventId}
               />
             ),
           },
@@ -110,6 +88,7 @@ const EventDocuments: React.FC<Props> = ({
                 files={getCurrentTabFiles("docs")}
                 tab="Documents"
                 handleOpenFile={handleOpenFile}
+                eventId={eventId}
               />
             ),
           },
@@ -121,6 +100,7 @@ const EventDocuments: React.FC<Props> = ({
                 tab="Videos"
                 files={getCurrentTabFiles("videos")}
                 handleOpenFile={handleOpenFile}
+                eventId={eventId}
               />
             ),
           },
@@ -132,6 +112,7 @@ const EventDocuments: React.FC<Props> = ({
                 tab="Other Documents"
                 files={getCurrentTabFiles("others")}
                 handleOpenFile={handleOpenFile}
+                eventId={eventId}
               />
             ),
           },
@@ -140,7 +121,7 @@ const EventDocuments: React.FC<Props> = ({
 
       {/* FILE VIEWER */}
       <FileViewer
-        files={viewerFiles}
+        files={files}
         initialIndex={selectedIndex}
         open={viewerOpen}
         onOpenChange={setViewerOpen}
