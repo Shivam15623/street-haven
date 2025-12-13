@@ -10,6 +10,7 @@ import { asyncHandler } from "../utills/AsyncHandler.js";
 import { uploadOnCloudinary } from "../utills/cloudinary.js";
 import { createNotification } from "../helper/CreateNotoification.js";
 import { addActivityLog } from "../helper/addActivityLogs.js";
+import { uploadAttachment } from "./meetingMinutes.controller.js";
 
 export const AddProgramManual = asyncHandler(async (req, res) => {
   const { title, description, tags, type } = req.body;
@@ -18,20 +19,9 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
 
   if (!attachmentpath) throw new ApiError(400, "Attachment file is missing");
 
-  // Phase 1: Parallel file processing (non-blocking)
-  const [totalPages, uploadedFile] = await Promise.all([
-    getPdfPageCount(attachmentpath), // Optimize this lib if possible [web:23]
-    uploadOnCloudinary(attachmentpath),
-  ]);
 
-  if (!uploadedFile?.url) throw new ApiError(500, "Attachment upload failed");
 
-  const attachmentData = {
-    fileName: uploadedFile.original_filename || "manual",
-    fileUrl: uploadedFile.secure_url,
-    size: uploadedFile.bytes,
-    totalPages,
-  };
+  const attachmentData =await uploadAttachment(attachmentpath);
 
   // Phase 2: Minimal transaction - DB only
   const session = await mongoose.startSession();
@@ -141,27 +131,16 @@ export const EditProgramManual = asyncHandler(async (req, res) => {
 
   // If a new file is uploaded
   if (req?.file?.path) {
-    const totalPages = await getPdfPageCount(req.file.path);
-    const uploadedFile = await uploadOnCloudinary(req.file.path);
-
-    if (!uploadedFile?.url) {
-      throw new ApiError(500, "Attachment upload failed");
-    }
-
-    const attachmentData = {
-      fileName: uploadedFile.original_filename || "manual",
-      fileUrl: uploadedFile.secure_url,
-      size: uploadedFile.bytes,
-      totalPages,
-    };
+  
+   
+    const attachmentData = await uploadAttachment(req?.file.path);
 
     // Only update if different (by URL or size or filename etc.)
     const currentAttachment = programManual.attachment || {};
     if (
       attachmentData.fileUrl !== currentAttachment.fileUrl ||
       attachmentData.fileName !== currentAttachment.fileName ||
-      attachmentData.size !== currentAttachment.size ||
-      attachmentData.totalPages !== currentAttachment.totalPages
+      attachmentData.size !== currentAttachment.size 
     ) {
       updates.attachment = attachmentData;
     }

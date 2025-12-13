@@ -9,14 +9,13 @@ import * as Yup from "yup";
 import { Form as BootstrapForm } from "react-bootstrap";
 import Badge from "../../../../components/child/Badge";
 import { showSuccess } from "../../../../utills/toastutills";
-import PdfField from "../../../../components/child/PdfField";
 import type { Document } from "./DocumentCard";
 import QuillEditor from "../../../../components/child/QuillEditor";
-import UploadProgress from "../../../../components/child/uploadProgress";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
+import FileField from "../../../../components/child/FileField";
 
 // 🔹 Schema generator (avoids duplication)
-const programManualSchema = (isEdit: boolean) =>
+const programManualSchema = () =>
   Yup.object().shape({
     title: Yup.string().required("Title is required"),
     description: Yup.string().required("Description is required"),
@@ -27,10 +26,6 @@ const programManualSchema = (isEdit: boolean) =>
     type: Yup.string().required("Type is required"),
     attachment: Yup.mixed<File>()
       .nullable()
-      .test("fileType", "Only PDF files are allowed", (value) => {
-        if (!value) return isEdit; // required in create, optional in edit
-        return value instanceof File && value.type === "application/pdf";
-      })
       .test("fileSize", "File size must be less than 16MB", (value) => {
         if (!value) return true;
         return value.size <= 16 * 1024 * 1024;
@@ -161,7 +156,7 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
     >
       <Formik
         initialValues={initialValues}
-        validationSchema={programManualSchema(isEdit)}
+        validationSchema={programManualSchema()}
         onSubmit={handleSave}
       >
         {({ values, setFieldValue, handleSubmit, errors, touched }) => (
@@ -275,8 +270,8 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
             </BootstrapForm.Group>
 
             {/* PDF Upload / Existing PDF */}
-            <PdfField
-              existingPdf={
+            <FileField
+              existingFile={
                 isEdit && document?.attachment
                   ? {
                       fileName: document.attachment.fileName,
@@ -288,13 +283,6 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
               name="attachment"
               isEdit={isEdit}
             />
-            {progress > 0 && (
-              <UploadProgress
-                progress={progress}
-                fileName={"Attachment"}
-                isComplete={progress === 100}
-              />
-            )}
           </BootstrapForm>
         )}
       </Formik>

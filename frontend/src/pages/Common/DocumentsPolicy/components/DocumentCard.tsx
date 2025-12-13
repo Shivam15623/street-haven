@@ -9,6 +9,8 @@ import dayjs from "dayjs";
 import DOMPurify from "dompurify";
 import ViewPdfModal from "../../../../components/child/ViewPdfModal";
 import useHasPermission from "../../../../hooks/Auth";
+import type { FileType } from "../../../../interfaces/fileinterface";
+import ViewFileModal from "../../../../components/child/VIewFileModal";
 export type Document = {
   _id: string;
   title: string;
@@ -21,7 +23,7 @@ export type Document = {
     fileName: string;
     fileUrl: string;
     size: number; // Cloudinary gives bytes
-    totalPages: number;
+    fileType: FileType;
   };
 };
 
@@ -108,7 +110,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
               )}
             </div>
             <div className="d-flex flex-row gap-8 gap-sm-12 justify-content-end">
-              <ViewPdfModal attachment={attachment} title={title} />
+              <ViewFileModal attachment={attachment} title={title} />
               <button
                 className="btn btn-street-primary   d-flex flex-row align-items-center justify-content-between gap-1  radius-12 text-xxs sm:text-xs"
                 onClick={() =>

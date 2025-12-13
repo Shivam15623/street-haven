@@ -3,6 +3,7 @@ import { useDeleteManualsMutation } from "../../../../services/ProgramManualApi"
 import { showSuccess } from "../../../../utills/toastutills";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import type { FileType } from "../../../../interfaces/fileinterface";
 
 type DeleteMannualsProps = {
   id: string;
@@ -12,7 +13,7 @@ type DeleteMannualsProps = {
     fileName: string;
     fileUrl: string;
     size: number; // bytes
-    totalPages: number;
+    fileType: FileType;
   };
 };
 
@@ -84,7 +85,7 @@ const DeleteMannuals: React.FC<DeleteMannualsProps> = ({
             <p className="mb-0">
               <span className="fw-semibold">File:</span> {attachment?.fileName}{" "}
               ({(attachment?.size / 1024 / 1024).toFixed(2)} MB,{" "}
-              {attachment?.totalPages} pages)
+              {attachment?.fileType} type)
             </p>
           </div>
         </div>
