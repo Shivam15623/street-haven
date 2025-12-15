@@ -12,8 +12,8 @@ import {
 
 import { showError, showSuccess } from "../../../../utills/toastutills";
 import CustomDatePicker from "../../../../components/child/DatePicker";
-import PdfField from "../../../../components/child/PdfField";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
+import FileField from "../../../../components/child/FileField";
 
 // -------------------------------------------------------
 // ✅ Validation Schema
@@ -104,7 +104,7 @@ const ActionsAgreement: React.FC<ActionsAgreementProps> = ({
           }).unwrap()
         : await createAgreement({
             data: formData,
-            onProgress: (p:number) => setProgress(p)
+            onProgress: (p: number) => setProgress(p),
           }).unwrap();
 
       if (res.success) {
@@ -248,9 +248,9 @@ const ActionsAgreement: React.FC<ActionsAgreementProps> = ({
             </BootstrapForm.Group>
 
             {/* Attachment */}
-            <PdfField
+            <FileField
               isEdit={isEdit}
-              existingPdf={
+              existingFile={
                 agreementToEdit?.attachment
                   ? {
                       fileName: agreementToEdit.attachment.fileName,

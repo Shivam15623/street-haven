@@ -3,10 +3,10 @@ import type { AgreementData } from "../../../../services/AgreementApi";
 import ActionsAgreement from "./ActionsAgreement";
 
 import { Icon } from "@iconify/react/dist/iconify.js";
-import ViewPdfModal from "../../../../components/child/ViewPdfModal";
 import useHasPermission from "../../../../hooks/Auth";
 import DeleteAgreement from "./DeleteAgreement";
 import dayjs from "dayjs";
+import ViewFileModal from "../../../../components/child/VIewFileModal";
 const formatFileSize = (bytes: number): string => {
   if (!bytes) return "0 KB";
   const kb = bytes / 1024;
@@ -64,7 +64,7 @@ const CollectiveAgreementCard = ({
                 </h4>
                 <div className="d-flex flex-row flex-wrap text-xxs xs:text-xs fw-normal gap-1 gap-sm-8">
                   {" "}
-                  <span>{attachment.totalPages} pages </span>•
+                  <span>{attachment.fileType.toUpperCase()}</span>•
                   <span>{formatFileSize(attachment.size)}</span>•
                   <span>
                     {" "}
@@ -81,7 +81,7 @@ const CollectiveAgreementCard = ({
               </div>
             </div>
             <div className="d-none d-sm-flex flex-row gap-6 gap-sm-12">
-              <ViewPdfModal attachment={attachment} title={agreement.title} />
+              <ViewFileModal attachment={attachment} title={agreement.title} />
               {hasPermission({ action: "edit_collective_agreement" }) && (
                 <button
                   className="btn btn-street-neutral d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
@@ -117,7 +117,7 @@ const CollectiveAgreementCard = ({
 
           <hr className="d-sm-none d-block" />
           <div className="d-flex d-sm-none flex-row justify-content-end gap-8 gap-sm-12">
-            <ViewPdfModal attachment={attachment} title={agreement.title} />
+            <ViewFileModal attachment={attachment} title={agreement.title} />
 
             {}
             {hasPermission({ action: "edit_collective_agreement" }) && (
