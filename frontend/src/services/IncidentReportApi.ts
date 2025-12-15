@@ -5,6 +5,23 @@ import type {
 } from "../interfaces/incidentReport";
 import type { ApiGeneralResponse } from "../interfaces/Response";
 import { api } from "../redux/ApiSlice";
+export interface IncidentReport {
+  _id: string;
+  dateOfIncident: Date | string;
+  location: string;
+  description: string;
+  witnesses: string[];
+  actionsTaken?: string;
+  reporterName: string;
+  submittedBy: {
+    _id: string;
+    firstname: string;
+    lastname: string;
+    email: string;
+  };
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
 
 const IncidentReportApi = api.injectEndpoints({
   endpoints: (builder) => ({
