@@ -2,15 +2,12 @@ import CollectiveAgreement from "../model/Agreement.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
-
-import { getPdfPageCount } from "../helper/pdfpagecount.js";
 import {
   deleteFromCloudinary,
-  uploadOnCloudinary,
 } from "../utills/cloudinary.js";
-
 import mongoose from "mongoose";
 import { addActivityLog } from "../helper/addActivityLogs.js";
+import { uploadAttachment } from "./meetingMinutes.controller.js";
 
 export const createCollectiveAgreement = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
@@ -18,28 +15,12 @@ export const createCollectiveAgreement = asyncHandler(async (req, res) => {
   try {
     const { title, startDate, endDate } = req.body;
     const { firstname, lastname } = req.user;
-    const attachmentPath = req?.file?.path;
+    const attachmentpath = req?.file?.path; // Fix typo
 
-    if (!attachmentPath) {
-      throw new ApiError(400, "Attachment file is missing");
-    }
+    if (!attachmentpath) throw new ApiError(400, "Attachment file is missing");
 
-    // Count pages
-    const [totalPages, uploadedFile] = await Promise.all([
-      getPdfPageCount(attachmentPath),
-      uploadOnCloudinary(attachmentPath),
-    ]);
-    if (!uploadedFile?.url) {
-      throw new ApiError(500, "Attachment upload failed");
-    }
+    const attachmentData = await uploadAttachment(attachmentpath);
 
-    const attachmentData = {
-      fileName: uploadedFile.original_filename || "manual",
-      fileUrl: uploadedFile.secure_url,
-      size: uploadedFile.bytes,
-      totalPages,
-      publicId: uploadedFile.public_id,
-    };
     session.startTransaction();
     // Save in DB (inside transaction)
     const newAgreement = await CollectiveAgreement.create(
@@ -133,21 +114,11 @@ export const editCollectiveAgreement = asyncHandler(async (req, res) => {
     console.log("Attachment Path:", attachmentPath);
     // Delete old file from Cloudinary
 
-    if (agreement.attachment?.publicId) {
-      await deleteFromCloudinary(agreement.attachment.publicId);
+    if (agreement.attachment?.fileUrl) {
+      await deleteFromCloudinary(agreement.attachment.fileUrl);
     }
-    const [totalPages, uploadedFile] = await Promise.all([
-      getPdfPageCount(attachmentPath),
-      uploadOnCloudinary(attachmentPath),
-    ]);
 
-    updatedAttachment = {
-      fileName: uploadedFile.original_filename || "manual",
-      fileUrl: uploadedFile.secure_url,
-      size: uploadedFile.bytes,
-      totalPages,
-      publicId: uploadedFile.public_id,
-    };
+    updatedAttachment = await uploadAttachment(attachmentPath);
   }
 
   // Update DB
@@ -175,8 +146,8 @@ export const deleteCollectiveAgreement = asyncHandler(async (req, res) => {
   }
 
   // Delete file from Cloudinary
-  if (agreement.attachment?.publicId) {
-    await deleteFromCloudinary(agreement.attachment.publicId);
+  if (agreement.attachment?.fileUrl) {
+    await deleteFromCloudinary(agreement.attachment.fileUrl);
   }
 
   // Delete from DB

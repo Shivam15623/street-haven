@@ -9,7 +9,7 @@ export interface AgreementData {
     fileName: string;
     fileUrl: string;
     size: number;
-    totalPages: number;
+    fileType: string;
   };
   effectiveStartDate: Date;
   effectiveEndDate: Date;

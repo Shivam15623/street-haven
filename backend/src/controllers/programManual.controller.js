@@ -1,13 +1,9 @@
 import mongoose from "mongoose";
-import { getPdfPageCount } from "../helper/pdfpagecount.js";
 import { io } from "../index.js";
-
 import ProgramManual from "../model/programManuals.js";
-
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
-import { uploadOnCloudinary } from "../utills/cloudinary.js";
 import { createNotification } from "../helper/CreateNotoification.js";
 import { addActivityLog } from "../helper/addActivityLogs.js";
 import { uploadAttachment } from "./meetingMinutes.controller.js";
