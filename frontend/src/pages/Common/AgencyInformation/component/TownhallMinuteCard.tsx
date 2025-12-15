@@ -79,7 +79,7 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
                     icon="famicons:document-sharp"
                     className="text-street-primary text-xxs xs:text-xs"
                   />
-                  {attachment.fileType}
+                  {attachment.fileType.toUpperCase()}
                 </span>
               )}
 
