@@ -6,6 +6,7 @@ import {
   useGetAllClientFeedbackQuery,
   type clientFeedbackData,
 } from "../../../../../services/FormApi";
+import ClientFeedback from "../modals/ClientFeedback";
 
 interface Column {
   header: string;
@@ -45,6 +46,10 @@ const columns: Column[] = [
 
       return row.complaintNature;
     },
+  },
+  {
+    header: "Actions",
+    accessor: (row) => <ClientFeedback detail={row} />,
   },
 ];
 

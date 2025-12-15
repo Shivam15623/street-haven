@@ -6,6 +6,7 @@ import type {
 } from "../../../../../interfaces/incidentReport";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import SimpleTable from "../../../../../components/child/SimpleTable";
+import IncidentReportModal from "../modals/IncidentReport";
 
 interface Column {
   header: string;
@@ -41,12 +42,9 @@ const columns: Column[] = [
     accessor: (row) => row.reporterName || "Anonymous",
   },
   {
-    header: "Submitted By",
-    accessor: (row) =>
-      `${row.submittedBy?.firstname || "Unknown"} (${
-        row.submittedBy?.email || "N/A"
-      })`,
-  },
+    header:"Actions",
+    accessor:(row)=><IncidentReportModal incident={row}/>
+  }
 ];
 
 const IncidentReportSubmission = () => {

@@ -7,6 +7,7 @@ import type { MeetingMinutesData } from "../../../../interfaces/meetingMinutes";
 import ActionstownhallMinutes from "./ActionstownhallMinutes";
 import DeleteMeetingMinutes from "./DeleteMeetingMinutes";
 import ViewFileModal from "../../../../components/child/VIewFileModal";
+import useHasPermission from "../../../../hooks/Auth";
 
 export type TownhallMinuteCardProps = {
   meeting: MeetingMinutesData;
@@ -27,7 +28,7 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
     keyTopicsDiscussed,
   } = meeting;
   const [showModal, setShowModal] = useState(false);
-
+  const { hasPermission } = useHasPermission();
   const handleDownload = async (url: string, filename: string) => {
     try {
       const response = await fetch(url);
@@ -101,22 +102,25 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
               <Icon icon="jam:download" className="text-xl" />
               Download
             </button>
+            {hasPermission({ action: "edit_event_minute" }) && (
+              <button
+                className="btn btn-street-neutral d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
+                style={{ width: "43px", height: "40px" }}
+                onClick={() => setShowModal(true)}
+              >
+                {" "}
+                <Icon icon="mdi:pencil" className="text-sm sm:text-xl" />
+              </button>
+            )}
 
-            <button
-              className="btn btn-street-neutral d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
-              style={{ width: "43px", height: "40px" }}
-              onClick={() => setShowModal(true)}
-            >
-              {" "}
-              <Icon icon="mdi:pencil" className="text-sm sm:text-xl" />
-            </button>
-
-            <DeleteMeetingMinutes
-              attachment={attachment}
-              id={meeting._id}
-              meetingDate={meetingDate}
-              title={title}
-            />
+            {hasPermission({ action: "delete_event_minute" }) && (
+              <DeleteMeetingMinutes
+                attachment={attachment}
+                id={meeting._id}
+                meetingDate={meetingDate}
+                title={title}
+              />
+            )}
           </div>
         </div>
 
@@ -153,20 +157,23 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
         )}
         <hr className="d-sm-none d-block" />
         <div className="d-flex d-sm-none flex-row justify-content-end gap-8 gap-sm-12">
-          <DeleteMeetingMinutes
-            attachment={attachment}
-            id={meeting._id}
-            meetingDate={meetingDate}
-            title={title}
-          />
-
-          <button
-            className="btn btn-street-neutral"
-            onClick={() => setShowModal(true)}
-          >
-            {" "}
-            <Icon icon="mdi:pencil" className="text-sm sm:text-xl" />
-          </button>
+          {hasPermission({ action: "delete_event_minute" }) && (
+            <DeleteMeetingMinutes
+              attachment={attachment}
+              id={meeting._id}
+              meetingDate={meetingDate}
+              title={title}
+            />
+          )}
+          {hasPermission({ action: "edit_event_minute" }) && (
+            <button
+              className="btn btn-street-neutral"
+              onClick={() => setShowModal(true)}
+            >
+              {" "}
+              <Icon icon="mdi:pencil" className="text-sm sm:text-xl" />
+            </button>
+          )}
 
           {attachment && (
             <ViewFileModal attachment={attachment} title={title} />

@@ -17,6 +17,7 @@ export interface IncidentReportQuery {
 }
 
 export interface IncidentReportData {
+  _id: string;
   dateOfIncident: string;
   location: string;
   description: string;
@@ -29,6 +30,8 @@ export interface IncidentReportData {
     lastname: string;
     email: string;
   };
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 export interface StaffFeedBackCredentials {
   date: string; // yyyy-mm-dd
