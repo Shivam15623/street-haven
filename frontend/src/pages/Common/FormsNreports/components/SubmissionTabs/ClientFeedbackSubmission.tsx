@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import { Icon } from "@iconify/react";
-import DOMPurify from "dompurify";
+
 import SimpleTable from "../../../../../components/child/SimpleTable";
 import {
   useGetAllClientFeedbackQuery,
   type clientFeedbackData,
 } from "../../../../../services/FormApi";
-import { OverlayTrigger, Tooltip } from "react-bootstrap";
 
 interface Column {
   header: string;
@@ -36,53 +35,16 @@ const columns: Column[] = [
     header: "Client Email",
     accessor: (row) => row.clientEmail || "N/A",
   },
-  {
-    header: "Client Phone",
-    accessor: (row) => row.clientPhone || "N/A",
-  },
+
   {
     header: "Complaint Nature",
     accessor: (row) => {
       if (row.complaintNature === "Other") {
-        return (
-          <OverlayTrigger
-            placement="top"
-            overlay={
-              <Tooltip id={`tooltip-${row._id}`}>
-                {row.otherComplaintText || "No additional details"}
-              </Tooltip>
-            }
-          >
-            <span
-              className=" text-street-primary "
-              style={{ cursor: "pointer" }}
-            >
-              Other
-            </span>
-          </OverlayTrigger>
-        );
+        return row.otherComplaintText;
       }
 
       return row.complaintNature;
     },
-  },
-  {
-    header: "Complaint Description",
-    accessor: (row) => (
-      <div
-        dangerouslySetInnerHTML={{
-          __html: DOMPurify.sanitize(row.complaintDescription),
-        }}
-      />
-    ),
-  },
-  {
-    header: "Desired Outcome",
-    accessor: (row) => row.desiredOutcome,
-  },
-  {
-    header: "Impact",
-    accessor: (row) => row.impact,
   },
 ];
 

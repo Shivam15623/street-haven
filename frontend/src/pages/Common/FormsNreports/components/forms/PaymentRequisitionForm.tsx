@@ -5,7 +5,7 @@ import {
   type FormikErrors,
   type FormikTouched,
 } from "formik";
-import { Card, Col, Form, Row, Table } from "react-bootstrap";
+import { Card, Col, Form, Row } from "react-bootstrap";
 import * as Yup from "yup";
 import CustomDatePicker from "../../../../../components/child/DatePicker";
 import { Icon } from "@iconify/react/dist/iconify.js";
@@ -70,7 +70,6 @@ const FormSchema = Yup.object({
       return value.size <= 16 * 1024 * 1024;
     }),
 });
-
 
 const PaymentRequisitionForm = () => {
   const [createpayrequest, { isLoading }] =
@@ -263,10 +262,9 @@ const PaymentRequisitionForm = () => {
                 {" "}
                 <FieldArray name="purchaseDetails">
                   {({ remove, push }) => (
-                    <Table
-                      bordered
-                      responsive
-                      className="table-form"
+                    <table
+                      className="table bordered-table mb-0 table-hover align-middle"
+                      // className="table-form"
                       style={{ minWidth: "900px" }}
                     >
                       <thead>
@@ -410,7 +408,7 @@ const PaymentRequisitionForm = () => {
 
                               {/* ACTION */}
                               <td>
-                                <div className="d-flex flex-column gap-1">
+                                <div className="d-flex flex-column gap-1 align-items-end justify-content-end">
                                   {values.purchaseDetails.length > 1 && (
                                     <button
                                       type="button"
@@ -461,7 +459,7 @@ const PaymentRequisitionForm = () => {
                           );
                         })}
                       </tbody>
-                    </Table>
+                    </table>
                   )}
                 </FieldArray>
                 <Row className="gy-3 gx-4">

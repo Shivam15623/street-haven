@@ -47,6 +47,14 @@ export function FunctionalAbilityDetail({
               <div className="d-flex flex-column gap-10">
                 {/* Claim Info Row */}
                 <div className="row  gy-3 gy-md-0 gx-0 gx-md-4">
+                  <div className="col-12">
+                    <FormField
+                      label="Claim No"
+                      value={details.claimNo}
+                      type="text"
+                      highlight
+                    />
+                  </div>
                   <div className="col-6 col-md-3">
                     <FormField
                       label="Date of Accident"
@@ -75,7 +83,7 @@ export function FunctionalAbilityDetail({
 
                 {/* Worker Info */}
                 <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
+                  <h4 className="text-md d-flex  fw-semibold uppercase tracking-wider text-street-base mb-20  align-items-center gap-2">
                     <Icon icon="mdi:account" className="w-4 h-4" />
                     Worker Details
                   </h4>
