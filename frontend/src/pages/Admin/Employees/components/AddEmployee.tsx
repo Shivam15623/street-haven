@@ -11,6 +11,9 @@ import { PatternFormat } from "react-number-format";
 import { ROLES, type Role } from "../../../../interfaces/AuthInterfaces";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 import CustomDatePicker from "../../../../components/child/DatePicker";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
 interface AddEmployeeValues {
   firstName: string;
   lastName: string;
@@ -20,10 +23,7 @@ interface AddEmployeeValues {
   role: Role;
   title: string;
   hireDate: string; // <-- keep as string for HTML input
-  timePeriod: {
-    value: number | string; 
-    unit: "days" | "weeks" | "months" | "years"; // <-- exact string union
-  };
+  timePeriod: string;
 }
 
 const roleValues = Object.values(ROLES) as Array<string>;
@@ -69,12 +69,7 @@ const AddEmployeeSchema = Yup.object({
     .matches(/\d/, "Must contain at least one number")
     .matches(/[@$!%*?&#]/, "Must contain at least one special character"),
   hireDate: Yup.date().required("Hire Date is required"),
-  timePeriod: Yup.object({
-    value: Yup.number()
-      .typeError("Time Period value must be a number")
-      .required("Time Period value is required"),
-    unit: Yup.string().required("Time Period unit is required"),
-  }),
+  timePeriod: Yup.string(),
 });
 const AddEmployee = () => {
   const [showModal, setShowModal] = useState(false);
@@ -143,7 +138,7 @@ const AddEmployee = () => {
             title: "",
             role: "employee",
             hireDate: "",
-            timePeriod: { value: "", unit: "months" },
+            timePeriod: "",
           }}
           validationSchema={AddEmployeeSchema}
           onSubmit={handleAddEmployee}
@@ -351,7 +346,7 @@ const AddEmployee = () => {
 
               {/* Time Period */}
               <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
-                <Col md={6}>
+                <Col md={12}>
                   <Form.Group
                     controlId="timePeriodValue"
                     className="d-flex flex-column gap-1"
@@ -360,45 +355,13 @@ const AddEmployee = () => {
                       Time Period
                     </Form.Label>
                     <Form.Control
-                      type="number"
-                      name="timePeriod.value"
+                      type="text"
+                      name="timePeriod"
                       placeholder="Enter number"
-                      value={values.timePeriod.value}
+                      value={dayjs(values.timePeriod).fromNow()}
                       onChange={handleChange}
-                      isInvalid={
-                        touched.timePeriod?.value && !!errors.timePeriod?.value
-                      }
+                      disabled
                     />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.timePeriod?.value}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-
-                <Col md={6}>
-                  <Form.Group
-                    controlId="timePeriodUnit"
-                    className="d-flex flex-column gap-1"
-                  >
-                    <Form.Label className="fw-normal m-0">Unit</Form.Label>
-                    <Form.Select
-                      name="timePeriod.unit"
-                      value={values.timePeriod.unit}
-                      onChange={handleChange}
-                      className={
-                        touched.timePeriod?.unit && errors.timePeriod?.unit
-                          ? "is-invalid"
-                          : ""
-                      }
-                    >
-                      <option value="days">Days</option>
-                      <option value="weeks">Weeks</option>
-                      <option value="months">Months</option>
-                      <option value="years">Years</option>
-                    </Form.Select>
-                    <Form.Control.Feedback type="invalid">
-                      {errors.timePeriod?.unit}
-                    </Form.Control.Feedback>
                   </Form.Group>
                 </Col>
               </Row>

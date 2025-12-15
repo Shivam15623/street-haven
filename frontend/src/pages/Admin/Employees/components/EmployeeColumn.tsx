@@ -4,6 +4,9 @@ import userimage from "@assets/images/user.png";
 import EditEmployee from "./EditEmployee";
 import DeleteEmployee from "./DeleteEmployee";
 import type { HasPermissionFn } from "../../../../hooks/Auth";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
 function formatRole(role: string): string {
   return role
     .split("_")
@@ -77,7 +80,7 @@ export const EmployeeColumn = (
                 phoneNo: row.phoneNo,
                 role: row.role,
                 hireDate: row.hireDate,
-                timePeriod: row.timePeriod,
+                timePeriod: dayjs(row.hireDate).fromNow(),
                 title: row.title,
               }}
             />

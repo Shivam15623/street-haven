@@ -37,10 +37,7 @@ const editEmployeeSchema = yup.object({
     .required("Phone number is required"),
   profilePic: yup.mixed<File>().nullable(),
   hireDate: yup.date().required("Hire Date is required"),
-  timePeriod: yup.object({
-    value: yup.number().required("Time Period value is required"),
-    unit: yup.string().required("Time Period unit is required"),
-  }),
+  timePeriod: yup.string(),
 });
 
 type EditEmployeeValues = yup.InferType<typeof editEmployeeSchema>;
@@ -62,10 +59,6 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
   const handleSave = async (values: EditEmployeeValues) => {
     try {
       // Ensure timePeriod exists
-      const safeTimePeriod = {
-        value: values.timePeriod?.value ?? 0,
-        unit: values.timePeriod?.unit ?? "days",
-      };
 
       const formData = new FormData();
       formData.append("firstname", values.firstname);
@@ -75,7 +68,6 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
       formData.append("role", values.role);
       formData.append("title", values.title);
 
-      formData.append("timePeriod", JSON.stringify(safeTimePeriod));
       function toISODate(value: Date | string | null | undefined) {
         if (!value) return "";
         return value instanceof Date
@@ -156,7 +148,7 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
             values,
             errors,
             touched,
-       
+
             handleBlur,
           }) => (
             <Form id="edit-employee-form" className="d-flex flex-column gap-18">
@@ -310,52 +302,21 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
 
               {/* Time Period */}
               <Row>
-                <Col md={6}>
+                <Col md={12}>
                   <BootstrapForm.Group className="mb-3">
                     <BootstrapForm.Label>Time Period</BootstrapForm.Label>
                     <Field
-                      name="timePeriod.value"
-                      type="number"
-                      className={`form-control ${
-                        touched.timePeriod?.value && errors.timePeriod?.value
-                          ? "is-invalid"
-                          : ""
-                      }`}
-                    />
-                    <ErrorMessage
-                      component="div"
-                      className="invalid-feedback"
-                      name="timePeriod.value"
-                    />
-                  </BootstrapForm.Group>
-                </Col>
-                <Col md={6}>
-                  <BootstrapForm.Group className="mb-3">
-                    <BootstrapForm.Label>Unit</BootstrapForm.Label>
-                    <Field
-                      as="select"
-                      name="timePeriod.unit"
+                      name="timePeriod"
+                      type="text"
                       
-                      className={`form-control ${
-                        touched.timePeriod?.unit && errors.timePeriod?.unit
-                          ? "is-invalid"
-                          : ""
-                      }`}
-                    >
-                      <option value="days">Days</option>
-                      <option value="weeks">Weeks</option>
-                      <option value="months">Months</option>
-                      <option value="years">Years</option>
-                    </Field>
-                    <ErrorMessage
-                      component="div"
-                      className="invalid-feedback"
-                      name="timePeriod.unit"
+                      className={`form-control`}
+                      disabled
                     />
+                   
                   </BootstrapForm.Group>
                 </Col>
+               
               </Row>
-             
             </Form>
           )}
         </Formik>

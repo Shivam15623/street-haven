@@ -12,10 +12,7 @@ interface User {
   createdAt: string;
   title: string;
   hireDate: Date;
-  timePeriod: {
-    value: number;
-    unit: "days" | "weeks" | "months" | "years";
-  };
+
 }
 export interface ChangeUserDetailsPayLoad {
   firstName?: string;
@@ -66,10 +63,7 @@ interface UserVerify {
   createdAt: string;
   title: string;
   hireDate: Date;
-  timePeriod: {
-    value: number;
-    unit: "days" | "weeks" | "months" | "years";
-  };
+ 
 }
 export interface LoginVerifyTotpResponseData {
   user: UserVerify;
