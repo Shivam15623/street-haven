@@ -43,8 +43,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
         slug: user.slug,
         createdAt: user.createdAt,
         title: user.title || "",
-        hireDate: user.hireDate ? new Date(user.hireDate) : new Date(),
-        timePeriod: user.timePeriod || { value: 0, unit: "months" },
+        hireDate: new Date(user.hireDate),
       };
       api.dispatch(
         setLoggedIn({

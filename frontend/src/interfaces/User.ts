@@ -23,10 +23,6 @@ interface UserProfile {
   updatedAt: string;
   title: string;
   hireDate: Date;
-  timePeriod: {
-    value: number;
-    unit: "days" | "weeks" | "months" | "years";
-  };
 }
 export interface changePasswordCredentials {
   currentPassword: string;

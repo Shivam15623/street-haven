@@ -71,9 +71,7 @@ const ProfileSettings: React.FC = () => {
             lastName: user?.data.lastname,
             title: user?.data.role,
             hireDate: dayjs(user.data.hireDate).format("MM/DD/YYYY"),
-            timePeriod: user?.data.timePeriod
-              ? `${user?.data.timePeriod.value} ${user?.data.timePeriod.unit}`
-              : "",
+            timePeriod: dayjs(user.data.hireDate).fromNow(),
             workEmail: user?.data.email || "",
             workPhone: user?.data.phoneNo || "",
           }}

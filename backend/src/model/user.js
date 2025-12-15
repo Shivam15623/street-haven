@@ -83,18 +83,6 @@ const UserSchema = new mongoose.Schema(
       required: true,
       default: new Date(),
     },
-    timePeriod: {
-      value: {
-        type: Number,
-        required: true,
-        min: 1,
-      },
-      unit: {
-        type: String,
-        enum: ["days", "weeks", "months", "years"],
-        required: true,
-      },
-    },
     // TOTP secret for Microsoft Authenticator
     totpSecret: {
       type: String,
