@@ -8,7 +8,7 @@ import path from "path";
 /** -----------------------------------------
  *  Common File-Type Detection Utility
  * ----------------------------------------- */
-const typeMap = {
+export const typeMap = {
   image: [".jpg", ".jpeg", ".png", ".gif", ".webp"],
   video: [".mp4", ".mov", ".avi", ".mkv"],
   audio: [".mp3", ".wav", ".ogg"],
@@ -19,7 +19,7 @@ const typeMap = {
   zip: [".zip", ".rar"],
 };
 
-const detectFileType = (ext) => {
+export const detectFileType = (ext) => {
   return (
     Object.keys(typeMap).find((key) => typeMap[key].includes(ext)) || "other"
   );
@@ -28,7 +28,7 @@ const detectFileType = (ext) => {
 /** -----------------------------------------
  *  Upload File Helper
  * ----------------------------------------- */
-const uploadAttachment = async (filePath) => {
+export const uploadAttachment = async (filePath) => {
   const uploaded = await uploadOnCloudinary(filePath);
   if (!uploaded || !uploaded.secure_url) {
     throw new ApiError(500, "Attachment upload failed");
