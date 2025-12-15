@@ -1,3 +1,4 @@
+import type { FileType } from "./fileinterface";
 import type { ApiResponse } from "./Response";
 
 export interface ProgrammMannualsCredentials {
@@ -16,7 +17,7 @@ export interface ProgramMannualData {
     fileName: string;
     fileUrl: string;
     size: number; // Cloudinary gives bytes
-    totalPages: number; // null if not a PDF
+    fileType: FileType; // null if not a PDF
   };
   createdAt: string;
   updatedAt: string;

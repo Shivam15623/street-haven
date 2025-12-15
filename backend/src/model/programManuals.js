@@ -6,8 +6,9 @@ const attachmentSchema = new mongoose.Schema({
   fileName: { type: String, required: true },
   fileUrl: { type: String, required: true },
   size: { type: Number, required: true }, // in KB/MB
-  totalPages: { type: Number },
+ fileType: { type: String, required: true },
 });
+
 
 const programManualSchema = new mongoose.Schema(
   {
