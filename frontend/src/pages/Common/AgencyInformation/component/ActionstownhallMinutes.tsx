@@ -11,7 +11,6 @@ import { showSuccess } from "../../../../utills/toastutills";
 import Badge from "../../../../components/child/Badge";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import type { MeetingMinutesData } from "../../../../interfaces/meetingMinutes";
-
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import CustomDatePicker from "../../../../components/child/DatePicker";
@@ -117,11 +116,7 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
     { resetForm }: { resetForm: () => void }
   ) => {
     try {
-      console.log(
-        "meetingDate",
-        values.meetingDate,
-        new Date(values.meetingDate + "T00:00:00").toISOString()
-      );
+     
 
       const formData = buildFormData(values);
       const res = isEdit

@@ -54,9 +54,9 @@ export function RestrictionsGrid({
   }
 
   return (
-    <div className={className}>
+    <div className={`${className}  mt-10 d-flex flex-column gap-10`}>
       {/* General Restrictions */}
-      <div className="row g-3">
+      <div className="row g-3 ">
         {restrictionItems.map(({ key, label, icon }) => {
           const value = restrictions[key as keyof Restrictions] as
             | string
@@ -74,28 +74,38 @@ export function RestrictionsGrid({
                   }`}
                 style={{
                   background: isActive
-                    ? "bg-warning-subtle"
+                    ? "bg-warning-surface"
                     : "var(--street-bg-f4)",
                 }}
               >
                 {/* Icon Box */}
                 <div
                   className={`d-flex justify-content-center align-items-center rounded-circle
-                    ${isActive ? "bg-warning" : "bg-secondary"} `}
+                    ${
+                      isActive ? "bg-warning-300 bg-opacity-25" : "bg-secondary"
+                    } `}
                   style={{ width: "32px", height: "32px" }}
                 >
                   <Icon
                     icon={icon}
-                    className={`fs-6 ${isActive ? "text-dark" : "text-light"}`}
+                    className={`fs-6 ${
+                      isActive ? "text-warning-800" : "text-light"
+                    }`}
                   />
                 </div>
 
                 {/* Content */}
                 <div className="flex-grow-1">
-                  <div className="text-street-base small">{label}</div>
+                  <div
+                    className={`${
+                      isActive ? "text-warning-800" : "text-street-base"
+                    } small`}
+                  >
+                    {label}
+                  </div>
                   <div
                     className={`fw-semibold ${
-                      isActive ? "text-street-dark" : "text-street-base"
+                      isActive ? "text-warning-800" : "text-street-base"
                     }`}
                   >
                     {value || "None"}
@@ -109,8 +119,8 @@ export function RestrictionsGrid({
 
       {/* Limited Pushing/Pulling */}
       {restrictions.limitedPushingPulling && (
-        <div className="mt-4">
-          <h5 className="small text-street-base text-uppercase mb-2 d-flex align-items-center gap-1">
+        <div className="mt-10 d-flex flex-column gap-10">
+          <h5 className="text-sm text-street-base text-uppercase mb-2 d-flex align-items-center gap-1">
             <Icon icon="mdi:hand" className="fs-6" />
             Limited Pushing/Pulling
           </h5>
@@ -149,8 +159,8 @@ export function RestrictionsGrid({
 
       {/* Exposure to Vibration */}
       {restrictions.exposureToVibration && (
-        <div className="mt-4">
-          <h5 className="small text-street-base text-uppercase mb-2 d-flex align-items-center gap-1">
+        <div className="mt-10 d-flex flex-column gap-10">
+          <h5 className="text-sm text-street-base text-uppercase mb-2 d-flex align-items-center gap-1">
             <Icon icon="mdi:vibrate" className="fs-6" />
             Exposure to Vibration
           </h5>
@@ -182,9 +192,9 @@ export function RestrictionsGrid({
 
       {/* Limited Use of Hands */}
       {restrictions.limitedUseOfHands && (
-        <div className="mt-4">
-          <h5 className="small text-street-base text-uppercase mb-3 d-flex align-items-center gap-1">
-            <Icon icon="mdi:hand" className="fs-6" />
+        <div className="mt-10 d-flex flex-column gap-10">
+          <h5 className="text-sm text-street-base text-uppercase mb-2 d-flex align-items-center gap-1">
+            <Icon icon="mdi:hand" />
             Limited Use of Hands
           </h5>
 
@@ -202,7 +212,10 @@ export function RestrictionsGrid({
                 <div className="d-flex flex-wrap gap-2">
                   {handTypes.map((type) =>
                     restrictions.limitedUseOfHands?.left?.[type] ? (
-                      <span key={type} className="badge bg-warning text-dark">
+                      <span
+                        key={type}
+                        className="badge  bg-warning-subtle text-warning"
+                      >
                         {type.charAt(0).toUpperCase() + type.slice(1)}
                       </span>
                     ) : null
@@ -219,7 +232,10 @@ export function RestrictionsGrid({
 
             {/* Right Hand */}
             <div className="col-md-6">
-              <div className="border rounded p-3 bg-light">
+              <div
+                className="border rounded p-3"
+                style={{ background: "var(--street-bg-f4)" }}
+              >
                 <div className="text-street-base small mb-2 fw-semibold">
                   Right Hand
                 </div>
@@ -227,7 +243,10 @@ export function RestrictionsGrid({
                 <div className="d-flex flex-wrap gap-2">
                   {handTypes.map((type) =>
                     restrictions.limitedUseOfHands?.right?.[type] ? (
-                      <span key={type} className="badge bg-warning text-dark">
+                      <span
+                        key={type}
+                        className="badge bg-warning-subtle text-warning"
+                      >
                         {type.charAt(0).toUpperCase() + type.slice(1)}
                       </span>
                     ) : null

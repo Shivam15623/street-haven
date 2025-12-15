@@ -16,6 +16,7 @@ interface AbilitiesRestrictionsProps {
   travelWorkField: { key: string; label: string }[];
 }
 
+
 const AbilitiesRestrictions: React.FC<AbilitiesRestrictionsProps> = ({
   values,
   setFieldValue,

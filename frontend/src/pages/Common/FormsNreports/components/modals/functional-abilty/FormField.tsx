@@ -48,7 +48,7 @@ export function FormField({
         );
 
       case "currency":
-        return `₹${Number(value).toFixed(2)}`;
+        return `$${Number(value).toFixed(2)}`;
 
       default:
         return String(value);
@@ -58,7 +58,7 @@ export function FormField({
   return (
     <div className={className}>
       <dt className="fw-semibold mb-8">{label}</dt>
-      <dd className={highlight ? "text-primary fw-bold" : ""}>
+      <dd className={highlight ? "text-street-primary fw-bold" : ""}>
         {renderValue()}
       </dd>
     </div>

@@ -6,7 +6,7 @@ import type {
 } from "../../../../../interfaces/incidentReport";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import SimpleTable from "../../../../../components/child/SimpleTable";
-import DOMPurify from "dompurify";
+
 interface Column {
   header: string;
   accessor: (row: IncidentReportData) => React.ReactNode;
@@ -29,26 +29,13 @@ const columns: Column[] = [
     header: "Location",
     accessor: (row) => row.location || "N/A",
   },
-  {
-    header: "Description",
-    accessor: (row) => (
-      <div
-        className="parse Te"
-        dangerouslySetInnerHTML={{
-          __html: DOMPurify.sanitize(row.description),
-        }}
-      />
-    ),
-  },
+ 
   {
     header: "Witnesses",
     accessor: (row) =>
       row.witnesses.length > 0 ? row.witnesses.join(", ") : "None",
   },
-  {
-    header: "Actions Taken",
-    accessor: (row) => row.actionsTaken || "None",
-  },
+
   {
     header: "Reporter Name",
     accessor: (row) => row.reporterName || "Anonymous",

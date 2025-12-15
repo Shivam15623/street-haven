@@ -10,7 +10,24 @@ import { FunctionalAbilityDetail } from "../modals/functional-abilty/FunctionalA
 
 // ------------------------------
 // Columns
-// ------------------------------
+// ------------------------------]
+const statusConfig = {
+  noRestrictions: {
+    label: "No Restrictions",
+    className: "badge bg-success-subtle text-success border border-success",
+    icon: "mdi:check",
+  },
+  withRestrictions: {
+    label: "With Restrictions",
+    className: "badge bg-warning-subtle text-warning border border-warning",
+    icon: "mdi:alert-circle-outline",
+  },
+  unable: {
+    label: "Unable to Work",
+    className: "badge bg-danger-subtle text-danger border border-danger",
+    icon: "mdi:close",
+  },
+};
 interface Column {
   header: string;
   accessor: (row: FunctionalAbility) => React.ReactNode;
@@ -40,7 +57,17 @@ const columns: Column[] = [
   },
   {
     header: "Return Status",
-    accessor: (row) => row.returnToWorkStatus || "N/A",
+    accessor: (row) => {
+      const config = statusConfig[row.returnToWorkStatus];
+      return (
+        <span
+          className={config.className + " d-inline-flex align-items-center"}
+        >
+          <Icon icon={config.icon} width="14" height="14" className="me-1" />
+          {config.label}
+        </span>
+      );
+    },
   },
   {
     header: "Actions",
