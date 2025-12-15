@@ -17,11 +17,12 @@ const Section = ({
   children: React.ReactNode;
 }) => (
   <div className="p-16">
-    <div className="text-lg xl:text-xl mb-10">{title}</div>
+    <div className="text-lg xl:text-xl mb-20 pb-20 border-bottom text-street-dark fw-semibold ">
+      {title}
+    </div>
     <div className="row g-3">{children}</div>
   </div>
 );
-
 const EmployeeIncidentReportDetails = ({
   detail,
 }: {

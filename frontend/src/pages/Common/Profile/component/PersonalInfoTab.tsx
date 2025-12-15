@@ -51,10 +51,10 @@ const PersonalInfoTab = () => {
         </div>
 
         {/* Other info fields */}
-        <InfoField label="Title" value="Demo" />
+        <InfoField label="Title" value={profile?.data.title??"---"} />
         <InfoField
           label="Hire Date"
-          value={dayjs(profile?.data.createdAt).format("DD-MM-YYYY")}
+          value={dayjs(profile?.data.hireDate).format("DD-MM-YYYY")}
         />
         <InfoField label="Work Email" value={profile?.data.email ?? "---"} />
         <InfoField label="Work Phone" value={profile?.data.phoneNo ?? "---"} />

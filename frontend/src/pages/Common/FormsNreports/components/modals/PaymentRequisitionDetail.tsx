@@ -1,13 +1,28 @@
 import React, { useState } from "react";
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import type { PaymentRequisition } from "../../../../../services/FormApi";
+import FileViewer from "../../../../../components/FileViewer/FileViewer";
 
-const LabelValue = ({ label, value }: { label: string; value: string }) => (
-  <div className="col-md-4 d-flex flex-column gap-1 mb-3">
-    <div className="text-sm text-street-base">{label}</div>
-    <div className="text-sm text-street-dark">{value || "N/A"}</div>
-  </div>
-);
+const LabelValue = ({
+  label,
+  value,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  type?: "currency" | "text";
+}) => {
+  const classval =
+    type === "currency"
+      ? "text-2xl text-street-primary fw-bold"
+      : "text-sm text-street-dark fw-semibold ";
+  return (
+    <div className="col-md-4 d-flex flex-column gap-8 ">
+      <div className="text-sm text-street-base ">{label}</div>
+      <div className={classval}>{value || "N/A"}</div>
+    </div>
+  );
+};
 
 const Section = ({
   title,
@@ -17,7 +32,9 @@ const Section = ({
   children: React.ReactNode;
 }) => (
   <div className="p-16">
-    <div className="text-lg xl:text-xl mb-10">{title}</div>
+    <div className="text-lg xl:text-xl mb-20 pb-20 border-bottom text-street-dark fw-semibold ">
+      {title}
+    </div>
     <div className="row g-3">{children}</div>
   </div>
 );
@@ -28,7 +45,7 @@ const PaymentRequisitionDetail = ({
   detail: PaymentRequisition;
 }) => {
   const [showModal, setShowModal] = useState(false);
-
+  const [openFile, setOpenFile] = useState(false);
   return (
     <>
       <button
@@ -41,7 +58,7 @@ const PaymentRequisitionDetail = ({
       <ModalWrapper
         show={showModal}
         title="Payment Requisition Details"
-        size="lg"
+        size="xl"
         headerClassName="text-xl p-0 pb-20 text-street-dark"
         className="p-20 p-sm-24 p-md-32 gap-16 gap-sm-20"
         bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
@@ -62,21 +79,23 @@ const PaymentRequisitionDetail = ({
             <LabelValue label="Requested By" value={detail.requestedBy} />
             <LabelValue label="Approved By" value={detail.approvedBy} />
             <LabelValue label="Payee Name" value={detail.payeeName} />
-            <LabelValue label="Total Amount" value={`₹${detail.totalAmount}`} />
+            <LabelValue
+              label="Total Amount"
+              type="currency"
+              value={`$${detail.totalAmount}`}
+            />
           </Section>
 
           {/* Invoice Attachment */}
           <Section title="📄 Invoice Attachment">
             <div className="col-12">
               {detail.invoiceAttachment ? (
-                <a
-                  href={detail.invoiceAttachment}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-outline-primary text-sm"
+                <button
+                  onClick={() => setOpenFile(true)}
+                  className="btn btn-street-outline-primary radius-12 "
                 >
                   View Invoice
-                </a>
+                </button>
               ) : (
                 <div className="text-sm text-street-dark">No Attachment</div>
               )}
@@ -85,9 +104,12 @@ const PaymentRequisitionDetail = ({
 
           {/* Payment Details */}
           <Section title="💰 Payment Details">
-            <div className="col-12">
-              <table className="table table-bordered text-sm">
-                <thead className="table-light">
+            <div
+              className="col-12 table-responsive radius-8"
+              style={{ scrollbarWidth: "thin" }}
+            >
+              <table className="table bordered-table mb-0 table-hover align-middle">
+                <thead>
                   <tr>
                     <th>Purchase Date</th>
                     <th>Nature of Purchase</th>
@@ -110,9 +132,9 @@ const PaymentRequisitionDetail = ({
                       <td>{item.purchaseNature}</td>
                       <td>{item.program}</td>
                       <td>{item.expenseCode}</td>
-                      <td>₹{item.netAmount}</td>
-                      <td>₹{item.hst}</td>
-                      <td>₹{item.totalAmount}</td>
+                      <td>${item.netAmount}</td>
+                      <td>${item.hst}</td>
+                      <td>${item.totalAmount}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -120,6 +142,20 @@ const PaymentRequisitionDetail = ({
             </div>
           </Section>
         </div>
+        {openFile && (
+          <FileViewer
+            files={[
+              {
+                _id: "1",
+                fileName: "invoice",
+                fileUrl: detail.invoiceAttachment,
+                fileType: "pdf",
+              },
+            ]}
+            open={openFile}
+            onOpenChange={setOpenFile}
+          />
+        )}
       </ModalWrapper>
     </>
   );
