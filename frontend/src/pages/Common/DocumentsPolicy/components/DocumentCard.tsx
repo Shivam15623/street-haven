@@ -7,7 +7,7 @@ import ActionsProgram from "./ActionsProgram";
 import DeleteMannuals from "./DeleteMannuals";
 import dayjs from "dayjs";
 import DOMPurify from "dompurify";
-import ViewPdfModal from "../../../../components/child/ViewPdfModal";
+
 import useHasPermission from "../../../../hooks/Auth";
 import type { FileType } from "../../../../interfaces/fileinterface";
 import ViewFileModal from "../../../../components/child/VIewFileModal";
