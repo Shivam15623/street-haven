@@ -1,11 +1,13 @@
-
 import { Spinner, Container } from "react-bootstrap";
 
 export default function Loader() {
   return (
     <Container
       fluid
-      className="d-flex flex-column align-items-center justify-content-center vh-100 bg-light"
+      className="d-flex flex-column align-items-center justify-content-center vh-100 "
+      style={{
+        background: "var(--street-card)",
+      }}
     >
       {/* Spinning Loader */}
       <Spinner
@@ -18,7 +20,7 @@ export default function Loader() {
       </Spinner>
 
       {/* Loading Text */}
-      <p className="mt-3 fs-5 fw-semibold text-secondary">Loading...</p>
+      <p className="mt-3 fs-5 fw-semibold text-street-base">Loading...</p>
     </Container>
   );
 }

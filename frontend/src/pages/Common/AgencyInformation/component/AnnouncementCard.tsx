@@ -3,15 +3,15 @@ import type { AnnouncementData } from "../../../../services/AnnouncementApi";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import ViewFileModal from "../../../../components/child/VIewFileModal";
 
-
 import ActionsAnnouncement from "./ActionsAnnouncement";
 import DeleteAnnouncement from "./DeleteAnnouncement";
+import useHasPermission from "../../../../hooks/Auth";
 interface AnnouncementProps {
   announcement: AnnouncementData;
 }
 const AnnouncementCard: React.FC<AnnouncementProps> = ({ announcement }) => {
   const { title, _id, createdAt, message, createdBy } = announcement;
- 
+  const { hasPermission } = useHasPermission();
   const [showDelete, setShowDelete] = useState(false);
   const [showModal, setShowModal] = useState(false);
   // Format createdAt -> MM/DD/YYYY
@@ -50,13 +50,13 @@ const AnnouncementCard: React.FC<AnnouncementProps> = ({ announcement }) => {
               </p>
             </div>
           </div>
-
+          {hasPermission({ action: "edit_announcement" }) && (
             <ActionsAnnouncement
               show={showModal}
               update={announcement}
               onHide={() => setShowModal(false)}
             />
-
+          )}
 
           <div className="d-flex flex-row gap-8 align-items-start">
             {announcement.attachment && (
@@ -66,6 +66,7 @@ const AnnouncementCard: React.FC<AnnouncementProps> = ({ announcement }) => {
               />
             )}
 
+            {hasPermission({ action: "edit_announcement" }) && (
               <button
                 className="btn btn-street-neutral d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
                 style={{ width: "43px", height: "40px" }}
@@ -74,7 +75,8 @@ const AnnouncementCard: React.FC<AnnouncementProps> = ({ announcement }) => {
                 {" "}
                 <Icon icon="mdi:pencil" className="text-sm sm:text-xl" />
               </button>
-   
+            )}
+            {hasPermission({ action: "delete_announcement" }) && (
               <>
                 <button
                   onClick={() => setShowDelete(true)}
@@ -90,7 +92,7 @@ const AnnouncementCard: React.FC<AnnouncementProps> = ({ announcement }) => {
                   onHide={() => setShowDelete(false)}
                 />
               </>
-      
+            )}
           </div>
         </div>
       </div>

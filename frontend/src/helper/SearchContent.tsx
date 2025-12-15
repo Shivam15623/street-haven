@@ -3,8 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchAllContentQuery } from "../services/searchApi";
 import { useDebounce } from "../hooks/useDebounce";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { selectAuth } from "../redux/AuthSlice";
 
 // ---------- Types ----------
 interface SearchProps {
@@ -64,7 +62,6 @@ const SearchContent: React.FC<SearchProps> = ({ mobileMode, onclose }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { user } = useSelector(selectAuth);
 
   const debouncedQuery = useDebounce<string>(query, 500);
 
@@ -106,16 +103,16 @@ const SearchContent: React.FC<SearchProps> = ({ mobileMode, onclose }) => {
 
   // --- Navigate handlers ---
   const goToEvent = (slug: string) =>
-    navigate(`/${user?.role}/events?slug=${slug}`);
+    navigate(`/events?slug=${slug}`);
 
   const goToHR = (slug: string) =>
-    navigate(`/${user?.role}/agency_info?tab=hr_updates&slug=${slug}`);
+    navigate(`/agency_info?tab=hr_updates&slug=${slug}`);
 
   const goToMinutes = (slug: string) =>
-    navigate(`/${user?.role}/agency_info?tab=townhall_minutes&slug=${slug}`);
+    navigate(`/agency_info?tab=townhall_minutes&slug=${slug}`);
 
   const goToManual = (slug: string) =>
-    navigate(`/${user?.role}/programs&manuals?slug=${slug}`);
+    navigate(`/programs&manuals?slug=${slug}`);
 
   return (
     <div
