@@ -85,7 +85,7 @@ export const AddEmployee = asyncHandler(async (req, res) => {
     role,
     title,
     hireDate,
-    timePeriod,
+ 
   } = req.body;
 
   const ExistingUser = await User.findOne({
@@ -110,10 +110,7 @@ export const AddEmployee = asyncHandler(async (req, res) => {
     role: role || "employee",
     title,
     hireDate: hireDate || new Date(),
-    timePeriod: {
-      value: timePeriod?.value || 3,
-      unit: timePeriod?.unit || "months",
-    },
+   
     totpSecret: null,
     isTOTPEnabled: false,
     isTOTPVerified: false,
@@ -135,26 +132,11 @@ export const EditEmployee = asyncHandler(async (req, res) => {
     throw new ApiError(404, "No such user found");
   }
 
-  const {
-    firstname,
-    lastname,
-    email,
-    phoneNo,
-    role,
-    title,
-    hireDate,
-    timePeriod,
-  } = req.body;
-  console.log("tm", req.body, typeof timePeriod);
+  const { firstname, lastname, email, phoneNo, role, title, hireDate } =
+    req.body;
+
   const updates = {};
-  let parsedTimePeriod = timePeriod;
-  if (typeof timePeriod === "string") {
-    try {
-      parsedTimePeriod = JSON.parse(timePeriod);
-    } catch (err) {
-      console.error("Invalid timePeriod JSON", err);
-    }
-  }
+
   // If profile picture is uploaded → skip equality check and update
   if (req.file && req.file.path) {
     if (findUser.profilePic) {
@@ -181,10 +163,6 @@ export const EditEmployee = asyncHandler(async (req, res) => {
       (title ? title === findUser.title : true) &&
       (hireDate
         ? new Date(hireDate).toISOString() === findUser.hireDate.toISOString()
-        : true) &&
-      (timePeriod !== undefined && timePeriod !== null
-        ? parsedTimePeriod.value == findUser.timePeriod?.value &&
-          parsedTimePeriod.unit == findUser.timePeriod?.unit
         : true);
 
     if (isSame) {
@@ -209,22 +187,6 @@ export const EditEmployee = asyncHandler(async (req, res) => {
     new Date(hireDate).toISOString() !== findUser.hireDate.toISOString()
   )
     updates.hireDate = new Date(hireDate);
-
-  if (parsedTimePeriod !== undefined && parsedTimePeriod !== null) {
-    const oldTP = findUser.timePeriod || {};
-
-    if (
-      parsedTimePeriod.value != oldTP.value ||
-      parsedTimePeriod.unit != oldTP.unit
-    ) {
-      updates.timePeriod = {
-        value: Number(parsedTimePeriod.value),
-        unit: parsedTimePeriod.unit,
-      };
-    }
-  }
-
-  console.log(updates);
   const updatedUser = await User.findByIdAndUpdate(userId, updates, {
     new: true,
     runValidators: true,

@@ -42,7 +42,7 @@ const VerifyTotp: React.FC = () => {
           createdAt: user.createdAt,
           title: user.title || "",
           hireDate: user.hireDate ? new Date(user.hireDate) : new Date(),
-          timePeriod: user.timePeriod || { value: 0, unit: "months" },
+        
         };
 
         dispatch(
