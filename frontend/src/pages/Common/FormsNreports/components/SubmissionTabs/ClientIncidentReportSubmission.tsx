@@ -37,7 +37,7 @@ const columns: Column[] = [
   },
   {
     header: "Actions",
-    accessor: (row) => <ClientIncidentReportDetail detail={row} />,
+    accessor: (row) => <ClientIncidentReportDetail incident={row} />,
   },
 ];
 
