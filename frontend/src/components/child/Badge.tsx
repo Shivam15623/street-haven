@@ -1,7 +1,7 @@
 import React from "react";
 import clsx from "clsx";
 
-type BadgeVariant =
+export type BadgeVariant =
   | "danger-soft"
   | "warning-soft"
   | "success-soft"
