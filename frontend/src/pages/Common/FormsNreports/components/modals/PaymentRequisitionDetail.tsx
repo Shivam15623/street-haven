@@ -1,43 +1,11 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import type { PaymentRequisition } from "../../../../../services/FormApi";
 import FileViewer from "../../../../../components/FileViewer/FileViewer";
-
-const LabelValue = ({
-  label,
-  value,
-  type = "text",
-}: {
-  label: string;
-  value: string;
-  type?: "currency" | "text";
-}) => {
-  const classval =
-    type === "currency"
-      ? "text-2xl text-street-primary fw-bold"
-      : "text-sm text-street-dark fw-semibold ";
-  return (
-    <div className="col-md-4 d-flex flex-column gap-8 ">
-      <div className="text-sm text-street-base ">{label}</div>
-      <div className={classval}>{value || "N/A"}</div>
-    </div>
-  );
-};
-
-const Section = ({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) => (
-  <div className="p-16">
-    <div className="text-lg xl:text-xl mb-20 pb-20 border-bottom text-street-dark fw-semibold ">
-      {title}
-    </div>
-    <div className="row g-3">{children}</div>
-  </div>
-);
+import { Icon } from "@iconify/react/dist/iconify.js";
+import dayjs from "dayjs";
+import { Col, Container, Row } from "react-bootstrap";
+import Badge from "../../../../../components/child/Badge";
 
 const PaymentRequisitionDetail = ({
   detail,
@@ -58,89 +26,166 @@ const PaymentRequisitionDetail = ({
       <ModalWrapper
         show={showModal}
         title="Payment Requisition Details"
-        size="xl"
+        size="lg"
         headerClassName="text-xl p-0 pb-20 text-street-dark"
         className="p-20 p-sm-24 p-md-32 gap-16 gap-sm-20"
         bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
         footerClassName="pt-16 pt-sm-20 px-0 pb-0"
         onHide={() => setShowModal(false)}
       >
-        <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
-          {/* General Info */}
-          <Section title="📝 General Information">
-            <LabelValue
-              label="Requested Date"
-              value={new Date(detail.requestedDate).toLocaleDateString("en-IN")}
-            />
-            <LabelValue
-              label="Approved Date"
-              value={new Date(detail.approvedDate).toLocaleDateString("en-IN")}
-            />
-            <LabelValue label="Requested By" value={detail.requestedBy} />
-            <LabelValue label="Approved By" value={detail.approvedBy} />
-            <LabelValue label="Payee Name" value={detail.payeeName} />
-            <LabelValue
-              label="Total Amount"
-              type="currency"
-              value={`$${detail.totalAmount}`}
-            />
-          </Section>
+        <div className="mt-10" style={{ maxHeight: "70vh", overflowY: "auto" }}>
+          <Container className="d-flex flex-column gap-24 animate-fade-in">
+            <div className="p-16 border rounded-3 border-sh-primary-50 bg-street-primary-10 ">
+              <div className="d-flex flex-row align-items-center justify-content-between">
+                <div className="d-flex align-items-center gap-2">
+                  <Icon
+                    icon="lucide:dollar-sign"
+                    fontSize={24}
+                    className=" text-street-primary"
+                  />
+                  <span className="text-sm fw-medium text-street-base">
+                    Total Amount
+                  </span>
+                </div>
+                <span className="text-2xl fw-bold text-street-primary">
+                  $
+                  {detail.totalAmount.toLocaleString("en-CA", {
+                    minimumFractionDigits: 2,
+                  })}
+                </span>
+              </div>
+            </div>{" "}
+            <Row className="g-3">
+              <Col md={6}>
+                <div className="p-16 card border h-100">
+                  <div className="card-body p-0">
+                    <div className="d-flex align-items-center gap-2 mb-3">
+                      <Icon
+                        fontSize={18}
+                        icon="lucide:user"
+                        className="text-street-base"
+                      />
+                      <span className="text-sm text-street-base fw-medium">
+                        Requested By
+                      </span>
+                    </div>
 
-          {/* Invoice Attachment */}
-          <Section title="📄 Invoice Attachment">
-            <div className="col-12">
-              {detail.invoiceAttachment ? (
-                <button
-                  onClick={() => setOpenFile(true)}
-                  className="btn btn-street-outline-primary radius-12 "
-                >
-                  View Invoice
-                </button>
-              ) : (
-                <div className="text-sm text-street-dark">No Attachment</div>
-              )}
+                    <p className="fw-semibold text-md">{detail.requestedBy}</p>
+
+                    <p className="text-sm text-street-base d-flex align-items-center gap-1 mt-1">
+                      <Icon icon="lucide:calendar" fontSize={14} />
+                      <span>
+                        {dayjs(detail.requestedDate).format("MMMM D Y")}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </Col>
+
+              <Col md={6}>
+                <div className="p-16 card border h-100">
+                  <div className="card-body p-0">
+                    <div className="d-flex align-items-center gap-2 mb-3">
+                      <Icon
+                        fontSize={18}
+                        icon="lucide:user"
+                        className="text-street-base"
+                      />
+                      <span className="text-sm text-street-base fw-medium">
+                        Approved By
+                      </span>
+                    </div>
+
+                    <p className="fw-semibold text-md">{detail.approvedBy}</p>
+
+                    <p className="text-sm text-street-base d-flex align-items-center gap-1 mt-1">
+                      <Icon icon="lucide:calendar" fontSize={14} />
+                      <span>
+                        {dayjs(detail.approvedDate).format("MMMM D Y")}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </Col>
+            </Row>
+            <div className="p-16 card border h-100">
+              <div className="card-body p-0">
+                <div className="d-flex align-items-center gap-2 mb-3">
+                  <Icon
+                    fontSize={18}
+                    icon="lucide:building"
+                    className="text-street-base"
+                  />
+                  <span className="text-sm text-street-base fw-medium">
+                    Payee
+                  </span>
+                </div>
+
+                <p className="fw-semibold text-street-dark text-lg">
+                  {detail.payeeName}
+                </p>
+
+                <div className="d-flex align-items-center gap-2 mt-8">
+                  <Icon icon="lucide:paperclip" fontSize={18} />
+                  <span
+                    onClick={() => setOpenFile(true)}
+                    className="text-sm text-street-primary hover-text-primary cursor-pointer"
+                  >
+                    invoice
+                  </span>
+                </div>
+              </div>
             </div>
-          </Section>
-
-          {/* Payment Details */}
-          <Section title="💰 Payment Details">
-            <div
-              className="col-12 table-responsive radius-8"
-              style={{ scrollbarWidth: "thin" }}
-            >
-              <table className="table bordered-table mb-0 table-hover align-middle">
-                <thead>
-                  <tr>
-                    <th>Purchase Date</th>
-                    <th>Nature of Purchase</th>
-                    <th>Department</th>
-                    <th>Expense Code</th>
-                    <th>Net Amount</th>
-                    <th>HST</th>
-                    <th>Total</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {detail.paymentDetails?.map((item, index) => (
-                    <tr key={index}>
-                      <td>
-                        {new Date(item.purchaseDate).toLocaleDateString(
-                          "en-IN"
-                        )}
-                      </td>
-                      <td>{item.purchaseNature}</td>
-                      <td>{item.program}</td>
-                      <td>{item.expenseCode}</td>
-                      <td>${item.netAmount}</td>
-                      <td>${item.hst}</td>
-                      <td>${item.totalAmount}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className=" d-flex flex-column gap-16">
+              <hr className="bg-street-base" />
+              <h3 className="text-sm fw-semibold  d-flex align-items-center gap-2">
+                <Icon icon="lucide:file-text" fontSize={18} />
+                Purchase Details ({detail.paymentDetails.length})
+              </h3>
+              {detail.paymentDetails.map((p) => (
+                <div className="bg-neutral-50 border-sh-base-1-2 rounded-3 shadow-none card p-16">
+                  <div className="card-body p-0">
+                    <div className="d-flex flex-row align-items-start justify-content-between">
+                      <span className="text-md text-street-dark fw-semibold">
+                        {p.purchaseNature}
+                      </span>
+                      <Badge variant="primary-soft"> {p.expenseCode}</Badge>
+                    </div>
+                    <div className="mt-2 text-sm text-street-base">
+                      {" "}
+                      {dayjs(p.purchaseDate).format("MMM DD YYYY")}
+                    </div>
+                    <div className="mt-3  text-sm text-street-base">
+                      {" "}
+                      {p.program}
+                    </div>
+                    <hr className="mt-2" />
+                    <div className="row g-3 mt-2">
+                      <div className="col-12 col-sm-6 col-md-4 d-flex flex-column gap-1">
+                        <span className="text-street-base text-xs">Net</span>
+                        <span className="text-street-dark text-md fw-semibold">
+                          ${p.netAmount}
+                        </span>
+                      </div>
+                      <div className="col-12 col-sm-6 col-md-4 d-flex flex-column gap-1">
+                        <span className="text-street-base text-xs">HST</span>
+                        <span className="text-street-dark text-md fw-semibold">
+                          {" "}
+                          ${p.hst}
+                        </span>
+                      </div>
+                      <div className="col-12 col-sm-6 col-md-4 d-flex flex-column gap-1">
+                        <span className="text-street-base text-xs">Total</span>
+                        <span className="text-street-primary text-md fw-semibold">
+                          ${p.totalAmount}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          </Section>
+          </Container>
         </div>
         {openFile && (
           <FileViewer

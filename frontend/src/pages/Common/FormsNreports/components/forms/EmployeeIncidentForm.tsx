@@ -102,7 +102,7 @@ interface EmployeeIncidentFormValues {
   doctorVisitDate?: Date;
   doctorVisitTime?: string;
   previousInjury: boolean;
-  previousInjuryDate: string;
+  previousInjuryDate: Date;
 }
 const EmployeeIncidentForm = () => {
   const [createIncident, { isLoading }] = useCreateEmployeeIncidentMutation();
@@ -153,6 +153,9 @@ const EmployeeIncidentForm = () => {
         payload.doctorPhone = values.doctorPhone;
         payload.doctorVisitDate = values.doctorVisitDate;
         payload.doctorVisitTime = values.doctorVisitTime;
+      }
+      if (values.previousInjury === true) {
+        payload.previousInjuryDate = new Date(values.previousInjuryDate);
       }
       const res = await createIncident(payload).unwrap();
       if (res.success) {
@@ -206,7 +209,7 @@ const EmployeeIncidentForm = () => {
           doctorVisitDate: new Date(),
           doctorVisitTime: "",
           previousInjury: false,
-          previousInjuryDate: "",
+          previousInjuryDate: new Date(),
         }}
         onSubmit={handleSubmit}
       >
@@ -760,14 +763,14 @@ const EmployeeIncidentForm = () => {
                         }}
                         isInvalid={
                           !!errors.previousInjuryDate &&
-                          touched.previousInjuryDate
+                          !!touched.previousInjuryDate
                         }
                       />
 
                       {errors.previousInjuryDate &&
                         touched.previousInjuryDate && (
                           <div className="invalid-feedback d-block">
-                            {errors.previousInjuryDate}
+                            {String(errors.previousInjuryDate)}
                           </div>
                         )}
                     </Form.Group>

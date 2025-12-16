@@ -115,6 +115,7 @@ export interface employeeIncidentReport {
   preventionSuggestion: string;
   injuredBodyPartOrRisk: string;
   sawDoctor: boolean;
+  witnessName?: string;
   doctorName?: string;
   doctorPhone?: string;
   doctorVisitDate?: Date;
