@@ -345,10 +345,14 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
 
     try {
       const formdata = new FormData();
-      formdata.append("message", message);
-      attachments.forEach((file) => {
-        formdata.append("attachments", file);
-      });
+      if (message) {
+        formdata.append("message", message);
+      }
+      if (attachments.length !== 0) {
+        attachments.forEach((file) => {
+          formdata.append("attachments", file);
+        });
+      }
 
       const res = await addComment({ ticketId: ticket._id, formdata }).unwrap();
       if (res.success) {
@@ -442,7 +446,7 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
                                 onClick={() => {
                                   setViewerFiles(
                                     msg.attachments?.map((a) => ({
-                                      _id:a._id,
+                                      _id: a._id,
                                       fileUrl: a.fileUrl,
                                       fileType: a.type,
                                       fileName: a.fileName,

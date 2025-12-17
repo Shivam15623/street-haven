@@ -16,7 +16,6 @@ interface AbilitiesRestrictionsProps {
   travelWorkField: { key: string; label: string }[];
 }
 
-
 const AbilitiesRestrictions: React.FC<AbilitiesRestrictionsProps> = ({
   values,
   setFieldValue,
@@ -232,12 +231,21 @@ const AbilitiesRestrictions: React.FC<AbilitiesRestrictionsProps> = ({
                 />
                 <span className="text-xs ">Limited Use Of Hands</span>
               </label>
+              <div
+                className="d-flex align-items-center text-xs justify-content-between my-2"
+               
+              >
+                <span>Left</span>
+                <span className="flex-grow-1"> </span>
+                <span>Right</span>
+              </div>
+
               {values.restrictions.limitedUseOfHands.checked &&
                 HandFields.map((field) => (
                   <div
                     key={field.label}
                     className="d-flex align-items-center text-xs justify-content-between my-2"
-                    style={{ width: "260px" }}
+                 
                   >
                     <input
                       type="checkbox"

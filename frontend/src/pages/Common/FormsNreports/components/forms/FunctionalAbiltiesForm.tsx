@@ -163,6 +163,10 @@ export interface FunctionalAbilityFormValues {
   isDiscussRTWtoPatient: boolean;
 
   nextAppointmentDate: Date | string;
+  providedTo: {
+    worker: false;
+    employer: false;
+  };
 }
 
 const functionalAbilityFormSchema = Yup.object({
@@ -222,7 +226,7 @@ const functionalAbilityFormSchema = Yup.object({
   srvCode: Yup.string().required("please fill this field"),
   hstRegNo: Yup.string().notRequired(),
   hstSrvcCode: Yup.string().notRequired(),
-  hstAmount: Yup.string().notRequired(),
+  hstAmount: Yup.number().notRequired(),
   healthProfessionalName: Yup.string().required("please fill this field"),
   hproAddress: Yup.string().required("please fill this field"),
   hprocityTown: Yup.string().required("please fill this field"),
@@ -412,6 +416,14 @@ const functionalAbilityFormSchema = Yup.object({
     then: (s) => s.notRequired(),
     otherwise: (s) => s.required("please fill next Appointment date"),
   }),
+  providedTo: Yup.object({
+    worker: Yup.boolean(),
+    employer: Yup.boolean(),
+  }).test(
+    "at-least-one",
+    "Select at least one option (Worker or Employer)",
+    (value) => value?.worker || value?.employer
+  ),
 });
 
 const handleDownload = async (url: string, filename: string) => {
@@ -496,21 +508,40 @@ const FunctionalAbiltiesForm = () => {
   const handleSubmit = async (values: FunctionalAbilityFormValues) => {
     try {
       const payload: any = { ...values };
-
+      if (!values.hstAmount) {
+        delete payload.hstAmount;
+      }
+      if (!values.hstRegNo) {
+        delete payload.hstRegNo;
+      }
+      if (!values.hstSrvcCode) {
+        delete payload.hstSrvcCode;
+      }
       if (values.returnToWorkStatus === "withRestrictions") {
         payload.abilities = extractAbilities(values.abilities);
         payload.restrictions = extractRestrictions(values.restrictions);
-      } else {
+      } else if (values.returnToWorkStatus === "noRestrictions") {
         delete payload.abilities;
         delete payload.restrictions;
+        delete payload.commentsOnAbilities;
+        delete payload.isDiscussRTWtoPatient;
+        delete payload.assessmentDuration;
+      } else if (values.returnToWorkStatus === "unable") {
+        delete payload.abilities;
+        delete payload.restrictions;
+        delete payload.commentsOnAbilities;
+        delete payload.assessmentDuration;
       }
 
       // Conditional fields
+
       if (values.discussedRTW) delete payload.nodateOfDiscusswill;
       if (values.designationOfHealthPro !== "Other")
         delete payload.otherDesignation;
       if (!values.iswsibRegistered) delete payload.wsibId;
+
       const res = await createFaf(payload).unwrap();
+
       if (res.success) showSuccess(res.message);
     } catch (error) {
       console.log(error);
@@ -596,6 +627,10 @@ const FunctionalAbiltiesForm = () => {
     assessmentDuration: "1-2 days", // ✅ fixed
     isDiscussRTWtoPatient: false,
     nextAppointmentDate: new Date(),
+    providedTo: {
+      worker: false,
+      employer: false,
+    },
   };
 
   return (
@@ -1736,6 +1771,63 @@ const FunctionalAbiltiesForm = () => {
                 </div>
               </div>
             )}
+            <div className="card shadow-sm">
+              <div className="card-body p-24">
+                <Form.Group className="d-flex flex-column gap-20">
+                  {/* Label */}
+                  <Form.Label className="fw-semibold text-xl mb-0">
+                    I have provided this completed Functional Abilities Form to:
+                  </Form.Label>
+
+                  {/* Options */}
+                  <div className="d-flex align-items-center gap-4">
+                    <div className="form-check d-flex align-items-center flex-row gap-2">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="providedWorker"
+                        name="providedTo.worker"
+                        checked={values.providedTo.worker}
+                        onChange={handleChange}
+                      />
+                      <label
+                        className="form-check-label fw-medium"
+                        htmlFor="providedWorker"
+                      >
+                        Worker
+                      </label>
+                    </div>
+
+                    <span className="fw-semibold text-street-dark">and/or</span>
+
+                    <div className="form-check align-items-center d-flex flex-row gap-2">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id="providedEmployer"
+                        name="providedTo.employer"
+                        checked={values.providedTo.employer}
+                        onChange={handleChange}
+                      />
+                      <label
+                        className="form-check-label fw-medium"
+                        htmlFor="providedEmployer"
+                      >
+                        Employer
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Error */}
+                  {errors.providedTo &&
+                    typeof errors.providedTo === "string" && (
+                      <div className="text-danger small mt-2">
+                        {errors.providedTo}
+                      </div>
+                    )}
+                </Form.Group>
+              </div>
+            </div>
 
             <div className="card">
               <div className="card-body d-flex flex-row w-100 justify-content-end  gap-20 px-24 py-16">
