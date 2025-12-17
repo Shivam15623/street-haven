@@ -72,7 +72,7 @@ export function ClientIncidentReportDetail({
             {/* Date / Time / Place */}
             <Row className="g-3 mb-4">
               <Col md={4}>
-                <div className="p-3 border rounded h-100">
+                <div className="p-3 border rounded-3 card h-100">
                   <div className="d-flex align-items-center gap-2 text-street-base mb-1">
                     <Icon icon="lucide:calendar" width={16} />
                     <small>Date</small>
@@ -83,7 +83,7 @@ export function ClientIncidentReportDetail({
                 </div>
               </Col>
               <Col md={4}>
-                <div className="p-3 border rounded h-100">
+                <div className="p-3 border rounded-3 card h-100">
                   <div className="d-flex align-items-center gap-2 text-street-base mb-1">
                     <Icon icon="lucide:clock" width={16} />
                     <small>Time</small>
@@ -92,7 +92,7 @@ export function ClientIncidentReportDetail({
                 </div>
               </Col>
               <Col md={4}>
-                <div className="p-3 border rounded h-100">
+                <div className="p-3 border rounded-3 card h-100">
                   <div className="d-flex align-items-center gap-2 text-street-base mb-1">
                     <Icon icon="lucide:map-pin" width={16} />
                     <small>Place</small>
@@ -175,41 +175,51 @@ export function ClientIncidentReportDetail({
               </div>
             </div>
 
-            <hr className="my-4" />
+            <hr />
+            <div>
+              {" "}
+              <h6 className="d-flex align-items-center gap-2 mb-3">
+                <Icon icon="lucide:clipboard-list" width={16} />
+                Reporting Details
+              </h6>
+              <Row className="g-3">
+                <Col md={6}>
+                  <div className="p-3 border card rounded-3">
+                    <div className="d-flex align-items-center gap-2 mb-10">
+                      <Icon icon="lucide:user" width={16} />
+                      <span className="fw-medium">Reported By</span>
+                    </div>
+                    <p className="fw-semibold mb-1">
+                      {incident.reportingStaffName}
+                    </p>
+                    <small className="text-street-base d-flex align-items-center gap-1">
+                      <Icon icon="lucide:calendar" width={14} />
+                      {format(new Date(incident.reportingDate), "MMM d, yyyy")}
+                    </small>
+                  </div>
+                </Col>
+                <Col md={6}>
+                  <div className="p-3 border card rounded-3">
+                    <div className="d-flex align-items-center gap-2 mb-10">
+                      <Icon icon="lucide:send" width={16} />
+                      <span className="fw-medium">Reported To</span>
+                    </div>
+                    <p className="fw-semibold mb-1">{incident.reportedTo}</p>
+                    <small className="text-street-base d-flex align-items-center gap-1">
+                      <Icon icon="lucide:calendar" width={14} />
+                      {format(new Date(incident.reportedToDate), "MMM d, yyyy")}
+                    </small>
+                  </div>
+                </Col>
+              </Row>
+            </div>
 
             {/* Reporting */}
-            <h6 className="d-flex align-items-center gap-2 mb-3">
-              <Icon icon="lucide:clipboard-list" width={16} />
-              Reporting Details
-            </h6>
-
-            <Row className="g-3">
-              <Col md={6}>
-                <div className="p-3 border card rounded-3">
-                  <p className="fw-semibold mb-1">
-                    {incident.reportingStaffName}
-                  </p>
-                  <small className="text-street-base d-flex align-items-center gap-1">
-                    <Icon icon="lucide:calendar" width={14} />
-                    {format(new Date(incident.reportingDate), "MMM d, yyyy")}
-                  </small>
-                </div>
-              </Col>
-              <Col md={6}>
-               <div className="p-3 border card rounded-3">
-                  <p className="fw-semibold mb-1">{incident.reportedTo}</p>
-                  <small className="text-street-base d-flex align-items-center gap-1">
-                    <Icon icon="lucide:calendar" width={14} />
-                    {format(new Date(incident.reportedToDate), "MMM d, yyyy")}
-                  </small>
-                </div>
-              </Col>
-            </Row>
 
             {/* Follow-up */}
             {incident.followup && (
               <div className="bg-neutral-50 border-sh-base-1-2 rounded-3 shadow-none mt-2 card p-16">
-                <div className="d-flex align-items-center gap-2 mb-2">
+                <div className="d-flex align-items-center gap-2 mb-10">
                   <Icon icon="lucide:clipboard-list" width={16} />
                   <span className="fw-medium">Follow-up</span>
                 </div>
