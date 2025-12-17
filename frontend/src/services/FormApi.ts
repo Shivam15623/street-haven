@@ -267,6 +267,10 @@ export interface FunctionalAbility {
 
   createdAt?: Date;
   updatedAt?: Date;
+  providedTo?: {
+    worker: boolean;
+    employer: boolean;
+  };
 }
 
 // ----------------- API -----------------

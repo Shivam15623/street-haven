@@ -240,7 +240,7 @@ export function FunctionalAbilityDetail({
 
                 {/* HST Info */}
                 <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-street-base-foreground mb-4">
                     HST Information
                   </h4>
                   <div className="row  gy-3 gy-md-0 gx-0 gx-md-4">
@@ -310,7 +310,7 @@ export function FunctionalAbilityDetail({
 
               {details.commentsOnAbilties && (
                 <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-street-base-foreground mb-2">
                     Additional Comments
                   </h4>
                   <p className="text-sm text-foreground">
@@ -349,6 +349,53 @@ export function FunctionalAbilityDetail({
                     type="date"
                     highlight
                   />
+                </div>
+              </div>
+            </FormSection>
+            <FormSection title="Form Distribution" sectionId="G" variant="f">
+              <div className="border rounded p-3">
+                <p className="fw-semibold mb-2">
+                  I have provided this completed Functional Abilities Form to:
+                </p>
+
+                <div className="d-flex align-items-center gap-4">
+                  {/* Worker */}
+                  <div className="d-flex align-items-center gap-2">
+                    <Icon
+                      icon={
+                        details.providedTo?.worker
+                          ? "mdi:checkbox-marked"
+                          : "mdi:checkbox-blank-outline"
+                      }
+                      className={
+                        details.providedTo?.worker
+                          ? "text-success"
+                          : "text-street-base"
+                      }
+                      width={20}
+                    />
+                    <span className="fw-medium">Worker</span>
+                  </div>
+
+                  <span className="fw-semibold text-street-base">and/or</span>
+
+                  {/* Employer */}
+                  <div className="d-flex align-items-center gap-2">
+                    <Icon
+                      icon={
+                        details.providedTo?.employer
+                          ? "mdi:checkbox-marked"
+                          : "mdi:checkbox-blank-outline"
+                      }
+                      className={
+                        details.providedTo?.employer
+                          ? "text-success"
+                          : "text-street-base"
+                      }
+                      width={20}
+                    />
+                    <span className="fw-medium">Employer</span>
+                  </div>
                 </div>
               </div>
             </FormSection>
