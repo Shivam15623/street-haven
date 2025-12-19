@@ -3,24 +3,24 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { Dropdown } from "react-bootstrap";
 import { useInView } from "../hooks/useInView";
-import { useDebouncedBulkMarkRead } from "../hooks/useDebouncedBulkMarkRead";
 import { type notificationData } from "../services/notificationApi";
 
 dayjs.extend(relativeTime);
 
 interface NotificationItemProps {
   item: notificationData;
+  onSeen: (id: string) => void;
 }
 
-const NotificationItem: React.FC<NotificationItemProps> = ({ item }) => {
+const NotificationItem: React.FC<NotificationItemProps> = ({ item,onSeen }) => {
   const { ref, isInView } = useInView({ threshold: 0.5 });
-  const { addNotificationId } = useDebouncedBulkMarkRead(1200); // 1.2s debounce
+ 
 
   useEffect(() => {
     if (isInView && !item.readAt) {
-      addNotificationId(item._id);
+      onSeen(item._id);
     }
-  }, [isInView, item._id, item.readAt, addNotificationId]);
+  }, [isInView, item._id, item.readAt, onSeen]);
 
   return (
     <>

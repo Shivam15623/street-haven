@@ -48,24 +48,25 @@ const EventFormSchema = Yup.object().shape({
       today.setHours(0, 0, 0, 0);
       return selected >= today;
     }),
+
   startTime: Yup.string().required("Start time is required"),
+
   endTime: Yup.string()
     .required("End time is required")
     .test(
       "end-after-start",
-      "End time must be later than start time and within the same day",
+      "End time must be later than start time",
       function (val) {
-        const { startTime, eventDate } = this.parent;
-        if (!val || !startTime || !eventDate) return true;
+        const { startTime } = this.parent;
+        if (!val || !startTime) return true;
 
-        const start = new Date(`${eventDate}T${startTime}`);
-        const end = new Date(`${eventDate}T${val}`);
+        const [sh, sm] = startTime.split(":").map(Number);
+        const [eh, em] = val.split(":").map(Number);
 
-        // End must be after start
-        if (end <= start) return false;
+        const startMinutes = sh * 60 + sm;
+        const endMinutes = eh * 60 + em;
 
-        // Check both times are within the same date (no next-day times)
-        return end.getDate() === start.getDate();
+        return endMinutes > startMinutes;
       }
     ),
 });
@@ -115,11 +116,12 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
     values: EventFormValues,
     { resetForm }: { resetForm: () => void }
   ) => {
+    const tempDate = new Date(values.eventDate).toISOString().split("T")[0];
     const payload = {
       ...values,
       eventDate: new Date(values.eventDate),
-      startTime: new Date(`${values.eventDate}T${values.startTime}`),
-      endTime: new Date(`${values.eventDate}T${values.endTime}`),
+      startTime: new Date(`${tempDate}T${values.startTime}`),
+      endTime: new Date(`${tempDate}T${values.endTime}`),
     };
     const res = await editEvent({ cred: payload, id: eventId }).unwrap();
     if (res.success) {
@@ -310,10 +312,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                         values.eventDate ? new Date(values.eventDate) : null
                       }
                       onChange={(date) => {
-                        const newDate = date
-                          ? date.toISOString().split("T")[0]
-                          : "";
-                        setFieldValue("eventDate", newDate, true); // ← Add true to validate immediately
+                        setFieldValue("eventDate", date, true); // ← Add true to validate immediately
                         setFieldTouched("eventDate", true, false); // ← false prevents double validation
                       }}
                       isInvalid={!!errors.eventDate && touched.eventDate}

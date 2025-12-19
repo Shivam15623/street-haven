@@ -49,9 +49,7 @@ const AddEmployeeSchema = Yup.object({
       "Email must be from @streethaven.com domain"
     )
     .email("Email is required"),
-  title: Yup.string()
-    .required("Title is required")
-    .matches(/^[a-zA-Z\s]+$/, "Title can only contain letters and spaces"),
+  title: Yup.string().required("Title is required"),
   phone: Yup.string()
     .required("Phone number is required")
     .matches(
