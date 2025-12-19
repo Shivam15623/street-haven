@@ -37,7 +37,7 @@ const UpcomingEvents = () => {
       {/* Empty State */}
       {!isFetching && events.length === 0 && (
         <div className="text-center text-sm text-street-base">
-          No past events.
+          No Upcoming events.
         </div>
       )}
       {events.map((event) => (

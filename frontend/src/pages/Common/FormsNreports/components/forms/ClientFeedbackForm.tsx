@@ -10,6 +10,8 @@ import {
 } from "../../../../../services/FormApi";
 import { showError, showSuccess } from "../../../../../utills/toastutills";
 
+import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
+
 // SCHEMA
 const ClientFeedBackFormSchema = Yup.object({
   date: Yup.string().required("Visit Date is Required"),
@@ -48,6 +50,7 @@ const ClientFeedBackFormSchema = Yup.object({
 type ClientFeedbackValues = Yup.InferType<typeof ClientFeedBackFormSchema>;
 const ClientFeedbackForm = () => {
   const [createFeedback, { isLoading }] = useCreateClientFeedbackMutation();
+
   const handleDownload = async (url: string, filename: string) => {
     try {
       const response = await fetch(url);
@@ -68,7 +71,10 @@ const ClientFeedbackForm = () => {
       console.error("Download failed:", err);
     }
   };
-  const handleSubmit = async (values: ClientFeedbackValues) => {
+  const handleSubmit = async (
+    values: ClientFeedbackValues,
+    { resetForm }: { resetForm: () => void }
+  ) => {
     try {
       const payload: ClientFeedbackCredentials = {
         date: new Date(values.date),
@@ -96,6 +102,7 @@ const ClientFeedbackForm = () => {
       const res = await createFeedback(payload).unwrap();
       if (res.success) {
         showSuccess(res.message);
+        resetForm();
       }
     } catch (error: unknown) {
       const err = error as { message?: string };
@@ -477,6 +484,13 @@ const ClientFeedbackForm = () => {
           </Form>
         )}
       </Formik>
+      <FormSubmissionLoader
+        isLoading={isLoading}
+        size="lg"
+        variant="spinner"
+        message="Please Wait"
+        subMessage="Processing Your Request Please Wait"
+      />
     </div>
   );
 };

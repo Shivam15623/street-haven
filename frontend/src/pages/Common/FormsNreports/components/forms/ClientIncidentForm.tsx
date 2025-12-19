@@ -10,6 +10,7 @@ import {
   type ClientIncidentCredentials,
 } from "../../../../../services/FormApi";
 import { showError, showSuccess } from "../../../../../utills/toastutills";
+import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
 
 const ClientIncidentFormSchema = Yup.object({
   date: Yup.date().required("Date is required"),
@@ -72,8 +73,10 @@ const ClientIncidentFormSchema = Yup.object({
 type ClientIncidentValues = Yup.InferType<typeof ClientIncidentFormSchema>;
 const ClientIncidentForm = () => {
   const [createIncident, { isLoading }] = useCreateClientincidentMutation();
-  const handleSubmit = async (values: ClientIncidentValues) => {
- 
+  const handleSubmit = async (
+    values: ClientIncidentValues,
+    { resetForm }: { resetForm: () => void }
+  ) => {
     try {
       const payload: ClientIncidentCredentials = {
         date: values.date,
@@ -103,6 +106,7 @@ const ClientIncidentForm = () => {
       const res = await createIncident(payload).unwrap();
       if (res.success) {
         showSuccess(res.message);
+        resetForm();
       }
     } catch (error: unknown) {
       const err = error as { message?: string };
@@ -674,19 +678,18 @@ const ClientIncidentForm = () => {
             </Card>
             <Card className="shadow-sm border-0">
               <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
-                
                 <button
-                      type="button"
-                      onClick={() =>
-                        handleDownload(
-                          "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764759062/Client_Incident_Report_Form_bactlw.pdf",
-                          "Client Incident Report Form"
-                        )
-                      }
-                      className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-                    >
-                      Download
-                    </button>
+                  type="button"
+                  onClick={() =>
+                    handleDownload(
+                      "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764759062/Client_Incident_Report_Form_bactlw.pdf",
+                      "Client Incident Report Form"
+                    )
+                  }
+                  className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                >
+                  Download
+                </button>
                 <button
                   type="submit"
                   disabled={isLoading}
@@ -699,6 +702,13 @@ const ClientIncidentForm = () => {
           </Form>
         )}
       </Formik>
+      <FormSubmissionLoader
+        isLoading={isLoading}
+        size="lg"
+        variant="spinner"
+        message="Please Wait"
+        subMessage="Processing Your Request Please Wait"
+      />
     </div>
   );
 };

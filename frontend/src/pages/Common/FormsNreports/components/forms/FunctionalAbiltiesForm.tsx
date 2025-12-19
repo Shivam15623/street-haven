@@ -8,6 +8,7 @@ import { useCreateFAfMutation } from "../../../../../services/FormApi";
 import { showSuccess } from "../../../../../utills/toastutills";
 
 import AbilitiesRestrictions from "../AbilitiesRestrictions";
+import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
 export interface FunctionalAbilityFormValues {
   claimNo: string;
 
@@ -1853,6 +1854,13 @@ const FunctionalAbiltiesForm = () => {
           </Form>
         )}
       </Formik>
+      <FormSubmissionLoader
+        isLoading={isLoading}
+        size="lg"
+        variant="spinner"
+        message="Please Wait"
+        subMessage="Processing Your Request Please Wait"
+      />
     </div>
   );
 };

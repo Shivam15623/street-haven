@@ -9,6 +9,7 @@ import {
   type EmployeeIncidentCredentials,
 } from "../../../../../services/FormApi";
 import { showError, showSuccess } from "../../../../../utills/toastutills";
+import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
 
 export const EmployeeIncidentFormSchema = Yup.object({
   reportingFor: Yup.string()
@@ -126,7 +127,7 @@ const EmployeeIncidentForm = () => {
       console.error("Download failed:", err);
     }
   };
-  const handleSubmit = async (values: EmployeeIncidentFormValues) => {
+  const handleSubmit = async (values: EmployeeIncidentFormValues, { resetForm }: { resetForm: () => void }) => {
     try {
       const payload: EmployeeIncidentCredentials = {
         type: values.reportingFor,
@@ -160,6 +161,7 @@ const EmployeeIncidentForm = () => {
       const res = await createIncident(payload).unwrap();
       if (res.success) {
         showSuccess(res.message);
+        resetForm()
       }
     } catch (error: unknown) {
       const err = error as { message?: string };
@@ -804,6 +806,13 @@ const EmployeeIncidentForm = () => {
           </Form>
         )}
       </Formik>
+      <FormSubmissionLoader
+        isLoading={isLoading}
+        size="lg"
+        variant="spinner"
+        message="Please Wait"
+        subMessage="Processing Your Request Please Wait"
+      />
       {/* FORM END */}
     </div>
   );

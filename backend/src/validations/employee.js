@@ -5,7 +5,7 @@ import { ROLES } from "../model/user.js";
 export const viewEmployees = Joi.object({
   page: Joi.number().optional(),
   limit: Joi.number().optional(),
-  search: Joi.string().optional(),
+  search: Joi.string().allow("").optional(),
   sortBy: Joi.string()
     .pattern(/^[A-Za-z]+$/)
     .optional(),
