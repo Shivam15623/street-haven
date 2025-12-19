@@ -42,8 +42,8 @@ const FAQResourcesTab = () => {
         {data?.data.map((cat: FAQCard) => (
           <Col md={6} key={cat._id}>
             {" "}
-            <div className="card">
-              <div className="card-body position-relative d-flex flex-column gap-10 gap-sm-16 gap-md-20 rounded-3 p-16 p-sm-24">
+            <div className="card h-100">
+              <div className="card-body position-relative d-flex flex-column gap-10 gap-sm-16 gap-md-20 rounded-3 p-16 p-sm-24 h-100">
                 {/* Add Questions button */}
                 {
                   <div

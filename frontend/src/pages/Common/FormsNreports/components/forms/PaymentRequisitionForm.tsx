@@ -12,6 +12,7 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import PdfUploader from "../../../../../components/child/PdfUploader";
 import { useCreatePaymentRequistionMutation } from "../../../../../services/FormApi";
 import { showSuccess } from "../../../../../utills/toastutills";
+import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
 
 // --------------------
 // TYPES
@@ -114,7 +115,10 @@ const PaymentRequisitionForm = () => {
       console.error("Download failed:", err);
     }
   };
-  const handleSubmit = async (values: FormValues) => {
+  const handleSubmit = async (
+    values: FormValues,
+    { resetForm }: { resetForm: () => void }
+  ) => {
     try {
       const formData = new FormData();
 
@@ -148,7 +152,10 @@ const PaymentRequisitionForm = () => {
           `paymentDetails[${index}][expenseCode]`,
           item.expenseCode
         );
-        formData.append(`paymentDetails[${index}][netAmount]`, item.netAmount.toString());
+        formData.append(
+          `paymentDetails[${index}][netAmount]`,
+          item.netAmount.toString()
+        );
         formData.append(`paymentDetails[${index}][hst]`, item.hst.toString());
         formData.append(
           `paymentDetails[${index}][totalAmount]`,
@@ -166,6 +173,7 @@ const PaymentRequisitionForm = () => {
 
       if (response.success) {
         showSuccess(response.message);
+        resetForm()
       }
     } catch (err: any) {
       console.error(err);
@@ -599,6 +607,13 @@ const PaymentRequisitionForm = () => {
           </Form>
         )}
       </Formik>
+      <FormSubmissionLoader
+        isLoading={isLoading}
+        size="lg"
+        variant="spinner"
+        message="Please Wait"
+        subMessage="Processing Your Request Please Wait"
+      />
     </div>
   );
 };

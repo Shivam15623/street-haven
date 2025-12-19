@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 interface FormSubmissionLoaderProps {
   isLoading: boolean;
@@ -27,106 +27,123 @@ const FormSubmissionLoader: React.FC<FormSubmissionLoaderProps> = ({
     lg: { spinner: "4rem", dots: "0.8rem", text: "1.2rem" },
   };
 
+  useEffect(() => {
+    if (isLoading) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isLoading]);
   const sizes = sizeMap[size];
 
   return (
     <div
-      className={`position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center ${className}`}
-      style={{
-        background: "rgba(0,0,0,0.45)",
-        backdropFilter: "blur(4px)",
-        zIndex: 9999,
-      }}
+      className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+      style={{ zIndex: 1055 }}
     >
       <div
-        className="card rounded-4 shadow-lg p-24 d-flex flex-column align-items-center justify-content-center gap-10 text-center border"
+        className={`position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center ${className}`}
         style={{
-          minWidth: "260px",
-          width:"50%",
-          animation: "fadeScale 0.25s ease-out",
-          minHeight: "180px",
+          background: "rgba(0,0,0,0.45)",
+          backdropFilter: "blur(4px)",
+          zIndex: 9999,
+          pointerEvents: "all",
         }}
       >
-        {/* Spinner Variant */}
-        {variant === "spinner" && (
-          <div
-            className="spinner-border text-street-primary mb-3"
-            role="status"
-            style={{ width: sizes.spinner, height: sizes.spinner }}
-          ></div>
-        )}
-
-        {/* Dots Variant */}
-        {variant === "dots" && (
-          <div className="d-flex gap-2 mb-3">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="rounded-circle bg-street-primary"
-                style={{
-                  width: sizes.dots,
-                  height: sizes.dots,
-                  animation: "dotPulse 0.8s infinite",
-                  animationDelay: `${i * 0.2}s`,
-                }}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Pulse Variant */}
-        {variant === "pulse" && (
-          <div
-            className="rounded-circle bg-street-primary mb-3"
-            style={{
-              width: sizes.spinner,
-              height: sizes.spinner,
-              opacity: 0.6,
-              animation: "pulseGrow 1.5s infinite",
-            }}
-          />
-        )}
-
-        {/* Progress Variant */}
-        {variant === "progress" && (
-          <div className="w-100 d-flex flex-column gap-12 ">
-            <div className="progress" style={{ height: "8px" }}>
-              <div
-                className="progress-bar progress-bar-striped progress-bar-animated bg-street-primary"
-                role="progressbar"
-                style={{ width: `${progress ?? 0}%` }}
-              ></div>
-            </div>
-            <div
-              className="fw-semibold mt-2 text-street-dark"
-              style={{ fontSize: sizes.text }}
-            >
-              {Math.round(progress || 0)}%
-            </div>
-          </div>
-        )}
-
-        {/* Message */}
         <div
-          className="fw-semibold text-street-base"
-          style={{ fontSize: sizes.text }}
+          className="card rounded-4 shadow-lg p-24 d-flex flex-column align-items-center justify-content-center gap-10 text-center border"
+          style={{
+            minWidth: "260px",
+            width: "50%",
+            maxWidth: "500px",
+            animation: "fadeScale 0.25s ease-out",
+            minHeight: "180px",
+          }}
         >
-          {message}
+          {/* Spinner Variant */}
+          {variant === "spinner" && (
+            <div
+              className="spinner-border text-street-primary mb-3"
+              role="status"
+              style={{ width: sizes.spinner, height: sizes.spinner }}
+            ></div>
+          )}
+
+          {/* Dots Variant */}
+          {variant === "dots" && (
+            <div className="d-flex gap-2 mb-3">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="rounded-circle bg-street-primary"
+                  style={{
+                    width: sizes.dots,
+                    height: sizes.dots,
+                    animation: "dotPulse 0.8s infinite",
+                    animationDelay: `${i * 0.2}s`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Pulse Variant */}
+          {variant === "pulse" && (
+            <div
+              className="rounded-circle bg-street-primary mb-3"
+              style={{
+                width: sizes.spinner,
+                height: sizes.spinner,
+                opacity: 0.6,
+                animation: "pulseGrow 1.5s infinite",
+              }}
+            />
+          )}
+
+          {/* Progress Variant */}
+          {variant === "progress" && (
+            <div className="w-100 d-flex flex-column gap-12 ">
+              <div className="progress" style={{ height: "8px" }}>
+                <div
+                  className="progress-bar progress-bar-striped progress-bar-animated bg-street-primary"
+                  role="progressbar"
+                  style={{ width: `${progress ?? 0}%` }}
+                ></div>
+              </div>
+              <div
+                className="fw-semibold mt-2 text-street-dark"
+                style={{ fontSize: sizes.text }}
+              >
+                {Math.round(progress || 0)}%
+              </div>
+            </div>
+          )}
+
+          {/* Message */}
+          <div
+            className="fw-semibold text-street-base"
+            style={{ fontSize: sizes.text }}
+          >
+            {message}
+          </div>
+
+          {/* Sub Message */}
+          {subMessage && (
+            <div
+              className="text-street-base mt-1"
+              style={{ fontSize: "0.85rem" }}
+            >
+              {subMessage}
+            </div>
+          )}
         </div>
 
-        {/* Sub Message */}
-        {subMessage && (
-          <div
-            className="text-street-base mt-1"
-            style={{ fontSize: "0.85rem" }}
-          >
-            {subMessage}
-          </div>
-        )}
-      </div>
-
-      {/* Animations */}
-      <style>{`
+        {/* Animations */}
+        <style>{`
         @keyframes fadeScale {
           from { opacity: 0; transform: scale(0.9); }
           to { opacity: 1; transform: scale(1); }
@@ -142,6 +159,7 @@ const FormSubmissionLoader: React.FC<FormSubmissionLoaderProps> = ({
           50% { transform: scale(1.1); opacity: 1; }
         }
       `}</style>
+      </div>
     </div>
   );
 };

@@ -23,8 +23,8 @@ const FileTab = ({ files, tab, handleOpenFile, eventId }: Props) => {
               height={32}
             />
           </div>
-          <p className="fs-5 fw-semibold text-dark">No files found</p>
-          <p className="mt-1 text-muted small">
+          <p className="fs-5 fw-semibold text-street-dark">No files found</p>
+          <p className="mt-1 text-street-base small">
             There are no {tab} in this event
           </p>
         </div>

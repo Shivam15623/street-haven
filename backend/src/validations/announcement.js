@@ -13,5 +13,5 @@ export const viewAnnouncementSchema = Joi.object({
   id: Joi.string().hex().length(24).optional(),
   page: Joi.number().optional(),
   limit: Joi.number().optional(),
-  keyword: Joi.string().optional(),
+  keyword: Joi.string().allow("").optional(),
 });
