@@ -8,11 +8,39 @@ import {
   edithrUpdate,
   viewhrUpdate,
 } from "../controllers/hrUpdates.controller.js";
+import { authorizePermissions } from "../middleware/AuthRole.js";
+import { PERMISSIONS } from "../auth/permissions.js";
+import { validateRequest } from "../middleware/validate.js";
+import { idParamSchema } from "../validations/common.js";
 
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
-router.route("/create").post(upload.single("attachment"), createhrUpdate);
-router.route("/edit/:id").patch(upload.single("attachment"), edithrUpdate);
-router.route("/delete/:id").delete(deletehrUpdate);
-router.route("/view").get(viewhrUpdate);
+router
+  .route("/create")
+  .post(
+    upload.single("attachment"),
+    authorizePermissions({ action: PERMISSIONS.CREATE_HR_UPDATE }),
+    createhrUpdate
+  );
+router
+  .route("/edit/:id")
+  .patch(
+    upload.single("attachment"),
+    validateRequest(idParamSchema, "params"),
+    authorizePermissions({ action: PERMISSIONS.EDIT_HR_UPDATE }),
+    edithrUpdate
+  );
+router
+  .route("/delete/:id")
+  .delete(
+    validateRequest(idParamSchema, "params"),
+    authorizePermissions({ action: PERMISSIONS.DELETE_HR_UPDATE }),
+    deletehrUpdate
+  );
+router
+  .route("/view")
+  .get(
+    authorizePermissions({ action: PERMISSIONS.VIEW_HR_UPDATES }),
+    viewhrUpdate
+  );
 export default router;

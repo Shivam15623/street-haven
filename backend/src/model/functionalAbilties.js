@@ -140,6 +140,16 @@ const FunctionalAbilitySchema = new mongoose.Schema(
 
     isDiscussRTWtoPatient: Boolean,
     nextAppointmentDate: Date,
+    providedTo: {
+      worker: {
+        type: Boolean,
+        default: false,
+      },
+      employer: {
+        type: Boolean,
+        default: false,
+      },
+    },
   },
   { timestamps: true }
 );

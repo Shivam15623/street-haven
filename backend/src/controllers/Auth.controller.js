@@ -375,7 +375,7 @@ export const verifyTOTP = asyncHandler(async (req, res) => {
     "roleName permissions _id"
   );
 
-  console.log(user.totpSecret);
+
   const isValid = speakeasy.totp.verify({
     secret: user.totpSecret,
     encoding: "base32",
@@ -440,7 +440,7 @@ export const verifyTOTPSetup = asyncHandler(async (req, res) => {
   }
 
   const user = await User.findById(decoded.userId);
-  console.log(user.totpSecret);
+
   const isValid = speakeasy.totp.verify({
     secret: user.totpSecret,
     encoding: "base32",

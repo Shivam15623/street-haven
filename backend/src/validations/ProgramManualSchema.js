@@ -62,3 +62,14 @@ export const editProgramManualSchema = Joi.object({
       "any.only": "Invalid type",
     }),
 });
+
+export const fetchProgramMannuals = Joi.object({
+  page: Joi.number().optional(),
+  limit: Joi.number().optional(),
+  search: Joi.string().optional(),
+  type: Joi.string().optional(),
+  slug: Joi.string().optional(),
+  order: Joi.string()
+    .valid("desc", "asc") // allowed roles
+    .optional(),
+});
