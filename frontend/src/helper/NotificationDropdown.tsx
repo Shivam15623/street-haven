@@ -3,6 +3,7 @@ import { Dropdown, Spinner } from "react-bootstrap";
 import { Icon } from "@iconify/react";
 import {
   useFetchNotifyQuery,
+  useMarkNotificationsAsReadMutation,
   type notificationData,
 } from "../services/notificationApi";
 import { useSocket } from "../hooks/useSocket";
@@ -10,14 +11,21 @@ import { useSelector } from "react-redux";
 import { selectAuth } from "../redux/AuthSlice";
 import NotificationItem from "./NotificationItem";
 import NotificationView from "./NotificationView";
-
+import { useNotificationReadBuffer } from "../hooks/useNotificationReader";
 
 const NotificationDropdown = () => {
   const { socket } = useSocket();
   const [notifications, setNotifications] = useState<notificationData[]>([]);
   const { user } = useSelector(selectAuth);
   const [unreadCount, setUnreadCount] = useState<number>(0);
-  const { data, isLoading } = useFetchNotifyQuery({ page: 1, limit: 10, readStatus: "all", type: undefined });
+  const { data, isLoading } = useFetchNotifyQuery({
+    page: 1,
+    limit: 10,
+    readStatus: "all",
+    type: undefined,
+  });
+  const { add, flush } = useNotificationReadBuffer();
+  const [markRead] = useMarkNotificationsAsReadMutation();
 
   useEffect(() => {
     setNotifications(data?.data.notifications ?? []);
@@ -28,8 +36,7 @@ const NotificationDropdown = () => {
 
     socket.emit("joinUserRoom", { userId: user?._id });
 
-    socket.on("newNotification", (notification: notificationData) => { 
-
+    socket.on("newNotification", (notification: notificationData) => {
       setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((prev) => prev + 1);
     });
@@ -45,7 +52,30 @@ const NotificationDropdown = () => {
   }, [notifications]);
 
   return (
-    <Dropdown className="notification-dropdown">
+    <Dropdown
+      className="notification-dropdown"
+      onToggle={async (isOpen) => {
+        if (!isOpen) {
+          const ids = flush();
+          if (ids.length === 0) return;
+
+          try {
+            await markRead(ids).unwrap();
+
+            // optimistic UI update
+            setNotifications((prev) =>
+              prev.map((n) =>
+                ids.includes(n._id)
+                  ? { ...n, readAt: new Date().toISOString() }
+                  : n
+              )
+            );
+          } catch (err) {
+            console.error("Failed to mark notifications as read", err);
+          }
+        }
+      }}
+    >
       <Dropdown.Toggle id="notification-dropdown-toggle">
         <Icon icon="basil:notification-outline" className="alarm notifyicon" />
         {unreadCount > 0 && <span className="badge-unread"></span>}
@@ -69,12 +99,12 @@ const NotificationDropdown = () => {
             </div>
           ) : (
             notifications.map((item) => (
-              <NotificationItem key={item._id} item={item} />
+              <NotificationItem key={item._id} item={item} onSeen={add} />
             ))
           )}
         </div>
 
-        <NotificationView/>
+        <NotificationView />
       </Dropdown.Menu>
     </Dropdown>
   );

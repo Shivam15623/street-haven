@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 
 interface FormSubmissionLoaderProps {
   isLoading: boolean;
@@ -27,17 +27,6 @@ const FormSubmissionLoader: React.FC<FormSubmissionLoaderProps> = ({
     lg: { spinner: "4rem", dots: "0.8rem", text: "1.2rem" },
   };
 
-  useEffect(() => {
-    if (isLoading) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isLoading]);
   const sizes = sizeMap[size];
 
   return (

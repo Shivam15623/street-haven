@@ -105,10 +105,13 @@ const StaffFeedbackForm: React.FC = () => {
     try {
       // combine date and time if needed
 
-      const fullDateTime = values.time
-        ? `${values.date}T${values.time}`
-        : values.date;
-      const payload = { ...values, date: fullDateTime };
+      const tempDate = new Date(values.date).toISOString().split("T")[0];
+      const fullDateTime = new Date(`${tempDate}T${values.time}`).toISOString();
+
+      const payload = {
+        ...values,
+        date: fullDateTime, // full ISO timestamp
+      };
 
       const res = await createStaff(payload).unwrap();
       if (res.success) {
