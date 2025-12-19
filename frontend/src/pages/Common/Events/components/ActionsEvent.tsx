@@ -14,6 +14,7 @@ import QuillEditor from "../../../../components/child/QuillEditor";
 import type { EventUpcomingData } from "../../../../interfaces/EventInterfaces";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
+import dayjs from "dayjs";
 
 const EventFormSchema = Yup.object().shape({
   title: Yup.string().required("Title is required"),
@@ -36,18 +37,25 @@ const EventFormSchema = Yup.object().shape({
       today.setHours(0, 0, 0, 0);
       return selected >= today;
     }),
+
   startTime: Yup.string().required("Start time is required"),
+
   endTime: Yup.string()
     .required("End time is required")
     .test(
       "end-after-start",
-      "End time must be later than start time and within the same day",
+      "End time must be later than start time",
       function (val) {
-        const { startTime, eventDate } = this.parent;
-        if (!val || !startTime || !eventDate) return true;
-        const start = new Date(`${eventDate}T${startTime}`);
-        const end = new Date(`${eventDate}T${val}`);
-        return end > start && end.getDate() === start.getDate();
+        const { startTime } = this.parent;
+        if (!val || !startTime) return true;
+
+        const [sh, sm] = startTime.split(":").map(Number);
+        const [eh, em] = val.split(":").map(Number);
+
+        const startMinutes = sh * 60 + sm;
+        const endMinutes = eh * 60 + em;
+
+        return endMinutes > startMinutes;
       }
     ),
 });
@@ -65,12 +73,14 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
     values: EventFormValues,
     { resetForm }: { resetForm: () => void }
   ) => {
+    const tempDate = new Date(values.eventDate).toISOString().split("T")[0];
     const payload = {
       ...values,
       eventDate: new Date(values.eventDate),
-      startTime: new Date(`${values.eventDate}T${values.startTime}`),
-      endTime: new Date(`${values.eventDate}T${values.endTime}`),
+      startTime: new Date(`${tempDate}T${values.startTime}`),
+      endTime: new Date(`${tempDate}T${values.endTime}`),
     };
+    console.log("payload", payload);
     const res = await createEvent(payload).unwrap();
     if (res.success) {
       showSuccess(res.message);
@@ -81,11 +91,12 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
 
   const handleEdit = async (values: EventFormValues) => {
     if (!event?._id) return;
+    const tempDate = new Date(values.eventDate).toISOString().split("T")[0];
     const payload = {
       ...values,
       eventDate: new Date(values.eventDate),
-      startTime: new Date(`${values.eventDate}T${values.startTime}`),
-      endTime: new Date(`${values.eventDate}T${values.endTime}`),
+      startTime: new Date(`${tempDate}T${values.startTime}`),
+      endTime: new Date(`${tempDate}T${values.endTime}`),
     };
     const res = await editEvent({ cred: payload, id: event._id }).unwrap();
     if (res.success) {
@@ -104,12 +115,8 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
     eventDate: event?.eventDate
       ? new Date(event.eventDate).toISOString().split("T")[0]
       : "",
-    startTime: event?.startTime
-      ? new Date(event.startTime).toISOString().slice(11, 16)
-      : "",
-    endTime: event?.endTime
-      ? new Date(event.endTime).toISOString().slice(11, 16)
-      : "",
+    startTime: event?.startTime ? dayjs(event.startTime).format("HH:mm") : "",
+    endTime: event?.endTime ? dayjs(event.endTime).format("HH:mm") : "",
   };
 
   return (
@@ -184,161 +191,167 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
             setFieldValue,
             handleBlur,
             setFieldTouched,
-          }) => (
-            <Form
-              id={isEdit ? "event-edit-form" : "event-create-form"}
-              onSubmit={handleSubmit}
-              className="d-flex flex-column gap-16 gap-sm-20"
-            >
-              {/* Title */}
-              <Form.Group>
-                <Form.Label>Title</Form.Label>
-                <Form.Control
-                  name="title"
-                  value={values.title}
-                  onChange={handleChange}
-                  isInvalid={!!errors.title && touched.title}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errors.title}
-                </Form.Control.Feedback>
-              </Form.Group>
+          }) => {
+            console.log("Formik Errors:", errors, values.endTime);
+            console.log("Formik Touched:", touched);
+            return (
+              <Form
+                id={isEdit ? "event-edit-form" : "event-create-form"}
+                onSubmit={handleSubmit}
+                className="d-flex flex-column gap-16 gap-sm-20"
+              >
+                {/* Title */}
+                <Form.Group>
+                  <Form.Label>Title</Form.Label>
+                  <Form.Control
+                    name="title"
+                    value={values.title}
+                    onChange={handleChange}
+                    isInvalid={!!errors.title && touched.title}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.title}
+                  </Form.Control.Feedback>
+                </Form.Group>
 
-              {/* Description */}
-              <Form.Group>
-                <Form.Label>Description</Form.Label>
-                <QuillEditor
-                  content={values.description}
-                  onChange={(val) => setFieldValue("description", val)}
-                  isInvalid={touched.description && !!errors.description}
-                  errorMessage={errors.description as string}
-                />
-              </Form.Group>
+                {/* Description */}
+                <Form.Group>
+                  <Form.Label>Description</Form.Label>
+                  <QuillEditor
+                    content={values.description}
+                    onChange={(val) => setFieldValue("description", val)}
+                    isInvalid={touched.description && !!errors.description}
+                    errorMessage={errors.description as string}
+                  />
+                </Form.Group>
 
-              {/* Location */}
-              <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
-                <Col md={6}>
-                  <Form.Group>
-                    <Form.Label>Location Name</Form.Label>
-                    <Form.Control
-                      name="locationName"
-                      value={values.locationName}
-                      onChange={handleChange}
-                      isInvalid={!!errors.locationName && touched.locationName}
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.locationName}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group>
-                    <Form.Label>Location URL</Form.Label>
-                    <Form.Control
-                      name="locationUrl"
-                      value={values.locationUrl}
-                      onChange={handleChange}
-                      placeholder="https://maps.app.goo.gl/..."
-                      isInvalid={!!errors.locationUrl && touched.locationUrl}
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.locationUrl}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-              </Row>
+                {/* Location */}
+                <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label>Location Name</Form.Label>
+                      <Form.Control
+                        name="locationName"
+                        value={values.locationName}
+                        onChange={handleChange}
+                        isInvalid={
+                          !!errors.locationName && touched.locationName
+                        }
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.locationName}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label>Location URL</Form.Label>
+                      <Form.Control
+                        name="locationUrl"
+                        value={values.locationUrl}
+                        onChange={handleChange}
+                        placeholder="https://maps.app.goo.gl/..."
+                        isInvalid={!!errors.locationUrl && touched.locationUrl}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.locationUrl}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                </Row>
 
-              {/* Facilitator */}
-              <Form.Group>
-                <Form.Label>Facilitator</Form.Label>
-                <Form.Control
-                  name="facilitator"
-                  value={values.facilitator}
-                  onChange={handleChange}
-                  isInvalid={!!errors.facilitator && touched.facilitator}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errors.facilitator}
-                </Form.Control.Feedback>
-              </Form.Group>
+                {/* Facilitator */}
+                <Form.Group>
+                  <Form.Label>Facilitator</Form.Label>
+                  <Form.Control
+                    name="facilitator"
+                    value={values.facilitator}
+                    onChange={handleChange}
+                    isInvalid={!!errors.facilitator && touched.facilitator}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.facilitator}
+                  </Form.Control.Feedback>
+                </Form.Group>
 
-              {/* Capacity */}
-              <Form.Group>
-                <Form.Label>Capacity</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="capacity"
-                  value={values.capacity}
-                  onChange={handleChange}
-                  isInvalid={!!errors.capacity && touched.capacity}
-                />
-                <Form.Control.Feedback type="invalid">
-                  {errors.capacity}
-                </Form.Control.Feedback>
-              </Form.Group>
+                {/* Capacity */}
+                <Form.Group>
+                  <Form.Label>Capacity</Form.Label>
+                  <Form.Control
+                    type="number"
+                    name="capacity"
+                    value={values.capacity}
+                    onChange={handleChange}
+                    isInvalid={!!errors.capacity && touched.capacity}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {errors.capacity}
+                  </Form.Control.Feedback>
+                </Form.Group>
 
-              {/* Date and Time */}
-              <Form.Group>
-                <Form.Label>Event Date</Form.Label>
-                <CustomDatePicker
-                  name="eventDate"
-                  value={values.eventDate ? new Date(values.eventDate) : null}
-                  onChange={(date) => {
-                    setFieldValue("eventDate", date, true); // ← Add true to validate immediately
-                    setFieldTouched("eventDate", true, false); // ← false prevents double validation
-                  }}
-                  onBlur={handleBlur}
-                  isInvalid={!!errors.eventDate && touched.eventDate}
-                />
-                {errors.eventDate && touched.eventDate && (
-                  <div className="invalid-feedback d-block">
-                    {errors.eventDate}
-                  </div>
-                )}
-              </Form.Group>
+                {/* Date and Time */}
+                <Form.Group>
+                  <Form.Label>Event Date</Form.Label>
+                  <CustomDatePicker
+                    name="eventDate"
+                    value={values.eventDate ? new Date(values.eventDate) : null}
+                    onChange={(date) => {
+                      setFieldValue("eventDate", date, true); // ← Add true to validate immediately
+                      setFieldTouched("eventDate", true, false); // ← false prevents double validation
+                    }}
+                    onBlur={handleBlur}
+                    isInvalid={!!errors.eventDate && touched.eventDate}
+                  />
+                  {errors.eventDate && touched.eventDate && (
+                    <div className="invalid-feedback d-block">
+                      {errors.eventDate}
+                    </div>
+                  )}
+                </Form.Group>
 
-              <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
-                <Col md={6}>
-                  <Form.Group>
-                    <Form.Label>Start Time</Form.Label>
-                    <TimePicker
-                      className={
-                        touched.startTime && errors.startTime
-                          ? "is-invalid"
-                          : ""
-                      }
-                      value={values.startTime}
-                      onChange={(val) => setFieldValue("startTime", val)}
-                      onBlur={() => setFieldTouched("startTime", true)}
-                    />
-                    {errors.startTime && touched.startTime && (
-                      <div className="invalid-feedback d-block">
-                        {errors.startTime}
-                      </div>
-                    )}
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group>
-                    <Form.Label>End Time</Form.Label>
-                    <TimePicker
-                      className={
-                        touched.endTime && errors.endTime ? "is-invalid" : ""
-                      }
-                      value={values.endTime}
-                      onChange={(val) => setFieldValue("endTime", val)}
-                      onBlur={() => setFieldTouched("endTime", true)}
-                    />
-                    {errors.endTime && touched.endTime && (
-                      <div className="invalid-feedback d-block">
-                        {errors.endTime}
-                      </div>
-                    )}
-                  </Form.Group>
-                </Col>
-              </Row>
-            </Form>
-          )}
+                <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label>Start Time</Form.Label>
+                      <TimePicker
+                        className={
+                          touched.startTime && errors.startTime
+                            ? "is-invalid"
+                            : ""
+                        }
+                        value={values.startTime}
+                        onChange={(val) => setFieldValue("startTime", val)}
+                        onBlur={() => setFieldTouched("startTime", true)}
+                      />
+                      {errors.startTime && touched.startTime && (
+                        <div className="invalid-feedback d-block">
+                          {errors.startTime}
+                        </div>
+                      )}
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label>End Time</Form.Label>
+                      <TimePicker
+                        className={
+                          touched.endTime && errors.endTime ? "is-invalid" : ""
+                        }
+                        value={values.endTime}
+                        onChange={(val) => setFieldValue("endTime", val)}
+                        onBlur={() => setFieldTouched("endTime", true)}
+                      />
+                      {errors.endTime && touched.endTime && (
+                        <div className="invalid-feedback d-block">
+                          {errors.endTime}
+                        </div>
+                      )}
+                    </Form.Group>
+                  </Col>
+                </Row>
+              </Form>
+            );
+          }}
         </Formik>
       </ModalWrapper>
     </>

@@ -101,9 +101,8 @@ const IncidentreportForm: React.FC = () => {
     { resetForm }: { resetForm: () => void }
   ) => {
     try {
-      const fullDateTime = new Date(
-        `${values.date}T${values.time}`
-      ).toISOString();
+      const tempDate = new Date(values.date).toISOString().split("T")[0];
+      const fullDateTime = new Date(`${tempDate}T${values.time}`).toISOString();
 
       const payload = {
         ...values,
@@ -182,10 +181,7 @@ const IncidentreportForm: React.FC = () => {
                           <CustomDatePicker
                             value={values.date ? new Date(values.date) : null}
                             onChange={(date) => {
-                              const newDate = date
-                                ? date.toISOString().split("T")[0]
-                                : "";
-                              setFieldValue("date", newDate, true); // ← Add true to validate immediately
+                              setFieldValue("date", date, true); // ← Add true to validate immediately
                               setFieldTouched("date", true, false); // ← false prevents double validation
                             }}
                             onBlur={handleBlur}
