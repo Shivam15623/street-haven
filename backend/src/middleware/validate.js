@@ -1,17 +1,28 @@
 import { ApiError } from "../utills/ApiError.js";
 import fs from "fs";
+import { addCommentSchema } from "../validations/ticket.js";
 
 export const validateRequest = (schema, property = "body") => {
   return async (req, res, next) => {
     try {
       // Validate using Joi
+
       const validatedData = await schema.validateAsync(req[property], {
-        abortEarly: false, // return all errors
-        stripUnknown: true, // remove unknown fields
+        abortEarly: false,
+        allowUnknown: true,
+        stripUnknown: true,
+        convert: true, // ✅ THIS IS THE KEY
       });
 
       // Overwrite request property with validated data
-      req[property] = validatedData;
+
+      // ✅ Safe assignment
+      if (property === "query") {
+        Object.assign(req.query, validatedData);
+      } else {
+        req[property] = validatedData;
+      }
+
       next();
     } catch (err) {
       // Helper to delete uploaded file(s)
@@ -48,4 +59,18 @@ export const validateRequest = (schema, property = "body") => {
       next(new ApiError(400, "Validation failed", messages));
     }
   };
+};
+export const validateAddComment = (req, res, next) => {
+  console.log(req.body.message, req.files?.length, req.files);
+
+  const { error } = addCommentSchema.validate({
+    message: req.body.message,
+    filesCount: req.files?.length || 0,
+  });
+
+  if (error) {
+    return next(new ApiError(400, error.message));
+  }
+
+  next();
 };

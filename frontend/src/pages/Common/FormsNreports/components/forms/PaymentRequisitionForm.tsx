@@ -148,9 +148,11 @@ const PaymentRequisitionForm = () => {
           `paymentDetails[${index}][expenseCode]`,
           item.expenseCode
         );
+        formData.append(`paymentDetails[${index}][netAmount]`, item.netAmount.toString());
+        formData.append(`paymentDetails[${index}][hst]`, item.hst.toString());
         formData.append(
-          `paymentDetails[${index}][amount]`,
-          item.netAmount.toString()
+          `paymentDetails[${index}][totalAmount]`,
+          item.totalAmount.toString()
         );
       });
 
@@ -546,8 +548,8 @@ const PaymentRequisitionForm = () => {
                             : null
                         }
                         onChange={(date) => {
-                          setFieldValue("requestedDate", date, true);
-                          setFieldTouched("requestedDate", true, false);
+                          setFieldValue("approvedDate", date, true);
+                          setFieldTouched("approvedDate", true, false);
                         }}
                         isInvalid={Boolean(
                           errors.approvedDate && touched.approvedDate

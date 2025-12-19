@@ -175,6 +175,10 @@ export const functionalAbilitiesSchema = Joi.object({
       .required()
       .messages({ "any.required": "Please fill next appointment date" }),
   }),
+  providedTo: Joi.object({
+    worker: Joi.boolean(),
+    employee: Joi.boolean(),
+  }),
 });
 
 //staff feedback

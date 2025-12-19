@@ -16,6 +16,8 @@ import {
 import { authorizePermissions } from "../middleware/AuthRole.js";
 import { PERMISSIONS } from "../auth/permissions.js";
 import { upload } from "../middleware/multer.js";
+import { idParamSchema } from "../validations/common.js";
+import { validateRequest } from "../middleware/validate.js";
 
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
@@ -29,6 +31,7 @@ router.post(
 );
 router.patch(
   "/edit/:id",
+  validateRequest(idParamSchema, "params"),
   authorizePermissions({ action: PERMISSIONS.EDIT_EVENT }),
   editEvent
 );
@@ -38,6 +41,7 @@ router.route("/signout/:id").patch(EventSignOut);
 router
   .route("/registrations/:id")
   .get(
+    validateRequest(idParamSchema, "params"),
     authorizePermissions({ action: PERMISSIONS.VIEW_REGISTERATIONS }),
     fetchRegisterations
   );

@@ -35,7 +35,7 @@ const commentSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  message: { type: String, required: true },
+  message: { type: String },
   attachments: [attachmentSchema], // ✅ Embedded attachment schema
   createdAt: { type: Date, default: Date.now },
 });

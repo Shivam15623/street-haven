@@ -31,7 +31,7 @@ export const sendEmail = async ({ to, subject, html }) => {
 
     return response;
   } catch (error) {
-    console.error(`Error sending email to ${to}:`, error);
+
     throw new Error("Failed to send email via Brevo API");
   }
 };

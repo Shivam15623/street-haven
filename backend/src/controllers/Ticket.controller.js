@@ -127,7 +127,7 @@ export const editTicket = asyncHandler(async (req, res) => {
     // Admin can change assigned person
     if (assignedId && assignedId !== ticket.assignedTo?.toString()) {
       updatedFields.assignedTo = assignedId;
-    }else if(!assignedId&& ticket.assignedTo===null){
+    } else if (!assignedId && ticket.assignedTo === null) {
       updatedFields.assignedTo = null;
     }
     // Admin can change status freely
@@ -379,13 +379,14 @@ export const AddComment = asyncHandler(async (req, res) => {
 
     attachments = await Promise.all(uploadPromises);
   }
-
-  const comment = await Comment.create({
-    ticketId,
-    userId,
-    message,
-    attachments,
-  });
+  const payload = { ticketId, userId };
+  if (message) {
+    payload.message = message;
+  }
+  if (attachments.length !== 0) {
+    payload.attachments = attachments;
+  }
+  const comment = await Comment.create(payload);
 
   const populatedComment = await Comment.findById(comment._id).populate(
     "userId",
