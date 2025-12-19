@@ -29,7 +29,7 @@ const StreetTab: React.FC<StreetTabProps> = ({ tabs, defaultActiveKey }) => {
               className={`nav-link h-100 text-center px-0 pb-18 text-xs xs:text-sm ${
                 activeKey === tab.key ? "active" : ""
               }`}
-              style={{ minWidth: "110px"}}
+              style={{ minWidth: "110px", lineHeight: "normal" }}
               // style={{ maxWidth: "165px" }}
               id={`pills-${tab.key}-tab`}
               data-bs-toggle="pill"

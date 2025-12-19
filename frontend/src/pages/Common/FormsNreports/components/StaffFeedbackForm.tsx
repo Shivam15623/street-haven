@@ -1,5 +1,5 @@
 import React from "react";
-import { Col, Form, Row, Spinner } from "react-bootstrap";
+import { Col, Form, Row } from "react-bootstrap";
 import { FieldArray, Formik } from "formik";
 import * as Yup from "yup";
 import { useCreateStaffFeedbackMutation } from "../../../../services/StaffFeedbackApi";
@@ -8,6 +8,7 @@ import Badge from "../../../../components/child/Badge";
 import TimePicker from "../../../../components/child/TimePicker";
 import CustomDatePicker from "../../../../components/child/DatePicker";
 import QuillEditor from "../../../../components/child/QuillEditor";
+import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 
 function parseLocalDate(val: string) {
   const [year, month, day] = val.split("-").map(Number);
@@ -428,16 +429,13 @@ const StaffFeedbackForm: React.FC = () => {
                   </div>
                 </Form>
 
-                {isLoading && (
-                  <div
-                    className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-                    style={{ zIndex: 10 }}
-                  >
-                    <Spinner animation="border" role="status">
-                      <span className="visually-hidden">Loading...</span>
-                    </Spinner>
-                  </div>
-                )}
+                <FormSubmissionLoader
+                  isLoading={isLoading}
+                  size="lg"
+                  variant="spinner"
+                  message="Please Wait"
+                  subMessage="Processing Your Request Please Wait"
+                />
               </div>
             );
           }}

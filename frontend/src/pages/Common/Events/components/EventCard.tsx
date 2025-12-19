@@ -96,12 +96,14 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
             <Icon icon="lucide:upload" className="text-xl" />
           </button>
         )}
-        <button
-          className="btn btn-street-outline-primary d-flex flex-column align-items-center justify-content-center radius-12"
-          onClick={() => setOpen(true)}
-        >
-          <Icon icon="lucide:paperclip" className="text-xl" />
-        </button>
+        {event.documents.length !== 0 && (
+          <button
+            className="btn btn-street-outline-primary d-flex flex-column align-items-center justify-content-center radius-12"
+            onClick={() => setOpen(true)}
+          >
+            <Icon icon="lucide:paperclip" className="text-xl" />
+          </button>
+        )}
         {hasPermission({
           action: "view_registerations",
         }) && (

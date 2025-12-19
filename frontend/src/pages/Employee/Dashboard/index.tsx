@@ -33,18 +33,30 @@ const EmployeeDashboard = () => {
     <div className="d-flex flex-column gap-4 ">
       <div className="d-flex flex-row justify-content-between">
         <div className="d-flex flex-column gap-1 gap-sm-2">
-          <div className="fw-semibold text-lg xs:text-xl sm:text-xxl text-street-dark">
+          <div
+            className="fw-semibold text-lg xs:text-xl sm:text-xxl text-street-dark"
+            style={{ lineHeight: "normal" }}
+          >
             Welcome Back,{user?.firstName}!
           </div>
-          <div className="text-street-base text-xs xs:text-sm sm:text-md fw-normal">
+          <div
+            className="text-street-base text-xs xs:text-sm sm:text-md fw-normal"
+            style={{ lineHeight: "normal" }}
+          >
             Here's what's happening at Street Haven today.
           </div>
         </div>
         <div className="d-flex flex-column justify-content-sm-end justify-content-end gap-1 gap-sm-2 ">
-          <div className="text-street-base text-xs xs:text-sm sm:text-md fw-normal text-end">
+          <div
+            className="text-street-base text-xs xs:text-sm sm:text-md fw-normal text-end"
+            style={{ lineHeight: "normal" }}
+          >
             Today
           </div>
-          <div className="fw-semibold text-sm xs:text-md sm:text-lg text-end text-street-dark">
+          <div
+            className="fw-semibold text-sm xs:text-md sm:text-lg text-end text-street-dark"
+            style={{ lineHeight: "normal" }}
+          >
             {today}
           </div>
         </div>
