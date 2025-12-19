@@ -311,7 +311,7 @@ const EmployeeIncidentReportDetails = ({
 
                         <span>
                           {dayjs(detail.doctorVisitDate).format("MMM DD YYYY")}{" "}
-                          at
+                          at{" "}
                           {detail.doctorVisitTime}
                         </span>
                       </div>

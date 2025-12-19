@@ -111,7 +111,7 @@ export const editCollectiveAgreement = asyncHandler(async (req, res) => {
   // If user uploads a new file
   if (req.file?.path) {
     const attachmentPath = req.file.path;
-    console.log("Attachment Path:", attachmentPath);
+
     // Delete old file from Cloudinary
 
     if (agreement.attachment?.fileUrl) {

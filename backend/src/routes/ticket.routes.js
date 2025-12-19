@@ -8,23 +8,36 @@ import {
   FetchTickets,
 } from "../controllers/Ticket.controller.js";
 import { upload } from "../middleware/multer.js";
+import { validateAddComment, validateRequest } from "../middleware/validate.js";
+import {
+  createTicketSchema,
+  editTicketSchema,
+  fetchTicketsSchema,
+} from "../validations/ticket.js";
+import { idParamSchema } from "../validations/common.js";
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
 
-router.get("/view", FetchTickets);
-router.post("/create", upload.single("photo"), createTicket);
-router.route("/edit/:id").patch(upload.single("photo"),editTicket);
+router.get("/view", validateRequest(fetchTicketsSchema, "query"), FetchTickets);
+router.post(
+  "/create",
+  upload.single("photo"),
+  validateRequest(createTicketSchema, "body"),
+  createTicket
+);
+router
+  .route("/edit/:id")
+  .patch(
+    validateRequest(idParamSchema, "params"),
+    upload.single("photo"),
+    validateRequest(editTicketSchema, "body"),
+    editTicket
+  );
 
 // ticket comments
 router.route("/:ticketId/comments").get(FetchComments);
 router
   .route("/:ticketId/comments")
-  .post(upload.array("attachments", 7), AddComment);
-// router.route("/:ticketId/comments/:commentId").patch()
-
-// GET    /api/tickets/:ticketId/comments      → get all comments for a ticket
-// POST   /api/tickets/:ticketId/comments      → add a new comment
-// PATCH  /api/tickets/:ticketId/comments/:commentId → edit a comment (optional)
-// DELETE /api/tickets/:ticketId/comments/:commentId → delete a comment (optional)
+  .post(upload.array("attachments", 7), validateAddComment, AddComment);
 
 export default router;

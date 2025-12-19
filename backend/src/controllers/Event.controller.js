@@ -526,7 +526,7 @@ export const uploadEventDocuments = asyncHandler(async (req, res) => {
       }
 
       const ext = path.extname(file.originalname).toLowerCase();
-      console.log("type",ext)
+   
 
       return {
         fileName: uploaded.original_filename,

@@ -29,6 +29,11 @@ const FormsNDReports = () => {
           content: <ClientFeedbackForm />,
         },
         {
+          label: "Client Incident Report Form",
+          key: "client_incident_report",
+          content: <ClientIncidentForm />,
+        },
+        {
           label: "Employee Incident Report Form",
           key: "employee_incident_report",
           content: <EmployeeIncidentForm />,
@@ -38,11 +43,7 @@ const FormsNDReports = () => {
           key: "payment_requistion",
           content: <PaymentRequisitionForm />,
         },
-        {
-          label: "Client Incident Report Form",
-          key: "client_incident_report",
-          content: <ClientIncidentForm />,
-        },
+
         {
           label: "Functional Abilities Form",
           key: "functional_abilties_form",
