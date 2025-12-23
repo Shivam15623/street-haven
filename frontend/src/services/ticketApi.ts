@@ -5,6 +5,7 @@ import type {
   TicketFetchResponseData,
 } from "../interfaces/Ticket";
 import { api } from "../redux/ApiSlice";
+import { uploadWithProgress } from "../utills/uploadWithProgress";
 
 export interface commentData {
   _id: string;
@@ -65,13 +66,16 @@ const ticketApi = api.injectEndpoints({
     }),
     addComment: builder.mutation<
       ApiGeneralResponse,
-      { ticketId: string; formdata: FormData }
+      { ticketId: string; formdata: FormData; onProgress?: (p: number) => void }
     >({
-      query: ({ ticketId, formdata }) => ({
-        url: `/ticket/${ticketId}/comments`,
-        method: "POST",
-        body: formdata,
-      }),
+      queryFn: ({ ticketId, formdata, onProgress }) =>
+        uploadWithProgress(
+          `/ticket/${ticketId}/comments`,
+          "POST"
+        )({
+          data: formdata,
+          onProgress,
+        }),
     }),
     viewComments: builder.query<
       commentResponse,
