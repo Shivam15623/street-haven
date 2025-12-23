@@ -219,6 +219,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
       slug: findUser.slug,
       profilePic: findUser.profilePic,
       createdAt: findUser.createdAt,
+      hireDate: findUser.hireDate,
     };
 
     const isProduction = process.env.NODE_ENV === "production";
@@ -286,6 +287,7 @@ export const silentAuth = asyncHandler(async (req, res) => {
     slug: finduser.slug,
     profilePic: finduser.profilePic,
     createdAt: finduser.createdAt,
+    hireDate: finduser.hireDate,
   };
   const isProduction = process.env.NODE_ENV === "production";
 
@@ -375,7 +377,6 @@ export const verifyTOTP = asyncHandler(async (req, res) => {
     "roleName permissions _id"
   );
 
-
   const isValid = speakeasy.totp.verify({
     secret: user.totpSecret,
     encoding: "base32",
@@ -400,6 +401,7 @@ export const verifyTOTP = asyncHandler(async (req, res) => {
     slug: user.slug,
     profilePic: user.profilePic,
     createdAt: user.createdAt,
+    hireDate: user.hireDate,
   };
   const isProduction = process.env.NODE_ENV === "production";
 

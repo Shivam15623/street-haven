@@ -16,48 +16,84 @@ export const viewEmployees = Joi.object({
 });
 
 export const createEmployeeSchema = Joi.object({
-  firstname: Joi.string()
-    .pattern(/^[A-Za-z]+$/)
-    .required(),
-  lastname: Joi.string()
-    .pattern(/^[A-Za-z]+$/)
-    .required(),
-
-  email: Joi.string()
-    .email({ tlds: { allow: false } }) // basic email format
-    .pattern(/^[a-zA-Z0-9._%+-]+@streethaven\.com$/) // only allow abazsc.com domain
+  firstName: Joi.string()
+    .trim()
+    .pattern(/^[A-Za-z ]+$/)
     .required()
     .messages({
-      "string.pattern.base": "Email must be on the abazsc.com domain",
+      "string.pattern.base": "First name must contain only letters",
+      "any.required": "First name is required",
+    }),
+  lastName: Joi.string()
+    .trim()
+    .pattern(/^[A-Za-z ]+$/)
+    .required()
+    .messages({
+      "string.pattern.base": "Last name must contain only letters",
+      "any.required": "Last name is required",
     }),
 
-  phoneNo: Joi.string()
-    .pattern(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&_])[A-Za-z\d@$!%*?#&_]{8,}$/
-    ) // assuming 10-digit numbers
+  email: Joi.string()
+    .trim()
+    .email({ tlds: { allow: false } })
+    .pattern(/^[a-zA-Z0-9._%+-]+@streethaven\.com$/)
     .required()
     .messages({
-      "string.pattern.base": "Phone number must be canadian",
+      "string.pattern.base": "Email must be on the streethaven.com domain",
+      "any.required": "Email is required",
+      "string.email": "Email must be a valid email",
+    }),
+
+  phone: Joi.string()
+    .trim()
+    .pattern(
+      /^(?:\+1\s?)?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/
+    )
+    .required()
+    .messages({
+      "string.pattern.base": "Phone number must be a valid Canadian number",
+      "any.required": "Phone number is required",
     }),
 
   role: Joi.string()
-    .valid(...Object.values(ROLES)) // allowed roles
+    .trim()
+    .valid(...Object.values(ROLES))
     .required()
     .messages({
-      "any.only": "Role must be one of admin, manager, or employee,",
+      "any.only": "Role must be one of admin, manager, or employee",
+      "any.required": "Role is required",
     }),
 
-  title: Joi.string().required(),
+  title: Joi.string().trim().required().messages({
+    "any.required": "Title is required",
+  }),
 
-  hireDate: Joi.date().required(),
+  password: Joi.string()
+    .required()
+    .min(8)
+    .pattern(/[A-Z]/, "uppercase")
+    .pattern(/[a-z]/, "lowercase")
+    .pattern(/\d/, "number")
+    .pattern(/[@$!%*?&#]/, "special")
+    .messages({
+      "string.min": "Password must be at least 8 characters",
+      "string.pattern.name":
+        "Password must contain at least one {#name} character",
+      "any.required": "Password is required",
+    }),
+
+  hireDate: Joi.date().required().messages({
+    "date.base": "Hire date must be a valid date",
+    "any.required": "Hire date is required",
+  }),
 });
 
 export const editEmployeeSchema = Joi.object({
   firstname: Joi.string()
-    .pattern(/^[A-Za-z]+$/)
+    .pattern(/^[A-Za-z ]+$/)
     .optional(),
   lastname: Joi.string()
-    .pattern(/^[A-Za-z]+$/)
+    .pattern(/^[A-Za-z ]+$/)
     .optional(),
 
   email: Joi.string()
@@ -70,7 +106,7 @@ export const editEmployeeSchema = Joi.object({
 
   phoneNo: Joi.string()
     .pattern(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&_])[A-Za-z\d@$!%*?#&_]{8,}$/
+      /^(?:\+1\s?)?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/
     ) // assuming 10-digit numbers
     .optional()
     .messages({

@@ -335,8 +335,9 @@ export const FetchComments = asyncHandler(async (req, res) => {
 });
 export const AddComment = asyncHandler(async (req, res) => {
   const { ticketId } = req.params;
+
   const userId = req.user._id;
-  const { message } = req.body;
+  const { message, clientId } = req.body;
 
   if (!message && (!req.files || req.files.length === 0)) {
     throw new ApiError(
@@ -346,6 +347,22 @@ export const AddComment = asyncHandler(async (req, res) => {
   }
 
   // Cloudinary uploads
+  const typeMap = {
+    image: [".jpg", ".jpeg", ".png", ".gif", ".webp"],
+    video: [".mp4", ".mov", ".avi", ".mkv"],
+    audio: [".mp3", ".wav", ".ogg"],
+    pdf: [".pdf"],
+    doc: [".doc", ".docx"],
+    ppt: [".ppt", ".pptx"],
+    excel: [".xls", ".xlsx"],
+    zip: [".zip", ".rar"],
+  };
+
+  const detectFileType = (ext) => {
+    return (
+      Object.keys(typeMap).find((key) => typeMap[key].includes(ext)) || "other"
+    );
+  };
   let attachments = [];
   if (req.files?.length > 0) {
     const uploadPromises = req.files.map(async (file) => {
@@ -359,21 +376,12 @@ export const AddComment = asyncHandler(async (req, res) => {
       }
 
       const ext = path.extname(file.originalname).toLowerCase();
-      let type = "other";
-      if ([".jpg", ".jpeg", ".png", ".gif", ".webp"].includes(ext))
-        type = "image";
-      else if ([".mp4", ".mov", ".avi", ".mkv"].includes(ext)) type = "video";
-      else if ([".mp3", ".wav", ".ogg"].includes(ext)) type = "audio";
-      else if ([".pdf"].includes(ext)) type = "pdf";
-      else if ([".doc", ".docx"].includes(ext)) type = "doc";
-      else if ([".xls", ".xlsx"].includes(ext)) type = "excel";
-      else if ([".zip", ".rar"].includes(ext)) type = "zip";
 
       return {
         fileName: uploadedFile.original_filename,
         fileUrl: uploadedFile.secure_url,
         size: uploadedFile.bytes,
-        type,
+        type: detectFileType(ext),
       };
     });
 
@@ -392,8 +400,8 @@ export const AddComment = asyncHandler(async (req, res) => {
     "userId",
     "firstname lastname email"
   );
-
-  io.to(ticketId).emit("newComment", populatedComment);
+  console.log(populatedComment);
+  io.to(ticketId).emit("newComment", { comment: populatedComment, clientId });
 
   res
     .status(201)
