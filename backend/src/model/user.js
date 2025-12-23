@@ -18,13 +18,13 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      match: [/^[A-Za-z]+$/, "First name must contain only letters"],
+      match: [/^[A-Za-z ]+$/, "First name must contain only letters"],
     },
     lastname: {
       type: String,
       required: true,
       trim: true,
-      match: [/^[A-Za-z]+$/, "Last name must contain only letters"],
+      match: [/^[A-Za-z ]+$/, "Last name must contain only letters"],
     },
     email: {
       type: String,
@@ -42,7 +42,6 @@ const UserSchema = new mongoose.Schema(
       required: true,
       trim: true,
       default: "none",
-      match: [/^[A-Za-z]+$/, "Last name must contain only letters"],
     },
     slug: {
       type: String,

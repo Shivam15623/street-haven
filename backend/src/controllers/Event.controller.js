@@ -105,35 +105,35 @@ export const editEvent = asyncHandler(async (req, res) => {
     facilitator,
     capacity,
     eventDate,
+    startTime,
+    endTime,
   } = req.body;
 
-  const updateData = {};
-
-  if (title) updateData.title = title;
-  if (description) updateData.description = description;
-  if (facilitator) updateData.facilitator = facilitator;
-  if (capacity) updateData.capacity = capacity;
-  if (eventDate) updateData.eventDate = eventDate;
-
-  // For nested object location
-  if (locationName || locationUrl) {
-    updateData.location = {};
-    if (locationName) updateData.location.location_name = locationName;
-    if (locationUrl) updateData.location.location_url = locationUrl;
-  }
-
-  const updatedEvent = await Event.findByIdAndUpdate(eventId, updateData, {
-    new: true, // return updated document
-    runValidators: true,
-  });
-
-  if (!updatedEvent) {
+  const event = await Event.findById(eventId);
+  if (!event) {
     throw new ApiError(404, "Event does not exist");
   }
 
+  if (title) event.title = title;
+  if (description) event.description = description;
+  if (facilitator) event.facilitator = facilitator;
+  if (capacity) event.capacity = capacity;
+  if (eventDate) event.eventDate = eventDate;
+  if (startTime) event.startTime = startTime;
+  if (endTime) event.endTime = endTime;
+
+  if (locationName || locationUrl) {
+    event.location = {
+      location_name: locationName || event.location?.location_name,
+      location_url: locationUrl || event.location?.location_url,
+    };
+  }
+
+  await event.save();
+
   return res
     .status(200)
-    .json(new ApiResponse(200, "Event updated successfully", updatedEvent));
+    .json(new ApiResponse(200, "Event updated successfully"));
 });
 
 export const GetUpcomingEvents = asyncHandler(async (req, res) => {
@@ -526,7 +526,6 @@ export const uploadEventDocuments = asyncHandler(async (req, res) => {
       }
 
       const ext = path.extname(file.originalname).toLowerCase();
-   
 
       return {
         fileName: uploaded.original_filename,

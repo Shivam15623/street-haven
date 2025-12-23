@@ -19,10 +19,21 @@ const attachmentSchema = new mongoose.Schema({
   type: {
     type: String,
     required: [true, "File type is required"],
-    enum: ["image", "video", "audio", "pdf", "doc", "excel", "zip", "other"],
+    enum: [
+      "image",
+      "video",
+      "audio",
+      "pdf",
+      "ppt",
+      "doc",
+      "excel",
+      "zip",
+      "other",
+    ],
     default: "other",
   },
 });
+
 
 const commentSchema = new mongoose.Schema({
   ticketId: {

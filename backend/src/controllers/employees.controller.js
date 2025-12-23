@@ -110,7 +110,6 @@ export const AddEmployee = asyncHandler(async (req, res) => {
     role: role || "employee",
     title,
     hireDate: hireDate || new Date(),
-   
     totpSecret: null,
     isTOTPEnabled: false,
     isTOTPVerified: false,
