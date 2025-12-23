@@ -11,7 +11,7 @@ interface User {
   slug: string;
   createdAt: string;
   title: string;
-  hireDate: Date;
+  hireDate: string;
 
 }
 export interface ChangeUserDetailsPayLoad {

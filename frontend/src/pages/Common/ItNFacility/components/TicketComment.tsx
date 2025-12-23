@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import Sheet from "../../../../components/child/Sheet";
 import { useSocket } from "../../../../hooks/useSocket";
 import type { TicketData } from "../../../../interfaces/Ticket";
@@ -12,14 +12,14 @@ import { useSelector } from "react-redux";
 import { selectAuth } from "../../../../redux/AuthSlice";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-
 import QuillEditor from "../../../../components/child/QuillEditor";
 import FileViewer from "../../../../components/FileViewer/FileViewer";
 import type { FileItem, FileType } from "../../../../interfaces/fileinterface";
+import { FileIconWithBackground } from "../../../../components/child/FileIcon";
 
 dayjs.extend(relativeTime);
 
-// Interface for grouped comments
+// Types
 interface CommentGroup {
   user: commentData["userId"];
   messages: commentData[];
@@ -29,6 +29,7 @@ interface DateGroupedComments {
   dateLabel: string;
   groups: CommentGroup[];
 }
+
 interface Attachment {
   _id: string;
   type: FileType;
@@ -37,14 +38,57 @@ interface Attachment {
   fileUrl: string;
   thumbnail?: string;
 }
-// 🔢 Utility function to convert bytes to readable format
+
+// Constants
+const COMMENTS_PER_PAGE = 15;
+const SCROLL_THRESHOLD = 40;
+const MAX_ATTACHMENTS = 7;
+
+// Utility functions
 const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return "0 Bytes";
   const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + " " + sizes[i];
+  return `${parseFloat((bytes / Math.pow(1024, i)).toFixed(2))} ${sizes[i]}`;
 };
 
+const getDateLabel = (date: dayjs.Dayjs, now: dayjs.Dayjs): string => {
+  if (date.isSame(now, "day")) return "Today";
+  if (date.add(1, "day").isSame(now, "day")) return "Yesterday";
+  return date.format("DD MMM YYYY");
+};
+
+const groupCommentsByUser = (comments: commentData[]): CommentGroup[] => {
+  return comments.reduce<CommentGroup[]>((groups, comment) => {
+    const lastGroup = groups[groups.length - 1];
+    if (lastGroup?.user._id === comment.userId._id) {
+      lastGroup.messages.push(comment);
+    } else {
+      groups.push({ user: comment.userId, messages: [comment] });
+    }
+    return groups;
+  }, []);
+};
+
+const groupCommentsByDate = (
+  comments: commentData[]
+): DateGroupedComments[] => {
+  const now = dayjs();
+  const dateMap = new Map<string, commentData[]>();
+
+  comments.forEach((comment) => {
+    const label = getDateLabel(dayjs(comment.createdAt), now);
+    const existing = dateMap.get(label) || [];
+    dateMap.set(label, [...existing, comment]);
+  });
+
+  return Array.from(dateMap.entries()).map(([dateLabel, dateComments]) => ({
+    dateLabel,
+    groups: groupCommentsByUser(dateComments),
+  }));
+};
+
+// AttachmentPreview Component
 const AttachmentPreview = ({
   attachment,
   onClick,
@@ -52,38 +96,10 @@ const AttachmentPreview = ({
   attachment: Attachment;
   onClick: () => void;
 }) => {
-  // 📸 Image Preview
   const readableSize = formatFileSize(attachment.size);
-  const getFileIcon = (type: string) => {
-    const iconMap: Record<string, string> = {
-      pdf: "mdi:file-pdf-box",
-      doc: "mdi:file-word-box",
-      excel: "mdi:file-excel-box",
-      zip: "mdi:folder-zip",
-      image: "mdi:file-image-box",
-      video: "mdi:file-video",
-      audio: "mdi:file-music",
-      other: "mdi:file-outline",
-    };
 
-    const colorMap: Record<string, string> = {
-      pdf: "text-danger", // red
-      doc: "text-primary", // blue
-      excel: "text-success", // green
-      zip: "text-warning", // yellow/orange
-      image: "text-info", // cyan
-      video: "text-purple", // or custom class
-      audio: "text-secondary",
-      other: "text-muted",
-    };
-
-    const icon = iconMap[type] || iconMap.other;
-    const color = colorMap[type] || colorMap.other;
-
-    return { icon, color };
-  };
-  const { icon, color } = getFileIcon(attachment.type);
-  const handleDownload = async () => {
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     try {
       const response = await fetch(attachment.fileUrl);
       if (!response.ok) throw new Error("Failed to fetch file");
@@ -97,8 +113,7 @@ const AttachmentPreview = ({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-
-      URL.revokeObjectURL(blobUrl); // Free memory
+      URL.revokeObjectURL(blobUrl);
     } catch (err) {
       console.error("Download failed:", err);
     }
@@ -129,7 +144,6 @@ const AttachmentPreview = ({
     );
   }
 
-  // 🎥 Video Preview
   if (attachment.type === "video") {
     return (
       <div
@@ -152,16 +166,10 @@ const AttachmentPreview = ({
     );
   }
 
-  // 🎵 Audio Preview
   if (attachment.type === "audio") {
     return (
       <div className="d-flex align-items-center gap-3 p-3 border rounded-3 bg-light">
-        <div
-          className="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle"
-          style={{ width: "48px", height: "48px" }}
-        >
-          <Icon icon="mdi:music" className={`text-primary fs-5 ${color}`} />
-        </div>
+        <FileIconWithBackground fileType={attachment.type} size={26} />
         <div className="flex-grow-1 text-truncate">
           <div className="fw-medium text-truncate">{attachment.fileName}</div>
           <div className="text-muted small">{readableSize}</div>
@@ -176,18 +184,12 @@ const AttachmentPreview = ({
     );
   }
 
-  // 📄 Document (PDF, DOC, etc.)
   return (
     <div
       className="d-flex align-items-center gap-3 p-3 border rounded-3 bg-white hover-shadow-sm cursor-pointer"
       onClick={onClick}
     >
-      <div
-        className="d-flex align-items-center justify-content-center bg-light rounded-3"
-        style={{ width: "48px", height: "48px" }}
-      >
-        <Icon icon={icon} className={`fs-4 text-secondary ${color}`} />
-      </div>
+      <FileIconWithBackground fileType={attachment.type} size={26} />
       <div className="flex-grow-1 text-truncate">
         <div className="fw-medium text-sm text-truncate">
           {attachment.fileName}
@@ -203,166 +205,235 @@ const AttachmentPreview = ({
     </div>
   );
 };
+
+// Custom hook for infinite scroll
+const useInfiniteScroll = (
+  containerRef: React.RefObject<HTMLDivElement | null>,
+  hasMore: boolean,
+  isFetching: boolean,
+  onLoadMore: () => void
+) => {
+  const prevScrollHeightRef = useRef<number>(0);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const handleScroll = () => {
+      if (el.scrollTop <= SCROLL_THRESHOLD && hasMore && !isFetching) {
+        prevScrollHeightRef.current = el.scrollHeight;
+        onLoadMore();
+      }
+    };
+
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, [hasMore, isFetching, onLoadMore, containerRef]);
+
+  const restoreScrollPosition = useCallback(() => {
+    const el = containerRef.current;
+    if (!el || !prevScrollHeightRef.current) return;
+
+    requestAnimationFrame(() => {
+      el.scrollTop = el.scrollHeight - prevScrollHeightRef.current;
+      prevScrollHeightRef.current = 0;
+    });
+  }, [containerRef]);
+
+  return { restoreScrollPosition };
+};
+
+// Main Component
 const TicketComment = ({ ticket }: { ticket: TicketData }) => {
   const { socket } = useSocket();
   const { user } = useSelector(selectAuth);
 
-  const [page, setPage] = useState(1); // current page
-  const limit = 10; // comments per page
-
+  const [page, setPage] = useState(1);
+  const [comments, setComments] = useState<commentData[]>([]);
   const [attachments, setAttachments] = useState<File[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [message, setMessage] = useState("");
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerFiles, setViewerFiles] = useState<FileItem[]>([]);
   const [viewerIndex, setViewerIndex] = useState(0);
-  const handleAddAttachments = (files: FileList) => {
-    const newFiles = Array.from(files).slice(0, 7 - attachments.length); // max 7
-    setAttachments((prev) => [...prev, ...newFiles]);
-  };
 
-  // Group consecutive messages by user
-  const groupComments = (comments: commentData[]): CommentGroup[] => {
-    const grouped: CommentGroup[] = [];
-    comments.forEach((comment) => {
-      const lastGroup = grouped[grouped.length - 1];
-      if (lastGroup && lastGroup.user._id === comment.userId._id) {
-        lastGroup.messages.push(comment);
-      } else {
-        grouped.push({ user: comment.userId, messages: [comment] });
-      }
-    });
-    return grouped;
-  };
-
-  const [comments, setComments] = useState<commentData[]>([]);
-  const [groupedComments, setGroupedComments] = useState<DateGroupedComments[]>(
-    []
-  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const {
-    data: commentD,
+    data: commentData,
     isLoading,
     isFetching,
   } = useViewCommentsQuery({
     ticketId: ticket._id,
-    page: page,
-    limit: limit,
+    page,
+    limit: COMMENTS_PER_PAGE,
   });
-  const totalPages = commentD?.data?.paggination.totalPages || 1;
+
+  const totalPages = commentData?.data?.paggination.totalPages || 1;
   const hasMore = page < totalPages;
 
-  // ✅ Load more function
-  const handleLoadMore = () => {
-    if (hasMore && !isFetching) setPage((p) => p + 1);
-  };
-  // Group messages by date (e.g., Today, Yesterday, or date)
-  const groupCommentsByDate = (comments: commentData[]) => {
-    const groups: { dateLabel: string; comments: commentData[] }[] = [];
+  const handleLoadMore = useCallback(() => {
+    setPage((p) => p + 1);
+  }, []);
 
-    const now = dayjs();
+  const { restoreScrollPosition } = useInfiniteScroll(
+    containerRef,
+    hasMore,
+    isFetching,
+    handleLoadMore
+  );
 
-    comments.forEach((comment) => {
-      const d = dayjs(comment.createdAt);
-      let label = "";
+  const [addComment, { isLoading: uploading }] = useAddCommentMutation();
 
-      if (d.isSame(now, "day")) label = "Today";
-      else if (d.add(1, "day").isSame(now, "day")) label = "Yesterday";
-      else label = d.format("DD MMM YYYY");
+  // Memoized grouped comments
+  const groupedComments = useMemo(
+    () => groupCommentsByDate(comments),
+    [comments]
+  );
 
-      const existingGroup = groups.find((g) => g.dateLabel === label);
-      if (existingGroup) existingGroup.comments.push(comment);
-      else groups.push({ dateLabel: label, comments: [comment] });
+  // Process new comments from API
+  useEffect(() => {
+    if (!commentData?.data?.comments) return;
+
+    const newComments = [...commentData.data.comments].reverse();
+
+    setComments((prev) => {
+      const merged = [...newComments, ...prev];
+      return Array.from(new Map(merged.map((c) => [c._id, c])).values());
     });
 
-    return groups;
-  };
-
-  // Update comments when query data arrives
-  useEffect(() => {
-    if (commentD?.data?.comments) {
-      const newComments = commentD.data.comments.slice().reverse(); // oldest first
-
-      // Prepend older comments at the beginning
-      const merged = [...newComments, ...comments];
-
-      // Deduplicate
-      const uniqueComments = Array.from(
-        new Map(merged.map((c) => [c._id, c])).values()
-      );
-      setComments(uniqueComments);
-      const dateGroups = groupCommentsByDate(uniqueComments);
-      const groupedByDateAndUser = dateGroups.map((group) => ({
-        dateLabel: group.dateLabel,
-        groups: groupComments(group.comments),
-      }));
-      setGroupedComments(groupedByDateAndUser);
+    if (page > 1) {
+      restoreScrollPosition();
     }
-  }, [commentD]);
+  }, [commentData, page, restoreScrollPosition]);
 
-  // Socket listener for new comments
+  // Socket listener
   useEffect(() => {
     if (!socket) return;
 
     socket.emit("joinRoom", { ticketId: ticket._id, userId: user?._id });
 
-    socket.on("newComment", (comment: commentData & { ticketId: string }) => {
+    const handleNewComment = ({
+      comment,
+      clientId,
+    }: {
+      comment: commentData & { ticketId: string };
+      clientId: string;
+    }) => {
+      console.log("comment", { comment, clientId });
       if (comment.ticketId !== ticket._id) return;
 
       setComments((prev) => {
-        const merged = [...prev, comment];
-        const uniqueComments = Array.from(
-          new Map(merged.map((c) => [c._id, c])).values()
-        );
+        // 🔁 Replace optimistic comment
+        if (clientId) {
+          const index = prev.findIndex((c) => c._id === clientId);
 
-        // ✅ Maintain the same structure: date -> user groups
-        const dateGroups = groupCommentsByDate(uniqueComments);
-        const groupedByDateAndUser = dateGroups.map((group) => ({
-          dateLabel: group.dateLabel,
-          groups: groupComments(group.comments),
-        }));
+          if (index !== -1) {
+            const updated = [...prev];
+            updated[index] = comment;
+            return updated;
+          }
+        }
 
-        setGroupedComments(groupedByDateAndUser);
-
-        return uniqueComments;
+        // ➕ Otherwise append normally
+        if (prev.some((c) => c._id === comment._id)) return prev;
+        return [...prev, comment];
       });
-    });
+    };
+
+    socket.on("newComment", handleNewComment);
 
     return () => {
       socket.emit("leaveRoom", { ticketId: ticket._id, userId: user?._id });
-      socket.off("newComment");
+      socket.off("newComment", handleNewComment);
     };
   }, [socket, ticket._id, user?._id]);
 
-  const handleFileSelect = () => {
-    fileInputRef.current?.click();
-  };
+  const handleAddAttachments = useCallback((files: FileList) => {
+    setAttachments((prev) => {
+      const newFiles = Array.from(files).slice(
+        0,
+        MAX_ATTACHMENTS - prev.length
+      );
+      return [...prev, ...newFiles];
+    });
+  }, []);
 
-  const [message, setMessage] = useState("");
-  const [addComment] = useAddCommentMutation();
+  const handleRemoveAttachment = useCallback((index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const handleFileSelect = () => fileInputRef.current?.click();
 
   const handleMessageSend = async () => {
     if (!message.trim() && attachments.length === 0) return;
 
     try {
       const formdata = new FormData();
-      if (message) {
-        formdata.append("message", message);
-      }
-      if (attachments.length !== 0) {
-        attachments.forEach((file) => {
-          formdata.append("attachments", file);
-        });
-      }
+      const clientId = crypto.randomUUID();
 
-      const res = await addComment({ ticketId: ticket._id, formdata }).unwrap();
+      formdata.append("clientId", clientId);
+
+      if (message) formdata.append("message", message);
+      attachments.forEach((file) => formdata.append("attachments", file));
+
+      // Optimistic update
+      if (user) {
+        const optimisticComment: commentData = {
+          _id: `${clientId}`,
+          message,
+          createdAt: new Date().toISOString(),
+          userId: {
+            _id: user._id,
+            email: user.email,
+            firstname: user.firstName,
+            lastname: user.lastName,
+          },
+          attachments: attachments.map((file) => ({
+            _id: `${clientId}-${file.name}`,
+            fileName: file.name,
+            size: file.size,
+            fileUrl: URL.createObjectURL(file),
+            type: file.type.startsWith("image")
+              ? "image"
+              : file.type.startsWith("video")
+              ? "video"
+              : "other",
+          })),
+        };
+        setComments((prev) => [...prev, optimisticComment]);
+      }
+      setMessage("");
+      setAttachments([]);
+      const res = await addComment({
+        ticketId: ticket._id,
+        formdata,
+      }).unwrap();
       if (res.success) {
         setMessage("");
         setAttachments([]);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Failed to send comment:", error);
     }
   };
+
+  const openFileViewer = useCallback(
+    (attachmentList: Attachment[], index: number) => {
+      setViewerFiles(
+        attachmentList.map((a) => ({
+          _id: a._id,
+          fileUrl: a.fileUrl,
+          fileType: a.type,
+          fileName: a.fileName,
+          size: a.size,
+        }))
+      );
+      setViewerIndex(index);
+      setViewerOpen(true);
+    },
+    []
+  );
 
   return (
     <Sheet
@@ -380,30 +451,30 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
       }
     >
       <div className="d-flex h-100 flex-column">
-        <div className="chat-main flex-grow-1 overflow-auto">
-          {hasMore && (
-            <div className="text-center my-3">
-              <button
-                disabled={isFetching}
-                onClick={handleLoadMore}
-                className="btn btn-outline-secondary btn-sm"
+        <div className="chat-main flex-grow-1 overflow-auto" ref={containerRef}>
+          {/* Loading indicator at top */}
+          {isFetching && page > 1 && (
+            <div className="text-center py-3">
+              <div
+                className="spinner-border spinner-border-sm text-primary"
+                role="status"
               >
-                {isFetching ? "Loading..." : "Load older comments"}
-              </button>
+                <span className="visually-hidden">Loading...</span>
+              </div>
             </div>
           )}
+
           {isLoading ? (
             [...Array(3)].map((_, idx) => (
               <div key={idx} className="chat-single-message left mb-2">
                 <div className="chat-message-content p-2 bg-light rounded placeholder-glow">
-                  <span className="placeholder col-8"></span>
+                  <span className="placeholder col-8" />
                 </div>
               </div>
             ))
           ) : groupedComments.length > 0 ? (
             groupedComments.map((dateGroup) => (
-              <div key={dateGroup.dateLabel} className="mb-3 ">
-                {/* Date Divider */}
+              <div key={dateGroup.dateLabel} className="mb-3">
                 <div className="text-center text-muted my-5 position-relative">
                   <hr className="m-0 opacity-0" />
                   <span
@@ -414,10 +485,9 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
                   </span>
                 </div>
 
-                {/* Messages under this date */}
                 {dateGroup.groups.map((group, idx) => (
                   <div
-                    key={group.user._id + idx}
+                    key={`${group.user._id}-${idx}`}
                     className={`chat-single-message p-0 d-flex flex-column gap-2 mb-0 ${
                       user?._id === group.user._id
                         ? "right"
@@ -437,35 +507,26 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
                           </div>
                         )}
 
-                        {msg.attachments && msg.attachments.length > 0 && (
-                          <div className=" space-y-2 gap-2 d-flex flex-column">
-                            {msg.attachments.map((attachment, idx) => (
+                        {msg.attachments && msg.attachments?.length > 0 && (
+                          <div className="space-y-2 gap-2 d-flex flex-column">
+                            {msg.attachments.map((attachment, attIdx) => (
                               <AttachmentPreview
-                                key={idx}
+                                key={attachment._id}
                                 attachment={attachment}
-                                onClick={() => {
-                                  setViewerFiles(
-                                    msg.attachments?.map((a) => ({
-                                      _id: a._id,
-                                      fileUrl: a.fileUrl,
-                                      fileType: a.type,
-                                      fileName: a.fileName,
-                                      size: a.size,
-                                    })) || []
-                                  );
-                                  setViewerIndex(idx);
-                                  setViewerOpen(true);
-                                }}
+                                onClick={() =>
+                                  openFileViewer(msg.attachments!, attIdx)
+                                }
                               />
                             ))}
                           </div>
                         )}
+
                         <div
                           className="prose Te py-2 chatpara"
                           dangerouslySetInnerHTML={{ __html: msg.message }}
                         />
 
-                        <div className="px-2  d-flex align-items-center  justify-content-end gap-1">
+                        <div className="px-2 d-flex align-items-center justify-content-end gap-1">
                           <span className="chat-time text-xxs">
                             {dayjs(msg.createdAt).format("hh:mm A")}
                           </span>
@@ -483,6 +544,7 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
             </div>
           )}
         </div>
+
         {/* Attachment preview */}
         {attachments.length > 0 && (
           <div className="p-2 border-top bg-light">
@@ -492,42 +554,39 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
             >
               {attachments.map((file, idx) => (
                 <div
-                  key={idx}
+                  key={`${file.name}-${idx}`}
                   className="position-relative d-flex align-items-center gap-2 p-2 bg-secondary bg-opacity-10 rounded"
                   style={{ minWidth: "160px" }}
                 >
                   <Icon
                     icon="mdi:file-outline"
                     className="text-muted flex-shrink-0"
-                    width="18"
-                    height="18"
+                    width={18}
                   />
                   <span className="text-truncate small flex-grow-1">
                     {file.name}
                   </span>
-
                   <button
                     type="button"
                     className="btn btn-sm btn-light p-1 d-flex align-items-center justify-content-center"
-                    onClick={() =>
-                      setAttachments(attachments.filter((_, i) => i !== idx))
-                    }
+                    onClick={() => handleRemoveAttachment(idx)}
                   >
-                    <Icon icon="mdi:close" width="14" height="14" />
+                    <Icon icon="mdi:close" width={14} />
                   </button>
                 </div>
               ))}
             </div>
           </div>
         )}
+
         <form
-          className="chat-message-box  p-0 rounded-0"
+          className="chat-message-box p-0 rounded-0"
           onSubmit={(e) => {
             e.preventDefault();
             handleMessageSend();
           }}
         >
-          <div className="d-flex flex-column w-100  p-2 ">
+          <div className="d-flex flex-column w-100 p-2">
             <div className="w-100 px-2 py-3">
               <QuillEditor
                 content={message}
@@ -544,7 +603,7 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
               />
             </div>
 
-            <div className="chat-message-box-action w-100 flex-row flex-nowrap gap-1  justify-content-end px-3 py-2 ">
+            <div className="chat-message-box-action w-100 flex-row flex-nowrap gap-1 justify-content-end px-3 py-2">
               <input
                 type="file"
                 multiple
@@ -556,16 +615,16 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
               />
               <button
                 type="button"
-                className=" btn btn-light  d-flex align-items-center text-xl"
+                className="btn btn-light d-flex align-items-center text-xl"
                 onClick={handleFileSelect}
               >
                 <Icon icon="ph:link" />
               </button>
               <button
                 type="submit"
-                className="btn btn-street-primary  text-sm d-flex align-items-center gap-1 "
+                disabled={uploading}
+                className="btn btn-street-primary text-sm d-flex align-items-center gap-1"
               >
-                {" "}
                 Send
                 <Icon icon="f7:paperplane" />
               </button>
@@ -573,6 +632,7 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
           </div>
         </form>
       </div>
+
       {viewerOpen && (
         <FileViewer
           files={viewerFiles}

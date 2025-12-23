@@ -41,7 +41,7 @@ const VerifyTotp: React.FC = () => {
           slug: user.slug,
           createdAt: user.createdAt,
           title: user.title || "",
-          hireDate: user.hireDate ? new Date(user.hireDate) : new Date(),
+          hireDate: user.hireDate ? new Date(user.hireDate).toISOString() : new Date().toISOString(),
         
         };
 
