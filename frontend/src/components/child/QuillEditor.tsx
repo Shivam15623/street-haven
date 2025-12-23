@@ -3,6 +3,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
 import { Form } from "react-bootstrap";
+import { createPortal } from "react-dom";
 
 interface QuillEditorProps {
   content?: string;
@@ -43,10 +44,15 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
 }) => {
   const [value, setValue] = useState(content);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [openUpwards, setOpenUpwards] = useState(false);
+ 
   const quillRef = useRef<ReactQuill>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const [editorHeight, setEditorHeight] = useState(100);
+  const [emojiPosition, setEmojiPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+
   const uniqueId = useId();
   const toolbarId = `toolbar-${uniqueId.replace(/:/g, "-")}`;
 
@@ -78,7 +84,16 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
     setValue(content);
     onChange?.(content);
   };
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest(".EmojiPickerReact")) {
+        setShowEmojiPicker(false);
+      }
+    };
 
+    if (showEmojiPicker) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showEmojiPicker]);
   const handleEmojiClick = (emojiData: EmojiClickData) => {
     const emoji = emojiData.emoji;
     const editor = quillRef.current?.getEditor();
@@ -97,11 +112,19 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
   const handleEmojiToggle = () => {
     if (!emojiButtonRef.current) return;
 
-    const buttonRect = emojiButtonRef.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - buttonRect.bottom;
+    const rect = emojiButtonRef.current.getBoundingClientRect();
     const pickerHeight = 320;
 
-    setOpenUpwards(spaceBelow < pickerHeight);
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUp = spaceBelow < pickerHeight;
+
+ 
+
+    setEmojiPosition({
+      top: openUp ? rect.top - pickerHeight - 8 : rect.bottom + 8,
+      left: rect.right - 260, // align right
+    });
+
     setShowEmojiPicker((prev) => !prev);
   };
 
@@ -199,27 +222,34 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
           </div>
         )}
 
-        {showEmojiPicker && features.emoji && !disabled && (
-          <div
-            className="position-absolute bg-white border rounded shadow p-2"
-            style={{
-              right: "10px",
-              zIndex: 20,
-              ...(openUpwards ? { bottom: "40px" } : { top: "40px" }),
-            }}
-          >
-            <EmojiPicker
-              onEmojiClick={handleEmojiClick}
-              height={320}
-              width={260}
-            />
-          </div>
-        )}
+        {showEmojiPicker &&
+          features.emoji &&
+          !disabled &&
+          emojiPosition &&
+          createPortal(
+            <div
+              className="bg-white border rounded shadow p-2"
+              style={{
+                position: "fixed",
+                top: emojiPosition.top,
+                left: emojiPosition.left,
+                zIndex: 9999, // 🔥 always on top
+              }}
+            >
+              <EmojiPicker
+                onEmojiClick={handleEmojiClick}
+                height={320}
+                width={260}
+              />
+            </div>,
+            document.body
+          )}
 
         <div
           style={{
             flex: 1,
             overflowY: "hidden",
+            overflowX:"visible",
             cursor: disabled ? "not-allowed" : "text",
             borderBottomRightRadius: "inherit",
             borderBottomLeftRadius: "inherit",

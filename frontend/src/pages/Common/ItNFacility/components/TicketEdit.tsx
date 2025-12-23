@@ -237,6 +237,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       name="assignedId"
                       value={values.assignedId}
                       onChange={handleChange}
+                      disabled={isRequester||isAssigned}
                       isInvalid={touched.assignedId && !!errors.assignedId}
                     >
                       <option value="">Select Assignee</option>

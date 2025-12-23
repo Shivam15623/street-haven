@@ -62,10 +62,12 @@ const SearchContent: React.FC<SearchProps> = ({ mobileMode, onclose }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-
   const debouncedQuery = useDebounce<string>(query, 500);
 
-  const { data: results, isLoading } = useSearchAllContentQuery(debouncedQuery);
+  const { data: results, isLoading } = useSearchAllContentQuery(
+    debouncedQuery,
+    { skip: debouncedQuery === "" || !debouncedQuery }
+  );
 
   // ---------- Close dropdown on outside click ----------
   useEffect(() => {
@@ -102,8 +104,7 @@ const SearchContent: React.FC<SearchProps> = ({ mobileMode, onclose }) => {
   };
 
   // --- Navigate handlers ---
-  const goToEvent = (slug: string) =>
-    navigate(`/events?slug=${slug}`);
+  const goToEvent = (slug: string) => navigate(`/events?slug=${slug}`);
 
   const goToHR = (slug: string) =>
     navigate(`/agency_info?tab=hr_updates&slug=${slug}`);
