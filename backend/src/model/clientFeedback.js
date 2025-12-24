@@ -64,7 +64,11 @@ const clientFeedbackSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
+    preferredContactMethod: {
+      type: String,
+      required: true,
+      enum: ["Phone", "Email", "Either"],
+    },
     impact: {
       type: String,
       required: true,

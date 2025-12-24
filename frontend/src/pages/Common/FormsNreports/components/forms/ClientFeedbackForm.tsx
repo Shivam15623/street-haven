@@ -41,6 +41,9 @@ const ClientFeedBackFormSchema = Yup.object({
     .required("complaint Type is required"),
 
   otherComplaintDescription: Yup.string().nullable(),
+  preferredContactMethod: Yup.mixed<"Phone" | "Email" | "Either">()
+    .oneOf(["Phone", "Email", "Either"], "Select a preferred contact method")
+    .required("Preferred contact method is required"),
 
   description: Yup.string().required("description is required"),
   impact: Yup.string().required("impact is required"),
@@ -83,6 +86,7 @@ const ClientFeedbackForm = () => {
         description: values.description,
         impact: values.impact,
         outcome: values.desiredOutcome,
+        preferredContactMethod:values.preferredContactMethod
       };
 
       // Optional fields mapping
@@ -145,6 +149,7 @@ const ClientFeedbackForm = () => {
           description: "",
           impact: "",
           desiredOutcome: "",
+          preferredContactMethod: "Either",
         }}
         onSubmit={handleSubmit}
       >
@@ -161,7 +166,7 @@ const ClientFeedbackForm = () => {
           <Form onSubmit={handleSubmit} className="d-flex flex-column gap-24">
             {/* ======= VISIT INFORMATION CARD ======= */}
             <Card className="shadow-sm border-0">
-              <Card.Body className="d-flex flex-column gap-10 p-20">
+              <Card.Body className="d-flex flex-column gap-20 p-20">
                 <h5 className="fw-semibold text-md md:text-lg text-street-dark">
                   Visit Information
                 </h5>
@@ -222,7 +227,7 @@ const ClientFeedbackForm = () => {
 
             {/* ======= CLIENT INFORMATION CARD ======= */}
             <Card className="shadow-sm border-0">
-              <Card.Body className="d-flex flex-column gap-10 p-20">
+              <Card.Body className="d-flex flex-column gap-20 p-20">
                 <h5 className="fw-semibold text-md md:text-lg text-street-dark ">
                   Client Information <span className="text-sm">(optional)</span>
                 </h5>
@@ -310,12 +315,46 @@ const ClientFeedbackForm = () => {
                     {errors.address}
                   </Form.Control.Feedback>
                 </Form.Group>
+                <Form.Group className="d-flex flex-column gap-8">
+                  <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
+                    Preferred Method of Contact
+                  </Form.Label>
+
+                  <div className="d-flex flex-row gap-20">
+                    {["Phone", "Email", "Either"].map((method) => (
+                      <label
+                        key={method}
+                        className="d-flex align-items-center gap-2"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <input
+                          type="radio"
+                          name="preferredContactMethod"
+                          value={method}
+                          checked={values.preferredContactMethod === method}
+                          onChange={() =>
+                            setFieldValue("preferredContactMethod", method)
+                          }
+                          className="form-check-input"
+                        />
+                        <span className="text-xs xs:text-sm">{method}</span>
+                      </label>
+                    ))}
+                  </div>
+
+                  {touched.preferredContactMethod &&
+                    errors.preferredContactMethod && (
+                      <div className="text-danger text-xs mt-1">
+                        {errors.preferredContactMethod}
+                      </div>
+                    )}
+                </Form.Group>
               </Card.Body>
             </Card>
 
             {/* ======= COMPLAINT DETAILS CARD ======= */}
             <Card className="shadow-sm border-0">
-              <Card.Body className="d-flex flex-column gap-10 p-20">
+              <Card.Body className="d-flex flex-column gap-20 p-20">
                 <h5 className="fw-semibold text-md md:text-lg text-street-dark">
                   Complaint Details
                 </h5>
@@ -409,7 +448,7 @@ const ClientFeedbackForm = () => {
 
             {/* ======= IMPACT & OUTCOME CARD ======= */}
             <Card className="shadow-sm border-0">
-              <Card.Body className="d-flex flex-column gap-10 p-20">
+              <Card.Body className="d-flex flex-column gap-20 p-20">
                 <h5 className="fw-semibold text-md md:text-lg text-street-dark ">
                   Impact & Desired Outcome
                 </h5>
@@ -459,7 +498,7 @@ const ClientFeedbackForm = () => {
             </Card>
 
             <Card className="shadow-sm border-0">
-              <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
+              <Card.Body className="d-flex flex-row justify-content-end gap-20 p-20">
                 <button
                   type="button"
                   onClick={() =>
