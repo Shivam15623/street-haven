@@ -30,7 +30,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
     endTime,
     startTime,
     location,
-    facilitator,
+   
     description,
     title,
     totalRegistered,
@@ -197,15 +197,15 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
             </a>
           </div>
 
-          {/* Facilitator (optional) */}
-          {facilitator && (
+  
+       
             <div className="col-6 col-md-4 d-flex flex-column gap-1">
-              <p className="text-xxs xs:text-xs fw-normal">Facilitator</p>
+              <p className="text-xxs xs:text-xs fw-normal">Created By</p>
               <p className="text-xs xs:text-sm fw-semibold">
                 {createdBy.firstname + " " + createdBy.lastname}
               </p>
             </div>
-          )}
+      
         </div>
       </div>
 

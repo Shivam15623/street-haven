@@ -28,6 +28,13 @@ const faqCategorySchema = new mongoose.Schema(
     faqs: {
       type: [faqSchema],
       default: [],
+      validate: {
+        validator: function (faqs) {
+          const questions = faqs.map((f) => f.question.toLowerCase());
+          return questions.length === new Set(questions).size;
+        },
+        message: "Duplicate FAQ questions are not allowed",
+      },
     },
     priority: {
       type: Number,

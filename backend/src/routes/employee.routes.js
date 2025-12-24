@@ -20,8 +20,17 @@ import { idParamSchema } from "../validations/common.js";
 
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
-router.route("/view").get(validateRequest(viewEmployees,"query"),AllEmployees);
-router.route("/edit/:id").patch(upload.single("profilePic"), validateRequest(editEmployeeSchema, "body"), EditEmployee);
+router
+  .route("/view")
+  .get(validateRequest(viewEmployees, "query"), AllEmployees);
+router
+  .route("/edit/:id")
+  .patch(
+    upload.single("profilePic"),
+    validateRequest(editEmployeeSchema, "body"),
+    authorizePermissions({ action: PERMISSIONS.EDIT_EMPLOYEE }),
+    EditEmployee
+  );
 router
   .route("/changePassword/:id")
   .patch(

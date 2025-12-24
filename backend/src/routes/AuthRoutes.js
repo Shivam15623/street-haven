@@ -17,6 +17,7 @@ import {
   loginUserSchema,
   registerUserSchema,
   resetPasswordSchema,
+  setupTotpSchema,
 } from "../validations/AuthSchema.js";
 import passport from "passport";
 
@@ -31,8 +32,12 @@ router
 router.route("/refresh").post(refreshAccessToken);
 router.route("/login").post(validateRequest(loginUserSchema, "body"), Login);
 router.route("/generate-totp").post(totpGenerate);
-router.route("/setup-totp").post(verifyTOTPSetup);
-router.route("/verify-totp").post(verifyTOTP);
+router
+  .route("/setup-totp")
+  .post(validateRequest(setupTotpSchema, "body"), verifyTOTPSetup);
+router
+  .route("/verify-totp")
+  .post(validateRequest(setupTotpSchema, "body"), verifyTOTP);
 router
   .route("/logout")
   .post(passport.authenticate("jwt", { session: false }), LogOut);

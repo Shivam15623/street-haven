@@ -60,10 +60,6 @@ const eventSchema = new mongoose.Schema(
         message: "End time must be after start time",
       },
     },
-    facilitator: {
-      type: String,
-      trim: true,
-    },
     registeredUsers: [
       {
         type: mongoose.Schema.Types.ObjectId,

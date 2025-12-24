@@ -187,7 +187,7 @@ const GenerateTotp: React.FC = () => {
                     isInvalid={touched.totp && !!errors.totp}
                     className=" text-center fs-4 tracking-widest"
                     style={{
-                      backgroundColor: "#F2F0EC",
+                      backgroundColor: "var(--street-auth-input)",
                       border: "2px solid #E8F0FE",
                       borderRadius: "15px",
                       padding: "14px 16px",

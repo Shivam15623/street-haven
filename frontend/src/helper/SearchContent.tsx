@@ -62,7 +62,7 @@ const SearchContent: React.FC<SearchProps> = ({ mobileMode, onclose }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const debouncedQuery = useDebounce<string>(query, 500);
+  const debouncedQuery = useDebounce<string>(query, 1000);
 
   const { data: results, isLoading } = useSearchAllContentQuery(
     debouncedQuery,

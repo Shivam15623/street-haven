@@ -22,7 +22,7 @@ const DeleteCategory: React.FC<DeleteCategoryProps> = ({ id, title }) => {
         showSuccess(`Category "${title}" deleted successfully`);
       }
     } catch (error) {
-      alert(error || "Something went wrong");
+      console.log(error || "Something went wrong");
     }
   };
 

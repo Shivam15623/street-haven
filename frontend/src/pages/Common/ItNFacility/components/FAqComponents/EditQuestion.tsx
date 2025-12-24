@@ -39,7 +39,7 @@ const EditQuestion: React.FC<EditQuestionProps> = ({
       }
       setShowModal(false);
     } catch (error) {
-      alert(error || "Something went wrong");
+      console.log(error || "Something went wrong");
     }
   };
 

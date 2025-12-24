@@ -103,7 +103,7 @@ const SignupForm = () => {
                       onChange={handleChange}
                       className="form-control h-50-px "
                       style={{
-                        backgroundColor: "#F2F0EC",
+                        backgroundColor: "var(--street-auth-input)",
                         borderColor: "#E2E8F0",
                         borderRadius: "15px",
                       }}
@@ -129,7 +129,7 @@ const SignupForm = () => {
                       value={values.lastName}
                       onChange={handleChange}
                       style={{
-                        backgroundColor: "#F2F0EC",
+                        backgroundColor: "var(--street-auth-input)",
                         borderColor: "#E2E8F0",
                         borderRadius: "15px",
                       }}
@@ -158,7 +158,7 @@ const SignupForm = () => {
                       value={values.email}
                       onChange={handleChange}
                       style={{
-                        backgroundColor: "#F2F0EC",
+                         backgroundColor: "var(--street-auth-input)",
                         borderColor: "#E2E8F0",
                         borderRadius: "15px",
                       }}
@@ -187,7 +187,7 @@ const SignupForm = () => {
                         touched.phone && errors.phone ? "is-invalid" : ""
                       }`}
                       style={{
-                        backgroundColor: "#F2F0EC",
+                        backgroundColor: "var(--street-auth-input)",
                         borderColor: "#E2E8F0",
                         borderRadius: "15px",
                       }}
@@ -223,7 +223,7 @@ const SignupForm = () => {
                         touched.role && errors.role ? "is-invalid" : ""
                       }`}
                       style={{
-                        backgroundColor: "#F2F0EC",
+                        backgroundColor: "var(--street-auth-input)",
                         borderColor: "#E2E8F0",
                         borderRadius: "15px",
                       }}
@@ -254,7 +254,7 @@ const SignupForm = () => {
                       className="h-50-px"
                       onChange={handleChange}
                       style={{
-                        backgroundColor: "#F2F0EC",
+                        backgroundColor: "var(--street-auth-input)",
                         borderColor: "#E2E8F0",
                         borderRadius: "15px",
                         paddingRight: "2.5rem",

@@ -23,7 +23,7 @@ const EventFormSchema = Yup.object().shape({
   locationUrl: Yup.string()
     .url("Enter a valid map URL")
     .required("Location URL is required"),
-  facilitator: Yup.string().required("Facilitator name is required"),
+  
   capacity: Yup.number()
     .required("Capacity is required")
     .positive("Capacity must be greater than 0")
@@ -110,7 +110,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
     description: event?.description || "",
     locationName: event?.location.location_name || "",
     locationUrl: event?.location.location_url || "",
-    facilitator: event?.facilitator || "",
+   
     capacity: event?.capacity || 0,
     eventDate: event?.eventDate
       ? new Date(event.eventDate).toISOString().split("T")[0]
@@ -260,19 +260,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
                   </Col>
                 </Row>
 
-                {/* Facilitator */}
-                <Form.Group>
-                  <Form.Label>Facilitator</Form.Label>
-                  <Form.Control
-                    name="facilitator"
-                    value={values.facilitator}
-                    onChange={handleChange}
-                    isInvalid={!!errors.facilitator && touched.facilitator}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.facilitator}
-                  </Form.Control.Feedback>
-                </Form.Group>
+          
 
                 {/* Capacity */}
                 <Form.Group>
