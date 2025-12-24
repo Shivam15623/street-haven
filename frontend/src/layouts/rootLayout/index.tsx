@@ -14,7 +14,7 @@ import ItNFacility from "../../assets/icons/sidebaricons/Facility.svg?react";
 import ProgramIcon from "../../assets/icons/sidebaricons/Program.svg?react";
 import SearchContent from "../../helper/SearchContent.tsx";
 import EmployeesIcon from "../../assets/icons/sidebaricons/Employees.svg?react";
-import useHasPermission from "../../hooks/Auth.ts";
+
 
 const menuItems = [
   {
@@ -27,7 +27,7 @@ const menuItems = [
     label: "Forms",
     path: "/forms",
     icon: FormIcon,
-    roles: ["super_admin", "admin", "director"],
+    public: true,
   },
   {
     label: "Program & Manuals",
@@ -65,10 +65,10 @@ const RootLayout = () => {
   const [mobileMenu, setMobileMenu] = useState(false);
   const location = useLocation(); // Hook to get the current route
   const [mobileMode, setMobileMode] = useState(false);
-  const { hasRole } = useHasPermission();
+
   const filteredMenu = menuItems.filter((m) => {
     if (m.public) return true; // public items visible to all
-    if (m.roles) return hasRole(m.roles); // check role
+ 
     return false; // hide if neither public nor allowed roles
   });
 

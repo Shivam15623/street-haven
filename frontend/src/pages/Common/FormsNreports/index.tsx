@@ -3,14 +3,14 @@ import { useState } from "react";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import FormsNDReports from "./components/FormsNDReports";
 import Submissions from "./components/Submissions";
-
+import useHasPermission from "../../../hooks/Auth";
 
 type Tab = "form" | "submissions";
 
 const FormsNreports = () => {
   const [activeTab, setActiveTab] = useState<Tab>("form");
 
-
+  const { hasPermission } = useHasPermission();
   return (
     <div className="d-flex flex-column gap-4">
       <div className="d-flex flex-row justify-content-between align-items-center">
@@ -22,7 +22,7 @@ const FormsNreports = () => {
             Submit reports, provide feedback, and view job postings
           </p>
         </div>
-
+        {hasPermission({ action: "view_submissions" }) && (
           <div className="d-flex sm:d-block justify-content-end">
             <div className="form-sub-toggle w-fit d-flex flex-row p-6 gap-1 radius-12">
               {/* Form Tab */}
@@ -52,12 +52,13 @@ const FormsNreports = () => {
               </div>
             </div>
           </div>
-
+        )}
       </div>
 
       {/* Tab Content */}
       {activeTab === "form" && <FormsNDReports />}
-      {activeTab === "submissions" && <Submissions />}
+      {activeTab === "submissions" &&
+        hasPermission({ action: "view_submissions" }) && <Submissions />}
     </div>
   );
 };

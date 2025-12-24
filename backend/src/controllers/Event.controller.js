@@ -35,7 +35,7 @@ export const createEvent = asyncHandler(async (req, res) => {
             location_name: locationName,
             location_url: locationUrl,
           },
-          
+
           capacity,
           eventDate,
           createdBy: userId,
@@ -102,7 +102,7 @@ export const editEvent = asyncHandler(async (req, res) => {
     description,
     locationName,
     locationUrl,
-  
+
     capacity,
     eventDate,
     startTime,
@@ -154,7 +154,7 @@ export const GetUpcomingEvents = asyncHandler(async (req, res) => {
   today.setHours(0, 0, 0, 0);
 
   // Only upcoming events
-  query.eventDate = { $gte: today };
+  query.startTime = { $gte: today };
 
   // Slug overrides search
   if (slug) {
@@ -310,7 +310,7 @@ export const EventSignUp = asyncHandler(async (req, res) => {
 
     const event = await Event.findOne({
       _id: eventId,
-      eventDate: { $gte: new Date() },
+      startTime: { $gte: new Date() },
     }).session(session);
 
     if (!event) throw new ApiError(404, "Event not found");

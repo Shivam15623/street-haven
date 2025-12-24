@@ -63,6 +63,12 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.DELETE_PROGRAM_MANUAL,
     PERMISSIONS.EDIT_PROGRAM_MANUAL,
     PERMISSIONS.VIEW_PROGRAM_MANUALS,
+
+    // 🔹 Forms
+    PERMISSIONS.VIEW_SUBMIT_FORM,
+    PERMISSIONS.VIEW_SUBMISSIONS,
+    PERMISSIONS.EDIT_FORM,
+    PERMISSIONS.DELETE_FORM,
   ],
 
   manager: [
@@ -101,6 +107,9 @@ export const ROLE_PERMISSIONS = {
 
     // 🔹 Program Manuals
     PERMISSIONS.VIEW_PROGRAM_MANUALS,
+
+    // 🔹 Forms
+    PERMISSIONS.VIEW_SUBMIT_FORM,
   ],
 
   hr: [
@@ -139,6 +148,9 @@ export const ROLE_PERMISSIONS = {
 
     // 🔹 Program Manuals
     PERMISSIONS.VIEW_PROGRAM_MANUALS,
+
+    // 🔹 Forms
+    PERMISSIONS.VIEW_SUBMIT_FORM,
   ],
 
   employee: [
@@ -171,5 +183,8 @@ export const ROLE_PERMISSIONS = {
 
     // 🔹 Program Manuals
     PERMISSIONS.VIEW_PROGRAM_MANUALS,
+
+    // 🔹 Forms
+    PERMISSIONS.VIEW_SUBMIT_FORM,
   ],
 };

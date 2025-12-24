@@ -76,17 +76,8 @@ export const AllEmployees = asyncHandler(async (req, res) => {
   );
 });
 export const AddEmployee = asyncHandler(async (req, res) => {
-  const {
-    firstName,
-    lastName,
-    email,
-    password,
-    phone,
-    role,
-    title,
-    hireDate,
- 
-  } = req.body;
+  const { firstName, lastName, email, password, phone, role, title, hireDate } =
+    req.body;
 
   const ExistingUser = await User.findOne({
     $or: [{ email: email }, { phoneNo: phone }],
@@ -200,7 +191,25 @@ export const EditEmployee = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "Employee profile updated successfully"));
 });
 
-export const EditEmployeePassword = asyncHandler(async (req, res) => {});
+export const EditEmployeePassword = asyncHandler(async (req, res) => {
+  const { id: userId } = req.params;
+
+  const { newPassword, confirmPassword } = req.body;
+  // Check if user exists
+  const findUser = await User.findById(userId);
+  if (!findUser) {
+    throw new ApiError(404, "No such user found");
+  }
+  if (newPassword === confirmPassword) {
+    throw new ApiError(
+      400,
+      "confirm password does not match with new Password"
+    );
+  }
+  findUser.password = newPassword;
+  await findUser.save();
+  return res.status(200).json(new ApiResponse("user's Pasword changed"));
+});
 export const RemoveEmployee = asyncHandler(async (req, res) => {
   const { id: userId } = req.params;
 
@@ -216,4 +225,24 @@ export const RemoveEmployee = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, null, "Employee removed successfully"));
+});
+export const resetTotp = asyncHandler(async (req, res) => {
+  const { id: userId } = req.params;
+  const employee = await User.findById(userId);
+  if (!employee) {
+    throw new ApiError(404, "No such user found");
+  }
+  employee.totpSecret = null;
+  employee.isTOTPEnabled = false;
+  employee.isTOTPVerified = false;
+
+  await employee.save();
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        `${employee.firstname} ${employee.lastname}'s Totp Reseted`
+      )
+    );
 });
