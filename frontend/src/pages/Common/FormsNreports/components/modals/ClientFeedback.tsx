@@ -18,6 +18,19 @@ const getComplaintBadgeVariant = (nature: string) => {
       return "secondary";
   }
 };
+const getContactIcon = (method?: string) => {
+  switch (method) {
+    case "Phone":
+      return "mdi:phone";
+    case "Email":
+      return "mdi:email-outline";
+    case "Either":
+      return "mdi:swap-horizontal";
+    default:
+      return "mdi:help-circle-outline";
+  }
+};
+
 const formatDate = (date: string | Date) => dayjs(date).format("DD MMM YYYY");
 
 const formatDateTime = (date: string | Date) =>
@@ -151,6 +164,26 @@ const ClientFeedback = ({ detail }: { detail: clientFeedbackData }) => {
                               <small>Address</small>
                             </div>
                             <p className="mb-0">{detail.clientAddress}</p>
+                          </div>
+                        </div>
+                      </Col>
+                    )}
+                    {detail.preferredContactMethod && (
+                      <Col md={6}>
+                        <div className="h-100 d-flex flex-column p-16 radius-12 bg-neutral-50 shadow-none border-sh-base-1-2">
+                          <div className="card-body">
+                            <div className="d-flex align-items-center gap-2 text-street-base mb-1">
+                              <Icon
+                                icon={getContactIcon(
+                                  detail.preferredContactMethod
+                                )}
+                                width={14}
+                              />
+                              <small>Preferred Contact Method</small>
+                            </div>
+                            <p className="mb-0 fw-medium">
+                              {detail.preferredContactMethod}
+                            </p>
                           </div>
                         </div>
                       </Col>

@@ -14,7 +14,7 @@ export const createEvent = asyncHandler(async (req, res) => {
     description,
     locationName,
     locationUrl,
-    facilitator,
+
     capacity,
     eventDate,
     startTime,
@@ -35,7 +35,7 @@ export const createEvent = asyncHandler(async (req, res) => {
             location_name: locationName,
             location_url: locationUrl,
           },
-          facilitator,
+          
           capacity,
           eventDate,
           createdBy: userId,
@@ -102,7 +102,7 @@ export const editEvent = asyncHandler(async (req, res) => {
     description,
     locationName,
     locationUrl,
-    facilitator,
+  
     capacity,
     eventDate,
     startTime,
@@ -116,7 +116,7 @@ export const editEvent = asyncHandler(async (req, res) => {
 
   if (title) event.title = title;
   if (description) event.description = description;
-  if (facilitator) event.facilitator = facilitator;
+
   if (capacity) event.capacity = capacity;
   if (eventDate) event.eventDate = eventDate;
   if (startTime) event.startTime = startTime;

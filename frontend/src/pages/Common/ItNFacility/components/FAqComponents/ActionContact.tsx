@@ -58,7 +58,7 @@ const EmergencyContact: React.FC<EmergencyContactModalProps> = ({
       }
       setShowModal(false);
     } catch (err) {
-      alert(err || "Something went wrong");
+      console.log(err || "Something went wrong");
     }
   };
 

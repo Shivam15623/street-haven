@@ -40,9 +40,9 @@ const AddFaqs: React.FC<AddFaqsProps> = ({ title, id }) => {
     try {
       await addQuestions({ id, questions: values.faqs }).unwrap();
       setShowModal(false);
-      alert("Questions added successfully");
+      console.log("Questions added successfully");
     } catch (error) {
-      alert(error || "Something went wrong");
+      console.log(error || "Something went wrong");
     }
   };
 

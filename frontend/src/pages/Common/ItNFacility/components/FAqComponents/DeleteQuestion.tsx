@@ -22,9 +22,9 @@ const DeleteQuestion: React.FC<DeleteQuestionProps> = ({
     try {
       await deleteQuestion({ cid, qid }).unwrap();
       setShowModal(false);
-      alert("Question deleted successfully");
+      console.log("Question deleted successfully");
     } catch (error) {
-      alert(error || "Something went wrong");
+      console.log(error || "Something went wrong");
     }
   };
 

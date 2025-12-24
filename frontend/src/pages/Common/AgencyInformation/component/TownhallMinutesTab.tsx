@@ -6,6 +6,7 @@ import TownhallMinuteCard from "./TownhallMinuteCard";
 import { useSearchParams } from "react-router-dom";
 
 import StreetPaggination from "../../../../components/child/StreetPaggination";
+import useHasPermission from "../../../../hooks/Auth";
 
 const TownhallMinutesTab = () => {
   const [page, setPage] = useState(1);
@@ -21,7 +22,7 @@ const TownhallMinutesTab = () => {
     order: "desc",
   });
   const totalPages = data ? data.data.paggination.totalPages : 0;
-
+  const { hasPermission } = useHasPermission();
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return;
     setPage(newPage);
@@ -33,7 +34,7 @@ const TownhallMinutesTab = () => {
       {/* Add Button */}
       <div className="d-flex flex-row justify-content-between align-items-center">
         <h2 className="text-md sm:text-lg">Event Minutes</h2>{" "}
-        { (
+        {hasPermission({ action: "create_event_minute" }) && (
           <button
             className="btn btn-street-primary d-flex text-sm  flex-row align-items-center justify-content-center radius-12 "
             style={{ minWidth: "43px", minHeight: "40px" }}
@@ -43,12 +44,12 @@ const TownhallMinutesTab = () => {
           </button>
         )}
       </div>
-      { (
+      {
         <ActionstownhallMinutes
           onHide={() => setShowModal(false)}
           show={showModal}
         />
-      )}
+      }
 
       {/* Loading */}
       {isLoading && <p>Loading meeting minutes...</p>}

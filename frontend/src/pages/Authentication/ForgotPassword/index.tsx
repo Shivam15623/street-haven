@@ -16,17 +16,16 @@ const forgotPasswordSchema = Yup.object({
     .email("Invalid email address"),
 });
 const ForgotPassword = () => {
-  const navigate=useNavigate()
+  const navigate = useNavigate();
   const [forgotPassword, { isLoading }] = useForgotPasswordMutation();
   const forgotpassword = async (values: ForgotValues) => {
     try {
       const res = await forgotPassword({ email: values.email }).unwrap();
       if (res?.success) {
         showSuccess(res.message);
-        setTimeout(()=> navigate("/login"),800)
-       
+        setTimeout(() => navigate("/login"), 800);
       }
-    } catch (err:any) {
+    } catch (err: any) {
       showError(err.data.message);
     }
   };
@@ -85,7 +84,7 @@ const ForgotPassword = () => {
                           disabled={isLoading} // disable input while loading
                           className=" h-50-px "
                           style={{
-                            backgroundColor: "#F2F0EC",
+                            backgroundColor: "var(--street-auth-input)",
                             borderColor: "#E2E8F0",
                             borderRadius: "15px",
                           }}

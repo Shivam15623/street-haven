@@ -77,6 +77,7 @@ export const createClientFeedback = asyncHandler(async (req, res) => {
     impact,
     outcome,
     description,
+    preferredContactMethod,
   } = req.body;
 
   // ---------------------------
@@ -101,7 +102,7 @@ export const createClientFeedback = asyncHandler(async (req, res) => {
     complaintDescription: description,
     desiredOutcome: outcome,
     impact: impact,
-
+    preferredContactMethod: preferredContactMethod,
     otherComplaintText: otherComplaint || undefined,
   });
 
@@ -176,7 +177,6 @@ export const createEmployeeIncident = asyncHandler(async (req, res) => {
       )
     );
 });
-
 
 export const createPaymentRequisition = asyncHandler(async (req, res) => {
   const {

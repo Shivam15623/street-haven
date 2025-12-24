@@ -40,6 +40,7 @@ export interface ClientFeedbackCredentials {
   impact: string;
   outcome: string;
   description: string;
+  preferredContactMethod: string;
 }
 
 export interface EmployeeIncidentCredentials {
@@ -72,7 +73,7 @@ export interface clientFeedbackData {
   clientEmail: string | null;
   clientPhone: string | null;
   clientAddress: string | null;
-
+  preferredContactMethod: "Phone" | "Email" | "Either";
   complaintNature: string;
   complaintDescription: string;
   desiredOutcome: string;

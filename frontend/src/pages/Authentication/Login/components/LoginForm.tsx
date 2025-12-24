@@ -31,7 +31,7 @@ const LoginForm: React.FC = () => {
               email: values.email,
             },
           });
-          return
+          return;
         } else if (response.data.status === "TOTP_SETUP_REQUIRED") {
           navigate("/connect-Authenticator", {
             state: {
@@ -92,7 +92,7 @@ const LoginForm: React.FC = () => {
                       onBlur={handleBlur}
                       className=" h-50-px "
                       style={{
-                        backgroundColor: "#F2F0EC",
+                        backgroundColor: "var(--street-auth-input)",
                         borderColor: "#E2E8F0",
                         borderRadius: "15px",
                       }}
@@ -120,7 +120,7 @@ const LoginForm: React.FC = () => {
                       onChange={handleChange}
                       onBlur={handleBlur}
                       style={{
-                        backgroundColor: "#F2F0EC",
+                        backgroundColor: "var(--street-auth-input)",
                         borderColor: "#E2E8F0",
                         borderRadius: "15px",
                         paddingRight: "2.5rem",

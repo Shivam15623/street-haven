@@ -12,6 +12,10 @@ import { authorizePermissions } from "../middleware/AuthRole.js";
 import { PERMISSIONS } from "../auth/permissions.js";
 import { validateRequest } from "../middleware/validate.js";
 import { idParamSchema } from "../validations/common.js";
+import {
+  createHrUpdateSchema,
+  updateHrUpdateSchema,
+} from "../validations/hrUpdates.js";
 
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
@@ -19,6 +23,7 @@ router
   .route("/create")
   .post(
     upload.single("attachment"),
+    validateRequest(createHrUpdateSchema, "body"),
     authorizePermissions({ action: PERMISSIONS.CREATE_HR_UPDATE }),
     createhrUpdate
   );
@@ -27,6 +32,7 @@ router
   .patch(
     upload.single("attachment"),
     validateRequest(idParamSchema, "params"),
+    validateRequest(updateHrUpdateSchema, "body"),
     authorizePermissions({ action: PERMISSIONS.EDIT_HR_UPDATE }),
     edithrUpdate
   );

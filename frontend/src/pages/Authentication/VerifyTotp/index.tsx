@@ -41,8 +41,9 @@ const VerifyTotp: React.FC = () => {
           slug: user.slug,
           createdAt: user.createdAt,
           title: user.title || "",
-          hireDate: user.hireDate ? new Date(user.hireDate).toISOString() : new Date().toISOString(),
-        
+          hireDate: user.hireDate
+            ? new Date(user.hireDate).toISOString()
+            : new Date().toISOString(),
         };
 
         dispatch(
@@ -123,7 +124,7 @@ const VerifyTotp: React.FC = () => {
                   onBlur={handleBlur}
                   className="h-50-px text-center fs-4 tracking-widest"
                   style={{
-                    backgroundColor: "#F2F0EC",
+                    backgroundColor: "var(--street-auth-input)",
                     border: "2px solid #E8F0FE",
                     padding: "14px 16px",
                     borderRadius: "15px",
