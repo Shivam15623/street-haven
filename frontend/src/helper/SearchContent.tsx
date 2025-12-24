@@ -110,7 +110,7 @@ const SearchContent: React.FC<SearchProps> = ({ mobileMode, onclose }) => {
     navigate(`/agency_info?tab=hr_updates&slug=${slug}`);
 
   const goToMinutes = (slug: string) =>
-    navigate(`/agency_info?tab=townhall_minutes&slug=${slug}`);
+    navigate(`/agency_info?tab=event_minutes&slug=${slug}`);
 
   const goToManual = (slug: string) =>
     navigate(`/programs&manuals?slug=${slug}`);

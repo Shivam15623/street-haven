@@ -5,6 +5,7 @@ import HRUpdateCard from "./HRUpdateCard";
 import { useViewhrUpdatesQuery } from "../../../../services/hrUpdatesApi";
 import ActionsHrUpdates from "./ActionsHrUpdates";
 import StreetPaggination from "../../../../components/child/StreetPaggination";
+import useHasPermission from "../../../../hooks/Auth";
 
 const HrUpdatesTab = () => {
   const [search, setSearch] = useState("");
@@ -26,6 +27,7 @@ const HrUpdatesTab = () => {
     order: "desc",
   });
   const totalPages = data ? data.data.paggination.totalPages : 0;
+  const { hasPermission } = useHasPermission();
   // When user types in search, remove slug and tab from URL
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -46,7 +48,7 @@ const HrUpdatesTab = () => {
     <div className="d-flex flex-column gap-24">
       <div className="d-flex flex-row justify-content-between align-items-center">
         <h2 className="text-md sm:text-lg">HR updates</h2>
-        { (
+        {hasPermission({ action: "create_hr_update" }) && (
           <button
             className="btn btn-street-primary text-sm d-flex  flex-row align-items-center justify-content-center radius-12 "
             style={{ minWidth: "43px", minHeight: "40px" }}
@@ -68,9 +70,7 @@ const HrUpdatesTab = () => {
         />
       </div>
 
-      {(
-        <ActionsHrUpdates show={showModal} onHide={() => setShowModal(false)} />
-      )}
+      {<ActionsHrUpdates show={showModal} onHide={() => setShowModal(false)} />}
 
       {isLoading && <p>Loading...</p>}
       {isError && <p>Something went wrong</p>}

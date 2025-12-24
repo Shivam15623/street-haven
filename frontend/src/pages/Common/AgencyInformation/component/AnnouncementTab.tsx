@@ -5,6 +5,7 @@ import { useViewAnnouncementsQuery } from "../../../../services/AnnouncementApi"
 import { Icon } from "@iconify/react/dist/iconify.js";
 import AnnouncementCard from "./AnnouncementCard";
 import StreetPaggination from "../../../../components/child/StreetPaggination";
+import useHasPermission from "../../../../hooks/Auth";
 
 const AnnouncementTab = () => {
   const [open, setOpen] = useState(false);
@@ -17,6 +18,7 @@ const AnnouncementTab = () => {
     page,
     keyword: search,
   });
+  const { hasPermission } = useHasPermission();
   const totalPages = data ? data.data.paggination.totalPages : 0;
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -32,7 +34,7 @@ const AnnouncementTab = () => {
       {/* Add Button */}
       <div className="d-flex flex-row justify-content-between align-items-center">
         <h2 className="text-md sm:text-lg">Announcements</h2>{" "}
-   
+        {hasPermission({ action: "create_announcement" }) && (
           <button
             className="btn btn-street-primary text-sm d-flex flex-row align-items-center justify-content-center radius-12 "
             style={{ minWidth: "43px", minHeight: "40px" }}
@@ -40,7 +42,7 @@ const AnnouncementTab = () => {
           >
             Add Announcement
           </button>
-  
+        )}
       </div>
       {/* Search box */}
       <div className="px-20 py-16 program-input bg-base radius-12 d-flex flex-row align-items-center gap-8">
@@ -53,7 +55,7 @@ const AnnouncementTab = () => {
         />
       </div>
 
-        <ActionsAnnouncement show={open} onHide={() => setOpen(false)} />
+      <ActionsAnnouncement show={open} onHide={() => setOpen(false)} />
 
       {isLoading && <p>Loading...</p>}
       {isError && <p>Something went wrong</p>}
