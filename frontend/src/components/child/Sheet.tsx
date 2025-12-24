@@ -115,10 +115,17 @@ export default function Sheet({
           <Offcanvas.Title id={`${sheetId}-label`}>{title}</Offcanvas.Title>
         </Offcanvas.Header>
 
-        <Offcanvas.Body className={bodyclassName}>{children}</Offcanvas.Body>
+        <Offcanvas.Body
+          style={{
+            background: "var(--street-bg-f2)",
+          }}
+          className={bodyclassName}
+        >
+          {children}
+        </Offcanvas.Body>
 
         {footer && (
-          <div className="offcanvas-footer p-3 border-top">
+          <div style={{ background: "var(--street-bg-f4)",}} className="offcanvas-footer p-3 border-top">
             {typeof footer === "function"
               ? footer({ close: handleClose })
               : footer}

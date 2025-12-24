@@ -114,14 +114,15 @@ function DataTable<T extends object>({
                 return (
                   <th
                     key={i}
-                    onClick={() =>
-                      col.sortable !== false && col.accessorKey
-                        ? onSortChange(
-                            col.accessorKey as string,
-                            isSorted && order === "asc" ? "desc" : "asc"
-                          )
-                        : undefined
-                    }
+                    onClick={() => {
+                      if (col.sortable !== false && col.accessorKey) {
+                        onSortChange(
+                          col.accessorKey as string,
+                          isSorted && order === "asc" ? "desc" : "asc"
+                        );
+                        onPageChange(1);
+                      }
+                    }}
                     style={{
                       cursor:
                         col.sortable !== false && col.accessorKey

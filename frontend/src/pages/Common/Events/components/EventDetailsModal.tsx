@@ -34,7 +34,7 @@ const EventFormSchema = Yup.object().shape({
   locationUrl: Yup.string()
     .url("Enter a valid map URL")
     .required("Location URL is required"),
-  facilitator: Yup.string().required("Facilitator name is required"),
+
   capacity: Yup.number()
     .required("Capacity is required")
     .positive("Capacity must be greater than 0")
@@ -95,7 +95,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
     endTime,
     startTime,
     location,
-    facilitator,
+
     description,
     title,
     totalRegistered,
@@ -266,7 +266,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
           initialValues={{
             title: event.title || "",
             description: event.description || "",
-            facilitator: event.facilitator || "",
+
             capacity: event.capacity || 0,
             eventDate: dayjs(event.eventDate).format("YYYY-MM-DD"),
             startTime: dayjs(event.startTime).format("HH:mm"),
@@ -416,21 +416,6 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
               <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
                 <Col md={6}>
                   {" "}
-                  <Form.Group className="d-flex flex-column gap-1">
-                    <Form.Label>Facilitator</Form.Label>
-                    <Form.Control
-                      name="facilitator"
-                      value={values.facilitator}
-                      onChange={handleChange}
-                      isInvalid={!!errors.facilitator && touched.facilitator}
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.facilitator}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-                </Col>{" "}
-                <Col md={6}>
-                  {" "}
                   {/* Location URL */}
                   <Form.Group className="d-flex flex-column gap-1">
                     <Form.Label>Capacity</Form.Label>
@@ -494,10 +479,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
               {location.location_name}
             </a>
           </div>
-          <div className="d-flex flex-column gap-2">
-            <p className="text-street-dark fw-semibold">Facilitator</p>
-            <p className="text-street-base">{facilitator}</p>
-          </div>
+
           <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
             <Col md={4}>
               <div className="d-flex flex-column gap-2">

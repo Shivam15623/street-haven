@@ -37,7 +37,7 @@ const ResetPassword: React.FC = () => {
         const response = await resetPassword({
           token,
           newPassword: values.newPassword,
-          confirmPassword:values.confirmPassword
+          confirmPassword: values.confirmPassword,
         }).unwrap();
 
         if (response?.success) {
@@ -103,7 +103,7 @@ const ResetPassword: React.FC = () => {
                           onChange={handleChange}
                           onBlur={handleBlur}
                           style={{
-                            backgroundColor: "#F2F0EC",
+                            backgroundColor: "var(--street-auth-input)",
                             borderColor: "#E2E8F0",
                             borderRadius: "15px",
                             paddingRight: "2.5rem",
@@ -135,7 +135,7 @@ const ResetPassword: React.FC = () => {
                           onBlur={handleBlur}
                           className="auth-input"
                           style={{
-                            backgroundColor: "#F2F0EC",
+                            backgroundColor: "var(--street-auth-input)",
                             borderColor: "#E2E8F0",
                             borderRadius: "15px",
                             paddingRight: "2.5rem",

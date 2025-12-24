@@ -62,7 +62,7 @@ const SearchContent: React.FC<SearchProps> = ({ mobileMode, onclose }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const debouncedQuery = useDebounce<string>(query, 500);
+  const debouncedQuery = useDebounce<string>(query, 1000);
 
   const { data: results, isLoading } = useSearchAllContentQuery(
     debouncedQuery,
@@ -110,7 +110,7 @@ const SearchContent: React.FC<SearchProps> = ({ mobileMode, onclose }) => {
     navigate(`/agency_info?tab=hr_updates&slug=${slug}`);
 
   const goToMinutes = (slug: string) =>
-    navigate(`/agency_info?tab=townhall_minutes&slug=${slug}`);
+    navigate(`/agency_info?tab=event_minutes&slug=${slug}`);
 
   const goToManual = (slug: string) =>
     navigate(`/programs&manuals?slug=${slug}`);

@@ -1,5 +1,6 @@
 import Joi from "joi";
 
+const ALLOWED_ROLES = ["hr", "employee", "manager"];
 export const registerUserSchema = Joi.object({
   firstName: Joi.string()
     .pattern(/^[A-Za-z\s]+$/)
@@ -24,7 +25,14 @@ export const registerUserSchema = Joi.object({
     "string.empty": "Email is required",
     "any.required": "Email is required",
   }),
-
+  role: Joi.string()
+    .trim()
+    .valid(...ALLOWED_ROLES)
+    .required()
+    .messages({
+      "any.only": "Role must be one of admin, manager, or employee",
+      "any.required": "Role is required",
+    }),
   phone: Joi.string()
     .pattern(
       /^\+1\s?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/
@@ -86,4 +94,15 @@ export const resetPasswordSchema = Joi.object({
       "string.empty": "Confirm password is required",
       "any.required": "Confirm password is required",
     }),
+});
+export const setupTotpSchema = Joi.object({
+  tempToken: Joi.string().required(),
+
+  totpCode: Joi.number().integer().min(100000).max(999999).required().messages({
+    "number.base": "TOTP code must be a number",
+    "number.integer": "TOTP code must be an integer",
+    "number.min": "TOTP code must be a 6-digit number",
+    "number.max": "TOTP code must be a 6-digit number",
+    "any.required": "TOTP code is required",
+  }),
 });

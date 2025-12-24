@@ -6,7 +6,7 @@ export interface EventCredentials {
   description: string;
   locationName: string;
   locationUrl: string;
-  facilitator: string;
+
   capacity: number;
   eventDate: Date;
   startTime: Date;
@@ -22,7 +22,7 @@ export interface EventUpcomingData {
   eventDate: string; // ISO date string (e.g. "2025-09-11T00:00:00.000Z")
   startTime: string; // ISO date string with time
   endTime: string; // ISO date string with time
-  facilitator: string;
+
   registeredUsers: string[]; // assuming these are user IDs
   totalRegistered: number;
   capacity: number;
