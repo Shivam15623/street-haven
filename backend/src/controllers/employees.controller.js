@@ -17,9 +17,7 @@ export const AllEmployees = asyncHandler(async (req, res) => {
   } = req.query;
 
   const query = {}; // always exclude admins for dropdown
-  if (forDropdown === "true" || forDropdown === true) {
-    query.role = { $ne: "admin" };
-  }
+ 
 
   // Search
   if (search) {
@@ -76,11 +74,24 @@ export const AllEmployees = asyncHandler(async (req, res) => {
   );
 });
 export const AddEmployee = asyncHandler(async (req, res) => {
-  const { firstName, lastName, email, password, phone, role, title, hireDate } =
-    req.body;
+  const {
+    firstName,
+    lastName,
+    email,
+    password,
+    phone,
+    role,
+    title,
+    hireDate,
+    superviserId,
+  } = req.body;
 
   const ExistingUser = await User.findOne({
     $or: [{ email: email }, { phoneNo: phone }],
+  });
+
+  const superviser = await User.findOne({
+    _id: superviserId,
   });
 
   if (ExistingUser) {
@@ -90,6 +101,9 @@ export const AddEmployee = asyncHandler(async (req, res) => {
     if (ExistingUser.phoneNo === phone) {
       throw new ApiError(400, "User already exists with this phone number");
     }
+  }
+  if (!superviser) {
+    throw new ApiError(404, "No Such Superviser Found");
   }
 
   const newUser = await User.create({
@@ -104,6 +118,7 @@ export const AddEmployee = asyncHandler(async (req, res) => {
     totpSecret: null,
     isTOTPEnabled: false,
     isTOTPVerified: false,
+    superviserId: superviserId,
   });
 
   if (!newUser) {
@@ -122,8 +137,16 @@ export const EditEmployee = asyncHandler(async (req, res) => {
     throw new ApiError(404, "No such user found");
   }
 
-  const { firstname, lastname, email, phoneNo, role, title, hireDate } =
-    req.body;
+  const {
+    firstname,
+    lastname,
+    email,
+    phoneNo,
+    role,
+    title,
+    hireDate,
+    superviserId,
+  } = req.body;
 
   const updates = {};
 
@@ -153,7 +176,8 @@ export const EditEmployee = asyncHandler(async (req, res) => {
       (title ? title === findUser.title : true) &&
       (hireDate
         ? new Date(hireDate).toISOString() === findUser.hireDate.toISOString()
-        : true);
+        : true) &&
+      (superviserId ? superviserId === findUser.superviserId : true);
 
     if (isSame) {
       return res
@@ -177,6 +201,16 @@ export const EditEmployee = asyncHandler(async (req, res) => {
     new Date(hireDate).toISOString() !== findUser.hireDate.toISOString()
   )
     updates.hireDate = new Date(hireDate);
+  if (superviserId && superviserId !== findUser.superviserId) {
+    const superviser = await User.findOne({
+      _id: superviserId,
+    });
+    if (!superviser) {
+      throw new ApiError(404, "No Such Superviser Found");
+    }
+    updates.superviserId = superviserId;
+  }
+
   const updatedUser = await User.findByIdAndUpdate(userId, updates, {
     new: true,
     runValidators: true,

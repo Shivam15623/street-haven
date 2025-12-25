@@ -3,7 +3,10 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as yup from "yup";
 import { Form as BootstrapForm, Row, Col } from "react-bootstrap";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
-import { useEditEmployeeMutation } from "../../../../services/EmployeeApi";
+import {
+  useAllEmployeesQuery,
+  useEditEmployeeMutation,
+} from "../../../../services/EmployeeApi";
 import { showSuccess } from "../../../../utills/toastutills";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import FormImageUploader from "./FormProfileUploader";
@@ -19,15 +22,12 @@ const editEmployeeSchema = yup.object({
   role: yup.string().required("Role is required"),
   email: yup
     .string()
-    // .matches(
-    //   /^[A-Za-z0-9._%+-]+@streethaven\.com$/,
-    //   "Email must be from @streethaven.com domain"
-    // )
+    .matches(
+      /^[A-Za-z0-9._%+-]+@streethaven\.com$/,
+      "Email must be from @streethaven.com domain"
+    )
     .required("Email is required"),
-  title: yup
-    .string()
-    .matches(/^[a-zA-Z\s]+$/, "Title can only contain letters and spaces")
-    .required("Title is required"),
+  title: yup.string().required("Title is required"),
   phoneNo: yup
     .string()
     .matches(
@@ -38,6 +38,7 @@ const editEmployeeSchema = yup.object({
   profilePic: yup.mixed<File>().nullable(),
   hireDate: yup.date().required("Hire Date is required"),
   timePeriod: yup.string(),
+  superviserId: yup.string().nullable(),
 });
 
 type EditEmployeeValues = yup.InferType<typeof editEmployeeSchema>;
@@ -55,7 +56,8 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [editEmployee, { isLoading }] = useEditEmployeeMutation();
-
+  const { data: employeeData, isLoading: isEmployeeLoading } =
+    useAllEmployeesQuery({ forDropdown: true });
   const handleSave = async (values: EditEmployeeValues) => {
     try {
       // Ensure timePeriod exists
@@ -67,7 +69,8 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
       formData.append("phoneNo", values.phoneNo);
       formData.append("role", values.role);
       formData.append("title", values.title);
-
+      if (values.superviserId && values.superviserId !== null)
+        formData.append("superviserId", values.superviserId);
       function toISODate(value: Date | string | null | undefined) {
         if (!value) return "";
         return value instanceof Date
@@ -138,188 +141,238 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
           </div>
         }
       >
-        <Formik
-          initialValues={initialValues}
-          validationSchema={editEmployeeSchema}
-          onSubmit={handleSave}
+        <div
+          style={{
+            maxHeight: "60vh",
+            overflowY: "auto",
+            overflowX: "hidden",
+            scrollbarWidth: "thin",
+          }}
         >
-          {({
-            setFieldValue,
-            values,
-            errors,
-            touched,
-
-            handleBlur,
-          }) => (
-            <Form id="edit-employee-form" className="d-flex flex-column gap-18">
-              {/* Profile Picture */}
-              <div className="d-flex justify-content-center mb-3">
-                <FormImageUploader
-                  setFieldValue={setFieldValue}
-                  value={values.profilePic}
-                  imageUrl={profilePic}
-                />
-              </div>
-
-              {/* First & Last Name */}
-              <Row>
-                <Col md={6}>
-                  <BootstrapForm.Group className="mb-3">
-                    <BootstrapForm.Label>First Name</BootstrapForm.Label>
-                    <Field
-                      name="firstname"
-                      type="text"
-                      className={`form-control ${
-                        touched.firstname && errors.firstname
-                          ? "is-invalid"
-                          : ""
-                      }`}
-                    />
-                    <ErrorMessage
-                      component="div"
-                      className="invalid-feedback"
-                      name="firstname"
-                    />
-                  </BootstrapForm.Group>
-                </Col>
-                <Col md={6}>
-                  <BootstrapForm.Group className="mb-3">
-                    <BootstrapForm.Label>Last Name</BootstrapForm.Label>
-                    <Field
-                      name="lastname"
-                      type="text"
-                      className={`form-control ${
-                        touched.lastname && errors.lastname ? "is-invalid" : ""
-                      }`}
-                    />
-                    <ErrorMessage
-                      component="div"
-                      className="invalid-feedback"
-                      name="lastname"
-                    />
-                  </BootstrapForm.Group>
-                </Col>
-              </Row>
-
-              {/* Email */}
-              <BootstrapForm.Group className="mb-3">
-                <BootstrapForm.Label>Email</BootstrapForm.Label>
-                <Field
-                  name="email"
-                  type="email"
-                  className={`form-control ${
-                    touched.email && errors.email ? "is-invalid" : ""
-                  }`}
-                />
-                <ErrorMessage
-                  component="div"
-                  className="invalid-feedback"
-                  name="email"
-                />
-              </BootstrapForm.Group>
-
-              {/* Role */}
-              <BootstrapForm.Group className="mb-3">
-                <BootstrapForm.Label>Role</BootstrapForm.Label>
-                <Field
-                  as="select"
-                  name="role"
-                  className={`form-control ${
-                    touched.role && errors.role ? "is-invalid" : ""
-                  }`}
+          <div className="py-16">
+            {" "}
+            <Formik
+              initialValues={initialValues}
+              validationSchema={editEmployeeSchema}
+              onSubmit={handleSave}
+            >
+              {({
+                setFieldValue,
+                values,
+                errors,
+                touched,
+                handleChange,
+                handleBlur,
+              }) => (
+                <Form
+                  id="edit-employee-form"
+                  className="d-flex flex-column gap-18"
                 >
-                  <option value="">Select Role</option>
-                  {Object.values(ROLES).map((role) => (
-                    <option key={role} value={role}>
-                      {formatRole(role)}
-                    </option>
-                  ))}
-                </Field>
-                <ErrorMessage
-                  component="div"
-                  className="invalid-feedback"
-                  name="role"
-                />
-              </BootstrapForm.Group>
+                  {/* Profile Picture */}
+                  <div className="d-flex justify-content-center mb-3">
+                    <FormImageUploader
+                      setFieldValue={setFieldValue}
+                      value={values.profilePic}
+                      imageUrl={profilePic}
+                    />
+                  </div>
 
-              {/* Phone */}
-              <BootstrapForm.Group className="mb-3">
-                <BootstrapForm.Label>Phone Number</BootstrapForm.Label>
-                <PatternFormat
-                  format="+1 (###) ###-####"
-                  allowEmptyFormatting
-                  mask="_"
-                  className={`form-control ${
-                    touched.phoneNo && errors.phoneNo ? "is-invalid" : ""
-                  }`}
-                  value={values.phoneNo}
-                  onValueChange={(v) =>
-                    setFieldValue("phoneNo", v.formattedValue)
-                  }
-                />
-                <ErrorMessage
-                  component="div"
-                  className="invalid-feedback"
-                  name="phoneNo"
-                />
-              </BootstrapForm.Group>
+                  {/* First & Last Name */}
+                  <Row>
+                    <Col md={6}>
+                      <BootstrapForm.Group className="mb-3">
+                        <BootstrapForm.Label>First Name</BootstrapForm.Label>
+                        <Field
+                          name="firstname"
+                          type="text"
+                          className={`form-control ${
+                            touched.firstname && errors.firstname
+                              ? "is-invalid"
+                              : ""
+                          }`}
+                        />
+                        <ErrorMessage
+                          component="div"
+                          className="invalid-feedback"
+                          name="firstname"
+                        />
+                      </BootstrapForm.Group>
+                    </Col>
+                    <Col md={6}>
+                      <BootstrapForm.Group className="mb-3">
+                        <BootstrapForm.Label>Last Name</BootstrapForm.Label>
+                        <Field
+                          name="lastname"
+                          type="text"
+                          className={`form-control ${
+                            touched.lastname && errors.lastname
+                              ? "is-invalid"
+                              : ""
+                          }`}
+                        />
+                        <ErrorMessage
+                          component="div"
+                          className="invalid-feedback"
+                          name="lastname"
+                        />
+                      </BootstrapForm.Group>
+                    </Col>
+                  </Row>
 
-              {/* Title & Hire Date */}
-              <Row>
-                <Col md={6}>
+                  {/* Email */}
                   <BootstrapForm.Group className="mb-3">
-                    <BootstrapForm.Label>Title</BootstrapForm.Label>
+                    <BootstrapForm.Label>Email</BootstrapForm.Label>
                     <Field
-                      name="title"
-                      type="text"
+                      name="email"
+                      type="email"
                       className={`form-control ${
-                        touched.title && errors.title ? "is-invalid" : ""
+                        touched.email && errors.email ? "is-invalid" : ""
                       }`}
                     />
                     <ErrorMessage
                       component="div"
                       className="invalid-feedback"
-                      name="title"
+                      name="email"
                     />
                   </BootstrapForm.Group>
-                </Col>
-                <Col md={6}>
-                  <BootstrapForm.Group className="mb-3">
-                    <BootstrapForm.Label>Hire Date</BootstrapForm.Label>
-                    <CustomDatePicker
-                      value={values.hireDate ? new Date(values.hireDate) : null}
-                      onChange={(date) => setFieldValue("hireDate", date)}
-                      onBlur={handleBlur}
-                    />
-                    {touched.hireDate && errors.hireDate && (
-                      <div className="invalid-feedback d-block">
-                        {errors.hireDate as string}
-                      </div>
-                    )}
-                  </BootstrapForm.Group>
-                </Col>
-              </Row>
 
-              {/* Time Period */}
-              <Row>
-                <Col md={12}>
+                  {/* Role */}
                   <BootstrapForm.Group className="mb-3">
-                    <BootstrapForm.Label>Time Period</BootstrapForm.Label>
+                    <BootstrapForm.Label>Role</BootstrapForm.Label>
                     <Field
-                      name="timePeriod"
-                      type="text"
-                      
-                      className={`form-control`}
-                      disabled
+                      as="select"
+                      name="role"
+                      className={`form-control ${
+                        touched.role && errors.role ? "is-invalid" : ""
+                      }`}
+                    >
+                      <option value="">Select Role</option>
+                      {Object.values(ROLES).map((role) => (
+                        <option key={role} value={role}>
+                          {formatRole(role)}
+                        </option>
+                      ))}
+                    </Field>
+                    <ErrorMessage
+                      component="div"
+                      className="invalid-feedback"
+                      name="role"
                     />
-                   
                   </BootstrapForm.Group>
-                </Col>
-               
-              </Row>
-            </Form>
-          )}
-        </Formik>
+
+                  {/* Phone */}
+                  <BootstrapForm.Group className="mb-3">
+                    <BootstrapForm.Label>Phone Number</BootstrapForm.Label>
+                    <PatternFormat
+                      format="+1 (###) ###-####"
+                      allowEmptyFormatting
+                      mask="_"
+                      className={`form-control ${
+                        touched.phoneNo && errors.phoneNo ? "is-invalid" : ""
+                      }`}
+                      value={values.phoneNo}
+                      onValueChange={(v) =>
+                        setFieldValue("phoneNo", v.formattedValue)
+                      }
+                    />
+                    <ErrorMessage
+                      component="div"
+                      className="invalid-feedback"
+                      name="phoneNo"
+                    />
+                  </BootstrapForm.Group>
+
+                  {/* Title & Hire Date */}
+                  <Row>
+                    <Col md={6}>
+                      <BootstrapForm.Group className="mb-3">
+                        <BootstrapForm.Label>Title</BootstrapForm.Label>
+                        <Field
+                          name="title"
+                          type="text"
+                          className={`form-control ${
+                            touched.title && errors.title ? "is-invalid" : ""
+                          }`}
+                        />
+                        <ErrorMessage
+                          component="div"
+                          className="invalid-feedback"
+                          name="title"
+                        />
+                      </BootstrapForm.Group>
+                    </Col>
+                    <Col md={6}>
+                      <BootstrapForm.Group className="mb-3">
+                        <BootstrapForm.Label>Hire Date</BootstrapForm.Label>
+                        <CustomDatePicker
+                          value={
+                            values.hireDate ? new Date(values.hireDate) : null
+                          }
+                          onChange={(date) => setFieldValue("hireDate", date)}
+                          onBlur={handleBlur}
+                        />
+                        {touched.hireDate && errors.hireDate && (
+                          <div className="invalid-feedback d-block">
+                            {errors.hireDate as string}
+                          </div>
+                        )}
+                      </BootstrapForm.Group>
+                    </Col>
+                  </Row>
+                  <BootstrapForm.Group className="mb-3">
+                    <BootstrapForm.Label
+                      className="align-items-center d-flex"
+                      column
+                      sm={2}
+                    >
+                      Assignee
+                    </BootstrapForm.Label>
+
+                    <BootstrapForm.Select
+                      size="sm"
+                      name="superviserId"
+                      value={values.superviserId}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      isInvalid={touched.superviserId && !!errors.superviserId}
+                    >
+                      <option value="">Select Supervisor</option>
+
+                      {isEmployeeLoading ? (
+                        <option disabled>Loading...</option>
+                      ) : (
+                        employeeData?.data.employees.map((emp) => (
+                          <option key={emp._id} value={emp._id}>
+                            {emp.firstname} {emp.lastname} ({emp.email})
+                          </option>
+                        ))
+                      )}
+                    </BootstrapForm.Select>
+
+                    <BootstrapForm.Control.Feedback type="invalid">
+                      {errors.superviserId}
+                    </BootstrapForm.Control.Feedback>
+                  </BootstrapForm.Group>
+
+                  {/* Time Period */}
+                  <Row>
+                    <Col md={12}>
+                      <BootstrapForm.Group className="mb-3">
+                        <BootstrapForm.Label>Time Period</BootstrapForm.Label>
+                        <Field
+                          name="timePeriod"
+                          type="text"
+                          className={`form-control`}
+                          disabled
+                        />
+                      </BootstrapForm.Group>
+                    </Col>
+                  </Row>
+                </Form>
+              )}
+            </Formik>
+          </div>
+        </div>
       </ModalWrapper>
     </>
   );

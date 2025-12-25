@@ -1,12 +1,12 @@
 import { Icon } from "@iconify/react";
 import { format } from "date-fns";
 import { Row, Col, Container } from "react-bootstrap";
-import type { clientIncidentReport } from "../../../../../services/FormApi";
-import Badge, {
-  type BadgeVariant,
-} from "../../../../../components/child/Badge";
-import ModalWrapper from "../../../../../components/child/ModalWrapper";
+
 import { useState, type JSX } from "react";
+import type { BadgeVariant } from "../../../../../../components/child/Badge";
+import type { clientIncidentReport } from "../../../../../../services/FormApi";
+import ModalWrapper from "../../../../../../components/child/ModalWrapper";
+import Badge from "../../../../../../components/child/Badge";
 
 interface ClientIncidentModalProps {
   incident: clientIncidentReport | null;

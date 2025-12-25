@@ -185,10 +185,8 @@ const StaffFeedbackForm: React.FC = () => {
                         <CustomDatePicker
                           value={values.date ? new Date(values.date) : null}
                           onChange={(date) => {
-                            const newDate = date
-                              ? date.toISOString().split("T")[0]
-                              : "";
-                            setFieldValue("date", newDate, true); // ← Add true to validate immediately
+                           
+                            setFieldValue("date", date, true); // ← Add true to validate immediately
                             setFieldTouched("date", true, false); // ← false prevents double validation
                           }}
                           onBlur={handleBlur}

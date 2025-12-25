@@ -1,44 +1,247 @@
-import React, { useState } from "react";
-import ModalWrapper from "../../../../../components/child/ModalWrapper";
-import { Formik } from "formik";
+import {
+  Field,
+  FieldArray,
+  Formik,
+  type FormikErrors,
+  type FormikProps,
+  type FormikTouched,
+} from "formik";
+import { Card, Col, Form, Row } from "react-bootstrap";
+import * as Yup from "yup";
+import CustomDatePicker from "../../../../../../components/child/DatePicker";
+import { Icon } from "@iconify/react/dist/iconify.js";
+import PdfUploader from "../../../../../../components/child/PdfUploader";
+import { useCreatePaymentRequistionMutation } from "../../../../../../services/FormApi";
+import { showSuccess } from "../../../../../../utills/toastutills";
+import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { selectAuth } from "../../../../../../redux/AuthSlice";
 
-import { Form } from "react-bootstrap";
-import { Card } from "react-bootstrap";
-import CustomDatePicker from "../../../../../components/child/DatePicker";
+// --------------------
+// TYPES
+// --------------------
+interface PurchaseDetail {
+  date: Date | null;
+  nature: string;
+  program: string;
+  expenseCode: string;
+  netAmount: number;
+  hst: number;
+  totalAmount: number;
+}
 
-const EditPaymentRequistion = () => {
-  const [showModal, setShowModal] = useState(false);
+interface FormValues {
+  payeeName: string;
+  totalAmount: number;
+  requestedBy: string;
+  requestedDate: Date | null;
+  approvedBy: string;
+  approvedDate: Date | null;
+  purchaseDetails: PurchaseDetail[];
+  invoices: File | null;
+}
+
+// --------------------
+// SCHEMA
+// --------------------
+const FormSchema = Yup.object({
+  payeeName: Yup.string().required("Payee Name is required"),
+  totalAmount: Yup.number(),
+  requestedBy: Yup.string().required("Requested By Name is required"),
+  requestedDate: Yup.date().nullable().required("Requested Date is required"),
+  approvedBy: Yup.string().required("Approved By Name is required"),
+  approvedDate: Yup.date().nullable().required("Approved Date is required"),
+  purchaseDetails: Yup.array()
+    .of(
+      Yup.object().shape({
+        date: Yup.date().nullable().required("Date is required"),
+        nature: Yup.string().required("Nature is required"),
+        program: Yup.string().required("Department is required"),
+        expenseCode: Yup.string().required("Expense Code required"),
+        netAmount: Yup.number().required("Net Amount is required"),
+        hst: Yup.number().required("HST is required"),
+        totalAmount: Yup.number().required("Total Amount is required"),
+      })
+    )
+    .min(1, "At least one Purchase Detail is required"),
+  invoices: Yup.mixed<File>()
+    .nullable()
+    .test("fileType", "Only PDF files are allowed", (value) => {
+      return value instanceof File && value.type === "application/pdf";
+    })
+    .test("fileSize", "File size must be less than 16MB", (value) => {
+      if (!value) return true;
+      return value.size <= 16 * 1024 * 1024;
+    }),
+});
+function GrandTotalUpdater({
+  values,
+  setFieldValue,
+}: Pick<FormikProps<FormValues>, "values" | "setFieldValue">) {
+  useEffect(() => {
+    const total = values.purchaseDetails.reduce(
+      (sum, item) => sum + Number(item.totalAmount || 0),
+      0
+    );
+
+    setFieldValue("totalAmount", total);
+  }, [values.purchaseDetails, setFieldValue]);
+
+  return null; // no UI
+}
+const PaymentRequisitionForm = () => {
+  const { user } = useSelector(selectAuth);
+  const [createpayrequest, { isLoading }] =
+    useCreatePaymentRequistionMutation();
+  const initialValues: FormValues = {
+    payeeName: "",
+    totalAmount: 0,
+    requestedBy: `${user?.firstName} ${user?.lastName}`,
+    requestedDate: new Date(),
+    approvedBy: "",
+    approvedDate: new Date(),
+    invoices: null,
+    purchaseDetails: [
+      {
+        date: null,
+        nature: "",
+        program: "",
+        expenseCode: "",
+        netAmount: 0,
+        totalAmount: 0,
+        hst: 0,
+      },
+    ],
+  };
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch file");
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(blobUrl); // Free memory
+    } catch (err) {
+      console.error("Download failed:", err);
+    }
+  };
+  const handleSubmit = async (
+    values: FormValues,
+    { resetForm }: { resetForm: () => void }
+  ) => {
+    try {
+      const formData = new FormData();
+
+      // ---------- BASIC FIELDS ----------
+      formData.append("payeeName", values.payeeName);
+      formData.append("requestedBy", values.requestedBy);
+      formData.append("approvedBy", values.approvedBy);
+
+      formData.append(
+        "requestedDate",
+        values.requestedDate ? values.requestedDate.toISOString() : ""
+      );
+
+      formData.append(
+        "approvedDate",
+        values.approvedDate ? values.approvedDate.toISOString() : ""
+      );
+
+      // ---------- PURCHASE DETAILS ----------
+      values.purchaseDetails.forEach((item, index) => {
+        formData.append(
+          `paymentDetails[${index}][purchaseDate]`,
+          item.date ? item.date.toISOString() : ""
+        );
+        formData.append(
+          `paymentDetails[${index}][purchaseNature]`,
+          item.nature
+        );
+        formData.append(`paymentDetails[${index}][program]`, item.program);
+        formData.append(
+          `paymentDetails[${index}][expenseCode]`,
+          item.expenseCode
+        );
+        formData.append(
+          `paymentDetails[${index}][netAmount]`,
+          item.netAmount.toString()
+        );
+        formData.append(`paymentDetails[${index}][hst]`, item.hst.toString());
+        formData.append(
+          `paymentDetails[${index}][totalAmount]`,
+          item.totalAmount.toString()
+        );
+      });
+
+      // ---------- INVOICE PDF ----------
+      if (values.invoices instanceof File) {
+        formData.append("invoiceAttachment", values.invoices); // must match multer field name
+      }
+
+      // ---------- API CALL ----------
+      const response = await createpayrequest(formData).unwrap();
+
+      if (response.success) {
+        showSuccess(response.message);
+        resetForm();
+      }
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
+
   return (
-    <>
-      <ModalWrapper
-        show={showModal}
-        onHide={() => setShowModal(false)}
-        size="lg"
-        title="Employee Incident Report"
-        headerClassName="text-xl p-0 pb-20 text-street-dark"
-        className="p-20 p-sm-24 p-md-32"
-        bodyClassName="p-0"
+    <div className="d-flex flex-column gap-24 ">
+      <div className="card">
+        <div className="card-body d-flex flex-row gap-20 align-items-center">
+          <img src="/assets/images/shForm.png" width={144} height={113} />
+          <div className="d-flex flex-column">
+            <h4 className="text-xxl sm:text-xl text-street-dark fw-semibold mb-2">
+              Payment Requisition Form
+            </h4>
+            <p className="text-md text-street-dark fw-semibold">
+              Thank you for visiting Street Haven. We value all our clients and
+              strive to meet everyone’s needs.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* FORM START */}
+      <Formik
+        validationSchema={FormSchema}
+        initialValues={initialValues}
+        onSubmit={handleSubmit}
       >
-        <Formik
-          validationSchema={FormSchema}
-          initialValues={initialValues}
-          onSubmit={handleSubmit}
-        >
-          {({
-            handleSubmit,
-            values,
-            errors,
-            touched,
-            setFieldValue,
-            handleChange,
-            setFieldTouched,
-            handleBlur,
-          }) => (
+        {({
+          handleSubmit,
+          values,
+          errors,
+          touched,
+          setFieldValue,
+          handleChange,
+          setFieldTouched,
+          handleBlur,
+        }) => {
+          return (
             <Form
               onSubmit={handleSubmit}
               noValidate
               className="d-flex flex-column gap-24"
             >
+              <GrandTotalUpdater
+                values={values}
+                setFieldValue={setFieldValue}
+              />
               {/* TABLE */}
               <Card className="shadow-sm border-0">
                 <Card.Body className="d-flex flex-column gap-16 p-20">
@@ -430,11 +633,18 @@ const EditPaymentRequistion = () => {
                 </Card.Body>
               </Card>
             </Form>
-          )}
-        </Formik>
-      </ModalWrapper>
-    </>
+          );
+        }}
+      </Formik>
+      <FormSubmissionLoader
+        isLoading={isLoading}
+        size="lg"
+        variant="spinner"
+        message="Please Wait"
+        subMessage="Processing Your Request Please Wait"
+      />
+    </div>
   );
 };
 
-export default EditPaymentRequistion;
+export default PaymentRequisitionForm;

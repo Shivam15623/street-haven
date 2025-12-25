@@ -8,18 +8,18 @@ import { showSuccess } from "../../../../../utills/toastutills";
 import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
 
 // ------------------ VALIDATION SCHEMA ------------------
-const MediaConsentSchema = Yup.object().shape({
+export const MediaConsentSchema = Yup.object().shape({
   name: Yup.string().required("Required"),
   printedName: Yup.string().required("Printed name is required"),
   date: Yup.date().required("Date is required").nullable(),
 });
-type MediaConsentFormValues = {
+export type MediaConsentFormValues = {
   name: string;
   printedName: string;
   date: Date | null;
 };
 // Reusable bullet section with nested items
-const BulletSection = ({
+export const BulletSection = ({
   title,
   description,
   items,
@@ -46,7 +46,7 @@ const BulletSection = ({
 );
 
 // Generic list block
-const SimpleListBlock = ({
+export const SimpleListBlock = ({
   heading,
   items,
 }: {
@@ -67,7 +67,7 @@ const SimpleListBlock = ({
   </ul>
 );
 
-const MediaConsentForm = () => {
+export const MediaConsentForm = () => {
   const [createMediaConsent, { isLoading }] = useCreatemediaConsentMutation();
   const handleSubmit = async (
     values: MediaConsentFormValues,

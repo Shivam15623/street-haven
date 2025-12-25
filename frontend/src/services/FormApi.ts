@@ -42,6 +42,21 @@ export interface ClientFeedbackCredentials {
   description: string;
   preferredContactMethod: string;
 }
+export const CANADA_PROVINCES = [
+  { label: "Alberta", value: "AB" },
+  { label: "British Columbia", value: "BC" },
+  { label: "Manitoba", value: "MB" },
+  { label: "New Brunswick", value: "NB" },
+  { label: "Newfoundland and Labrador", value: "NL" },
+  { label: "Nova Scotia", value: "NS" },
+  { label: "Ontario", value: "ON" },
+  { label: "Prince Edward Island", value: "PE" },
+  { label: "Quebec", value: "QC" },
+  { label: "Saskatchewan", value: "SK" },
+  { label: "Northwest Territories", value: "NT" },
+  { label: "Nunavut", value: "NU" },
+  { label: "Yukon", value: "YT" },
+];
 
 export interface EmployeeIncidentCredentials {
   type: string;
@@ -74,7 +89,11 @@ export interface clientFeedbackData {
   clientPhone: string | null;
   clientAddress: string | null;
   preferredContactMethod: "Phone" | "Email" | "Either";
-  complaintNature: string;
+  complaintNature:
+    | "Service Issue"
+    | "Product Issue"
+    | "Staff Behaviour"
+    | "Other";
   complaintDescription: string;
   desiredOutcome: string;
   impact: string;
@@ -83,7 +102,27 @@ export interface clientFeedbackData {
   createdAt: Date;
   updatedAt: Date;
 }
+export interface editclientFeedbackCredentials {
+  visitDate: Date;
+  visitLocation: string;
+  clientName: string | null;
+  clientEmail: string | null;
+  clientPhone: string | null;
+  clientAddress: string | null;
+  preferredContactMethod: "Phone" | "Email" | "Either";
+  complaintNature:
+    | "Service Issue"
+    | "Product Issue"
+    | "Staff Behaviour"
+    | "Other";
+  complaintDescription: string;
+  desiredOutcome: string;
+  impact: string;
+
+  otherComplaintText?: string;
+}
 export interface clientIncidentReport {
+  _id: string;
   incidentDate: Date;
   incidentTime: string;
   incidentPlace: string;
@@ -99,6 +138,25 @@ export interface clientIncidentReport {
   reportingStaffName: string;
   reportedTo: string;
   reportingDate: string;
+  followup: string;
+  reportedToDate: Date;
+}
+export interface editclientIncident {
+  incidentDate: Date;
+  incidentTime: string;
+  incidentPlace: string;
+  incidentType: string;
+  affectedPerson: string;
+  staffName: string;
+  staffEmail: string;
+  witnessName: string;
+  otherincidentText?: string | undefined;
+  incidentDescription: string;
+  ActionTaken: string;
+  debrief: string;
+  reportingStaffName: string;
+  reportedTo: string;
+  reportingDate: Date;
   followup: string;
   reportedToDate: Date;
 }
@@ -288,6 +346,16 @@ const FormApi = api.injectEndpoints({
         body: credentials,
       }),
     }),
+    editClientIncident: builder.mutation<
+      ApiGeneralResponse,
+      { id: string; data: editclientIncident }
+    >({
+      query: ({ id, data }) => ({
+        url: `/form/clientIncident/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+    }),
     createClientFeedback: builder.mutation<
       ApiGeneralResponse,
       ClientFeedbackCredentials
@@ -298,6 +366,17 @@ const FormApi = api.injectEndpoints({
         body: credentials,
       }),
     }),
+    editClientFeedBack: builder.mutation<
+      ApiGeneralResponse,
+      { id: string; data: editclientFeedbackCredentials }
+    >({
+      query: ({ id, data }) => ({
+        url: `/form/clientFeedback/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+    }),
+
     createEmployeeIncident: builder.mutation<
       ApiGeneralResponse,
       EmployeeIncidentCredentials
@@ -437,4 +516,6 @@ export const {
   useGetAllPaymentRequisitionsQuery,
   useGetAllFAFQuery,
   useGetAllMediaConsentQuery,
+  useEditClientFeedBackMutation,
+  useEditClientIncidentMutation,
 } = FormApi;

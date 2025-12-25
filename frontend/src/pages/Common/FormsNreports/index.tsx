@@ -9,7 +9,7 @@ type Tab = "form" | "submissions";
 
 const FormsNreports = () => {
   const [activeTab, setActiveTab] = useState<Tab>("form");
-
+  const [activeKey, setActiveKey] = useState("incident_report");
   const { hasPermission } = useHasPermission();
   return (
     <div className="d-flex flex-column gap-4">
@@ -56,9 +56,19 @@ const FormsNreports = () => {
       </div>
 
       {/* Tab Content */}
-      {activeTab === "form" && <FormsNDReports />}
+      {activeTab === "form" && (
+        <FormsNDReports
+          activeKey={activeKey}
+          onTabChange={(key) => setActiveKey(key)}
+        />
+      )}
       {activeTab === "submissions" &&
-        hasPermission({ action: "view_submissions" }) && <Submissions />}
+        hasPermission({ action: "view_submissions" }) && (
+          <Submissions
+            activeKey={activeKey}
+            onTabChange={(key) => setActiveKey(key)}
+          />
+        )}
     </div>
   );
 };

@@ -11,6 +11,7 @@ export interface EmployeeData {
   profilePic: string;
   createdAt: string;
   updatedAt: string;
+  superviserId:string;
   title: string;
   hireDate: Date;
   timePeriod: {

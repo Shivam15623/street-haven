@@ -8,17 +8,36 @@ type TabItem = {
 
 interface StreetTabProps {
   tabs: TabItem[];
-  defaultActiveKey?: string;
+  defaultActiveKey?: string; // initial active key for uncontrolled mode
+  activeKey?: string; // controlled active key
+  onTabChange?: (key: string) => void; // callback for parent when tab changes
 }
 
-const StreetTab: React.FC<StreetTabProps> = ({ tabs, defaultActiveKey }) => {
-  // Use state to track active tab
-  const [activeKey, setActiveKey] = useState(defaultActiveKey ?? tabs[0].key);
+const StreetTab: React.FC<StreetTabProps> = ({
+  tabs,
+  defaultActiveKey,
+  activeKey: controlledActiveKey,
+  onTabChange,
+}) => {
+  // Uncontrolled mode state
+  const [internalActiveKey, setInternalActiveKey] = useState(
+    defaultActiveKey ?? tabs[0].key
+  );
+
+  // Determine current active key (controlled vs uncontrolled)
+  const activeKey = controlledActiveKey ?? internalActiveKey;
+
+  const handleTabClick = (key: string) => {
+    if (!controlledActiveKey) {
+      setInternalActiveKey(key); // only update internal state if uncontrolled
+    }
+    onTabChange?.(key); // notify parent
+  };
 
   return (
     <>
       <ul
-        className="nav bordered-tab border border-top-0 border-start-0 gap-32 border-end-0 d-flex flex-row flex-nowrap  overflow-x-auto overflow-y-hidden nav-pills"
+        className="nav bordered-tab border border-top-0 border-start-0 gap-32 border-end-0 d-flex flex-row flex-nowrap overflow-x-auto overflow-y-hidden nav-pills"
         id="pills-tab"
         role="tablist"
         style={{ scrollbarWidth: "thin" }}
@@ -30,15 +49,12 @@ const StreetTab: React.FC<StreetTabProps> = ({ tabs, defaultActiveKey }) => {
                 activeKey === tab.key ? "active" : ""
               }`}
               style={{ minWidth: "110px", lineHeight: "normal" }}
-              // style={{ maxWidth: "165px" }}
               id={`pills-${tab.key}-tab`}
-              data-bs-toggle="pill"
-              data-bs-target={`#pills-${tab.key}`}
               type="button"
               role="tab"
               aria-controls={`pills-${tab.key}`}
               aria-selected={activeKey === tab.key ? "true" : "false"}
-              onClick={() => setActiveKey(tab.key)}
+              onClick={() => handleTabClick(tab.key)}
             >
               {tab.label}
             </button>
