@@ -53,7 +53,6 @@ const EventCalendarView = () => {
     const clickedEvent = data?.data.find((e) => e.slug === slug);
 
     if (clickedEvent) {
-
       setSelectedEvent(clickedEvent);
       setOpenModal(true);
     }
@@ -93,6 +92,7 @@ const EventCalendarView = () => {
 
         {/* Calendar Body */}
         <FullCalendar
+          timeZone="local"
           direction="ltr"
           ref={calendarRef}
           eventMinWidth={140}
@@ -133,14 +133,18 @@ const EventCalendarView = () => {
           dayCellClassNames={"p-1 p-sm-8"}
           firstDay={1}
           fixedWeekCount={false}
-          events={data?.data.map((event) => ({
-            extendedProps: {
-              slug: event.slug, // ✅ store custom property here
-            },
-            title: event.title,
-            start: event.startTime,
-            end: event.endTime,
-          }))}
+          events={data?.data.map((event) => {
+            console.log(event.startTime, new Date(event.startTime));
+            return {
+              extendedProps: {
+                slug: event.slug, // ✅ store custom property here
+              },
+              title: event.title,
+              start: event.startTime,
+              end: event.endTime,
+              date: event.eventDate,
+            };
+          })}
           eventClick={handleEventClick}
           dayCellDidMount={(info) => {
             const startOfMonth = new Date(

@@ -23,12 +23,12 @@ const EventFormSchema = Yup.object().shape({
   locationUrl: Yup.string()
     .url("Enter a valid map URL")
     .required("Location URL is required"),
-  
+
   capacity: Yup.number()
     .required("Capacity is required")
     .positive("Capacity must be greater than 0")
     .integer("Capacity must be an integer"),
-  eventDate: Yup.string()
+  eventDate: Yup.date()
     .required("Event date is required")
     .test("not-in-past", "Event date cannot be in the past", (val) => {
       if (!val) return false;
@@ -73,12 +73,32 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
     values: EventFormValues,
     { resetForm }: { resetForm: () => void }
   ) => {
-    const tempDate = new Date(values.eventDate).toISOString().split("T")[0];
+    const eventDate = values.eventDate as Date;
+
+    const [sh, sm] = values.startTime.split(":").map(Number);
+    const [eh, em] = values.endTime.split(":").map(Number);
+
+    const startDateTime = new Date(
+      eventDate.getFullYear(),
+      eventDate.getMonth(),
+      eventDate.getDate(),
+      sh,
+      sm
+    );
+
+    const endDateTime = new Date(
+      eventDate.getFullYear(),
+      eventDate.getMonth(),
+      eventDate.getDate(),
+      eh,
+      em
+    );
+
     const payload = {
       ...values,
-      eventDate: new Date(values.eventDate),
-      startTime: new Date(`${tempDate}T${values.startTime}`),
-      endTime: new Date(`${tempDate}T${values.endTime}`),
+      eventDate, // keep as Date
+      startTime: startDateTime,
+      endTime: endDateTime,
     };
     console.log("payload", payload);
     const res = await createEvent(payload).unwrap();
@@ -91,12 +111,32 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
 
   const handleEdit = async (values: EventFormValues) => {
     if (!event?._id) return;
-    const tempDate = new Date(values.eventDate).toISOString().split("T")[0];
+    const eventDate = values.eventDate;
+
+    const [sh, sm] = values.startTime.split(":").map(Number);
+    const [eh, em] = values.endTime.split(":").map(Number);
+
+    const startDateTime = new Date(
+      eventDate.getFullYear(),
+      eventDate.getMonth(),
+      eventDate.getDate(),
+      sh,
+      sm
+    );
+
+    const endDateTime = new Date(
+      eventDate.getFullYear(),
+      eventDate.getMonth(),
+      eventDate.getDate(),
+      eh,
+      em
+    );
+
     const payload = {
       ...values,
-      eventDate: new Date(values.eventDate),
-      startTime: new Date(`${tempDate}T${values.startTime}`),
-      endTime: new Date(`${tempDate}T${values.endTime}`),
+      eventDate, // keep as Date
+      startTime: startDateTime,
+      endTime: endDateTime,
     };
     const res = await editEvent({ cred: payload, id: event._id }).unwrap();
     if (res.success) {
@@ -110,11 +150,11 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
     description: event?.description || "",
     locationName: event?.location.location_name || "",
     locationUrl: event?.location.location_url || "",
-   
+
     capacity: event?.capacity || 0,
     eventDate: event?.eventDate
-      ? new Date(event.eventDate).toISOString().split("T")[0]
-      : "",
+      ? new Date(event.eventDate)
+      : new Date(),
     startTime: event?.startTime ? dayjs(event.startTime).format("HH:mm") : "",
     endTime: event?.endTime ? dayjs(event.endTime).format("HH:mm") : "",
   };
@@ -260,8 +300,6 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
                   </Col>
                 </Row>
 
-          
-
                 {/* Capacity */}
                 <Form.Group>
                   <Form.Label>Capacity</Form.Label>
@@ -288,11 +326,11 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
                       setFieldTouched("eventDate", true, false); // ← false prevents double validation
                     }}
                     onBlur={handleBlur}
-                    isInvalid={!!errors.eventDate && touched.eventDate}
+                    isInvalid={!!errors.eventDate && !!touched.eventDate}
                   />
                   {errors.eventDate && touched.eventDate && (
                     <div className="invalid-feedback d-block">
-                      {errors.eventDate}
+                      {String(errors.eventDate)}
                     </div>
                   )}
                 </Form.Group>
