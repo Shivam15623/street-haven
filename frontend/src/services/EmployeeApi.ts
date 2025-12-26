@@ -11,7 +11,7 @@ export interface EmployeeData {
   profilePic: string;
   createdAt: string;
   updatedAt: string;
-  superviserId:string;
+  superviserId: string;
   title: string;
   hireDate: Date;
   timePeriod: {
@@ -146,6 +146,12 @@ const EmployeeApi = api.injectEndpoints({
         method: "GET",
       }),
     }),
+    resetTotp: builder.mutation<ApiGeneralResponse, { id: string }>({
+      query: ({ id }) => ({
+        url: `employees/resetTotp/${id}`,
+        method: "PATCH",
+      }),
+    }),
   }),
 });
 
@@ -159,4 +165,5 @@ export const {
   useDeleteRoleMutation,
   useViewRolesQuery,
   useGetRolebyIdQuery,
+  useResetTotpMutation,
 } = EmployeeApi;

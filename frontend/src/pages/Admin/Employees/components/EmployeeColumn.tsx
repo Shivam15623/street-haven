@@ -6,6 +6,7 @@ import DeleteEmployee from "./DeleteEmployee";
 import type { HasPermissionFn } from "../../../../hooks/Auth";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import ResetTotp from "./ResetTotp";
 
 dayjs.extend(relativeTime);
 function formatRole(role: string): string {
@@ -96,6 +97,16 @@ export const EmployeeColumn = (
                 lastname: row.lastname,
                 role: row.role,
                 _id: row._id,
+              }}
+            />
+          )}
+          {canDelete && (
+            <ResetTotp
+              employee={{
+                _id: row._id,
+                email: row.email,
+                firstname: row.firstname,
+                lastname: row.lastname,
               }}
             />
           )}

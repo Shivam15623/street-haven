@@ -68,4 +68,5 @@ export const {
   useCreatemeetingMinutesMutation,
   useEditmeetingMinutesMutation,
   useDeletemeetingMinutesMutation,
+  useLazyFetchMeetingMinutesQuery
 } = meetingMinutesApi;

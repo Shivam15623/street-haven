@@ -6,22 +6,24 @@ import { useViewhrUpdatesQuery } from "../../../../services/hrUpdatesApi";
 import ActionsHrUpdates from "./ActionsHrUpdates";
 import StreetPaggination from "../../../../components/child/StreetPaggination";
 import useHasPermission from "../../../../hooks/Auth";
+import  { useDebounce } from "../../../../hooks/useDebounce";
 
 const HrUpdatesTab = () => {
   const [search, setSearch] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
   const [showModal, setShowModal] = useState(false);
-
+  const  debouncedsearch=useDebounce(search,1000)
   const [page, setPage] = useState(1);
 
   // Get slug from URL params
   const slug = searchParams.get("slug") ?? "";
 
   // Call query, include slug
+  
   const { data, isLoading, isError } = useViewhrUpdatesQuery({
     page: page,
     limit: 10,
-    search,
+    search:debouncedsearch,
     slug,
     sortBy: "createdAt",
     order: "desc",

@@ -17,7 +17,6 @@ export const AllEmployees = asyncHandler(async (req, res) => {
   } = req.query;
 
   const query = {}; // always exclude admins for dropdown
- 
 
   // Search
   if (search) {
@@ -262,21 +261,32 @@ export const RemoveEmployee = asyncHandler(async (req, res) => {
 });
 export const resetTotp = asyncHandler(async (req, res) => {
   const { id: userId } = req.params;
-  const employee = await User.findById(userId);
+
+  const employee = await User.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        totpSecret: null,
+        isTOTPEnabled: false,
+        isTOTPVerified: false,
+      },
+    },
+    {
+      new: true,
+      runValidators: false, // 👈 VERY IMPORTANT
+    }
+  );
+
   if (!employee) {
     throw new ApiError(404, "No such user found");
   }
-  employee.totpSecret = null;
-  employee.isTOTPEnabled = false;
-  employee.isTOTPVerified = false;
 
-  await employee.save();
   return res
     .status(200)
     .json(
       new ApiResponse(
-        200,
-        `${employee.firstname} ${employee.lastname}'s Totp Reseted`
+        true,
+        `${employee.firstname} ${employee.lastname}'s TOTP reset successfully`
       )
     );
 });
