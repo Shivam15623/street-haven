@@ -73,7 +73,7 @@ const ClientFeedbackFormTab = () => {
         footer={true}
         handleSubmit={handleSubmit}
         initialvalues={{
-          date: new Date().toISOString(), // string (YYYY-MM-DD)
+          date: new Date(),
           location: "",
           name: "",
           phone: "",

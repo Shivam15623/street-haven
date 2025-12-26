@@ -10,23 +10,6 @@ import CustomDatePicker from "../../../../components/child/DatePicker";
 import QuillEditor from "../../../../components/child/QuillEditor";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 
-function parseLocalDate(val: string) {
-  const [year, month, day] = val.split("-").map(Number);
-  return new Date(year, month - 1, day); // month is 0-indexed
-}
-
-function isSameOrBeforeToday(val: string) {
-  if (!val) return true;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const selected = parseLocalDate(val);
-
-  selected.setHours(0, 0, 0, 0);
-
-  return selected <= today;
-}
-
 const staffFeedbackSchema = Yup.object({
   date: Yup.string()
     .required("Date of incident is required")
@@ -34,7 +17,14 @@ const staffFeedbackSchema = Yup.object({
       return val ? !isNaN(Date.parse(val)) : false;
     })
     .test("not-future-date", "Date cannot be in the future", (val) => {
-      return isSameOrBeforeToday(val || "");
+      if (!val) return true;
+      const today = new Date();
+      const selected = new Date(val);
+      // ignore time when comparing
+      selected.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+
+      return selected <= today;
     }),
 
   time: Yup.string()
@@ -64,7 +54,8 @@ const staffFeedbackSchema = Yup.object({
 
   witnesses: Yup.array()
     .of(Yup.string().required("Witness cannot be empty"))
-    .min(1, "At least one witness is required"),
+    .min(1, "At least one witness is required")
+    .max(5, "At most five witness is required"),
 
   actionsTaken: Yup.string().max(
     500,
@@ -185,7 +176,6 @@ const StaffFeedbackForm: React.FC = () => {
                         <CustomDatePicker
                           value={values.date ? new Date(values.date) : null}
                           onChange={(date) => {
-                           
                             setFieldValue("date", date, true); // ← Add true to validate immediately
                             setFieldTouched("date", true, false); // ← false prevents double validation
                           }}
@@ -328,6 +318,22 @@ const StaffFeedbackForm: React.FC = () => {
                                 }
                               }}
                             />
+                            <button
+                              className="btn-street-primary radius-8 px-3 text-lg"
+                              type="button"
+                              onClick={() => {
+                                if (
+                                  values.newWitness &&
+                                  values.witnesses &&
+                                  values?.witnesses.length < 5
+                                ) {
+                                  push(values.newWitness);
+                                  setFieldValue("newWitness", "");
+                                }
+                              }}
+                            >
+                              +
+                            </button>
                           </div>
 
                           <div className="d-flex gap-2 flex-wrap mb-2">

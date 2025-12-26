@@ -66,11 +66,6 @@ router
   .patch(editClientFeedback);
 
 router
-  .route("/employeeIncident/:id")
-  // .get(getEmployeeIncidentById)
-  .patch(editEmployeeIncident);
-
-router
   .route("/mediaConsent/:id")
   // .get(getMediaConsentById)
   .patch(editMediaConsent);
@@ -79,5 +74,9 @@ router
   .route("/paymentRequistion/:id")
   // .get(getPaymentRequisitionById)
   .patch(upload.single("invoiceAttachment"), editPaymentRequisition);
+router
+  .route("/employeeIncident/:id")
+  // .get(getEmployeeIncidentById)
+  .patch(editEmployeeIncident);
 
 export default router;

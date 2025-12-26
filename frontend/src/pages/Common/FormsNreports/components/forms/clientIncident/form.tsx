@@ -17,9 +17,34 @@ interface FormProp {
   ) => void;
 }
 const ClientIncidentFormSchema = Yup.object({
-  date: Yup.date().required("Date is required"),
+  date: Yup.date()
+    .required("Date is required")
+    .test("not-future-date", "Date cannot be in the future", (val) => {
+      if (!val) return true;
+      const today = new Date();
+      const selected = new Date(val);
+      // ignore time when comparing
+      selected.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
 
-  time: Yup.string().required("Time is required"),
+      return selected <= today;
+    }),
+
+  time: Yup.string()
+    .test("not-future-time", "Time cannot be in the future", function (val) {
+      const { date } = this.parent;
+      if (!date || !val) return true;
+
+      const [h, m] = val.split(":").map(Number);
+
+      // combine date and time
+      const incidentDateTime = new Date(date);
+      incidentDateTime.setHours(h, m, 0, 0);
+
+      const now = new Date();
+      return incidentDateTime <= now;
+    })
+    .required("Time is required"),
 
   place: Yup.string().required("Place is required"),
 
@@ -68,10 +93,32 @@ const ClientIncidentFormSchema = Yup.object({
   debrief: Yup.string().required("Debrief is required"),
 
   reportingStaffName: Yup.string().required("Reporting staff name is required"),
-  repotingDate: Yup.date().required("reporting Date is required"),
+  repotingDate: Yup.date()
+    .required("reporting Date is required")
+    .test("not-future-date", "reporting Date cannot be in the future", (val) => {
+      if (!val) return true;
+      const today = new Date();
+      const selected = new Date(val);
+      // ignore time when comparing
+      selected.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+
+      return selected <= today;
+    }),
 
   reportedTo: Yup.string().required("Reported to (name) is required"),
-  reportedToDate: Yup.date().required("reported Date is required"),
+  reportedToDate: Yup.date()
+    .required("reported Date is required")
+    .test("not-future-date", "reported Date cannot be in the future", (val) => {
+      if (!val) return true;
+      const today = new Date();
+      const selected = new Date(val);
+      // ignore time when comparing
+      selected.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+
+      return selected <= today;
+    }),
   followUp: Yup.string().required("Follow Up is required"),
 });
 export type FormValues = Yup.InferType<typeof ClientIncidentFormSchema>;

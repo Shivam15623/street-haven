@@ -9,7 +9,6 @@ import {
   LazyLoader,
   LazyLogin,
   LazyProfile,
-  LazySignUp,
   LazyAgencyInfo,
   LazyResetPassword,
   LazyEmployees,
@@ -26,10 +25,6 @@ const withSuspense = (Component: React.ReactElement) => (
 );
 export const AllRoutes: RouteObject[] = [
   { path: "", element: <Navigate to="/login" replace /> },
-
-  // ─────────────────────────────
-  // PUBLIC ROUTES
-  // ─────────────────────────────
   {
     path: "login",
     element: withSuspense(
@@ -38,14 +33,7 @@ export const AllRoutes: RouteObject[] = [
       </RouteGuard>
     ),
   },
-  {
-    path: "signup",
-    element: withSuspense(
-      <RouteGuard isPublic={true}>
-        <LazySignUp />
-      </RouteGuard>
-    ),
-  },
+
   {
     path: "forgot-password",
     element: withSuspense(

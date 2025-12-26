@@ -96,7 +96,7 @@ const EmployeeIncidentFormTab = () => {
           doctorVisitDate: new Date(),
           doctorVisitTime: "",
           previousInjury: false,
-          previousInjuryDate: new Date().toISOString(),
+          previousInjuryDate: new Date(),
         }}
       />
       <FormSubmissionLoader

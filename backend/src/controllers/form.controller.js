@@ -577,20 +577,77 @@ export const editFAF = asyncHandler(async (req, res) => {
 });
 
 export const editPaymentRequisition = asyncHandler(async (req, res) => {
-  const payment = await PaymentRequisition.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    { new: true, runValidators: true }
-  );
+  const { id } = req.params;
+
+  const {
+    paymentDetails,
+    requestedBy,
+    approvedBy,
+    requestedDate,
+    approvedDate,
+    payeeName,
+  } = req.body;
+
+  const payment = await PaymentRequisition.findById(id);
 
   if (!payment) {
     throw new ApiError(404, "Payment requisition not found");
   }
 
-  res
+  /* ---------------- Invoice upload (optional) ---------------- */
+  if (req.file) {
+    const uploadedInvoice = await uploadOnCloudinary(req.file.path);
+
+    if (!uploadedInvoice?.secure_url) {
+      throw new ApiError(500, "Invoice upload failed");
+    }
+
+    payment.invoiceAttachment = uploadedInvoice.secure_url;
+  }
+
+  /* ---------------- Payment details update ---------------- */
+  if (paymentDetails) {
+    if (!Array.isArray(paymentDetails) || paymentDetails.length === 0) {
+      throw new ApiError(400, "At least one purchase detail is required");
+    }
+
+    const normalizedDetails = paymentDetails.map((item) => {
+      const netAmount = Number(item.netAmount || item.amount || 0);
+      const hst = Number(item.hst || 0);
+
+      return {
+        purchaseDate: item.purchaseDate,
+        purchaseNature: item.purchaseNature,
+        program: item.program,
+        expenseCode: item.expenseCode,
+        netAmount,
+        hst,
+        totalAmount: netAmount + hst,
+      };
+    });
+
+    payment.paymentDetails = normalizedDetails;
+
+    // Recalculate totalAmount
+    payment.totalAmount = normalizedDetails.reduce(
+      (sum, item) => sum + item.totalAmount,
+      0
+    );
+  }
+
+  /* ---------------- Optional fields ---------------- */
+  if (requestedBy !== undefined) payment.requestedBy = requestedBy;
+  if (approvedBy !== undefined) payment.approvedBy = approvedBy;
+  if (requestedDate !== undefined) payment.requestedDate = requestedDate;
+  if (approvedDate !== undefined) payment.approvedDate = approvedDate;
+  if (payeeName !== undefined) payment.payeeName = payeeName;
+
+  await payment.save();
+
+  return res
     .status(200)
     .json(
-      new ApiResponse(200, "Payment requisition updated successfully", payment)
+      new ApiResponse(200,"Payment requisition updated successfully")
     );
 });
 

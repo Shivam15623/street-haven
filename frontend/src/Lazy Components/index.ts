@@ -1,9 +1,7 @@
 import React from "react";
 
 export const LazyLoader = React.lazy(() => import("../components/Loader"));
-export const LazySignUp = React.lazy(
-  () => import("../pages/Authentication/SignUp")
-);
+
 export const LazyLogin = React.lazy(
   () => import("../pages/Authentication/Login")
 );

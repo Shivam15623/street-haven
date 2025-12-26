@@ -17,7 +17,18 @@ interface FormProp {
 }
 // SCHEMA
 const ClientFeedBackFormSchema = Yup.object({
-  date: Yup.string().required("Visit Date is Required"),
+  date: Yup.date()
+    .required("Visit Date is required")
+    .test("not-future-date", "Date cannot be in the future", (val) => {
+      if (!val) return true;
+      const today = new Date();
+      const selected = new Date(val);
+      // ignore time when comparing
+      selected.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+
+      return selected <= today;
+    }),
 
   location: Yup.string().required("location is required"),
 

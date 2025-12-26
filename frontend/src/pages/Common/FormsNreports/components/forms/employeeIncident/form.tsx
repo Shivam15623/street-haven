@@ -20,10 +20,41 @@ export const EmployeeIncidentFormSchema = Yup.object({
   informedSuperviser: Yup.boolean().required("please fill this field"),
 
   injuryDate: Yup.date()
-    .typeError("Please input a valid date (M/d/yyyy)")
-    .required("Date of injury / near miss is required"),
+    .required("Date of injury / near miss is required")
+    .test(
+      "not-future-date",
+      "Date of injury cannot be in the future",
+      (val) => {
+        if (!val) return true;
+        const today = new Date();
+        const selected = new Date(val);
+        // ignore time when comparing
+        selected.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
 
-  injuryTime: Yup.string().required("Time is required"),
+        return selected <= today;
+      }
+    ),
+
+  injuryTime: Yup.string()
+    .required("Time is required")
+    .test(
+      "not-future-time",
+      "injury Time cannot be in the future",
+      function (val) {
+        const { injuryDate } = this.parent;
+        if (!injuryDate || !val) return true;
+
+        const [h, m] = val.split(":").map(Number);
+
+        // combine date and time
+        const incidentDateTime = new Date(injuryDate);
+        incidentDateTime.setHours(h, m, 0, 0);
+
+        const now = new Date();
+        return incidentDateTime <= now;
+      }
+    ),
 
   witnessName: Yup.string(),
 
@@ -59,22 +90,94 @@ export const EmployeeIncidentFormSchema = Yup.object({
     then: (schema) =>
       schema
         .required("Date is required")
+        .min(
+          Yup.ref("injuryDate"),
+          "Doctor Visit Date Can not be earlier then injury Date"
+        )
+        .test(
+          "not-future-date",
+          "Date of doctor visit cannot be in the future",
+          (val) => {
+            if (!val) return true;
+            const today = new Date();
+            const selected = new Date(val);
+            // ignore time when comparing
+            selected.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+
+            return selected <= today;
+          }
+        )
         .typeError("Enter a valid date (M/d/yyyy)"),
     otherwise: (schema) => schema.nullable(),
   }),
 
   doctorVisitTime: Yup.string().when("doctorVisited", {
     is: true,
-    then: (schema) => schema.required("Time is required"),
+    then: (schema) =>
+      schema
+        .required("Time is required")
+        .test(
+          "end-after-start",
+          "doctor visit time must be later than start time",
+          function (val) {
+            const { injuryTime } = this.parent;
+            if (!val || !injuryTime) return true;
+
+            const [sh, sm] = injuryTime.split(":").map(Number);
+            const [eh, em] = val.split(":").map(Number);
+
+            const startMinutes = sh * 60 + sm;
+            const endMinutes = eh * 60 + em;
+
+            return endMinutes > startMinutes;
+          }
+        )
+        .test(
+          "not-future-time",
+          "Time cannot be in the future",
+          function (val) {
+            const { doctorVisitDate } = this.parent;
+            if (!doctorVisitDate || !val) return true;
+
+            const [h, m] = val.split(":").map(Number);
+
+            // combine date and time
+            const incidentDateTime = new Date(doctorVisitDate);
+            incidentDateTime.setHours(h, m, 0, 0);
+
+            const now = new Date();
+            return incidentDateTime <= now;
+          }
+        ),
     otherwise: (schema) => schema.nullable(),
   }),
 
   previousInjury: Yup.boolean().required(),
 
-  previousInjuryDate: Yup.string().when("previousInjury", {
+  previousInjuryDate: Yup.date().when("previousInjury", {
     is: true,
     then: (schema) =>
-      schema.required("Please provide the previous injury date"),
+      schema
+        .required("Please provide the previous injury date")
+        .max(
+          Yup.ref("injuryDate"),
+          "Previous Injury Date can not be greater than inury Date"
+        )
+        .test(
+          "not-future-date",
+          "Date of doctor visit cannot be in the future",
+          (val) => {
+            if (!val) return true;
+            const today = new Date();
+            const selected = new Date(val);
+            // ignore time when comparing
+            selected.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+
+            return selected <= today;
+          }
+        ),
     otherwise: (schema) => schema.nullable(),
   }),
 });

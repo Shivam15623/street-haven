@@ -23,6 +23,7 @@ const EditClientFeedback = ({ data }: EditClientFeedbackProps) => {
     { resetForm }: { resetForm: () => void }
   ) => {
     try {
+
       const payload: editclientFeedbackCredentials = {
         visitDate: new Date(values.date),
         visitLocation: values.location,
@@ -114,7 +115,7 @@ const EditClientFeedback = ({ data }: EditClientFeedbackProps) => {
               handleSubmit={handleSubmit}
               isLoading={isLoading}
               initialvalues={{
-                date: new Date(data.visitDate).toISOString(),
+                date: new Date(data.visitDate),
                 location: data.visitLocation,
                 name: data.clientName,
                 phone: data.clientPhone,

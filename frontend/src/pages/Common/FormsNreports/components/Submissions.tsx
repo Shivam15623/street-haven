@@ -5,7 +5,7 @@ import EmployeeIncidentReportSubmission from "./forms/employeeIncident/submissio
 import FunctionalAbilitiesSubmission from "./SubmissionTabs/FunctionalAbiltiesSubmission";
 import IncidentReportSubmission from "./SubmissionTabs/IncidentReportSubmission";
 import MediaConsentSubmission from "./SubmissionTabs/MediaConsentSubmission";
-import PaymentRequistionSubmission from "./forms/paymentRequisition/PaymentRequistionSubmission";
+import PaymentRequistionSubmission from "./forms/paymentRequisition/submissions";
 import StaffFeedBackSubmission from "./SubmissionTabs/StaffFeedBackSubmission";
 
 interface SubmissionsProps {

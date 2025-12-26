@@ -69,7 +69,7 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
       formData.append("phoneNo", values.phoneNo);
       formData.append("role", values.role);
       formData.append("title", values.title);
-      if (values.superviserId && values.superviserId !== null)
+      if (values.superviserId && values.superviserId !== null&& values.superviserId!=="")
         formData.append("superviserId", values.superviserId);
       function toISODate(value: Date | string | null | undefined) {
         if (!value) return "";
@@ -325,13 +325,13 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
                       column
                       sm={2}
                     >
-                      Assignee
+                      Manager
                     </BootstrapForm.Label>
 
                     <BootstrapForm.Select
                       size="sm"
                       name="superviserId"
-                      value={values.superviserId}
+                      value={values.superviserId ?? ""}
                       onChange={handleChange}
                       onBlur={handleBlur}
                       isInvalid={touched.superviserId && !!errors.superviserId}

@@ -11,7 +11,19 @@ import FormSubmissionLoader from "../../../../../components/child/FormSubmission
 export const MediaConsentSchema = Yup.object().shape({
   name: Yup.string().required("Required"),
   printedName: Yup.string().required("Printed name is required"),
-  date: Yup.date().required("Date is required").nullable(),
+  date: Yup.date()
+    .required("Date is required")
+    .nullable()
+    .test("not-future-date", "Date cannot be in the future", (val) => {
+      if (!val) return true;
+      const today = new Date();
+      const selected = new Date(val);
+      // ignore time when comparing
+      selected.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+
+      return selected <= today;
+    }),
 });
 export type MediaConsentFormValues = {
   name: string;
@@ -187,7 +199,14 @@ export const MediaConsentForm = () => {
         validationSchema={MediaConsentSchema}
         onSubmit={handleSubmit}
       >
-        {({ values, errors, touched, setFieldValue, handleSubmit }) => (
+        {({
+          values,
+          errors,
+          touched,
+          setFieldValue,
+          handleSubmit,
+          setFieldTouched,
+        }) => (
           <Form className="d-flex flex-column gap-24" onSubmit={handleSubmit}>
             {/* Header Card */}
             <div className="card">
@@ -261,7 +280,10 @@ export const MediaConsentForm = () => {
 
                     <CustomDatePicker
                       value={values.date}
-                      onChange={(date) => setFieldValue("date", date)}
+                      onChange={(date) => {
+                        setFieldValue("date", date, true);
+                        setFieldTouched("date", true, false);
+                      }}
                     />
 
                     {errors.date && touched.date && (

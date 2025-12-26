@@ -1,12 +1,12 @@
 import StaffFeedbackForm from "./StaffFeedbackForm";
 import IncidentreportForm from "./IncidentreportForm";
 import StreetTab from "../../../../components/StreetTab";
-import ClientFeedbackForm from "./forms/clientFeedback/formTab";
 import EmployeeIncidentForm from "./forms/employeeIncident/formTab";
-import PaymentRequisitionForm from "./forms/paymentRequisition/PaymentRequisitionForm";
-import ClientIncidentForm from "./forms/clientIncident/formTab";
 import FunctionalAbiltiesForm from "./forms/FunctionalAbiltiesForm";
 import MediaConsentForm from "./forms/MediaConsentForm";
+import PaymentRequisition from "./forms/paymentRequisition/formTab";
+import ClientIncidentFormTab from "./forms/clientIncident/formTab";
+import ClientFeedbackFormTab from "./forms/clientFeedback/formTab";
 
 interface FormsNDReportsProps {
   activeKey: string;
@@ -36,12 +36,12 @@ const FormsNDReports: React.FC<FormsNDReportsProps> = ({
         {
           key: "client_feedback",
           label: "Client Feedback Form",
-          content: <ClientFeedbackForm />,
+          content: <ClientFeedbackFormTab />,
         },
         {
           key: "client_incident_report",
           label: "Client Incident Report Form",
-          content: <ClientIncidentForm />,
+          content: <ClientIncidentFormTab />,
         },
         {
           key: "employee_incident_report",
@@ -51,7 +51,7 @@ const FormsNDReports: React.FC<FormsNDReportsProps> = ({
         {
           key: "payment_requisition",
           label: "Payment Requisition Form",
-          content: <PaymentRequisitionForm />,
+          content: <PaymentRequisition />,
         },
         {
           key: "functional_ability",

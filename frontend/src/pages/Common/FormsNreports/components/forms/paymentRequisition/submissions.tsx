@@ -6,8 +6,8 @@ import {
   type PaymentRequisition,
 } from "../../../../../../services/FormApi";
 
-import EditPaymentRequistion from "./EditPaymentRequistion";
-import PaymentRequisitionDetail from "./PaymentRequisitionDetail";
+import EditPaymentRequistion from "./edit";
+import PaymentRequisitionDetail from "./detail";
 
 interface Column {
   header: string;

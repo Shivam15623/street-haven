@@ -161,7 +161,8 @@ export interface editclientIncident {
   reportedToDate: Date;
 }
 export interface employeeIncidentReport {
-  reportType: string;
+  _id: string;
+  reportType: "Injury" | "Illness" | "Near Miss";
   name: string;
   jobTitle: string;
   supervisor: string;
@@ -182,6 +183,28 @@ export interface employeeIncidentReport {
   previousInjuryDate?: string;
   previousInjury: boolean;
 }
+export interface editemployeeIncidentReportCred {
+  reportType: "Injury" | "Illness" | "Near Miss";
+  name: string;
+  jobTitle: string;
+  supervisor: string;
+  informedSupervisor: boolean;
+  injuryDate: Date;
+  injuryTime: string;
+  location: string;
+  activityAtTime: string;
+  description: string;
+  preventionSuggestion: string;
+  injuredBodyPartOrRisk: string;
+  sawDoctor: boolean;
+  witnessName?: string;
+  doctorName?: string;
+  doctorPhone?: string;
+  doctorVisitDate?: Date;
+  doctorVisitTime?: string;
+  previousInjuryDate?: Date;
+  previousInjury: boolean;
+}
 interface PurchaseDetail {
   purchaseDate: Date;
   purchaseNature: string;
@@ -193,7 +216,7 @@ interface PurchaseDetail {
 }
 
 export interface PaymentRequisition {
-  _id?: string;
+  _id: string;
 
   paymentDetails: PurchaseDetail[];
 
@@ -387,11 +410,31 @@ const FormApi = api.injectEndpoints({
         body: credentials,
       }),
     }),
+    editEmployeeIncident: builder.mutation<
+      ApiGeneralResponse,
+      { id: string; data: editemployeeIncidentReportCred }
+    >({
+      query: ({ id, data }) => ({
+        url: `/form/employeeIncident/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+    }),
     createPaymentRequistion: builder.mutation<ApiGeneralResponse, FormData>({
       query: (formData) => ({
         url: "/form/paymentRequistion",
         method: "POST",
         body: formData,
+      }),
+    }),
+    editPaymentRequistion: builder.mutation<
+      ApiGeneralResponse,
+      { id: string; data: FormData }
+    >({
+      query: ({ id, data }) => ({
+        url: `/form/paymentRequistion/${id}`,
+        method: "PATCH",
+        body: data,
       }),
     }),
     createFAf: builder.mutation<ApiGeneralResponse, any>({
@@ -518,4 +561,6 @@ export const {
   useGetAllMediaConsentQuery,
   useEditClientFeedBackMutation,
   useEditClientIncidentMutation,
+  useEditEmployeeIncidentMutation,
+  useEditPaymentRequistionMutation,
 } = FormApi;

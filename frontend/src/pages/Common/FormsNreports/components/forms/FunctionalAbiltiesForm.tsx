@@ -188,10 +188,40 @@ const functionalAbilityFormSchema = Yup.object({
       )
       .required("Province is required"),
     postalCode: Yup.string().required("Postal code is required."),
-    dateOfBirth: Yup.date().required("Date of birth is required."),
+    dateOfBirth: Yup.date()
+      .required("Date of birth is required.")
+      .test(
+        "not-future-date",
+        "Date of Birth cannot be in the future",
+        (val) => {
+          if (!val) return true;
+          const today = new Date();
+          const selected = new Date(val);
+          // ignore time when comparing
+          selected.setHours(0, 0, 0, 0);
+          today.setHours(0, 0, 0, 0);
+
+          return selected <= today;
+        }
+      ),
   }),
 
-  dateOfAccident: Yup.date().required("Please enter the accident date."),
+  dateOfAccident: Yup.date()
+    .required("Please enter the accident date.")
+    .test(
+      "not-future-date",
+      "Date of Accident cannot be in the future",
+      (val) => {
+        if (!val) return true;
+        const today = new Date();
+        const selected = new Date(val);
+        // ignore time when comparing
+        selected.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+
+        return selected <= today;
+      }
+    ),
   employerFaxNo: Yup.string().required("Fax number is required."),
 
   employer: Yup.object({
@@ -217,7 +247,23 @@ const functionalAbilityFormSchema = Yup.object({
   nodateOfDiscusswill: Yup.date()
     .when("discussedRTW", {
       is: false,
-      then: (s) => s.required("Please provide the date of discussion."),
+      then: (s) =>
+        s
+          .required("Please provide the date of discussion.")
+          .test(
+            "not-past-date",
+            "Date of return to work discuss cannot be in the past",
+            (val) => {
+              if (!val) return true;
+              const today = new Date();
+              const selected = new Date(val);
+              // ignore time when comparing
+              selected.setHours(0, 0, 0, 0);
+              today.setHours(0, 0, 0, 0);
+
+              return selected >= today;
+            }
+          ),
       otherwise: (s) => s.notRequired(),
     })
     .default(null),
@@ -252,7 +298,12 @@ const functionalAbilityFormSchema = Yup.object({
     .required("Province is required"),
   hproPostalCode: Yup.string().required("please fill this field"),
   hproFax: Yup.string().required("please fill this field"),
-  assesmentDate: Yup.date().required().required("please fill this field"),
+  assesmentDate: Yup.date()
+    .required("please fill this field")
+    .min(
+      Yup.ref("dateOfAccident"),
+      "Assesment Date cant be earlier than date Of accident"
+    ),
   returnToWorkStatus: Yup.string()
     .oneOf(["noRestrictions", "withRestrictions", "unable"])
     .required("please fill this field"),
@@ -433,7 +484,27 @@ const functionalAbilityFormSchema = Yup.object({
   nextAppointmentDate: Yup.date().when("returnToWorkStatus", {
     is: "noRestrictions",
     then: (s) => s.notRequired(),
-    otherwise: (s) => s.required("please fill next Appointment date"),
+    otherwise: (s) =>
+      s
+        .required("please fill next Appointment date")
+        .test(
+          "not-past-date",
+          "next Appointment Date cannot be in the past",
+          (val) => {
+            if (!val) return true;
+            const today = new Date();
+            const selected = new Date(val);
+            // ignore time when comparing
+            selected.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+
+            return selected > today;
+          }
+        )
+        .min(
+          Yup.ref("assesmentDate"),
+          "next Appointment Date Cannot be earlier than Assesment"
+        ),
   }),
   providedTo: Yup.object({
     worker: Yup.boolean(),
