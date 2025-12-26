@@ -67,7 +67,7 @@ export const createEmployeeSchema = Joi.object({
   title: Joi.string().trim().required().messages({
     "any.required": "Title is required",
   }),
-
+  superviserId: Joi.string().hex().length(24),
   password: Joi.string()
     .required()
     .min(8)
@@ -121,6 +121,6 @@ export const editEmployeeSchema = Joi.object({
     }),
 
   title: Joi.string().optional(),
-
+  superviserId: Joi.string().hex().length(24).optional(),
   hireDate: Joi.date().optional(),
 });

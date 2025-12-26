@@ -20,14 +20,22 @@ const ImageUploader = () => {
 
   // 📌 Select image
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImageSrc(reader.result as string);
-        setShowModal(true); // open modal
-      };
-      reader.readAsDataURL(e.target.files[0]);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ["image/jpeg", "image/png", "image/webp"];
+
+    if (!validTypes.includes(file.type)) {
+      alert("Please upload JPG, PNG, or WEBP images only");
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageSrc(reader.result as string);
+      setShowModal(true);
+    };
+    reader.readAsDataURL(file);
   };
 
   // 📌 Track crop
@@ -102,7 +110,7 @@ const ImageUploader = () => {
       <input
         id="fileInput"
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         style={{ display: "none" }}
         onChange={handleFileChange}
       />

@@ -32,7 +32,6 @@ const TrackTickettab = () => {
   const total = ticketData?.data?.paggination?.total ?? 0;
   const totalPages = Math.ceil(total / filter?.limit);
 
-
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setFilter((prev) => ({ ...prev, page: newPage }));
@@ -96,16 +95,7 @@ const TrackTickettab = () => {
               }
               active={filter.status === "In Progress"}
             />
-            <TicketCountCard
-              count={ticketData?.data.counts.completed ?? 0}
-              label="Completed"
-              variant="completed"
-              icon="si:info-line"
-              onClick={() =>
-                setFilter((prev) => ({ ...prev, status: "Completed", page: 1 }))
-              }
-              active={filter.status === "Completed"}
-            />
+
             <TicketCountCard
               count={ticketData?.data.counts.underReview ?? 0}
               label="Under Review"
@@ -119,6 +109,16 @@ const TrackTickettab = () => {
                 }))
               }
               active={filter.status === "Under Review"}
+            />
+            <TicketCountCard
+              count={ticketData?.data.counts.completed ?? 0}
+              label="Completed"
+              variant="completed"
+              icon="si:info-line"
+              onClick={() =>
+                setFilter((prev) => ({ ...prev, status: "Completed", page: 1 }))
+              }
+              active={filter.status === "Completed"}
             />
             <TicketCountCard
               count={ticketData?.data.counts.total ?? 0}

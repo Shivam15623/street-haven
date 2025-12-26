@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import userimage from "@assets/images/user.png";
+
 import { Dropdown } from "react-bootstrap";
 import { useDispatch } from "react-redux";
 import { useLogoutMutation } from "../services/AuthApi";
@@ -13,7 +13,6 @@ const ProfileDropdown = () => {
   const navigate = useNavigate();
 
   const onLogout = async () => {
-
     try {
       const res = await logout(undefined).unwrap();
       if (res.statuscode === 200) {
@@ -26,13 +25,19 @@ const ProfileDropdown = () => {
   return (
     <Dropdown className="user-dropdown" align="end">
       <Dropdown.Toggle className="rounded-circle">
-        <img src={user?.profilePic ?? userimage} alt="User" />
+        <img
+          src={user?.profilePic ?? "assets/images/userlogo.png"}
+          alt="User"
+        />
       </Dropdown.Toggle>
 
       <Dropdown.Menu>
         {/* User Info */}
         <div className="user-info">
-          <img src={user?.profilePic ?? userimage} alt="User" />
+          <img
+            src={user?.profilePic ?? "assets/images/userlogo.png"}
+            alt="User"
+          />
           <div>
             <p>
               {user?.firstName} {user?.lastName}

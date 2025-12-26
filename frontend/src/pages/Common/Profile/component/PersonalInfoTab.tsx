@@ -1,4 +1,4 @@
-import avatar from "@assets/images/user.png";
+
 import ImageUploader from "./ImageUploader";
 import { useFetchUserProfileQuery } from "../../../../services/UserApi";
 import dayjs from "dayjs";
@@ -33,7 +33,7 @@ const PersonalInfoTab = () => {
         <div className="d-flex px-3 flex-column flex-sm-row gap-1 gap-sm-3 align-items-sm-center">
           <div className="position-relative w-100-px h-100-px radius-50">
             <img
-              src={profile?.data.profilePic ?? avatar}
+              src={profile?.data.profilePic ?? "assets/images/userlogo.png"}
               className="w-100 h-100 rounded-circle object-fit-cover"
               alt="Avatar"
             />
@@ -51,7 +51,7 @@ const PersonalInfoTab = () => {
         </div>
 
         {/* Other info fields */}
-        <InfoField label="Title" value={profile?.data.title??"---"} />
+        <InfoField label="Job Title" value={profile?.data.title ?? "---"} />
         <InfoField
           label="Hire Date"
           value={dayjs(profile?.data.hireDate).format("DD-MM-YYYY")}

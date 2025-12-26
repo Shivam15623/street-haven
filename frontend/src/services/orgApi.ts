@@ -8,15 +8,19 @@ interface orgNodeCredential {
 
 export interface OrgNodeData {
   _id: string;
-  label: string;
+  title: string;
+  name: string;
+  profilePic: string;
+  role: string;
   reportsTo: {
     _id: string;
-    label: string;
+    name: string;
   } | null;
-  department: string;
+
   supervises: {
     _id: string;
-    label: string;
+    title: string;
+    name: string;
   }[];
 }
 type OrgNodesResponse = ApiResponse<OrgNodeData[]>;

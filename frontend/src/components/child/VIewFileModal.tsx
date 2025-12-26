@@ -21,7 +21,7 @@ const ViewFileModal = ({ attachment, title }: Props) => {
   const [showModal, setShowModal] = useState(false);
 
   const extension = attachment.fileUrl.split(".").pop()?.toLowerCase() || "";
-  console.log("File extension:", extension);
+
 
   const handleDownload = async () => {
     const response = await fetch(attachment.fileUrl);

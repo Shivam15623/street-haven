@@ -80,18 +80,17 @@ const ViewRegistrations: React.FC<ViewRegistrationsProps> = ({ eventId }) => {
   const handleExportToExcel = () => {
     if (!event || !event.registeredUsers?.length) return;
 
-    // Prepare structured data for Excel
+    /* -------------------- DATA -------------------- */
+
     const formattedData = event.registeredUsers.map((user, index) => ({
       "Sr No": index + 1,
       "First Name": user.firstname,
       "Last Name": user.lastname,
       Email: user.email,
       "Phone Number": user.phoneNo,
-      Slug: user.slug,
       Status: "Registered",
     }));
 
-    // Add event summary at the top
     const eventSummary = [
       ["Event Title", event.title],
       ["Total Registered", event.totalRegistered],
@@ -99,24 +98,75 @@ const ViewRegistrations: React.FC<ViewRegistrationsProps> = ({ eventId }) => {
       [],
     ];
 
-    // Combine both arrays for the final Excel sheet
-    const worksheetData = [
-      ...eventSummary,
-      Object.keys(formattedData[0]),
-      ...formattedData.map((item) => Object.values(item)),
+    const headers = Object.keys(formattedData[0]);
+    const rows = formattedData.map(Object.values);
+
+    const worksheetData = [...eventSummary, headers, ...rows];
+
+    /* -------------------- WORKSHEET -------------------- */
+
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+    /* -------------------- STYLING -------------------- */
+
+    // Bold event summary
+    ["A1", "A2", "A3"].forEach((cell) => {
+      if (worksheet[cell]) {
+        worksheet[cell].s = { font: { bold: true } };
+      }
+    });
+
+    // Header row styling
+    const headerRowIndex = eventSummary.length + 1; // Excel index starts at 1
+    headers.forEach((_, colIndex) => {
+      const cellAddress = XLSX.utils.encode_cell({
+        r: headerRowIndex - 1,
+        c: colIndex,
+      });
+
+      if (worksheet[cellAddress]) {
+        worksheet[cellAddress].s = {
+          font: { bold: true },
+          alignment: { horizontal: "center" },
+          border: {
+            top: { style: "thin" },
+            bottom: { style: "thin" },
+            left: { style: "thin" },
+            right: { style: "thin" },
+          },
+        };
+      }
+    });
+
+    /* -------------------- COLUMN WIDTHS -------------------- */
+
+    worksheet["!cols"] = [
+      { wch: 8 }, // Sr No
+      { wch: 15 }, // First Name
+      { wch: 15 }, // Last Name
+      { wch: 30 }, // Email
+      { wch: 18 }, // Phone
+      { wch: 15 }, // Status
     ];
 
-    // Create worksheet and workbook
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    /* -------------------- FREEZE HEADER -------------------- */
+
+    worksheet["!freeze"] = {
+      xSplit: 0,
+      ySplit: headerRowIndex,
+    };
+
+    /* -------------------- WORKBOOK -------------------- */
+
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Registrations");
 
-    // Save Excel file
     XLSX.writeFile(
       workbook,
       `${event.title.replace(/\s+/g, "_")}_Registrations.xlsx`
     );
   };
+
   const capacityPercentage = event
     ? (event.totalRegistered / event.capacity) * 100
     : 0;

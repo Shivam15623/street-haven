@@ -54,7 +54,7 @@ function convertOrgToFlow(orgNodes: OrgNodeData[]) {
     nodes.push({
       id: node._id,
       type: "tree",
-      data: { label: node.label },
+      data: { label: node.name },
       position: { x: 0, y: 0 },
     });
 

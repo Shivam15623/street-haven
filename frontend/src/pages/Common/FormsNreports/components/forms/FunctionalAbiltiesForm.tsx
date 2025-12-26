@@ -3,8 +3,11 @@ import * as Yup from "yup";
 import { Col, Form, Row } from "react-bootstrap";
 import CustomDatePicker from "../../../../../components/child/DatePicker";
 import { PatternFormat } from "react-number-format";
-
-import { useCreateFAfMutation } from "../../../../../services/FormApi";
+import InputMask from "react-input-mask";
+import {
+  CANADA_PROVINCES,
+  useCreateFAfMutation,
+} from "../../../../../services/FormApi";
 import { showSuccess } from "../../../../../utills/toastutills";
 
 import AbilitiesRestrictions from "../AbilitiesRestrictions";
@@ -178,12 +181,47 @@ const functionalAbilityFormSchema = Yup.object({
     telephone: Yup.string().required("Telephone number is required."),
     address: Yup.string().required("Address is required."),
     cityTown: Yup.string().required("City / Town is required."),
-    province: Yup.string().required("Province is required."),
+    province: Yup.string()
+      .oneOf(
+        CANADA_PROVINCES.map((p) => p.value),
+        "Invalid province"
+      )
+      .required("Province is required"),
     postalCode: Yup.string().required("Postal code is required."),
-    dateOfBirth: Yup.date().required("Date of birth is required."),
+    dateOfBirth: Yup.date()
+      .required("Date of birth is required.")
+      .test(
+        "not-future-date",
+        "Date of Birth cannot be in the future",
+        (val) => {
+          if (!val) return true;
+          const today = new Date();
+          const selected = new Date(val);
+          // ignore time when comparing
+          selected.setHours(0, 0, 0, 0);
+          today.setHours(0, 0, 0, 0);
+
+          return selected <= today;
+        }
+      ),
   }),
 
-  dateOfAccident: Yup.date().required("Please enter the accident date."),
+  dateOfAccident: Yup.date()
+    .required("Please enter the accident date.")
+    .test(
+      "not-future-date",
+      "Date of Accident cannot be in the future",
+      (val) => {
+        if (!val) return true;
+        const today = new Date();
+        const selected = new Date(val);
+        // ignore time when comparing
+        selected.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+
+        return selected <= today;
+      }
+    ),
   employerFaxNo: Yup.string().required("Fax number is required."),
 
   employer: Yup.object({
@@ -191,7 +229,12 @@ const functionalAbilityFormSchema = Yup.object({
     telephone: Yup.string().required("Employer phone number is required."),
     address: Yup.string().required("Employer address is required."),
     cityTown: Yup.string().required("City / Town is required."),
-    province: Yup.string().required("Province is required."),
+    province: Yup.string()
+      .oneOf(
+        CANADA_PROVINCES.map((p) => p.value),
+        "Invalid province"
+      )
+      .required("Province is required"),
     postalCode: Yup.string().required("Postal code is required."),
   }),
 
@@ -204,7 +247,23 @@ const functionalAbilityFormSchema = Yup.object({
   nodateOfDiscusswill: Yup.date()
     .when("discussedRTW", {
       is: false,
-      then: (s) => s.required("Please provide the date of discussion."),
+      then: (s) =>
+        s
+          .required("Please provide the date of discussion.")
+          .test(
+            "not-past-date",
+            "Date of return to work discuss cannot be in the past",
+            (val) => {
+              if (!val) return true;
+              const today = new Date();
+              const selected = new Date(val);
+              // ignore time when comparing
+              selected.setHours(0, 0, 0, 0);
+              today.setHours(0, 0, 0, 0);
+
+              return selected >= today;
+            }
+          ),
       otherwise: (s) => s.notRequired(),
     })
     .default(null),
@@ -231,10 +290,20 @@ const functionalAbilityFormSchema = Yup.object({
   healthProfessionalName: Yup.string().required("please fill this field"),
   hproAddress: Yup.string().required("please fill this field"),
   hprocityTown: Yup.string().required("please fill this field"),
-  hproProvince: Yup.string().required("please fill this field"),
+  hproProvince: Yup.string()
+    .oneOf(
+      CANADA_PROVINCES.map((p) => p.value),
+      "Invalid province"
+    )
+    .required("Province is required"),
   hproPostalCode: Yup.string().required("please fill this field"),
   hproFax: Yup.string().required("please fill this field"),
-  assesmentDate: Yup.date().required().required("please fill this field"),
+  assesmentDate: Yup.date()
+    .required("please fill this field")
+    .min(
+      Yup.ref("dateOfAccident"),
+      "Assesment Date cant be earlier than date Of accident"
+    ),
   returnToWorkStatus: Yup.string()
     .oneOf(["noRestrictions", "withRestrictions", "unable"])
     .required("please fill this field"),
@@ -415,7 +484,27 @@ const functionalAbilityFormSchema = Yup.object({
   nextAppointmentDate: Yup.date().when("returnToWorkStatus", {
     is: "noRestrictions",
     then: (s) => s.notRequired(),
-    otherwise: (s) => s.required("please fill next Appointment date"),
+    otherwise: (s) =>
+      s
+        .required("please fill next Appointment date")
+        .test(
+          "not-past-date",
+          "next Appointment Date cannot be in the past",
+          (val) => {
+            if (!val) return true;
+            const today = new Date();
+            const selected = new Date(val);
+            // ignore time when comparing
+            selected.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+
+            return selected > today;
+          }
+        )
+        .min(
+          Yup.ref("assesmentDate"),
+          "next Appointment Date Cannot be earlier than Assesment"
+        ),
   }),
   providedTo: Yup.object({
     worker: Yup.boolean(),
@@ -830,30 +919,63 @@ const FunctionalAbiltiesForm = () => {
 
                       <Col sm={12} md={2}>
                         <Form.Group className="d-flex flex-column gap-2 mb-3">
-                          <Form.Label>Province</Form.Label>
-                          <Form.Control
+                          <Form.Label>
+                            Province <span className="text-danger">*</span>
+                          </Form.Label>
+
+                          <Form.Select
                             style={{ height: "40px" }}
                             name="worker.province"
                             value={values.worker.province}
                             onChange={handleChange}
-                          />
-                          {touched.worker?.province &&
-                            errors.worker?.province && (
-                              <div className="text-danger text-sm">
-                                {errors.worker.province}
-                              </div>
-                            )}
+                            isInvalid={
+                              !!(
+                                touched.worker?.province &&
+                                errors.worker?.province
+                              )
+                            }
+                          >
+                            <option value="">Select Province</option>
+
+                            {CANADA_PROVINCES.map((province) => (
+                              <option
+                                key={province.value}
+                                value={province.value}
+                              >
+                                {province.label}
+                              </option>
+                            ))}
+                          </Form.Select>
+
+                          <Form.Control.Feedback type="invalid">
+                            {errors.worker?.province}
+                          </Form.Control.Feedback>
                         </Form.Group>
                       </Col>
 
                       <Col sm={12} md={6}>
                         <Form.Group className="d-flex flex-column gap-2 mb-3">
-                          <Form.Label>Postal Code</Form.Label>
-                          <Form.Control
-                            style={{ height: "40px" }}
-                            name="worker.postalCode"
+                          <Form.Label>
+                            Postal Code <span className="text-danger">*</span>
+                          </Form.Label>
+
+                          <InputMask
+                            mask="a9a 9a9"
                             value={values.worker.postalCode}
-                            onChange={handleChange}
+                            onChange={(e) =>
+                              setFieldValue("worker.postalCode", e.target.value)
+                            }
+                            className={`form-control ${
+                              touched.worker?.postalCode &&
+                              errors.worker?.postalCode
+                                ? "is-invalid"
+                                : ""
+                            }`}
+                            placeholder="M5V 3L9"
+                            style={{
+                              height: "40px",
+                              textTransform: "uppercase",
+                            }}
                           />
                           {touched.worker?.postalCode &&
                             errors.worker?.postalCode && (
@@ -929,30 +1051,66 @@ const FunctionalAbiltiesForm = () => {
 
                         <Col sm={12} md={2}>
                           <Form.Group className="d-flex flex-column gap-2 mb-3">
-                            <Form.Label>Province</Form.Label>
-                            <Form.Control
+                            <Form.Label>
+                              Province <span className="text-danger">*</span>
+                            </Form.Label>
+
+                            <Form.Select
                               style={{ height: "40px" }}
                               name="employer.province"
                               value={values.employer.province}
                               onChange={handleChange}
-                            />
-                            {touched.employer?.province &&
-                              errors.employer?.province && (
-                                <div className="text-danger text-sm">
-                                  {errors.employer.province}
-                                </div>
-                              )}
+                              isInvalid={
+                                !!(
+                                  touched.employer?.province &&
+                                  errors.employer?.province
+                                )
+                              }
+                            >
+                              <option value="">Select Province</option>
+
+                              {CANADA_PROVINCES.map((province) => (
+                                <option
+                                  key={province.value}
+                                  value={province.value}
+                                >
+                                  {province.label}
+                                </option>
+                              ))}
+                            </Form.Select>
+
+                            <Form.Control.Feedback type="invalid">
+                              {errors.employer?.province}
+                            </Form.Control.Feedback>
                           </Form.Group>
                         </Col>
 
                         <Col sm={12} md={6}>
                           <Form.Group className="d-flex flex-column gap-2 mb-3">
-                            <Form.Label>Postal Code</Form.Label>
-                            <Form.Control
-                              style={{ height: "40px" }}
-                              name="employer.postalCode"
+                            <Form.Label>
+                              Postal Code <span className="text-danger">*</span>
+                            </Form.Label>
+
+                            <InputMask
+                              mask="a9a 9a9"
                               value={values.employer.postalCode}
-                              onChange={handleChange}
+                              onChange={(e) =>
+                                setFieldValue(
+                                  "employer.postalCode",
+                                  e.target.value
+                                )
+                              }
+                              className={`form-control ${
+                                touched.employer?.postalCode &&
+                                errors.employer?.postalCode
+                                  ? "is-invalid"
+                                  : ""
+                              }`}
+                              placeholder="M5V 3L9"
+                              style={{
+                                height: "40px",
+                                textTransform: "uppercase",
+                              }}
                             />
                             {touched.employer?.postalCode &&
                               errors.employer?.postalCode && (
@@ -978,10 +1136,7 @@ const FunctionalAbiltiesForm = () => {
                               : null
                           }
                           onChange={(date) => {
-                            const newDate = date
-                              ? date.toISOString().split("T")[0]
-                              : "";
-                            setFieldValue("worker.dateOfBirth", newDate, true);
+                            setFieldValue("worker.dateOfBirth", date, true);
                             setFieldTouched("worker.dateOfBirth", true, false);
                           }}
                           isInvalid={Boolean(
@@ -1009,10 +1164,7 @@ const FunctionalAbiltiesForm = () => {
                               : null
                           }
                           onChange={(date) => {
-                            const newDate = date
-                              ? date.toISOString().split("T")[0]
-                              : "";
-                            setFieldValue("dateOfAccident", newDate, true);
+                            setFieldValue("dateOfAccident", date, true);
                             setFieldTouched("dateOfAccident", true, false);
                           }}
                           isInvalid={Boolean(
@@ -1171,10 +1323,7 @@ const FunctionalAbiltiesForm = () => {
                               : null
                           }
                           onChange={(date) => {
-                            const newDate = date
-                              ? date.toISOString().split("T")[0]
-                              : "";
-                            setFieldValue("nodateOfDiscusswill", newDate, true);
+                            setFieldValue("nodateOfDiscusswill", date, true);
                             setFieldTouched("nodateOfDiscusswill", true, false);
                           }}
                           isInvalid={Boolean(
@@ -1627,10 +1776,7 @@ const FunctionalAbiltiesForm = () => {
                             : null
                         }
                         onChange={(date) => {
-                          const newDate = date
-                            ? date.toISOString().split("T")[0]
-                            : "";
-                          setFieldValue("assesmentDate", newDate, true);
+                          setFieldValue("assesmentDate", date, true);
                           setFieldTouched("assesmentDate", true, false);
                         }}
                         isInvalid={Boolean(

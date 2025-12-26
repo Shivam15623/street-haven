@@ -6,6 +6,7 @@ import {
   useGetAllMediaConsentQuery,
   type MediaConsent,
 } from "../../../../../services/FormApi";
+import EditMediaConsent from "../modals/EditMediaConsent";
 
 // ------------------------------
 // Columns
@@ -35,6 +36,14 @@ const columns: Column[] = [
       row.createdAt
         ? new Date(row.createdAt).toLocaleDateString("en-IN")
         : "N/A",
+  },
+  {
+    header: "Actions",
+    accessor: (row) => (
+      <>
+        <EditMediaConsent data={row} />
+      </>
+    ),
   },
 ];
 

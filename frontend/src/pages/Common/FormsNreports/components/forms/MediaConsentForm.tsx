@@ -8,18 +8,30 @@ import { showSuccess } from "../../../../../utills/toastutills";
 import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
 
 // ------------------ VALIDATION SCHEMA ------------------
-const MediaConsentSchema = Yup.object().shape({
+export const MediaConsentSchema = Yup.object().shape({
   name: Yup.string().required("Required"),
   printedName: Yup.string().required("Printed name is required"),
-  date: Yup.date().required("Date is required").nullable(),
+  date: Yup.date()
+    .required("Date is required")
+    .nullable()
+    .test("not-future-date", "Date cannot be in the future", (val) => {
+      if (!val) return true;
+      const today = new Date();
+      const selected = new Date(val);
+      // ignore time when comparing
+      selected.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+
+      return selected <= today;
+    }),
 });
-type MediaConsentFormValues = {
+export type MediaConsentFormValues = {
   name: string;
   printedName: string;
   date: Date | null;
 };
 // Reusable bullet section with nested items
-const BulletSection = ({
+export const BulletSection = ({
   title,
   description,
   items,
@@ -46,7 +58,7 @@ const BulletSection = ({
 );
 
 // Generic list block
-const SimpleListBlock = ({
+export const SimpleListBlock = ({
   heading,
   items,
 }: {
@@ -67,7 +79,7 @@ const SimpleListBlock = ({
   </ul>
 );
 
-const MediaConsentForm = () => {
+export const MediaConsentForm = () => {
   const [createMediaConsent, { isLoading }] = useCreatemediaConsentMutation();
   const handleSubmit = async (
     values: MediaConsentFormValues,
@@ -187,7 +199,14 @@ const MediaConsentForm = () => {
         validationSchema={MediaConsentSchema}
         onSubmit={handleSubmit}
       >
-        {({ values, errors, touched, setFieldValue, handleSubmit }) => (
+        {({
+          values,
+          errors,
+          touched,
+          setFieldValue,
+          handleSubmit,
+          setFieldTouched,
+        }) => (
           <Form className="d-flex flex-column gap-24" onSubmit={handleSubmit}>
             {/* Header Card */}
             <div className="card">
@@ -261,7 +280,10 @@ const MediaConsentForm = () => {
 
                     <CustomDatePicker
                       value={values.date}
-                      onChange={(date) => setFieldValue("date", date)}
+                      onChange={(date) => {
+                        setFieldValue("date", date, true);
+                        setFieldTouched("date", true, false);
+                      }}
                     />
 
                     {errors.date && touched.date && (

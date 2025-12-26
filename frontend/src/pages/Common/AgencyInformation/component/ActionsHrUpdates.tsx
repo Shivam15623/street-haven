@@ -23,7 +23,15 @@ const HrUpdatesFormSchema = () =>
       .min(3, "Title must be at least 3 characters")
       .max(150, "Title must be at most 150 characters")
       .required("Title is required"),
-    description: yup.string(),
+    description: yup
+      .string()
+      .min(10, "Description must be at least 10 characters long")
+      .test(
+        "min-text-length",
+        "Description must be at least 10 characters",
+        (value) => getPlainTextLength(value || "") >= 10
+      )
+      .required(),
     attachment: yup
       .mixed<File>()
       .nullable()
@@ -37,6 +45,12 @@ interface HrUpdateValue {
   description: string;
   attachment: File | null;
 }
+const getPlainTextLength = (html: string) => {
+  if (!html) return 0;
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  return div.textContent?.trim().length || 0;
+};
 
 // ✅ FormData builder
 const buildFormData = (values: HrUpdateValue) => {
@@ -80,6 +94,7 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
     { resetForm }: { resetForm: () => void }
   ) => {
     try {
+      console.log("help", getPlainTextLength(values.description));
       const formData = buildFormData(values);
 
       const res = isEdit

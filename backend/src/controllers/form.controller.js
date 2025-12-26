@@ -504,3 +504,165 @@ export const GetAllPaymentRequisitions = asyncHandler(async (req, res) => {
     })
   );
 });
+
+export const editClientIncident = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const updated = await ClientIncident.findByIdAndUpdate(id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!updated) {
+    throw new ApiError(404, "Client incident not found");
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, "Client incident updated successfully", updated)
+    );
+});
+
+export const editClientFeedback = asyncHandler(async (req, res) => {
+  const feedback = await ClientFeedback.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true, runValidators: true }
+  );
+
+  if (!feedback) {
+    throw new ApiError(404, "Client feedback not found");
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, "Client feedback updated successfully", feedback)
+    );
+});
+
+export const editEmployeeIncident = asyncHandler(async (req, res) => {
+  const incident = await EmployeeIncidentReport.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true, runValidators: true }
+  );
+
+  if (!incident) {
+    throw new ApiError(404, "Employee incident not found");
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, "Employee incident updated successfully", incident)
+    );
+});
+
+export const editFAF = asyncHandler(async (req, res) => {
+  const faf = await FunctionalAbility.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true, runValidators: true }
+  );
+
+  if (!faf) {
+    throw new ApiError(404, "Functional ability form not found");
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Functional ability updated successfully", faf));
+});
+
+export const editPaymentRequisition = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const {
+    paymentDetails,
+    requestedBy,
+    approvedBy,
+    requestedDate,
+    approvedDate,
+    payeeName,
+  } = req.body;
+
+  const payment = await PaymentRequisition.findById(id);
+
+  if (!payment) {
+    throw new ApiError(404, "Payment requisition not found");
+  }
+
+  /* ---------------- Invoice upload (optional) ---------------- */
+  if (req.file) {
+    const uploadedInvoice = await uploadOnCloudinary(req.file.path);
+
+    if (!uploadedInvoice?.secure_url) {
+      throw new ApiError(500, "Invoice upload failed");
+    }
+
+    payment.invoiceAttachment = uploadedInvoice.secure_url;
+  }
+
+  /* ---------------- Payment details update ---------------- */
+  if (paymentDetails) {
+    if (!Array.isArray(paymentDetails) || paymentDetails.length === 0) {
+      throw new ApiError(400, "At least one purchase detail is required");
+    }
+
+    const normalizedDetails = paymentDetails.map((item) => {
+      const netAmount = Number(item.netAmount || item.amount || 0);
+      const hst = Number(item.hst || 0);
+
+      return {
+        purchaseDate: item.purchaseDate,
+        purchaseNature: item.purchaseNature,
+        program: item.program,
+        expenseCode: item.expenseCode,
+        netAmount,
+        hst,
+        totalAmount: netAmount + hst,
+      };
+    });
+
+    payment.paymentDetails = normalizedDetails;
+
+    // Recalculate totalAmount
+    payment.totalAmount = normalizedDetails.reduce(
+      (sum, item) => sum + item.totalAmount,
+      0
+    );
+  }
+
+  /* ---------------- Optional fields ---------------- */
+  if (requestedBy !== undefined) payment.requestedBy = requestedBy;
+  if (approvedBy !== undefined) payment.approvedBy = approvedBy;
+  if (requestedDate !== undefined) payment.requestedDate = requestedDate;
+  if (approvedDate !== undefined) payment.approvedDate = approvedDate;
+  if (payeeName !== undefined) payment.payeeName = payeeName;
+
+  await payment.save();
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200,"Payment requisition updated successfully")
+    );
+});
+
+export const editMediaConsent = asyncHandler(async (req, res) => {
+  const consent = await MediaConsent.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true, runValidators: true }
+  );
+
+  if (!consent) {
+    throw new ApiError(404, "Media consent not found");
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Media consent updated successfully", consent));
+});

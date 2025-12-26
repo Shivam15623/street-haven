@@ -12,21 +12,16 @@ import {
   type Edge,
   type Node,
 } from "@xyflow/react";
-
+import dagre from "@dagrejs/dagre";
 import "@xyflow/react/dist/style.css";
 
-import CustomNode, {
-  type CustomNodeData,
-  type CustomNodeProps,
-} from "./CustomNode";
+import CustomNode, { type CustomNodeProps } from "./CustomNode";
 import {
   useGetTreeNodesQuery,
   type OrgNodeData,
 } from "../../../../../services/orgApi";
-import ActionOrgNode from "./ActionOrgNode";
 
-const ROOT_TOP_Y = 40;
-const DEFAULT_NODE_HEIGHT = 120;
+const DEFAULT_NODE_HEIGHT = 240;
 
 // -----------------------------
 // Helpers
@@ -105,117 +100,69 @@ function transformOrgNodesToFlow(orgNodes: OrgNodeData[]): {
 function layoutDagre(
   nodes: Node<{ node: OrgNodeData; expanded: boolean }>[],
   edges: Edge[],
-  rootId: string,
+
   visibleIds: Set<string>,
-  containerWidth: number,
+
   nodeWidth: number,
   nodeHeight: number
 ) {
-  const HORIZONTAL_SPACING = 30;
-  const VERTICAL_SPACING = 80;
-  const CHILDREN_PER_ROW = 4;
+  const g = new dagre.graphlib.Graph();
 
-  const containerStartX = 0; // fixed container boundary
-  const containerEndX = containerWidth;
+  g.setDefaultEdgeLabel(() => ({}));
 
-  const vNodes = nodes.map((n) => ({ ...n, hidden: !visibleIds.has(n.id) }));
+  g.setGraph({
+    rankdir: "TB", // Top → Bottom
+    nodesep: 30, // horizontal spacing
+    ranksep: 80, // vertical spacing
+    marginx: 20,
+    marginy: 20,
+  });
+
+  // ---- Filter visible nodes & edges ----
+  const vNodes = nodes
+    .filter((n) => visibleIds.has(n.id))
+    .map((n) => ({ ...n, hidden: false }));
+
   const vEdges = edges.filter(
     (e) => visibleIds.has(e.source) && visibleIds.has(e.target)
   );
-  const nodeMap = new Map(vNodes.map((n) => [n.id, n]));
-  const childrenByParent = new Map<string, Node<CustomNodeData>[]>();
-  for (const e of vEdges) {
-    const child = nodeMap.get(e.target);
-    if (!child) continue;
-    if (!childrenByParent.has(e.source)) childrenByParent.set(e.source, []);
-    childrenByParent.get(e.source)!.push(child);
-  }
 
-  const positionNode = (
-    nodeId: string,
-    x: number,
-    y: number
-  ): { positioned: Node<CustomNodeData>[]; width: number; height: number } => {
-    const node = vNodes.find((n) => n.id === nodeId)!;
-    const children = childrenByParent.get(nodeId) || [];
-    const positioned: Node<CustomNodeData>[] = [];
-    node.position = { x, y };
-    positioned.push(node);
-
-    if (children.length === 0)
-      return { positioned, width: nodeWidth, height: nodeHeight };
-
-    const numRows = Math.ceil(children.length / CHILDREN_PER_ROW);
-    const totalChildWidth =
-      Math.min(CHILDREN_PER_ROW, children.length) * nodeWidth +
-      (Math.min(CHILDREN_PER_ROW, children.length) - 1) * HORIZONTAL_SPACING;
-
-    let currentY = y + nodeHeight + VERTICAL_SPACING;
-    let totalSubtreeHeight = nodeHeight;
-
-    for (let r = 0; r < numRows; r++) {
-      const childrenInRow = children.slice(
-        r * CHILDREN_PER_ROW,
-        (r + 1) * CHILDREN_PER_ROW
-      );
-      const rowWidth =
-        childrenInRow.length * nodeWidth +
-        (childrenInRow.length - 1) * HORIZONTAL_SPACING;
-
-      // Try parent-centered alignment
-      let rowX = x + nodeWidth / 2 - rowWidth / 2;
-
-      // Detect collision with container edges
-      if (rowX < containerStartX || rowX + rowWidth > containerEndX) {
-        // If any child will overflow, fallback to root-centered alignment
-        rowX = containerWidth / 2 - rowWidth / 2;
-      }
-
-      console.log(
-        `Parent ${node.data.node.label} Row ${r}: startX = ${rowX}, endX = ${
-          rowX + rowWidth
-        }`
-      );
-
-      let rowMaxHeight = 0;
-
-      childrenInRow.forEach((c, j) => {
-        const childX = rowX + j * (nodeWidth + HORIZONTAL_SPACING);
-        const { positioned: childNodes, height: subHeight } = positionNode(
-          c.id,
-          childX,
-          currentY
-        );
-        rowMaxHeight = Math.max(rowMaxHeight, subHeight);
-        positioned.push(...childNodes);
-      });
-
-      currentY += rowMaxHeight + VERTICAL_SPACING;
-      totalSubtreeHeight += rowMaxHeight + VERTICAL_SPACING;
-    }
-
-    return { positioned, width: totalChildWidth, height: totalSubtreeHeight };
-  };
-
-  const rootX = containerWidth / 2 - nodeWidth / 2;
-  const rootY = ROOT_TOP_Y;
-  const { positioned } = positionNode(rootId, rootX, rootY);
-
-  const visibleNodes = positioned.filter((n) => !n.hidden);
-  const minX = Math.min(...visibleNodes.map((n) => n.position.x));
-  const maxX = Math.max(...visibleNodes.map((n) => n.position.x + nodeWidth));
-  const centerOffset = containerWidth / 2 - (minX + (maxX - minX) / 2);
-
-  visibleNodes.forEach((n) => {
-    n.position.x += centerOffset;
+  // ---- Add nodes to Dagre ----
+  vNodes.forEach((node) => {
+    g.setNode(node.id, {
+      width: nodeWidth,
+      height: nodeHeight,
+    });
   });
 
+  // ---- Add edges to Dagre ----
+  vEdges.forEach((edge) => {
+    g.setEdge(edge.source, edge.target);
+  });
+
+  // ---- Run layout ----
+  dagre.layout(g);
+
+  // ---- Apply positions ----
+  vNodes.forEach((node) => {
+    const dagreNode = g.node(node.id);
+    node.position = {
+      x: dagreNode.x - nodeWidth / 2,
+      y: dagreNode.y - nodeHeight / 2,
+    };
+  });
+
+  // ---- Calculate scroll height ----
   const contentHeight = Math.max(
     800,
-    Math.max(...visibleNodes.map((n) => n.position.y + nodeHeight)) + 100
+    Math.max(...vNodes.map((n) => n.position.y + nodeHeight)) + 100
   );
 
-  return { nodes: visibleNodes, edges: vEdges, contentHeight };
+  return {
+    nodes: vNodes,
+    edges: vEdges,
+    contentHeight,
+  };
 }
 // -----------------------------
 // Component
@@ -225,8 +172,7 @@ function Flow() {
   const containerRef = useRef<HTMLDivElement>(null);
   const width = useContainerWidth(containerRef);
   const { data } = useGetTreeNodesQuery();
-  const [selectedNode, setSelectedNode] = useState<OrgNodeData | null>();
-  const [showEditModal, setShowEditModal] = useState(false);
+
   const { nodes: apiNodes, edges: apiEdges } = useMemo<{
     nodes: Node<{ node: OrgNodeData; expanded: boolean }>[];
     edges: Edge[];
@@ -238,6 +184,7 @@ function Flow() {
     const root = apiNodes.find((n) => !n.data.node.reportsTo?._id);
     return root?.data.node._id || ""; // fallback to empty string if no root
   }, [apiNodes]);
+
   // UI state
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   useEffect(() => {
@@ -293,16 +240,7 @@ function Flow() {
     },
     [apiNodes]
   );
-  const handleEditNode = useCallback(
-    (id: string) => {
-      const node = apiNodes.find((n) => n.data.node._id === id);
-      if (node) {
-        setSelectedNode(node.data.node);
-        setShowEditModal(true);
-      }
-    },
-    [apiNodes]
-  );
+
   const nodeTypes = useMemo(
     () => ({
       custom: (props: CustomNodeProps) => (
@@ -313,8 +251,7 @@ function Flow() {
           }}
           onToggle={handleToggle}
           fixedHeight={maxNodeHeight}
-          fixedWidth={(width - 100) / 4 || 340}
-          onEdit={handleEditNode}
+          fixedWidth={280}
         />
       ),
     }),
@@ -329,22 +266,15 @@ function Flow() {
     const visibleIds = computeVisibleIds(apiNodes, rootId, expanded);
 
     console.log("visibleIds", Array.from(visibleIds));
-    const nodeWidth = (width - 100) / 4 || 340;
+    const nodeWidth = 340;
     return layoutDagre(
       apiNodes,
       apiEdges,
-      rootId,
       visibleIds,
-      width || 1000,
       nodeWidth,
       maxNodeHeight
     );
   }, [expanded, width, maxNodeHeight, apiNodes]);
-
-  const handleClose = () => {
-    setShowEditModal(false);
-    setSelectedNode(null);
-  };
 
   return (
     <>
@@ -367,8 +297,8 @@ function Flow() {
             nodeTypes={nodeTypes}
             // edgeTypes={edgeTypes}
             nodesDraggable={false}
-            panOnDrag={false}
-            zoomOnScroll={false}
+            panOnDrag={true}
+            zoomOnScroll={true}
             zoomOnPinch={false}
             panOnScroll={false}
             zoomOnDoubleClick={false}
@@ -381,16 +311,6 @@ function Flow() {
           />
         </div>
       </div>
-      {showEditModal &&
-        selectedNode &&
-        selectedNode !== null &&
-        selectedNode !== undefined && (
-          <ActionOrgNode
-            show={showEditModal}
-            onHide={handleClose}
-            orgNode={selectedNode} // passes selected node data
-          />
-        )}
     </>
   );
 }

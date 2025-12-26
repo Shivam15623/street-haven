@@ -168,10 +168,7 @@ const LoginForm: React.FC = () => {
         )}
       </Formik>
       <p className="text-center  text-sm  text-street-base mb-0 ">
-        Don’t have an account?{" "}
-        <Link to="/Signup" className="text-sm fw-semibold link-street-base">
-          Sign Up
-        </Link>
+        Don’t have an account? Contact Administration{" "}
       </p>
     </div>
   );

@@ -3,20 +3,18 @@ import {
   FieldArray,
   Formik,
   type FormikErrors,
+  type FormikProps,
   type FormikTouched,
 } from "formik";
 import { Card, Col, Form, Row } from "react-bootstrap";
 import * as Yup from "yup";
-import CustomDatePicker from "../../../../../components/child/DatePicker";
+import CustomDatePicker from "../../../../../../components/child/DatePicker";
 import { Icon } from "@iconify/react/dist/iconify.js";
-import PdfUploader from "../../../../../components/child/PdfUploader";
-import { useCreatePaymentRequistionMutation } from "../../../../../services/FormApi";
-import { showSuccess } from "../../../../../utills/toastutills";
-import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
 
-// --------------------
-// TYPES
-// --------------------
+import { useEffect } from "react";
+
+import { handleDownload } from "../../../../../../utills/handleDownload";
+import PdfField from "../../../../../../components/child/PdfField";
 interface PurchaseDetail {
   date: Date | null;
   nature: string;
@@ -26,10 +24,9 @@ interface PurchaseDetail {
   hst: number;
   totalAmount: number;
 }
-
-interface FormValues {
+export interface FormValues {
   payeeName: string;
-  totalAmount: string;
+  totalAmount: number;
   requestedBy: string;
   requestedDate: Date | null;
   approvedBy: string;
@@ -37,187 +34,148 @@ interface FormValues {
   purchaseDetails: PurchaseDetail[];
   invoices: File | null;
 }
-
+interface FormProp {
+  footer: boolean;
+  isEdit: boolean;
+  FileUrl?: string;
+  isLoading: boolean;
+  initialvalues: FormValues;
+  id?: string;
+  handleSubmit: (
+    values: FormValues,
+    { resetForm }: { resetForm: () => void }
+  ) => void;
+}
 // --------------------
 // SCHEMA
 // --------------------
-const FormSchema = Yup.object({
-  payeeName: Yup.string().required("Payee Name is required"),
-  totalAmount: Yup.number(),
-  requestedBy: Yup.string().required("Requested By Name is required"),
-  requestedDate: Yup.date().nullable().required("Requested Date is required"),
-  approvedBy: Yup.string().required("Approved By Name is required"),
-  approvedDate: Yup.date().nullable().required("Approved Date is required"),
-  purchaseDetails: Yup.array()
-    .of(
-      Yup.object().shape({
-        date: Yup.date().nullable().required("Date is required"),
-        nature: Yup.string().required("Nature is required"),
-        program: Yup.string().required("Department is required"),
-        expenseCode: Yup.string().required("Expense Code required"),
-        netAmount: Yup.number().required("Net Amount is required"),
-        hst: Yup.number().required("HST is required"),
-        totalAmount: Yup.number().required("Total Amount is required"),
-      })
-    )
-    .min(1, "At least one Purchase Detail is required"),
-  invoices: Yup.mixed<File>()
-    .nullable()
-    .test("fileType", "Only PDF files are allowed", (value) => {
-      return value instanceof File && value.type === "application/pdf";
-    })
-    .test("fileSize", "File size must be less than 16MB", (value) => {
-      if (!value) return true;
-      return value.size <= 16 * 1024 * 1024;
-    }),
-});
+const getFormSchema = (isEdit: boolean) =>
+  Yup.object({
+    payeeName: Yup.string().required("Payee Name is required"),
+    totalAmount: Yup.number(),
 
-const PaymentRequisitionForm = () => {
-  const [createpayrequest, { isLoading }] =
-    useCreatePaymentRequistionMutation();
-  const initialValues: FormValues = {
-    payeeName: "",
-    totalAmount: "",
-    requestedBy: "",
-    requestedDate: new Date(),
-    approvedBy: "",
-    approvedDate: new Date(),
-    invoices: null,
-    purchaseDetails: [
-      {
-        date: null,
-        nature: "",
-        program: "",
-        expenseCode: "",
-        netAmount: 0,
-        totalAmount: 0,
-        hst: 0,
-      },
-    ],
-  };
-  const handleDownload = async (url: string, filename: string) => {
-    try {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to fetch file");
+    requestedBy: Yup.string().required("Requested By Name is required"),
+    requestedDate: Yup.date()
+      .nullable()
+      .required("Requested Date is required")
+      .test(
+        "not-future-date",
+        "Date of Request cannot be in the future",
+        (val) => {
+          if (!val) return true;
+          const today = new Date();
+          const selected = new Date(val);
+          // ignore time when comparing
+          selected.setHours(0, 0, 0, 0);
+          today.setHours(0, 0, 0, 0);
 
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
+          return selected <= today;
+        }
+      ),
 
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    approvedBy: Yup.string().required("Approved By Name is required"),
+    approvedDate: Yup.date()
+      .nullable()
+      .required("Approved Date is required")
+      .test(
+        "not-future-date",
+        "Date of Request cannot be in the future",
+        (val) => {
+          if (!val) return true;
+          const today = new Date();
+          const selected = new Date(val);
+          // ignore time when comparing
+          selected.setHours(0, 0, 0, 0);
+          today.setHours(0, 0, 0, 0);
 
-      URL.revokeObjectURL(blobUrl); // Free memory
-    } catch (err) {
-      console.error("Download failed:", err);
-    }
-  };
-  const handleSubmit = async (
-    values: FormValues,
-    { resetForm }: { resetForm: () => void }
-  ) => {
-    try {
-      const formData = new FormData();
+          return selected <= today;
+        }
+      ).min(Yup.ref("requestedDate"),"approved date cant be earlier then Date of Request"),
 
-      // ---------- BASIC FIELDS ----------
-      formData.append("payeeName", values.payeeName);
-      formData.append("requestedBy", values.requestedBy);
-      formData.append("approvedBy", values.approvedBy);
+    purchaseDetails: Yup.array()
+      .of(
+        Yup.object().shape({
+          date: Yup.date().nullable().required("Date is required"),
+          nature: Yup.string().required("Nature is required"),
+          program: Yup.string().required("Department is required"),
+          expenseCode: Yup.string().required("Expense Code required"),
+          netAmount: Yup.number().required("Net Amount is required"),
+          hst: Yup.number().required("HST is required"),
+          totalAmount: Yup.number().required("Total Amount is required"),
+        })
+      )
+      .min(1, "At least one Purchase Detail is required"),
 
-      formData.append(
-        "requestedDate",
-        values.requestedDate ? values.requestedDate.toISOString() : ""
-      );
+    invoices: isEdit
+      ? Yup.mixed<File>()
+          .nullable()
+          .test("fileType", "Only PDF files are allowed", (value) => {
+            if (!value) return true; // ✅ allow null in edit
+            return value instanceof File && value.type === "application/pdf";
+          })
+          .test("fileSize", "File size must be less than 16MB", (value) => {
+            if (!value) return true;
+            return value.size <= 16 * 1024 * 1024;
+          })
+      : Yup.mixed<File>()
+          .required("Invoice is required")
+          .test("fileType", "Only PDF files are allowed", (value) => {
+            return value instanceof File && value.type === "application/pdf";
+          })
+          .test("fileSize", "File size must be less than 16MB", (value) => {
+            if (!value) return true;
+            return value.size <= 16 * 1024 * 1024;
+          }),
+  });
 
-      formData.append(
-        "approvedDate",
-        values.approvedDate ? values.approvedDate.toISOString() : ""
-      );
+function GrandTotalUpdater({
+  values,
+  setFieldValue,
+}: Pick<FormikProps<FormValues>, "values" | "setFieldValue">) {
+  useEffect(() => {
+    const total = values.purchaseDetails.reduce(
+      (sum, item) => sum + Number(item.totalAmount || 0),
+      0
+    );
 
-      // ---------- PURCHASE DETAILS ----------
-      values.purchaseDetails.forEach((item, index) => {
-        formData.append(
-          `paymentDetails[${index}][purchaseDate]`,
-          item.date ? item.date.toISOString() : ""
-        );
-        formData.append(
-          `paymentDetails[${index}][purchaseNature]`,
-          item.nature
-        );
-        formData.append(`paymentDetails[${index}][program]`, item.program);
-        formData.append(
-          `paymentDetails[${index}][expenseCode]`,
-          item.expenseCode
-        );
-        formData.append(
-          `paymentDetails[${index}][netAmount]`,
-          item.netAmount.toString()
-        );
-        formData.append(`paymentDetails[${index}][hst]`, item.hst.toString());
-        formData.append(
-          `paymentDetails[${index}][totalAmount]`,
-          item.totalAmount.toString()
-        );
-      });
+    setFieldValue("totalAmount", total);
+  }, [values.purchaseDetails, setFieldValue]);
 
-      // ---------- INVOICE PDF ----------
-      if (values.invoices instanceof File) {
-        formData.append("invoiceAttachment", values.invoices); // must match multer field name
-      }
-
-      // ---------- API CALL ----------
-      const response = await createpayrequest(formData).unwrap();
-
-      if (response.success) {
-        showSuccess(response.message);
-        resetForm()
-      }
-    } catch (err: any) {
-      console.error(err);
-    }
-  };
-
+  return null; // no UI
+}
+const PaymentRequisitionForm: React.FC<FormProp> = ({
+  footer,
+  handleSubmit,
+  initialvalues,
+  isLoading,
+  id,
+  isEdit,
+  FileUrl,
+}) => {
   return (
-    <div className="d-flex flex-column gap-24 ">
-      <div className="card">
-        <div className="card-body d-flex flex-row gap-20 align-items-center">
-          <img src="/assets/images/shForm.png" width={144} height={113} />
-          <div className="d-flex flex-column">
-            <h4 className="text-xxl sm:text-xl text-street-dark fw-semibold mb-2">
-              Payment Requisition Form
-            </h4>
-            <p className="text-md text-street-dark fw-semibold">
-              Thank you for visiting Street Haven. We value all our clients and
-              strive to meet everyone’s needs.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* FORM START */}
-      <Formik
-        validationSchema={FormSchema}
-        initialValues={initialValues}
-        onSubmit={handleSubmit}
-      >
-        {({
-          handleSubmit,
-          values,
-          errors,
-          touched,
-          setFieldValue,
-          handleChange,
-          setFieldTouched,
-          handleBlur,
-        }) => (
+    <Formik
+      validationSchema={getFormSchema(isEdit)}
+      initialValues={initialvalues}
+      onSubmit={handleSubmit}
+    >
+      {({
+        handleSubmit,
+        values,
+        errors,
+        touched,
+        setFieldValue,
+        handleChange,
+        setFieldTouched,
+        handleBlur,
+      }) => {
+        return (
           <Form
             onSubmit={handleSubmit}
             noValidate
+            id={id ? id : "paymentRequisitionForm"}
             className="d-flex flex-column gap-24"
           >
+            <GrandTotalUpdater values={values} setFieldValue={setFieldValue} />
             {/* TABLE */}
             <Card className="shadow-sm border-0">
               <Card.Body className="d-flex flex-column gap-16 p-20">
@@ -577,44 +535,47 @@ const PaymentRequisitionForm = () => {
             <Card className="shadow-sm border-0">
               <Card.Body className="d-flex flex-column gap-16 p-20">
                 {" "}
-                <PdfUploader name={"invoices"} label={"Invoices:"} />
-              </Card.Body>
-            </Card>
-
-            <Card className="shadow-sm border-0">
-              <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleDownload(
-                      "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764756165/Payment_Requisation_Form_xihfsq.pdf",
-                      "Payment Requisition Form"
-                    )
+                <PdfField
+                  name={"invoices"}
+                  fieldLabel="Invoice"
+                  isEdit={isEdit}
+                  existingPdf={
+                    isEdit && FileUrl
+                      ? { fileName: "Invoice", fileUrl: FileUrl }
+                      : undefined
                   }
-                  className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-                >
-                  Download
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-                >
-                  {isLoading ? "Submitting..." : "Submit"}
-                </button>
+                />
               </Card.Body>
             </Card>
+            {footer === true && (
+              <Card className="shadow-sm border-0">
+                <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleDownload(
+                        "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764756165/Payment_Requisation_Form_xihfsq.pdf",
+                        "Payment Requisition Form"
+                      )
+                    }
+                    className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                  >
+                    Download
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                  >
+                    {isLoading ? "Submitting..." : "Submit"}
+                  </button>
+                </Card.Body>
+              </Card>
+            )}
           </Form>
-        )}
-      </Formik>
-      <FormSubmissionLoader
-        isLoading={isLoading}
-        size="lg"
-        variant="spinner"
-        message="Please Wait"
-        subMessage="Processing Your Request Please Wait"
-      />
-    </div>
+        );
+      }}
+    </Formik>
   );
 };
 

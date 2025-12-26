@@ -14,22 +14,27 @@ import { showError, showSuccess } from "../../../../utills/toastutills";
 import { useDispatch } from "react-redux";
 import { UpdateUserDetails } from "../../../../redux/AuthSlice";
 import { PatternFormat } from "react-number-format";
+import { ROLES } from "../../../../interfaces/AuthInterfaces";
 
 dayjs.extend(relativeTime);
 // ✅ Validation Schema
+function formatRole(role: string): string {
+  return role
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+}
 const ProfileSchema = Yup.object({
-  firstName: Yup.string().required("First name is required"),
-  lastName: Yup.string().required("Last name is required"),
-  title: Yup.string().oneOf(["admin", "employee"]),
+  firstName: Yup.string(),
+  lastName: Yup.string(),
+  title: Yup.string().oneOf(Object.values(ROLES).map((p) => formatRole(p))),
   hireDate: Yup.string(),
-  timePeriod: Yup.string(),
+
   workEmail: Yup.string(),
-  workPhone: Yup.string()
-    .matches(
-      /^(?:\+1\s?)?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
-      "Enter a valid 10-digit Canadian phone number"
-    )
-    .required("Work phone is required"),
+  workPhone: Yup.string().matches(
+    /^(?:\+1\s?)?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
+    "Enter a valid 10-digit Canadian phone number"
+  ),
 });
 type ProfileValues = Yup.InferType<typeof ProfileSchema>;
 const ProfileSettings: React.FC = () => {
@@ -39,9 +44,9 @@ const ProfileSettings: React.FC = () => {
   const handleupdate = async (values: ProfileValues) => {
     try {
       const formdata = new FormData();
-      formdata.append("firstname", values.firstName);
-      formdata.append("lastname", values.lastName);
-      formdata.append("phoneNo", values.workPhone);
+      if (values.firstName) formdata.append("firstname", values.firstName);
+      if (values.lastName) formdata.append("lastname", values.lastName);
+      if (values.workPhone) formdata.append("phoneNo", values.workPhone);
 
       const res = await updateUser(formdata).unwrap();
       if (res.success) {
@@ -69,7 +74,7 @@ const ProfileSettings: React.FC = () => {
           initialValues={{
             firstName: user?.data.firstname,
             lastName: user?.data.lastname,
-            title: user?.data.role,
+            title: user?.data.role ? formatRole(user?.data.role) : "employee",
             hireDate: dayjs(user.data.hireDate).format("MM/DD/YYYY"),
             timePeriod: dayjs(user.data.hireDate).fromNow(),
             workEmail: user?.data.email || "",
@@ -118,7 +123,7 @@ const ProfileSettings: React.FC = () => {
               </Row>
               <Row className="mb-3 align-items-center">
                 <Form.Label column sm={2}>
-                  Title
+                  Account Type
                 </Form.Label>
                 <Col sm={10}>
                   <Form.Control
@@ -153,25 +158,7 @@ const ProfileSettings: React.FC = () => {
                   </Form.Control.Feedback>
                 </Col>
               </Row>
-              <Row className="mb-3 align-items-center">
-                <Form.Label column sm={2}>
-                  Time Period
-                </Form.Label>
-                <Col sm={10}>
-                  <Form.Control
-                    type="text"
-                    size="sm"
-                    name="timePeriod"
-                    value={values.timePeriod}
-                    disabled
-                    onChange={handleChange}
-                    isInvalid={touched.timePeriod && !!errors.timePeriod}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    {errors.timePeriod}
-                  </Form.Control.Feedback>
-                </Col>
-              </Row>
+
               <Row className="mb-3 align-items-center">
                 <Form.Label column sm={2}>
                   Work Email
@@ -233,10 +220,12 @@ const ProfileSettings: React.FC = () => {
                         });
                       }}
                     />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.workPhone}
-                    </Form.Control.Feedback>
                   </div>
+                  {touched.workPhone && errors.workPhone && (
+                    <div className="invalid-feedback d-block">
+                      {errors.workPhone}
+                    </div>
+                  )}
                 </Col>
               </Row>
               <div className="d-flex gap-16 justify-content-end">

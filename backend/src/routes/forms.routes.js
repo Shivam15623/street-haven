@@ -6,6 +6,11 @@ import {
   createFAF,
   createMediaConsent,
   createPaymentRequisition,
+  editClientFeedback,
+  editClientIncident,
+  editEmployeeIncident,
+  editMediaConsent,
+  editPaymentRequisition,
   GetAllClientFeedback,
   GetAllClientIncidents,
   GetAllEmployeeIncidents,
@@ -49,4 +54,29 @@ router.route("/mediaConsent").get(GetAllMediaConsent);
 
 // Payment Requisition
 router.route("/paymentRequistion").get(GetAllPaymentRequisitions);
+
+router
+  .route("/clientIncident/:id")
+  // .get(getClientIncidentById)
+  .patch(editClientIncident);
+
+router
+  .route("/clientFeedback/:id")
+  // .get(getClientFeedbackById)
+  .patch(editClientFeedback);
+
+router
+  .route("/mediaConsent/:id")
+  // .get(getMediaConsentById)
+  .patch(editMediaConsent);
+
+router
+  .route("/paymentRequistion/:id")
+  // .get(getPaymentRequisitionById)
+  .patch(upload.single("invoiceAttachment"), editPaymentRequisition);
+router
+  .route("/employeeIncident/:id")
+  // .get(getEmployeeIncidentById)
+  .patch(editEmployeeIncident);
+
 export default router;

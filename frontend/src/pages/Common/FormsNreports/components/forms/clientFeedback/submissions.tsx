@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { Icon } from "@iconify/react";
 
-import SimpleTable from "../../../../../components/child/SimpleTable";
+import SimpleTable from "../../../../../../components/child/SimpleTable";
 import {
   useGetAllClientFeedbackQuery,
   type clientFeedbackData,
-} from "../../../../../services/FormApi";
-import ClientFeedback from "../modals/ClientFeedback";
+} from "../../../../../../services/FormApi";
+
+import EditClientFeedback from "./edit";
+import ClientFeedback from "./details";
 
 interface Column {
   header: string;
@@ -49,7 +51,12 @@ const columns: Column[] = [
   },
   {
     header: "Actions",
-    accessor: (row) => <ClientFeedback detail={row} />,
+    accessor: (row) => (
+      <>
+        <EditClientFeedback data={row} />
+        <ClientFeedback detail={row} />
+      </>
+    ),
   },
 ];
 
