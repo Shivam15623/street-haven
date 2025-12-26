@@ -28,6 +28,7 @@ const TownhallMinutesFormSchema = () =>
       .required("Title is required"),
     attendees: yup
       .number()
+      .min(1)
       .typeError("Attendees must be a number")
       .positive("Attendees must be greater than 0")
       .integer("Attendees must be an integer")
@@ -116,8 +117,6 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
     { resetForm }: { resetForm: () => void }
   ) => {
     try {
-     
-
       const formData = buildFormData(values);
       const res = isEdit
         ? await editMeeting({
@@ -226,6 +225,13 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
               <Field
                 name="attendees"
                 type="number"
+                min={1}
+                step={1}
+                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                  if (e.key === "-" || e.key === "e" || e.key === "E") {
+                    e.preventDefault(); // 🚫 block negatives & scientific notation
+                  }
+                }}
                 as={BootstrapForm.Control}
                 placeholder="Enter number of attendees"
               />

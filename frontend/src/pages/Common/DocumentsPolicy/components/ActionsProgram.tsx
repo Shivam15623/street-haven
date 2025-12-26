@@ -243,6 +243,18 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
                           }
                         }}
                       />
+                      <button
+                        className="btn-street-primary radius-8 px-3 text-lg"
+                        type="button"
+                        onClick={() => {
+                          if (values.newTag && values.tags.length < 3) {
+                            push(values.newTag);
+                            setFieldValue("newTag", "");
+                          }
+                        }}
+                      >
+                        +
+                      </button>
                     </div>
                     <div className="d-flex gap-2 flex-wrap mb-2">
                       {values.tags.map((tag, index) => (

@@ -61,7 +61,8 @@ const incidentReportSchema = Yup.object({
 
   witnesses: Yup.array()
     .of(Yup.string().required("Witness cannot be empty"))
-    .min(1, "At least one witness is required"),
+    .min(1, "At least one witness is required")
+    .max(5, "At most five witness is required"),
 
   actionsTaken: Yup.string().max(
     500,
@@ -306,6 +307,22 @@ const IncidentreportForm: React.FC = () => {
                                   }
                                 }}
                               />
+                              <button
+                                className="btn-street-primary radius-8 px-3 text-lg"
+                                type="button"
+                                onClick={() => {
+                                  if (
+                                    values.newWitness &&
+                                    values.witnesses &&
+                                    values?.witnesses.length < 5
+                                  ) {
+                                    push(values.newWitness);
+                                    setFieldValue("newWitness", "");
+                                  }
+                                }}
+                              >
+                                +
+                              </button>
                             </div>
 
                             <div className="d-flex gap-2 flex-wrap mb-2">

@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { Icon } from "@iconify/react";
-import SimpleTable from "../../../../../components/child/SimpleTable";
+import SimpleTable from "../../../../../../components/child/SimpleTable";
 import {
   useGetAllPaymentRequisitionsQuery,
   type PaymentRequisition,
-} from "../../../../../services/FormApi";
-import PaymentRequisitionDetail from "../modals/PaymentRequisitionDetail";
+} from "../../../../../../services/FormApi";
+
+import EditPaymentRequistion from "./edit";
+import PaymentRequisitionDetail from "./detail";
 
 interface Column {
   header: string;
@@ -40,7 +42,12 @@ const columns: Column[] = [
   },
   {
     header: "Action",
-    accessor: (row) => <PaymentRequisitionDetail detail={row} />,
+    accessor: (row) => (
+      <div className="d-flex gap-2">
+        <EditPaymentRequistion data={row} />
+        <PaymentRequisitionDetail detail={row} />
+      </div>
+    ),
   },
 ];
 

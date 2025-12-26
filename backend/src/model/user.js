@@ -99,6 +99,11 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    superviserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // reference to User model
+      default: null,
+    },
   },
   {
     timestamps: true,

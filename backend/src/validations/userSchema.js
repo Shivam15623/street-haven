@@ -15,7 +15,7 @@ export const editUserProfileSchema = Joi.object({
     .pattern(
       /^(?:\+1\s?)?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/
     )
-    .required()
+
     .messages({
       "string.pattern.base": "Enter a valid 10-digit Canadian phone number",
       "string.empty": "Phone number is required",

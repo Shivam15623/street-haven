@@ -159,7 +159,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
 
           <span className="d-none d-sm-inline-block ">
             {" "}
-            {isFull ? "Full" : isRegistered ? "Cancel Registration" : "Sign Up"}
+            {isFull ? "Full" : isRegistered ? "Cancel Registration" : "Register"}
           </span>
         </button>
       </div>

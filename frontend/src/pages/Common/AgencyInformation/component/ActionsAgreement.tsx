@@ -36,7 +36,12 @@ const AgreementFormSchema = () =>
       }),
 
     startDate: yup.date().nullable().required("Start date is required"),
-    endDate: yup.date().nullable().required("End date is required"),
+
+    endDate: yup
+      .date()
+      .nullable()
+      .required("End date is required")
+      .min(yup.ref("startDate"), "End date must be greater than start date"),
   });
 
 // -------------------------------------------------------

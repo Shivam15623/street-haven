@@ -17,9 +17,7 @@ export const AllEmployees = asyncHandler(async (req, res) => {
   } = req.query;
 
   const query = {}; // always exclude admins for dropdown
-  if (forDropdown === "true" || forDropdown === true) {
-    query.role = { $ne: "admin" };
-  }
+ 
 
   // Search
   if (search) {
@@ -85,11 +83,15 @@ export const AddEmployee = asyncHandler(async (req, res) => {
     role,
     title,
     hireDate,
- 
+    superviserId,
   } = req.body;
 
   const ExistingUser = await User.findOne({
     $or: [{ email: email }, { phoneNo: phone }],
+  });
+
+  const superviser = await User.findOne({
+    _id: superviserId,
   });
 
   if (ExistingUser) {
@@ -99,6 +101,9 @@ export const AddEmployee = asyncHandler(async (req, res) => {
     if (ExistingUser.phoneNo === phone) {
       throw new ApiError(400, "User already exists with this phone number");
     }
+  }
+  if (!superviser) {
+    throw new ApiError(404, "No Such Superviser Found");
   }
 
   const newUser = await User.create({
@@ -113,6 +118,7 @@ export const AddEmployee = asyncHandler(async (req, res) => {
     totpSecret: null,
     isTOTPEnabled: false,
     isTOTPVerified: false,
+    superviserId: superviserId,
   });
 
   if (!newUser) {
@@ -131,8 +137,16 @@ export const EditEmployee = asyncHandler(async (req, res) => {
     throw new ApiError(404, "No such user found");
   }
 
-  const { firstname, lastname, email, phoneNo, role, title, hireDate } =
-    req.body;
+  const {
+    firstname,
+    lastname,
+    email,
+    phoneNo,
+    role,
+    title,
+    hireDate,
+    superviserId,
+  } = req.body;
 
   const updates = {};
 
@@ -162,7 +176,8 @@ export const EditEmployee = asyncHandler(async (req, res) => {
       (title ? title === findUser.title : true) &&
       (hireDate
         ? new Date(hireDate).toISOString() === findUser.hireDate.toISOString()
-        : true);
+        : true) &&
+      (superviserId ? superviserId === findUser.superviserId : true);
 
     if (isSame) {
       return res
@@ -186,6 +201,16 @@ export const EditEmployee = asyncHandler(async (req, res) => {
     new Date(hireDate).toISOString() !== findUser.hireDate.toISOString()
   )
     updates.hireDate = new Date(hireDate);
+  if (superviserId && superviserId !== findUser.superviserId) {
+    const superviser = await User.findOne({
+      _id: superviserId,
+    });
+    if (!superviser) {
+      throw new ApiError(404, "No Such Superviser Found");
+    }
+    updates.superviserId = superviserId;
+  }
+
   const updatedUser = await User.findByIdAndUpdate(userId, updates, {
     new: true,
     runValidators: true,
@@ -200,7 +225,25 @@ export const EditEmployee = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "Employee profile updated successfully"));
 });
 
-export const EditEmployeePassword = asyncHandler(async (req, res) => {});
+export const EditEmployeePassword = asyncHandler(async (req, res) => {
+  const { id: userId } = req.params;
+
+  const { newPassword, confirmPassword } = req.body;
+  // Check if user exists
+  const findUser = await User.findById(userId);
+  if (!findUser) {
+    throw new ApiError(404, "No such user found");
+  }
+  if (newPassword === confirmPassword) {
+    throw new ApiError(
+      400,
+      "confirm password does not match with new Password"
+    );
+  }
+  findUser.password = newPassword;
+  await findUser.save();
+  return res.status(200).json(new ApiResponse("user's Pasword changed"));
+});
 export const RemoveEmployee = asyncHandler(async (req, res) => {
   const { id: userId } = req.params;
 
@@ -216,4 +259,24 @@ export const RemoveEmployee = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, null, "Employee removed successfully"));
+});
+export const resetTotp = asyncHandler(async (req, res) => {
+  const { id: userId } = req.params;
+  const employee = await User.findById(userId);
+  if (!employee) {
+    throw new ApiError(404, "No such user found");
+  }
+  employee.totpSecret = null;
+  employee.isTOTPEnabled = false;
+  employee.isTOTPVerified = false;
+
+  await employee.save();
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        `${employee.firstname} ${employee.lastname}'s Totp Reseted`
+      )
+    );
 });

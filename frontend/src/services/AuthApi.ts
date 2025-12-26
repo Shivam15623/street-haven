@@ -11,7 +11,7 @@ import type {
   LoginVerifyTotpResponse,
   RequestResetPasswordcredential,
   SetUpTotpResponseCredentials,
-  SignupCredentials,
+
 } from "../interfaces/AuthInterfaces";
 
 export const authApi = api.injectEndpoints({
@@ -23,13 +23,7 @@ export const authApi = api.injectEndpoints({
         body: credentials,
       }),
     }),
-    registerEmployee: builder.mutation<ApiGeneralResponse, SignupCredentials>({
-      query: (credentials) => ({
-        url: "/auth/register/employee",
-        method: "POST",
-        body: credentials,
-      }),
-    }),
+   
     logout: builder.mutation<ApiGeneralResponse, void>({
       query: () => ({
         url: "/auth/logout",
@@ -126,7 +120,7 @@ export const authApi = api.injectEndpoints({
 
 export const {
   useLoginMutation,
-  useRegisterEmployeeMutation,
+
   useSilentAuthQuery,
   useLogoutMutation,
   useForgotPasswordMutation,

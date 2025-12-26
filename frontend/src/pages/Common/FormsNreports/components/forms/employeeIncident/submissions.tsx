@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { Icon } from "@iconify/react";
-import SimpleTable from "../../../../../components/child/SimpleTable";
+import SimpleTable from "../../../../../../components/child/SimpleTable";
 import {
   useGetAllEmployeeIncidentsQuery,
   type employeeIncidentReport,
-} from "../../../../../services/FormApi";
-import EmployeeIncidentReportDetails from "../modals/EmployeeIncidentReportDetails";
+} from "../../../../../../services/FormApi";
+
+import EditEmployeeIncident from "./edit";
+import EmployeeIncidentReportDetails from "./details";
 
 interface Column {
   header: string;
@@ -39,7 +41,12 @@ const columns: Column[] = [
   },
   {
     header: "Actions",
-    accessor: (row) => <EmployeeIncidentReportDetails detail={row} />,
+    accessor: (row) => (
+      <div className="d-flex gap-2">
+        <EditEmployeeIncident data={row} />
+        <EmployeeIncidentReportDetails detail={row} />
+      </div>
+    ),
   },
 ];
 

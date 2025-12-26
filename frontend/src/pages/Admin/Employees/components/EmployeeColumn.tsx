@@ -1,11 +1,12 @@
 import type { Column } from "../../../../components/child/DataTable";
 import type { EmployeeData } from "../../../../services/EmployeeApi";
-import userimage from "@assets/images/user.png";
+
 import EditEmployee from "./EditEmployee";
 import DeleteEmployee from "./DeleteEmployee";
 import type { HasPermissionFn } from "../../../../hooks/Auth";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+
 dayjs.extend(relativeTime);
 function formatRole(role: string): string {
   return role
@@ -22,7 +23,7 @@ export const EmployeeColumn = (
       accessorKey: "profilePic",
       render: (row) => (
         <img
-          src={row?.profilePic ?? userimage}
+          src={row?.profilePic || "assets/images/userlogo.png"}
           alt="User"
           className="rounded-circle w-48-px h-48-px"
         />
@@ -72,7 +73,7 @@ export const EmployeeColumn = (
           {canUpdate && (
             <EditEmployee
               id={row._id}
-              profilePic={row.profilePic}
+              profilePic={row.profilePic ?? "assets/images/userlogo.png"}
               initialValues={{
                 email: row.email,
                 firstname: row.firstname,
@@ -82,6 +83,7 @@ export const EmployeeColumn = (
                 hireDate: row.hireDate,
                 timePeriod: dayjs(row.hireDate).fromNow(),
                 title: row.title,
+                superviserId: row.superviserId,
               }}
             />
           )}

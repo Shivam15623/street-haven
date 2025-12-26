@@ -1,3 +1,4 @@
+import type { Role } from "./AuthInterfaces";
 import type { ApiResponse } from "./Response";
 
 interface EditUserData {
@@ -6,7 +7,7 @@ interface EditUserData {
   lastname: string;
   email: string;
   phoneNo: string;
-  role: "admin" | "employee";
+  role: Role;
   profilePic?: string;
   slug: string;
 }
@@ -16,7 +17,7 @@ interface UserProfile {
   lastname: string;
   email: string;
   phoneNo: string;
-  role: "admin" | "employee";
+  role: Role;
   profilePic?: string;
   slug: string;
   createdAt: string;

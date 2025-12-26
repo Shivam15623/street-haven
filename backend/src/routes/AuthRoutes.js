@@ -5,7 +5,6 @@ import {
   LogOut,
   refreshAccessToken,
   RegisterAdmin,
-  RegisterEmployee,
   ResetPassword,
   silentAuth,
   totpGenerate,
@@ -23,9 +22,7 @@ import passport from "passport";
 
 const router = Router();
 
-router
-  .route("/register/employee")
-  .post(validateRequest(registerUserSchema, "body"), RegisterEmployee);
+
 router
   .route("/register/admin")
   .post(validateRequest(registerUserSchema, "body"), RegisterAdmin);

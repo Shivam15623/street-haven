@@ -77,4 +77,9 @@ export const PERMISSIONS = {
   EDIT_ORG_CHART: "edit_org_chart",
   DELETE_ORG_CHART: "delete_org_chart",
   VIEW_ORG_CHART: "view_org_chart",
+
+  VIEW_SUBMIT_FORM: "view_submit_form",
+  VIEW_SUBMISSIONS: "view_submissions",
+  EDIT_FORM: "edit_form",
+  DELETE_FORM: "delete_form",
 };

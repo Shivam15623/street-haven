@@ -89,7 +89,7 @@ const FormImageUploader: React.FC<Props> = ({
       {/* Preview image */}
       <div className="position-relative" style={{ width: 120, height: 120 }}>
         <img
-          src={previewUrl || "/default-avatar.png"}
+          src={previewUrl || "assets/images/userlogo.png"}
           alt="Profile Preview"
           className="rounded-circle"
           style={{ width: "100%", height: "100%", objectFit: "cover" }}

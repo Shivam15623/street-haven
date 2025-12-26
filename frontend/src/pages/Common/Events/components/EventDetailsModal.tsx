@@ -192,7 +192,10 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
     <ModalWrapper
       show={open}
       size="lg"
-      onHide={handleClose}
+      onHide={() => {
+        setEditMode(false);
+        handleClose();
+      }}
       title="Event Details"
       headerClassName="text-xl font-semibold text-street-dark"
       className="p-6"
@@ -246,18 +249,17 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                     Edit
                   </button>
                 )}
+                {commonActionButton}
+                <button
+                  type="button"
+                  className="btn btn-street-neutral  btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+                  onClick={handleClose}
+                >
+                  Close
+                </button>
               </>
             )}
           </>
-
-          {commonActionButton}
-          <button
-            type="button"
-            className="btn btn-street-neutral  btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
-            onClick={handleClose}
-          >
-            Close
-          </button>
         </>
       }
     >

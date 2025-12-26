@@ -1,11 +1,12 @@
-import  { useState } from "react";
-import ModalWrapper from "../../../../../components/child/ModalWrapper";
-import type { PaymentRequisition } from "../../../../../services/FormApi";
-import FileViewer from "../../../../../components/FileViewer/FileViewer";
+import { useState } from "react";
+
 import { Icon } from "@iconify/react/dist/iconify.js";
 import dayjs from "dayjs";
 import { Col, Container, Row } from "react-bootstrap";
-import Badge from "../../../../../components/child/Badge";
+import type { PaymentRequisition } from "../../../../../../services/FormApi";
+import ModalWrapper from "../../../../../../components/child/ModalWrapper";
+import Badge from "../../../../../../components/child/Badge";
+import FileViewer from "../../../../../../components/FileViewer/FileViewer";
 
 const PaymentRequisitionDetail = ({
   detail,
