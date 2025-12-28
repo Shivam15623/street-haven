@@ -12,7 +12,7 @@ export interface IncidentReport {
   description: string;
   witnesses: string[];
   actionsTaken?: string;
-  reporterName: string;
+
   submittedBy: {
     _id: string;
     firstname: string;
@@ -22,7 +22,13 @@ export interface IncidentReport {
   createdAt: Date | string;
   updatedAt: Date | string;
 }
-
+interface incidentReportCredentials {
+  date: Date;
+  location: string;
+  description: string;
+  witnesses?: string[];
+  actionsTaken: string;
+}
 const IncidentReportApi = api.injectEndpoints({
   endpoints: (builder) => ({
     createIncidentReport: builder.mutation<
@@ -36,11 +42,20 @@ const IncidentReportApi = api.injectEndpoints({
       }),
       invalidatesTags: ["IncidentReport"],
     }),
-    editIncidentReport: builder.mutation({
-      query: (credentials) => ({
-        url: "/incident-reports/edit",
+    editIncidentReport: builder.mutation<
+      ApiGeneralResponse,
+      { id: string; credentials: incidentReportCredentials }
+    >({
+      query: ({ id, credentials }) => ({
+        url: `/incident-reports/edit/${id}`,
         method: "PATCH",
         body: credentials,
+      }),
+    }),
+    deleteIncidentReport: builder.mutation<ApiGeneralResponse, { id: string }>({
+      query: ({ id }) => ({
+        url: `/incident-reports/delete/${id}`,
+        method: "DELETE",
       }),
     }),
     viewIncidentReport: builder.query<
@@ -67,4 +82,5 @@ export const {
   useCreateIncidentReportMutation,
   useEditIncidentReportMutation,
   useViewIncidentReportQuery,
+  useDeleteIncidentReportMutation,
 } = IncidentReportApi;

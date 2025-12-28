@@ -1,3 +1,4 @@
+
 import mongoose from "mongoose";
 
 const EmployeeIncidentSchema = new mongoose.Schema(
@@ -8,9 +9,17 @@ const EmployeeIncidentSchema = new mongoose.Schema(
       required: true,
     },
 
-    name: { type: String, required: true },
-    jobTitle: { type: String },
-    supervisor: { type: String, required: true },
+    employee: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    jobTitle: { type: String ,required:true},
+    supervisor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
 
     informedSupervisor: { type: Boolean, required: true },
 

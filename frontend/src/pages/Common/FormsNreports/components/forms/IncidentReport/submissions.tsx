@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import { useViewIncidentReportQuery } from "../../../../../services/IncidentReportApi";
+import { useViewIncidentReportQuery } from "../../../../../../services/IncidentReportApi";
 import type {
   IncidentReportQuery,
   IncidentReportData,
-} from "../../../../../interfaces/incidentReport";
+} from "../../../../../../interfaces/incidentReport";
 import { Icon } from "@iconify/react/dist/iconify.js";
-import SimpleTable from "../../../../../components/child/SimpleTable";
-import IncidentReportModal from "../modals/IncidentReport";
+import SimpleTable from "../../../../../../components/child/SimpleTable";
+import IncidentReportModal from "./IncidentReport";
+import EditIncidentReport from "./edit";
 
 interface Column {
   header: string;
@@ -30,7 +31,7 @@ const columns: Column[] = [
     header: "Location",
     accessor: (row) => row.location || "N/A",
   },
- 
+
   {
     header: "Witnesses",
     accessor: (row) =>
@@ -38,13 +39,14 @@ const columns: Column[] = [
   },
 
   {
-    header: "Reporter Name",
-    accessor: (row) => row.reporterName || "Anonymous",
+    header: "Actions",
+    accessor: (row) => (
+      <div className="d-flex gap-2">
+        <EditIncidentReport data={row} />
+        <IncidentReportModal incident={row} />
+      </div>
+    ),
   },
-  {
-    header:"Actions",
-    accessor:(row)=><IncidentReportModal incident={row}/>
-  }
 ];
 
 const IncidentReportSubmission = () => {

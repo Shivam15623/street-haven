@@ -104,6 +104,10 @@ const UserSchema = new mongoose.Schema(
       ref: "User", // reference to User model
       default: null,
     },
+    customPermissions: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
   },
   {
     timestamps: true,

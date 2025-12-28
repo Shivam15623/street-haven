@@ -1,21 +1,21 @@
 import { Formik } from "formik";
 import React from "react";
-import { Card, Col, Form, Row } from "react-bootstrap";
+import { Card, Col, Form, Row, Spinner } from "react-bootstrap";
 import { PatternFormat } from "react-number-format";
 import * as Yup from "yup";
 import { handleDownload } from "../../../../../../utills/handleDownload";
 import CustomDatePicker from "../../../../../../components/child/DatePicker";
 import TimePicker from "../../../../../../components/child/TimePicker";
+import { useEmployeeSuperFormQuery } from "../../../../../../services/EmployeeApi";
 export const EmployeeIncidentFormSchema = Yup.object({
   reportingFor: Yup.string()
     .oneOf(["Injury", "Illness", "Near Miss"], "Invalid option")
     .required("This field is required"),
-
+  employeeId: Yup.string().required("Employee name is required"),
   employeeName: Yup.string().required("Employee name is required"),
-
+  superviserName: Yup.string(),
+superviserId:Yup.string().required("Superviser is required"),
   jobTitle: Yup.string().required("Job title is required"),
-
-  superviserName: Yup.string().required("Supervisor name is required"),
 
   informedSuperviser: Yup.boolean().required("please fill this field"),
 
@@ -199,6 +199,9 @@ const EmployeeIncidentForm: React.FC<FormProp> = ({
   initialvalues,
   id,
 }) => {
+  const { data, isLoading: fetchLoad } = useEmployeeSuperFormQuery(undefined);
+  console.log("emplo", data);
+
   return (
     <Formik
       validationSchema={EmployeeIncidentFormSchema}
@@ -268,55 +271,76 @@ const EmployeeIncidentForm: React.FC<FormProp> = ({
                 Employee Information
               </h5>
               <Form.Group className="d-flex flex-column gap-8">
-                <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                  Your Name
-                </Form.Label>
-                <Form.Control
-                  type="text"
-                  name="employeeName"
-                  value={values.employeeName}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  className="text-xs xs:text-sm"
-                  isInvalid={touched.employeeName && !!errors.employeeName}
-                />
+                <Form.Label>Employee</Form.Label>
+
+                {fetchLoad ? (
+                  <div className="d-flex align-items-center gap-2 text-muted">
+                    <Spinner size="sm" />
+                    Loading employees...
+                  </div>
+                ) : (
+                  <Form.Select
+                    name="employeeId"
+                    value={values.employeeId}
+                    disabled={fetchLoad}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      setFieldValue("employeeId", selectedId);
+
+                      const emp = data?.data.find((u) => u._id === selectedId);
+
+                      if (emp) {
+                        setFieldValue("jobTitle", emp.title);
+                        setFieldValue(
+                          "superviserId",
+                          emp.superviser?._id || ""
+                        );
+                        setFieldValue(
+                          "superviserName",
+                          emp.superviser
+                            ? `${emp.superviser.firstname} ${emp.superviser.lastname}`
+                            : ""
+                        );
+                      }
+                    }}
+                    isInvalid={touched.employeeId && !!errors.employeeId}
+                  >
+                    <option value="">Select employee</option>
+                    {data?.data.map((emp) => (
+                      <option key={emp._id} value={emp._id}>
+                        {emp.firstname} {emp.lastname}
+                      </option>
+                    ))}
+                  </Form.Select>
+                )}
+
                 <Form.Control.Feedback type="invalid">
-                  {errors.employeeName}
+                  {errors.employeeId}
                 </Form.Control.Feedback>
               </Form.Group>
+              {/* Job Title */}
               <Form.Group className="d-flex flex-column gap-8">
-                <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                  Job Title
-                </Form.Label>
+                <Form.Label>Job Title</Form.Label>
                 <Form.Control
-                  type="text"
-                  name="jobTitle"
                   value={values.jobTitle}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  className="text-xs xs:text-sm"
+                  disabled
                   isInvalid={touched.jobTitle && !!errors.jobTitle}
                 />
-                <Form.Control.Feedback type="invalid">
-                  {errors.jobTitle}
-                </Form.Control.Feedback>
               </Form.Group>
+              {/* Supervisor */}
               <Form.Group className="d-flex flex-column gap-8">
-                <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                  Supervisor
-                </Form.Label>
+                <Form.Label>Supervisor</Form.Label>
                 <Form.Control
-                  type="text"
-                  name="superviserName"
                   value={values.superviserName}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  className="text-xs xs:text-sm"
-                  isInvalid={touched.superviserName && !!errors.superviserName}
+                  disabled
+                  placeholder={
+                    fetchLoad
+                      ? "Loading..."
+                      : !values.employeeId
+                      ? "Select employee first"
+                      : ""
+                  }
                 />
-                <Form.Control.Feedback type="invalid">
-                  {errors.superviserName}
-                </Form.Control.Feedback>
               </Form.Group>
               <Form.Group className="d-flex flex-column gap-8">
                 <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">

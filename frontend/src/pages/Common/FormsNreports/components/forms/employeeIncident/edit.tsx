@@ -5,14 +5,15 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import {
   useEditEmployeeIncidentMutation,
   type editemployeeIncidentReportCred,
-  type employeeIncidentReport,
+
+  type EmployeeIncidentReportPopulated,
 } from "../../../../../../services/FormApi";
 
 import EmployeeIncidentForm, { type FormValues } from "./form";
 import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
 import { showError, showSuccess } from "../../../../../../utills/toastutills";
 interface EditEmployeeIncidentProp {
-  data: employeeIncidentReport;
+  data: EmployeeIncidentReportPopulated;
 }
 const EditEmployeeIncident: React.FC<EditEmployeeIncidentProp> = ({ data }) => {
   const [showModal, setShowModal] = useState(false);
@@ -25,9 +26,9 @@ const EditEmployeeIncident: React.FC<EditEmployeeIncidentProp> = ({ data }) => {
     try {
       const payload: editemployeeIncidentReportCred = {
         reportType: values.reportingFor!,
-        name: values.employeeName,
+        name: values.employeeId,
         jobTitle: values.jobTitle,
-        supervisor: values.superviserName,
+        supervisor: values.superviserId,
         informedSupervisor: values.informedSuperviser,
         injuryDate: new Date(values.injuryDate),
         injuryTime: values.injuryTime,
@@ -69,9 +70,9 @@ const EditEmployeeIncident: React.FC<EditEmployeeIncidentProp> = ({ data }) => {
   };
   const initialValues = {
     reportingFor: data.reportType,
-    employeeName: data.name,
+    employeeName: `${data.employee.firstname} ${data.employee.lastname}`,
     jobTitle: data.jobTitle,
-    superviserName: data.supervisor,
+    superviserName: `${data.supervisor.firstname} ${data.supervisor.lastname}`,
     informedSuperviser: data.informedSupervisor,
     injuryDate: new Date(data.injuryDate),
     injuryTime: data.injuryTime,

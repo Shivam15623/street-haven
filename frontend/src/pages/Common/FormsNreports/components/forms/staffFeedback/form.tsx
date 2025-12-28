@@ -1,21 +1,16 @@
-import React from "react";
+import React from 'react'
 import { Col, Form, Row } from "react-bootstrap";
 import { FieldArray, Formik } from "formik";
 import * as Yup from "yup";
-import { useCreateStaffFeedbackMutation } from "../../../../services/StaffFeedbackApi";
-import { showSuccess } from "../../../../utills/toastutills";
-import Badge from "../../../../components/child/Badge";
-import TimePicker from "../../../../components/child/TimePicker";
-import CustomDatePicker from "../../../../components/child/DatePicker";
-import QuillEditor from "../../../../components/child/QuillEditor";
-import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
-
+import { handleDownload } from '../../../../../../utills/handleDownload';
+import Badge from '../../../../../../components/child/Badge';
+import CustomDatePicker from '../../../../../../components/child/DatePicker';
+import TimePicker from '../../../../../../components/child/TimePicker';
+import QuillEditor from '../../../../../../components/child/QuillEditor';
 const staffFeedbackSchema = Yup.object({
-  date: Yup.string()
+  date: Yup.date()
     .required("Date of incident is required")
-    .test("valid-date", "Invalid date format", (val) => {
-      return val ? !isNaN(Date.parse(val)) : false;
-    })
+   
     .test("not-future-date", "Date cannot be in the future", (val) => {
       if (!val) return true;
       const today = new Date();
@@ -43,7 +38,7 @@ const staffFeedbackSchema = Yup.object({
       return incidentDateTime <= now;
     }),
 
-  location: Yup.string(),
+  location: Yup.string().required("location is required"),
   category: Yup.string()
     .oneOf(["Other", "Behavior", "Equipment", "Safety"])
     .default("Other"),
@@ -60,82 +55,37 @@ const staffFeedbackSchema = Yup.object({
   actionsTaken: Yup.string().max(
     500,
     "Actions taken cannot exceed 500 characters"
-  ),
+  ).required("Actions Taken is required"),
   newWitness: Yup.string(),
-  reporterName: Yup.string(),
+
 });
 
-type StaffFeedbackFormValues = Yup.InferType<typeof staffFeedbackSchema>;
-
-const StaffFeedbackForm: React.FC = () => {
-  const [createStaff, { isLoading }] = useCreateStaffFeedbackMutation();
-  const handleDownload = async (url: string, filename: string) => {
-    try {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to fetch file");
-
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      URL.revokeObjectURL(blobUrl); // Free memory
-    } catch (err) {
-      console.error("Download failed:", err);
-    }
-  };
-  const handleSubmit = async (
-    values: StaffFeedbackFormValues,
+interface FormProp {
+  footer: boolean;
+  isLoading: boolean;
+  initialvalues: FormValues;
+  id?: string;
+  handleSubmit: (
+    values: FormValues,
     { resetForm }: { resetForm: () => void }
-  ) => {
-    try {
-      // combine date and time if needed
-
-      const tempDate = new Date(values.date).toISOString().split("T")[0];
-      const fullDateTime = new Date(`${tempDate}T${values.time}`).toISOString();
-
-      const payload = {
-        ...values,
-        date: fullDateTime, // full ISO timestamp
-      };
-
-      const res = await createStaff(payload).unwrap();
-      if (res.success) {
-        showSuccess(res.message);
-        resetForm();
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
+  ) => void;
+}
+export type FormValues = Yup.InferType<typeof staffFeedbackSchema>;
+const StaffFeedbackForm:React.FC<FormProp> = ({
+  footer,
+  isLoading,
+  handleSubmit,
+  initialvalues,
+  id,
+}) => {
   return (
-    <div className="card">
-      <div className="card-body d-flex flex-column gap-12 gap-sm-16 gap-md-20 rounded-3 p-16 p-sm-20 p-md-24">
-        <h4 className="text-lg sm:text-xl text-street-dark fw-semibold mb-0">
-          Staff Feedback Form
-        </h4>
-
-        <Formik
+         <Formik
           validationSchema={staffFeedbackSchema}
+          
           validateOnChange={false}
           validateOnBlur={true}
-          initialValues={{
-            date: new Date().toISOString().split("T")[0],
-            time: "",
-            location: "",
-            description: "",
-            witnesses: [] as string[],
-            actionsTaken: "",
-            reporterName: "",
-            category: "Other",
-            newWitness: "",
-          }}
+          initialValues={initialvalues}
+       
           onSubmit={handleSubmit}
         >
           {({
@@ -149,7 +99,7 @@ const StaffFeedbackForm: React.FC = () => {
             handleBlur,
             handleReset,
           }) => {
-            console.log("Formik Errors:", errors);
+          
             return (
               <div
                 className={`position-relative ${
@@ -158,6 +108,7 @@ const StaffFeedbackForm: React.FC = () => {
               >
                 <Form
                   noValidate
+                  id={id?id:"create-staff-report"}
                   onSubmit={handleSubmit}
                   className="d-flex flex-column gap-20"
                 >
@@ -180,13 +131,13 @@ const StaffFeedbackForm: React.FC = () => {
                             setFieldTouched("date", true, false); // ← false prevents double validation
                           }}
                           onBlur={handleBlur}
-                          isInvalid={!!errors.date && touched.date}
+                          isInvalid={!!errors.date && !!touched.date}
                         />
 
                         {/* Show error manually */}
                         {errors.date && touched.date && (
                           <div className="invalid-feedback d-block">
-                            {errors.date}
+                            {String(errors.date)}
                           </div>
                         )}
                       </Form.Group>
@@ -386,28 +337,10 @@ const StaffFeedbackForm: React.FC = () => {
                     </Form.Control.Feedback>
                   </Form.Group>
 
-                  {/* Reporter Name */}
-                  <Form.Group
-                    controlId="reporterName"
-                    className="d-flex flex-column gap-8"
-                  >
-                    <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                      Reporter Name
-                    </Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="reporterName"
-                      value={values.reporterName}
-                      onChange={handleChange}
-                      isInvalid={!!errors.reporterName && touched.reporterName}
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.reporterName}
-                    </Form.Control.Feedback>
-                  </Form.Group>
+                  
 
                   {/* Actions */}
-                  <div className="d-flex justify-content-end gap-2 mt-3">
+                  {footer&&  <div className="d-flex justify-content-end gap-2 mt-3">
                     <button
                       type="button"
                       onClick={() =>
@@ -433,23 +366,16 @@ const StaffFeedbackForm: React.FC = () => {
                     >
                       Cancel
                     </button>
-                  </div>
+                  </div>}
+                
                 </Form>
 
-                <FormSubmissionLoader
-                  isLoading={isLoading}
-                  size="lg"
-                  variant="spinner"
-                  message="Please Wait"
-                  subMessage="Processing Your Request Please Wait"
-                />
+               
               </div>
             );
           }}
         </Formik>
-      </div>
-    </div>
-  );
-};
+  )
+}
 
-export default StaffFeedbackForm;
+export default StaffFeedbackForm

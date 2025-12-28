@@ -32,11 +32,7 @@ const staffFeedbackSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    reporterName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+  
     submittedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", // who submitted it in system

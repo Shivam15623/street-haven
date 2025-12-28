@@ -290,3 +290,36 @@ export const resetTotp = asyncHandler(async (req, res) => {
       )
     );
 });
+
+export const employeeSuperviserForm = asyncHandler(async (req, res) => {
+  const employees = await User.find({})
+    .select("firstname lastname title superviserId")
+    .populate({
+      path: "superviserId",
+      select: "firstname lastname title",
+    })
+    .lean();
+
+  const formattedEmployees = employees.map((emp) => ({
+    _id: emp._id,
+    firstname: emp.firstname,
+    lastname: emp.lastname,
+    title: emp.title,
+    superviser: emp.superviserId
+      ? {
+          _id: emp.superviserId._id,
+          firstname: emp.superviserId.firstname,
+          lastname: emp.superviserId.lastname,
+          title: emp.superviserId.title,
+        }
+      : null,
+  }));
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      "Employees with supervisor data fetched successfully",
+      formattedEmployees
+    )
+  );
+});

@@ -10,7 +10,7 @@ export const createIncidentreport = asyncHandler(async (req, res) => {
     description,
     witnesses,
     actionsTaken,
-    reporterName,
+
   } = req.body;
   const submittedBy = req.user._id;
   const newReport = await IncidentReport.create({
@@ -19,7 +19,7 @@ export const createIncidentreport = asyncHandler(async (req, res) => {
     description,
     witnesses,
     actionsTaken,
-    reporterName,
+
     submittedBy,
   });
   if (!newReport) {
@@ -45,7 +45,7 @@ export const GetAllIncidentreports = asyncHandler(async (req, res) => {
     query.$or = [
       { description: { $regex: search, $options: "i" } },
       { location: { $regex: search, $options: "i" } },
-      { reporterName: { $regex: search, $options: "i" } },
+     
       { date: { $regex: search, $options: "i" } },
     ];
   }
@@ -66,5 +66,53 @@ export const GetAllIncidentreports = asyncHandler(async (req, res) => {
         totalPages: Math.ceil(totalCount / limit),
       },
     })
+  );
+});
+export const deleteIncidentReport = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const report = await IncidentReport.findById(id);
+
+  if (!report) {
+    throw new ApiError(404, "Incident report not found");
+  }
+
+
+
+  await report.deleteOne();
+
+  res.status(200).json(
+    new ApiResponse(true, "Incident report deleted successfully")
+  );
+});
+export const editIncidentReport = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const {
+    date,
+    location,
+    description,
+    witnesses,
+    actionsTaken,
+  } = req.body;
+
+  const report = await IncidentReport.findById(id);
+
+  if (!report) {
+    throw new ApiError(404, "Incident report not found");
+  }
+
+
+
+  report.dateOfIncident = date ?? report.dateOfIncident;
+  report.location = location ?? report.location;
+  report.description = description ?? report.description;
+  report.witnesses = witnesses ?? report.witnesses;
+  report.actionsTaken = actionsTaken ?? report.actionsTaken;
+
+  await report.save();
+
+  res.status(200).json(
+    new ApiResponse(true, "Incident report updated successfully", report)
   );
 });
