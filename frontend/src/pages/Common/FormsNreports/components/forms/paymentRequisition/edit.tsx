@@ -148,15 +148,7 @@ const EditPaymentRequistion: React.FC<EditPaymentRequistionProp> = ({
           </>
         }
       >
-        <div
-          style={{
-            maxHeight: "60vh",
-            overflowY: "auto",
-            overflowX: "hidden",
-            scrollbarWidth: "thin",
-          }}
-        >
-          <div className="py-16">
+      
             {" "}
             <PaymentRequisitionForm
               footer={false}
@@ -167,8 +159,7 @@ const EditPaymentRequistion: React.FC<EditPaymentRequistionProp> = ({
               handleSubmit={handleSubmit}
               isLoading={isLoading}
             />
-          </div>
-        </div>
+
       </ModalWrapper>
     </>
   );

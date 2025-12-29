@@ -20,8 +20,9 @@ import {
   useGetTreeNodesQuery,
   type OrgNodeData,
 } from "../../../../../services/orgApi";
+import UserNodeDetail from "./UserNodeDetail";
 
-const DEFAULT_NODE_HEIGHT = 240;
+const DEFAULT_NODE_HEIGHT = 190;
 
 // -----------------------------
 // Helpers
@@ -66,6 +67,7 @@ function computeVisibleIds(
   visit(rootId);
   return visible;
 }
+
 function transformOrgNodesToFlow(orgNodes: OrgNodeData[]): {
   nodes: Node<{ node: OrgNodeData; expanded: boolean }>[];
   edges: Edge[];
@@ -172,7 +174,18 @@ function Flow() {
   const containerRef = useRef<HTMLDivElement>(null);
   const width = useContainerWidth(containerRef);
   const { data } = useGetTreeNodesQuery();
+  const [selectedNode, setSelectedNode] = useState<OrgNodeData | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
+  const handleOpenModal = (node: OrgNodeData) => {
+    setSelectedNode(node);
+    setShowModal(true);
+  };
+
+  const handleClose = () => {
+    setShowModal(false);
+    setSelectedNode(null);
+  };
   const { nodes: apiNodes, edges: apiEdges } = useMemo<{
     nodes: Node<{ node: OrgNodeData; expanded: boolean }>[];
     edges: Edge[];
@@ -251,6 +264,7 @@ function Flow() {
           }}
           onToggle={handleToggle}
           fixedHeight={maxNodeHeight}
+          onOpenModal={handleOpenModal}
           fixedWidth={280}
         />
       ),
@@ -309,6 +323,13 @@ function Flow() {
             edgesFocusable={false} // ✅ Add this
             // No fitView calls anywhere
           />
+          {showModal && selectedNode && (
+            <UserNodeDetail
+              show={showModal}
+              handleclose={handleClose}
+              id={selectedNode._id}
+            />
+          )}
         </div>
       </div>
     </>

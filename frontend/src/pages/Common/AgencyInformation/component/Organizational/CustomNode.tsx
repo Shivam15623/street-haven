@@ -12,6 +12,7 @@ export type CustomNodeProps = {
   id: string;
   data: CustomNodeData;
   onToggle?: (id: string) => void;
+  onOpenModal?: (node: OrgNodeData) => void;
   fixedHeight?: number;
   fixedWidth?: number; // ✅ Add width
 };
@@ -23,18 +24,14 @@ function getInitials(name: string) {
     .join("")
     .toUpperCase();
 }
-function formatRole(role: string): string {
-  return role
-    .split("_")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(" ");
-}
+
 // 👇 forwardRef so Flow can attach refs
 const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
-  ({ id, data, onToggle, fixedHeight, fixedWidth }, ref) => {
+  ({ id, data, onToggle, fixedHeight, onOpenModal, fixedWidth }, ref) => {
     return (
       <div
         ref={ref}
+        onClick={() => onOpenModal?.(data.node)}
         className=" p-20 gap-10 d-flex flex-column org-node radius-12 shadow-sm position-relative "
         style={{
           minHeight: fixedHeight ? `${fixedHeight}px` : "auto",
@@ -71,19 +68,6 @@ const CustomNode = forwardRef<HTMLDivElement, CustomNodeProps>(
         </h3>
         <p className="text-sm text-street-primary fw-semibold text-center">
           {data.node.title}
-        </p>
-        <p
-          className="text-street-base text-center"
-          style={{ fontSize: "13px" }}
-        >
-          {formatRole(data.node.role)}
-        </p>
-        <p
-          className="text-street-base text-center text-xs"
-          style={{ opacity: "0.7" }}
-        >
-          <span>Reports to: </span>{" "}
-          <span>{data.node.reportsTo?.name ?? "N/A"}</span>
         </p>
 
         {data.node.reportsTo !== null &&

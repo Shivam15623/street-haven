@@ -62,7 +62,7 @@ const ClientFeedback = ({ detail }: { detail: clientFeedbackData }) => {
         footerClassName="pt-16 pt-sm-20 px-0 pb-0"
         onHide={() => setShowModal(false)}
       >
-        <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
+   
           <Container className=" animate-fade-in d-flex flex-column gap-24 ">
             {/* Visit Info */}
             <Row className="g-3 mb-4">
@@ -264,7 +264,7 @@ const ClientFeedback = ({ detail }: { detail: clientFeedbackData }) => {
               </div>
             </div>
           </Container>
-        </div>
+
       </ModalWrapper>
     </>
   );
