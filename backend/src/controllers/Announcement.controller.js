@@ -66,7 +66,9 @@ export const createAnnouncement = asyncHandler(async (req, res) => {
     const announcement = newAnnouncement[0];
     const notification = await createNotification(
       {
-        type: "new_announcement",
+        action: "created",
+        severity:"info",
+        category: "announcement",
         title: "New Announcement",
         message: `The new Announcement "${title}" has been created by ${firstname} ${lastname}.`,
         link: `/agency_info/${announcement._id}`,
@@ -240,5 +242,7 @@ export const recentAnnouncementCount = asyncHandler(async (req, res) => {
 
   return res
     .status(201)
-    .json(new ApiResponse(201, `Recent Announcements fetched Successfully`,count));
+    .json(
+      new ApiResponse(201, `Recent Announcements fetched Successfully`, count)
+    );
 });

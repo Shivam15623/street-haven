@@ -117,7 +117,7 @@ export const createClientFeedback = asyncHandler(async (req, res) => {
 export const createEmployeeIncident = asyncHandler(async (req, res) => {
   const {
     type,
-    name,
+    employee,
     jobTitle,
     supervisor,
     informedSupervisor,
@@ -137,9 +137,10 @@ export const createEmployeeIncident = asyncHandler(async (req, res) => {
     previousInjury,
     previousInjuryDate,
   } = req.body;
+  console.log(req.body)
   const payload = {
     reportType: type,
-    name: name,
+    employee: employee,
     jobTitle,
     supervisor: supervisor,
     informedSupervisor: informedSupervisor,

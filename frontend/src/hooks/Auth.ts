@@ -15,13 +15,20 @@ const useHasPermission = () => {
   // ─────────────────────────────
   // Check if user has a specific permission
   // ─────────────────────────────
+
   const hasPermission = ({ action }: PermissionCheck) => {
     if (!user) return false;
 
     const rolePermissions = [...ROLE_PERMISSIONS[user.role]];
-    if (!rolePermissions) return false;
+    const userPermissions = user.customPermissions;
+    const effectivePermissions = new Set([
+      ...rolePermissions,
+      ...userPermissions,
+    ]);
 
-    return rolePermissions.includes(action);
+    if (!effectivePermissions) return false;
+
+    return effectivePermissions.has(action);
   };
 
   // ─────────────────────────────

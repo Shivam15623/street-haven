@@ -1,6 +1,7 @@
 import Joi from "joi";
 
 import { ROLES } from "../model/user.js";
+import { PERMISSIONS } from "../auth/permissions.js";
 
 export const viewEmployees = Joi.object({
   page: Joi.number().optional(),
@@ -86,6 +87,13 @@ export const createEmployeeSchema = Joi.object({
     "date.base": "Hire date must be a valid date",
     "any.required": "Hire date is required",
   }),
+  customPermissions: Joi.array()
+    .items(Joi.string().valid(...Object.values(PERMISSIONS)))
+    .default([])
+    .messages({
+      "array.base": "Custom permissions must be an array",
+      "any.only": "Invalid permission selected",
+    }),
 });
 
 export const editEmployeeSchema = Joi.object({
@@ -123,4 +131,11 @@ export const editEmployeeSchema = Joi.object({
   title: Joi.string().optional(),
   superviserId: Joi.string().hex().length(24).optional(),
   hireDate: Joi.date().optional(),
+  customPermissions: Joi.array()
+    .items(Joi.string().valid(...Object.values(PERMISSIONS)))
+    .default([])
+    .messages({
+      "array.base": "Custom permissions must be an array",
+      "any.only": "Invalid permission selected",
+    }),
 });

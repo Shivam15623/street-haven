@@ -83,7 +83,7 @@ export interface EmployeeIncidentReportPopulated {
 
   preventionSuggestion: string;
 
-  injuredBodyPartOrRisk?: string;
+  injuredBodyPartOrRisk: string;
 
   sawDoctor: boolean;
 
@@ -109,7 +109,7 @@ export interface PopulatedUser {
 
 export interface EmployeeIncidentCredentials {
   type: string;
-  name: string;
+  employee: string;
   jobTitle: string;
   supervisor: string;
   informedSupervisor: boolean;
@@ -234,7 +234,7 @@ export interface employeeIncidentReport {
 }
 export interface editemployeeIncidentReportCred {
   reportType: "Injury" | "Illness" | "Near Miss";
-  name: string;
+  employee: string;
   jobTitle: string;
   supervisor: string;
   informedSupervisor: boolean;

@@ -7,9 +7,9 @@ import TicketDetails from "./TicketEdit";
 import Badge from "../../../../components/child/Badge";
 import type { TicketData } from "../../../../interfaces/Ticket";
 import TicketComment from "./TicketComment";
-import { useSelector } from "react-redux";
-import { selectAuth } from "../../../../redux/AuthSlice";
+
 import DOMPurify from "dompurify";
+
 interface TicketCardProps {
   ticket: TicketData;
 }
@@ -28,10 +28,8 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     createdAt,
     _id,
   } = ticket;
-  const { user } = useSelector(selectAuth);
 
-  const isAssigned = ticket.assignedTo?._id === user?._id;
-  const isRequester = ticket.createdBy._id === user?._id;
+
   // Meta info
   const meta: string[] = [
     `#${_id}`, // Ticket ID
@@ -143,12 +141,8 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
           </div>
           <div className="d-flex flex flex-row gap-2">
             <TicketComment ticket={ticket} />
-            {(isAssigned ||
-              isRequester ||
-              (user &&
-                ["admin", "super_admin", "director", "manager"].includes(
-                  user.role
-                ))) && <TicketDetails ticket={ticket} />}
+
+            <TicketDetails ticket={ticket} />
           </div>
         </div>
       </div>

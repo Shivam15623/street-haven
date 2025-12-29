@@ -7,7 +7,28 @@ export interface notificationData {
   message: string;
   meta: any;
   title: string;
-  type: string;
+  category:
+    | "ticket"
+    | "event"
+    | "announcement"
+    | "event_minute"
+    | "program_mannual"
+    | "collective_agreement"
+    | "hr_updates"
+    | "system";
+
+  action:
+    | "created"
+    | "updated"
+    | "commented"
+    | "assigned"
+    | "status_changed"
+    | "deleted"
+    | "registered"
+    | "unregistered";
+
+  severity: "info" | "success" | "warning" | "error";
+
   updatedAt: string;
   _id: string;
   readAt: string | null;

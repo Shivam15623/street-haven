@@ -5,7 +5,6 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import {
   useEditEmployeeIncidentMutation,
   type editemployeeIncidentReportCred,
-
   type EmployeeIncidentReportPopulated,
 } from "../../../../../../services/FormApi";
 
@@ -26,9 +25,9 @@ const EditEmployeeIncident: React.FC<EditEmployeeIncidentProp> = ({ data }) => {
     try {
       const payload: editemployeeIncidentReportCred = {
         reportType: values.reportingFor!,
-        name: values.employeeId,
-        jobTitle: values.jobTitle,
-        supervisor: values.superviserId,
+        employee: values.employeeId!,
+        jobTitle: values.jobTitle!,
+        supervisor: values.superviserId!,
         informedSupervisor: values.informedSuperviser,
         injuryDate: new Date(values.injuryDate),
         injuryTime: values.injuryTime,
@@ -70,7 +69,9 @@ const EditEmployeeIncident: React.FC<EditEmployeeIncidentProp> = ({ data }) => {
   };
   const initialValues = {
     reportingFor: data.reportType,
+    employeeId: data.employee._id,
     employeeName: `${data.employee.firstname} ${data.employee.lastname}`,
+    superviserId: data.supervisor._id,
     jobTitle: data.jobTitle,
     superviserName: `${data.supervisor.firstname} ${data.supervisor.lastname}`,
     informedSuperviser: data.informedSupervisor,

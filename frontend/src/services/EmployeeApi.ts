@@ -1,6 +1,7 @@
 import type { Role, SignupCredentials } from "../interfaces/AuthInterfaces";
 import type { ApiGeneralResponse, ApiResponse } from "../interfaces/Response";
 import { api } from "../redux/ApiSlice";
+import type { AllPermissions } from "../utills/auth/permissions";
 export interface EmployeeData {
   _id: string;
   firstname: string;
@@ -18,6 +19,7 @@ export interface EmployeeData {
     value: number;
     unit: "days" | "weeks" | "months" | "years";
   };
+  customPermissions: AllPermissions[];
 }
 export interface EmployeeSuperviserData {
   _id: string;

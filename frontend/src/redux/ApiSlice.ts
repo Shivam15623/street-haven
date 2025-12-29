@@ -32,7 +32,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
     if (refreshResult?.data) {
       const { accessToken, user } =
         refreshResult.data as LoginVerifyTotpResponseData;
-       
+
       const payload = {
         _id: user._id,
         email: user.email,
@@ -45,6 +45,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
         createdAt: user.createdAt,
         title: user.title || "",
         hireDate: new Date(user.hireDate).toISOString(),
+        customPermissions: user.customPermissions || [],
       };
       api.dispatch(
         setLoggedIn({

@@ -105,8 +105,8 @@ const UserSchema = new mongoose.Schema(
       default: null,
     },
     customPermissions: {
-      type: mongoose.Schema.Types.Mixed,
-      default: {},
+      type: [String],
+      default: [],
     },
   },
   {

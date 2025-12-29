@@ -16,7 +16,7 @@ import { selectAuth } from "../../../../redux/AuthSlice";
 import QuillEditor from "../../../../components/child/QuillEditor";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 import useHasPermission from "../../../../hooks/Auth";
-import { ROLES } from "../../../../interfaces/AuthInterfaces";
+import { PERMISSIONS } from "../../../../utills/auth/permissions";
 
 // ✅ Validation Schema
 const TicketSchema = Yup.object({
@@ -41,13 +41,21 @@ interface TicketCardProps {
 const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
   const [showModal, setShowModal] = useState(false);
   const { user } = useSelector(selectAuth);
-  const { hasRole } = useHasPermission();
+
   const isAssigned = ticket.assignedTo?._id === user?._id;
   const isRequester = ticket.createdBy._id === user?._id;
   const [editphoto, seteditphoto] = useState(false);
+  const categorybased =
+    ticket.category === "Property Maintenance"
+      ? PERMISSIONS.VIEW_PROPERTY_TICKETS
+      : PERMISSIONS.VIEW_IT_TICKETS;
+
+  const { hasPermission } = useHasPermission();
   const { data: employeeData, isLoading: isEmployeeLoading } =
     useAllEmployeesQuery({ forDropdown: true });
   const [editTicket, { isLoading }] = useEditTicketMutation();
+  const hasEditStatus = hasPermission({ action: categorybased }) || isAssigned;
+  const hasEditAssign = hasPermission({ action: categorybased });
 
   const initialValues: TicketValues = {
     requestTitle: ticket.req_title,
@@ -250,15 +258,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                           name="assignedId"
                           value={values.assignedId}
                           onChange={handleChange}
-                          disabled={
-                            isRequester ||
-                            isAssigned ||
-                            !hasRole([
-                              ROLES.ADMIN,
-                              ROLES.DIRECTOR,
-                              ROLES.SUPER_ADMIN,
-                            ])
-                          }
+                          disabled={!hasEditAssign}
                           isInvalid={touched.assignedId && !!errors.assignedId}
                         >
                           <option value="">Select Assignee</option>
@@ -292,14 +292,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                           size="sm"
                           name="status"
                           value={values.status}
-                          disabled={
-                            !isAssigned ||
-                            !hasRole([
-                              ROLES.ADMIN,
-                              ROLES.DIRECTOR,
-                              ROLES.SUPER_ADMIN,
-                            ])
-                          }
+                          disabled={!hasEditStatus}
                           onChange={handleChange}
                           isInvalid={touched.status && !!errors.status}
                         >

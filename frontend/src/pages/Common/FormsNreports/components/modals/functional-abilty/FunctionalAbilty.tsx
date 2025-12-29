@@ -4,12 +4,17 @@ import { FormField, StatusField } from "./FormField";
 import { FormSection } from "./FormSection";
 import { AbilitiesGrid } from "./AbiltiesGrid";
 import { RestrictionsGrid } from "./RestrictionGrid";
-import type { FunctionalAbility } from "../../../../../../services/FormApi";
+import {
+  CANADA_PROVINCES,
+  type FunctionalAbility,
+} from "../../../../../../services/FormApi";
 import { Icon } from "@iconify/react/dist/iconify.js";
 
 interface FunctionalAbilityDetailProps {
   details: FunctionalAbility;
 }
+const provinceLabel = (value: string) =>
+  CANADA_PROVINCES.find((p) => p.value === value)?.label ?? "-";
 
 export function FunctionalAbilityDetail({
   details,
@@ -116,7 +121,7 @@ export function FunctionalAbilityDetail({
                     />
                     <FormField
                       label="Province"
-                      value={details.worker?.province}
+                      value={provinceLabel(details.worker?.province)}
                     />
                     <FormField
                       label="Postal Code"
@@ -151,7 +156,7 @@ export function FunctionalAbilityDetail({
                   />
                   <FormField
                     label="Province"
-                    value={details.employer?.province}
+                    value={provinceLabel(details.employer?.province)}
                   />
                   <FormField
                     label="Postal Code"
@@ -228,7 +233,10 @@ export function FunctionalAbilityDetail({
                     className="lg:col-span-2"
                   />
                   <FormField label="City/Town" value={details.hprocityTown} />
-                  <FormField label="Province" value={details.hproProvince} />
+                  <FormField
+                    label="Province"
+                    value={provinceLabel(details.hproProvince)}
+                  />
                   <FormField
                     label="Postal Code"
                     value={details.hproPostalCode}

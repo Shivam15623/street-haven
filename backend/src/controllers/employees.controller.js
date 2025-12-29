@@ -83,6 +83,7 @@ export const AddEmployee = asyncHandler(async (req, res) => {
     title,
     hireDate,
     superviserId,
+    customPermissions,
   } = req.body;
 
   const ExistingUser = await User.findOne({
@@ -118,6 +119,7 @@ export const AddEmployee = asyncHandler(async (req, res) => {
     isTOTPEnabled: false,
     isTOTPVerified: false,
     superviserId: superviserId,
+    customPermissions: customPermissions,
   });
 
   if (!newUser) {
@@ -145,6 +147,7 @@ export const EditEmployee = asyncHandler(async (req, res) => {
     title,
     hireDate,
     superviserId,
+    customPermissions,
   } = req.body;
 
   const updates = {};
@@ -176,7 +179,10 @@ export const EditEmployee = asyncHandler(async (req, res) => {
       (hireDate
         ? new Date(hireDate).toISOString() === findUser.hireDate.toISOString()
         : true) &&
-      (superviserId ? superviserId === findUser.superviserId : true);
+      (superviserId ? superviserId === findUser.superviserId : true) &&
+      (customPermissions
+        ? customPermissions === findUser.customPermissions
+        : true);
 
     if (isSame) {
       return res
@@ -200,6 +206,7 @@ export const EditEmployee = asyncHandler(async (req, res) => {
     new Date(hireDate).toISOString() !== findUser.hireDate.toISOString()
   )
     updates.hireDate = new Date(hireDate);
+  if (customPermissions) updates.customPermissions = customPermissions;
   if (superviserId && superviserId !== findUser.superviserId) {
     const superviser = await User.findOne({
       _id: superviserId,
@@ -315,11 +322,13 @@ export const employeeSuperviserForm = asyncHandler(async (req, res) => {
       : null,
   }));
 
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      "Employees with supervisor data fetched successfully",
-      formattedEmployees
-    )
-  );
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        "Employees with supervisor data fetched successfully",
+        formattedEmployees
+      )
+    );
 });

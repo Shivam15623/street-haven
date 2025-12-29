@@ -13,6 +13,7 @@ import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoa
 import CustomDatePicker from "../../../../components/child/DatePicker";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { PERMISSIONS } from "../../../../utills/auth/permissions";
 dayjs.extend(relativeTime);
 interface AddEmployeeValues {
   firstName: string;
@@ -24,6 +25,7 @@ interface AddEmployeeValues {
   title: string;
   hireDate: string; // <-- keep as string for HTML input
   timePeriod: string;
+  customPermissions: string[];
 }
 
 const roleValues = Object.values(ROLES) as Array<string>;
@@ -68,6 +70,15 @@ const AddEmployeeSchema = Yup.object({
     .matches(/[@$!%*?&#]/, "Must contain at least one special character"),
   hireDate: Yup.date().required("Hire Date is required"),
   timePeriod: Yup.string(),
+  customPermissions: Yup.array()
+    .of(
+      Yup.string().oneOf(
+        Object.values(PERMISSIONS),
+        "Invalid permission selected"
+      )
+    )
+    .default([])
+    .nullable(),
 });
 const AddEmployee = () => {
   const [showModal, setShowModal] = useState(false);
@@ -126,269 +137,345 @@ const AddEmployee = () => {
           </div>
         }
       >
-        <Formik
-          initialValues={{
-            firstName: "",
-            lastName: "",
-            email: "",
-            phone: "",
-            password: "",
-            title: "",
-            role: "employee",
-            hireDate: "",
-            timePeriod: "",
+        <div
+          style={{
+            maxHeight: "60vh",
+            overflowY: "auto",
+            overflowX: "hidden",
+            scrollbarWidth: "thin",
           }}
-          validationSchema={AddEmployeeSchema}
-          onSubmit={handleAddEmployee}
-          disabled={isLoading}
         >
-          {({
-            handleSubmit,
-            handleChange,
-            values,
-            touched,
-            errors,
-            handleBlur,
-            setFieldTouched,
-            setFieldValue,
-          }) => (
-            <Form
-              noValidate
-              id="add-employee-form"
-              onSubmit={handleSubmit}
-              className="d-flex flex-column gap-16"
+          <div className="py-16">
+            {" "}
+            <Formik
+              initialValues={{
+                firstName: "",
+                lastName: "",
+                email: "",
+                phone: "",
+                password: "",
+                title: "",
+                role: "employee",
+                hireDate: "",
+                timePeriod: "",
+                customPermissions: [],
+              }}
+              validationSchema={AddEmployeeSchema}
+              onSubmit={handleAddEmployee}
+              disabled={isLoading}
             >
-              <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
-                <Col md={6}>
-                  <Form.Group
-                    controlId=" firstName"
-                    className="d-flex flex-column gap-1"
-                  >
-                    <Form.Label className=" m-0 fw-normal">
-                      First Name
-                    </Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="firstName"
-                      placeholder="First Name"
-                      value={values.firstName}
-                      onChange={handleChange}
-                      className="form-control  "
-                      isInvalid={touched.firstName && !!errors.firstName}
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.firstName}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
+              {({
+                handleSubmit,
+                handleChange,
+                values,
+                touched,
+                errors,
+                handleBlur,
+                setFieldTouched,
+                setFieldValue,
+              }) => (
+                <Form
+                  noValidate
+                  id="add-employee-form"
+                  onSubmit={handleSubmit}
+                  className="d-flex flex-column gap-16"
+                >
+                  <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
+                    <Col md={6}>
+                      <Form.Group
+                        controlId=" firstName"
+                        className="d-flex flex-column gap-1"
+                      >
+                        <Form.Label className=" m-0 fw-normal">
+                          First Name
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="firstName"
+                          placeholder="First Name"
+                          value={values.firstName}
+                          onChange={handleChange}
+                          className="form-control  "
+                          isInvalid={touched.firstName && !!errors.firstName}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {errors.firstName}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
 
-                <Col md={6}>
-                  <Form.Group
-                    controlId="lastName"
-                    className="d-flex flex-column gap-1"
-                  >
-                    <Form.Label className="m-0 fw-normal">Last Name</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="lastName"
-                      className="form-control  "
-                      placeholder="Last Name"
-                      value={values.lastName}
-                      onChange={handleChange}
-                      isInvalid={touched.lastName && !!errors.lastName}
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.lastName}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-              </Row>
+                    <Col md={6}>
+                      <Form.Group
+                        controlId="lastName"
+                        className="d-flex flex-column gap-1"
+                      >
+                        <Form.Label className="m-0 fw-normal">
+                          Last Name
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="lastName"
+                          className="form-control  "
+                          placeholder="Last Name"
+                          value={values.lastName}
+                          onChange={handleChange}
+                          isInvalid={touched.lastName && !!errors.lastName}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {errors.lastName}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                  </Row>
 
-              {/* Email */}
-              <Row>
-                <Col>
-                  <Form.Group
-                    controlId="email"
-                    className="d-flex flex-column gap-1"
-                  >
-                    <Form.Label className="fw-normal m-0">Email</Form.Label>
-                    <Form.Control
-                      type="email"
-                      className="form-control  "
-                      name="email"
-                      placeholder="Your email"
-                      value={values.email}
-                      onChange={handleChange}
-                      isInvalid={touched.email && !!errors.email}
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.email}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-              </Row>
-              {/* Role Select */}
-              <Row>
-                <Col>
-                  <Form.Group
-                    controlId="role"
-                    className="d-flex flex-column gap-1"
-                  >
-                    <Form.Label className="fw-normal m-0">
-                      Select Role
-                    </Form.Label>
+                  {/* Email */}
+                  <Row>
+                    <Col>
+                      <Form.Group
+                        controlId="email"
+                        className="d-flex flex-column gap-1"
+                      >
+                        <Form.Label className="fw-normal m-0">Email</Form.Label>
+                        <Form.Control
+                          type="email"
+                          className="form-control  "
+                          name="email"
+                          placeholder="Your email"
+                          value={values.email}
+                          onChange={handleChange}
+                          isInvalid={touched.email && !!errors.email}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {errors.email}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  {/* Role Select */}
+                  <Row>
+                    <Col>
+                      <Form.Group
+                        controlId="role"
+                        className="d-flex flex-column gap-1"
+                      >
+                        <Form.Label className="fw-normal m-0">
+                          Select Role
+                        </Form.Label>
 
-                    <Form.Select
-                      name="role"
-                      value={values.role}
-                      onChange={handleChange}
-                      className={
-                        touched.role && errors.role ? "is-invalid" : ""
-                      }
-                    >
-                      <option value="">-- Select Role --</option>
-                      {Object.values(ROLES).map((role) => (
-                        <option key={role} value={role}>
-                          {formatRole(role)}
-                        </option>
-                      ))}
-                    </Form.Select>
+                        <Form.Select
+                          name="role"
+                          value={values.role}
+                          onChange={handleChange}
+                          className={
+                            touched.role && errors.role ? "is-invalid" : ""
+                          }
+                        >
+                          <option value="">-- Select Role --</option>
+                          {Object.values(ROLES).map((role) => (
+                            <option key={role} value={role}>
+                              {formatRole(role)}
+                            </option>
+                          ))}
+                        </Form.Select>
 
-                    <Form.Control.Feedback type="invalid">
-                      {errors.role}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-              </Row>
+                        <Form.Control.Feedback type="invalid">
+                          {errors.role}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                  </Row>
 
-              {/* Phone */}
-              <Row>
-                <Col>
-                  <Form.Group
-                    controlId="phone"
-                    className="d-flex flex-column gap-1"
-                  >
-                    <Form.Label className="fw-normal m-0">Phone</Form.Label>
-                    <PatternFormat
-                      format="+1 (###) ###-####"
-                      mask="_"
-                      name="phone"
-                      className={`form-control ${
-                        touched.phone && errors.phone ? "is-invalid" : ""
-                      }`}
-                      placeholder="+1 (123) 456-7890"
-                      value={values.phone}
-                      onValueChange={(valuesObj) => {
-                        handleChange({
-                          target: {
-                            name: "phone",
-                            value: valuesObj.formattedValue,
-                          },
-                        });
-                      }}
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.phone}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-              </Row>
-              <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
-                {/* Title */}
-                <Col md={6}>
-                  <Form.Group
-                    controlId="title"
-                    className="d-flex flex-column gap-1"
-                  >
-                    <Form.Label className="fw-normal m-0">Title</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="title"
-                      placeholder="Title"
-                      value={values.title}
-                      onChange={handleChange}
-                      isInvalid={touched.title && !!errors.title}
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.title}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
+                  {/* Phone */}
+                  <Row>
+                    <Col>
+                      <Form.Group
+                        controlId="phone"
+                        className="d-flex flex-column gap-1"
+                      >
+                        <Form.Label className="fw-normal m-0">Phone</Form.Label>
+                        <PatternFormat
+                          format="+1 (###) ###-####"
+                          mask="_"
+                          name="phone"
+                          className={`form-control ${
+                            touched.phone && errors.phone ? "is-invalid" : ""
+                          }`}
+                          placeholder="+1 (123) 456-7890"
+                          value={values.phone}
+                          onValueChange={(valuesObj) => {
+                            handleChange({
+                              target: {
+                                name: "phone",
+                                value: valuesObj.formattedValue,
+                              },
+                            });
+                          }}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {errors.phone}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
+                    {/* Title */}
+                    <Col md={6}>
+                      <Form.Group
+                        controlId="title"
+                        className="d-flex flex-column gap-1"
+                      >
+                        <Form.Label className="fw-normal m-0">Title</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="title"
+                          placeholder="Title"
+                          value={values.title}
+                          onChange={handleChange}
+                          isInvalid={touched.title && !!errors.title}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {errors.title}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
 
-                {/* Hire Date */}
-                <Col md={6}>
-                  <Form.Group
-                    controlId="hireDate"
-                    className="d-flex flex-column gap-1"
-                  >
-                    <Form.Label className="fw-normal m-0">Hire Date</Form.Label>
-                    <CustomDatePicker
-                      name="hireDate"
-                      value={values.hireDate ? new Date(values.hireDate) : null}
-                      onChange={(date) => {
-                        const str = date ? date.toISOString() : "";
-                        setFieldValue("hireDate", str, true); // ← Add true to validate immediately
-                        setFieldTouched("hireDate", true, false); // ← false prevents double validation
-                      }}
-                      onBlur={handleBlur}
-                      isInvalid={!!errors.hireDate && touched.hireDate}
-                    />
-                    {errors.hireDate && touched.hireDate && (
-                      <div className="invalid-feedback d-block">
-                        {errors.hireDate}
-                      </div>
-                    )}
-                  </Form.Group>
-                </Col>
-              </Row>
+                    {/* Hire Date */}
+                    <Col md={6}>
+                      <Form.Group
+                        controlId="hireDate"
+                        className="d-flex flex-column gap-1"
+                      >
+                        <Form.Label className="fw-normal m-0">
+                          Hire Date
+                        </Form.Label>
+                        <CustomDatePicker
+                          name="hireDate"
+                          value={
+                            values.hireDate ? new Date(values.hireDate) : null
+                          }
+                          onChange={(date) => {
+                            const str = date ? date.toISOString() : "";
+                            setFieldValue("hireDate", str, true); // ← Add true to validate immediately
+                            setFieldTouched("hireDate", true, false); // ← false prevents double validation
+                          }}
+                          onBlur={handleBlur}
+                          isInvalid={!!errors.hireDate && touched.hireDate}
+                        />
+                        {errors.hireDate && touched.hireDate && (
+                          <div className="invalid-feedback d-block">
+                            {errors.hireDate}
+                          </div>
+                        )}
+                      </Form.Group>
+                    </Col>
+                  </Row>
 
-              {/* Time Period */}
-              <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
-                <Col md={12}>
-                  <Form.Group
-                    controlId="timePeriodValue"
-                    className="d-flex flex-column gap-1"
-                  >
-                    <Form.Label className="fw-normal m-0">
-                      Time Period
-                    </Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="timePeriod"
-                      placeholder="Enter number"
-                      value={dayjs(values.timePeriod).fromNow()}
-                      onChange={handleChange}
-                      disabled
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
+                  {/* Time Period */}
+                  <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
+                    <Col md={12}>
+                      <Form.Group
+                        controlId="timePeriodValue"
+                        className="d-flex flex-column gap-1"
+                      >
+                        <Form.Label className="fw-normal m-0">
+                          Time Period
+                        </Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="timePeriod"
+                          placeholder="Enter number"
+                          value={dayjs(values.timePeriod).fromNow()}
+                          onChange={handleChange}
+                          disabled
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
 
-              {/* Password */}
-              <Row>
-                <Col>
-                  <Form.Group
-                    controlId="password"
-                    className="d-flex flex-column gap-1"
-                  >
-                    <Form.Label className="fw-normal m-0">Password</Form.Label>
-                    <PasswordInput
-                      name="password"
-                      value={values.password}
-                      className=""
-                      onChange={handleChange}
-                      isInvalid={touched.password && !!errors.password}
-                      error={errors.password}
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.password}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
-              </Row>
-            </Form>
-          )}
-        </Formik>
+                  {/* Password */}
+                  <Row>
+                    <Col>
+                      <Form.Group
+                        controlId="password"
+                        className="d-flex flex-column gap-1"
+                      >
+                        <Form.Label className="fw-normal m-0">
+                          Password
+                        </Form.Label>
+                        <PasswordInput
+                          name="password"
+                          value={values.password}
+                          className=""
+                          onChange={handleChange}
+                          isInvalid={touched.password && !!errors.password}
+                          error={errors.password}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {errors.password}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  {/* Ticket Permissions */}
+                  <Row>
+                    <Col>
+                      <Form.Group className="d-flex flex-column gap-2">
+                        <Form.Label className="fw-normal m-0">
+                          Ticket Permissions
+                        </Form.Label>
+
+                        <Form.Check
+                          type="checkbox"
+                          id="view-it-ticket"
+                          label="View IT Related Tickets"
+                          checked={values.customPermissions.includes(
+                            PERMISSIONS.VIEW_PROPERTY_TICKETS
+                          )}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            const permission =
+                              PERMISSIONS.VIEW_PROPERTY_TICKETS;
+
+                            setFieldValue(
+                              "customPermissions",
+                              checked
+                                ? [...values.customPermissions, permission]
+                                : values.customPermissions.filter(
+                                    (p) => p !== permission
+                                  )
+                            );
+                          }}
+                        />
+
+                        <Form.Check
+                          type="checkbox"
+                          id="view-facilities-ticket"
+                          label="View Facilities Related Tickets"
+                          checked={values.customPermissions.includes(
+                            PERMISSIONS.VIEW_IT_TICKETS
+                          )}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            const permission = PERMISSIONS.VIEW_IT_TICKETS;
+
+                            setFieldValue(
+                              "customPermissions",
+                              checked
+                                ? [...values.customPermissions, permission]
+                                : values.customPermissions.filter(
+                                    (p) => p !== permission
+                                  )
+                            );
+                          }}
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                </Form>
+              )}
+            </Formik>
+          </div>
+        </div>
       </ModalWrapper>
     </>
   );

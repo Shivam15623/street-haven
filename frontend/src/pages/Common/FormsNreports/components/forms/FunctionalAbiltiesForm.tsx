@@ -1699,14 +1699,28 @@ const FunctionalAbiltiesForm = () => {
                       <Col sm={2} md={2}>
                         {" "}
                         <Form.Group className="d-flex flex-column gap-2 mb-3">
-                          <Form.Label>Service Code</Form.Label>
-                          <Form.Control
-                            className="h-40-px"
-                            name="hproProvince"
+                          <Form.Label>Province</Form.Label>
+                          <Form.Select
                             style={{ height: "40px" }}
+                            name="hproProvince"
                             value={values.hproProvince}
                             onChange={handleChange}
-                          />
+                            isInvalid={
+                              !!(touched.hproProvince && errors.hproProvince)
+                            }
+                          >
+                            <option value="">Select Province</option>
+
+                            {CANADA_PROVINCES.map((province) => (
+                              <option
+                                key={province.value}
+                                value={province.value}
+                              >
+                                {province.label}
+                              </option>
+                            ))}
+                          </Form.Select>
+
                           {touched.hproProvince && errors.hproProvince && (
                             <div className="text-danger text-sm">
                               {errors.hproProvince}
@@ -1718,12 +1732,23 @@ const FunctionalAbiltiesForm = () => {
                         {" "}
                         <Form.Group className="d-flex flex-column gap-2 mb-3">
                           <Form.Label>Postal Code</Form.Label>
-                          <Form.Control
-                            className="h-40-px"
-                            name="hproPostalCode"
-                            style={{ height: "40px" }}
+
+                          <InputMask
+                            mask="a9a 9a9"
                             value={values.hproPostalCode}
-                            onChange={handleChange}
+                            onChange={(e) =>
+                              setFieldValue("hproPostalCode", e.target.value)
+                            }
+                            className={`form-control ${
+                              touched.hproPostalCode && errors.hproPostalCode
+                                ? "is-invalid"
+                                : ""
+                            }`}
+                            placeholder="M5V 3L9"
+                            style={{
+                              height: "40px",
+                              textTransform: "uppercase",
+                            }}
                           />
                           {touched.hproPostalCode && errors.hproPostalCode && (
                             <div className="text-danger text-sm">

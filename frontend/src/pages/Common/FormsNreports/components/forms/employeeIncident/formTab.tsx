@@ -14,11 +14,12 @@ const EmployeeIncidentFormTab = () => {
     { resetForm }: { resetForm: () => void }
   ) => {
     try {
+      console.log(values.jobTitle);
       const payload: EmployeeIncidentCredentials = {
         type: values.reportingFor,
-        name: values.employeeName,
-        jobTitle: values.jobTitle,
-        supervisor: values.superviserName,
+        employee: values.employeeId,
+        jobTitle: values.jobTitle!,
+        supervisor: values.superviserId!,
         informedSupervisor: values.informedSuperviser,
         injuryDate: values.injuryDate,
         injuryTime: values.injuryTime,
@@ -78,8 +79,10 @@ const EmployeeIncidentFormTab = () => {
         handleSubmit={handleSubmit}
         initialvalues={{
           reportingFor: "Illness",
-          employeeName: "",
+          employeeId: "",
+
           jobTitle: "",
+          superviserId: "",
           superviserName: "",
           informedSuperviser: false,
           injuryDate: new Date(),

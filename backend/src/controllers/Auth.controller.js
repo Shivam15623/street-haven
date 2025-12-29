@@ -9,7 +9,6 @@ import jwt from "jsonwebtoken";
 import speakeasy from "speakeasy";
 import qrcode from "qrcode";
 
-
 export const RegisterAdmin = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, password, phone } = req.body;
 
@@ -179,6 +178,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
       profilePic: findUser.profilePic,
       createdAt: findUser.createdAt,
       hireDate: findUser.hireDate,
+      customPermissions: findUser.customPermissions,
     };
 
     const isProduction = process.env.NODE_ENV === "production";
@@ -247,6 +247,7 @@ export const silentAuth = asyncHandler(async (req, res) => {
     profilePic: finduser.profilePic,
     createdAt: finduser.createdAt,
     hireDate: finduser.hireDate,
+    customPermissions: finduser.customPermissions,
   };
   const isProduction = process.env.NODE_ENV === "production";
 
@@ -361,6 +362,7 @@ export const verifyTOTP = asyncHandler(async (req, res) => {
     profilePic: user.profilePic,
     createdAt: user.createdAt,
     hireDate: user.hireDate,
+    customPermissions: user.customPermissions,
   };
   const isProduction = process.env.NODE_ENV === "production";
 

@@ -85,6 +85,7 @@ export const EmployeeColumn = (
                 timePeriod: dayjs(row.hireDate).fromNow(),
                 title: row.title,
                 superviserId: row.superviserId,
+                customPermissions:row.customPermissions
               }}
             />
           )}

@@ -47,7 +47,7 @@ export const AllRoutes: RouteObject[] = [
     element: withSuspense(
       <RouteGuard isPublic={true}>
         <LazyResetPassword />
-      </RouteGuard>
+      </RouteGuard>    
     ),
   },
   {
