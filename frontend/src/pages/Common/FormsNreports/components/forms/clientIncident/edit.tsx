@@ -96,15 +96,7 @@ const EditClientIncident: React.FC<EditClientIncidentProp> = ({ data }) => {
           </>
         }
       >
-        <div
-          style={{
-            maxHeight: "60vh",
-            overflowY: "auto",
-            overflowX: "hidden",
-            scrollbarWidth: "thin",
-          }}
-        >
-          <div className="py-16">
+  
             {" "}
             <ClientIncidentForm
               footer={false}
@@ -143,8 +135,7 @@ const EditClientIncident: React.FC<EditClientIncidentProp> = ({ data }) => {
                 followUp: data.followup,
               }}
             />
-          </div>
-        </div>
+
       </ModalWrapper>
     </>
   );

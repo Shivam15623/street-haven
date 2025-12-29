@@ -37,7 +37,10 @@ const EditIncidentReport = ({ data }: { data: IncidentReportData }) => {
         date: fullDateTime, // full ISO timestamp
       };
 
-      const res = await editIncident({id:data._id,credentials:payload}).unwrap();
+      const res = await editIncident({
+        id: data._id,
+        credentials: payload,
+      }).unwrap();
       if (res.success) {
         showSuccess(res.message);
         resetForm();
@@ -86,24 +89,13 @@ const EditIncidentReport = ({ data }: { data: IncidentReportData }) => {
           </>
         }
       >
-        <div
-          style={{
-            maxHeight: "60vh",
-            overflowY: "auto",
-            overflowX: "hidden",
-            scrollbarWidth: "thin",
-          }}
-        >
-          <div className="py-16">
-            <IncidentReportForm
-              footer={false}
-              handleSubmit={handleSubmit}
-              initialvalues={initialValues}
-              isLoading={isLoading}
-              id="edit-incident-report-form"
-            />
-          </div>
-        </div>
+        <IncidentReportForm
+          footer={false}
+          handleSubmit={handleSubmit}
+          initialvalues={initialValues}
+          isLoading={isLoading}
+          id="edit-incident-report-form"
+        />
       </ModalWrapper>
     </>
   );

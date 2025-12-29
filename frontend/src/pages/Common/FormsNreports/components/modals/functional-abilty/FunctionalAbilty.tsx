@@ -41,7 +41,7 @@ export function FunctionalAbilityDetail({
         onHide={() => setShowModal(false)}
       >
         {/* Scrollable Modal Body */}
-        <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
+   
           <div className="p-6 d-flex flex-column gap-20">
             {/* Section A: Claim & Worker Information */}
             <FormSection
@@ -408,7 +408,7 @@ export function FunctionalAbilityDetail({
               </div>
             </FormSection>
           </div>
-        </div>
+
       </ModalWrapper>
     </>
   );

@@ -99,15 +99,7 @@ const EditClientFeedback = ({ data }: EditClientFeedbackProps) => {
           </>
         }
       >
-        <div
-          style={{
-            maxHeight: "60vh",
-            overflowY: "auto",
-            overflowX: "hidden",
-            scrollbarWidth: "thin",
-          }}
-        >
-          <div className="py-16">
+   
             {" "}
             <ClientFeedBackForm
               id="edit-client-feedback-form"
@@ -129,8 +121,7 @@ const EditClientFeedback = ({ data }: EditClientFeedbackProps) => {
                 preferredContactMethod: data.preferredContactMethod,
               }}
             />
-          </div>
-        </div>
+      
       </ModalWrapper>
     </>
   );

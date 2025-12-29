@@ -66,7 +66,7 @@ const EmployeeIncidentReportDetails = ({
         className="p-20 p-sm-24 p-md-32"
         bodyClassName="p-0"
       >
-        <div className="py-3" style={{ maxHeight: "70vh", overflowY: "auto" }}>
+
           <Container className="d-flex flex-column gap-24 ">
             <div className="bg-neutral-50 border-sh-base-1-2 rounded-3 shadow-none card p-16">
               <div className="card-body p-0">
@@ -345,7 +345,7 @@ const EmployeeIncidentReportDetails = ({
               </div>
             </div>
           </Container>
-        </div>
+
       </ModalWrapper>
     </>
   );

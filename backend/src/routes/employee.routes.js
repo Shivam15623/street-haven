@@ -5,6 +5,7 @@ import {
   EditEmployee,
   EditEmployeePassword,
   employeeSuperviserForm,
+  getEmployeeById,
   RemoveEmployee,
   resetTotp,
 } from "../controllers/employees.controller.js";
@@ -61,4 +62,5 @@ router
     resetTotp
   );
 router.route("/form-superviser").get(employeeSuperviserForm);
+router.route("/:id").get(getEmployeeById);
 export default router;

@@ -24,7 +24,7 @@ export const createhrUpdate = asyncHandler(async (req, res) => {
   session.startTransaction();
 
   try {
-    // Count PDF pages
+ 
 
 
     // Upload file to Cloudinary

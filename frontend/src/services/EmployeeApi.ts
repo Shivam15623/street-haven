@@ -15,10 +15,7 @@ export interface EmployeeData {
   superviserId: string;
   title: string;
   hireDate: Date;
-  timePeriod: {
-    value: number;
-    unit: "days" | "weeks" | "months" | "years";
-  };
+
   customPermissions: AllPermissions[];
 }
 export interface EmployeeSuperviserData {
@@ -173,6 +170,41 @@ const EmployeeApi = api.injectEndpoints({
         method: "GET",
       }),
     }),
+    fetchEmployeeById: builder.query<
+      ApiResponse<{
+        employee: {
+          _id: string;
+          firstname: string;
+          lastname: string;
+          email: string;
+          phoneNo: string;
+          role: Role;
+          profilePic: string;
+          superviserId: string;
+          title: string;
+          hireDate: Date;
+        };
+        supervisor?: {
+          _id: string;
+          firstname: string;
+          lastname: string;
+          title: string;
+        };
+        subordinates?: {
+          _id: string;
+          firstname: string;
+          lastname: string;
+          title: string;
+        }[];
+      }>,
+      { id: string; orgChart: boolean }
+    >({
+      query: ({ id, orgChart }) => ({
+        url: `/employees/${id}`,
+        method: "GET",
+        params: orgChart ? { orgChart: "true" } : undefined,
+      }),
+    }),
   }),
 });
 
@@ -188,4 +220,5 @@ export const {
   useGetRolebyIdQuery,
   useResetTotpMutation,
   useEmployeeSuperFormQuery,
+  useFetchEmployeeByIdQuery,
 } = EmployeeApi;

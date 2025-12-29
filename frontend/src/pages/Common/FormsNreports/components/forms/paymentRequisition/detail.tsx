@@ -34,7 +34,7 @@ const PaymentRequisitionDetail = ({
         footerClassName="pt-16 pt-sm-20 px-0 pb-0"
         onHide={() => setShowModal(false)}
       >
-        <div className="mt-10" style={{ maxHeight: "70vh", overflowY: "auto" }}>
+   
           <Container className="d-flex flex-column gap-24 animate-fade-in">
             <div className="p-16 border rounded-3 border-sh-primary-50 bg-street-primary-10 ">
               <div className="d-flex flex-row align-items-center justify-content-between">
@@ -187,7 +187,7 @@ const PaymentRequisitionDetail = ({
               ))}
             </div>
           </Container>
-        </div>
+   
         {openFile && (
           <FileViewer
             files={[

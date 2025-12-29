@@ -97,15 +97,7 @@ const EditMediaConsent: React.FC<EditMediaConsentProps> = ({ data }) => {
         className="p-20 p-sm-24 p-md-32"
         bodyClassName="p-0"
       >
-        <div
-          style={{
-            maxHeight: "60vh",
-            overflowY: "auto",
-            overflowX: "hidden",
-            scrollbarWidth: "thin",
-          }}
-        >
-          <div className="py-16">
+        
             {" "}
             <Formik<MediaConsentFormValues>
               initialValues={{
@@ -224,8 +216,7 @@ const EditMediaConsent: React.FC<EditMediaConsentProps> = ({ data }) => {
                 </Form>
               )}
             </Formik>
-          </div>
-        </div>
+ 
       </ModalWrapper>
     </>
   );
