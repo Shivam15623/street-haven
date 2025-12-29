@@ -332,3 +332,51 @@ export const employeeSuperviserForm = asyncHandler(async (req, res) => {
       )
     );
 });
+export const getEmployeeById = asyncHandler(async (req, res) => {
+  const { id: userId } = req.params;
+  const isOrgChart = req.query.orgChart === "true";
+
+  // 🔹 Base fields (always)
+  let selectFields =
+    "firstname lastname title email role profilePic phoneNo hireDate superviserId";
+
+  // 🔹 Extra fields only for org chart view
+  if (isOrgChart) {
+    selectFields += " customPermissions";
+  }
+
+  // 🔹 Build query dynamically
+  let query = User.findById(userId).select(selectFields);
+
+  // 🔹 Populate supervisor ONLY if org chart is requested
+  if (isOrgChart) {
+    query = query.populate({
+      path: "superviserId",
+      select: "firstname lastname title",
+    });
+  }
+
+  const user = await query;
+
+  if (!user) {
+    throw new ApiError(404, "Employee not found");
+  }
+
+  let subordinates = [];
+
+  // 🔹 Fetch subordinates only for org chart
+  if (isOrgChart) {
+    subordinates = await User.find(
+      { superviserId: userId },
+      "firstname lastname title"
+    );
+  }
+
+  res.status(200).json(
+    new ApiResponse(200, "Employee fetched successfully", {
+      employee: user,
+      supervisor: isOrgChart ? user.superviserId : undefined,
+      subordinates: isOrgChart ? subordinates : undefined,
+    })
+  );
+});

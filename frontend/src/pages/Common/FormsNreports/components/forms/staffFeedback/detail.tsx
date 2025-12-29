@@ -33,7 +33,7 @@ const StaffFeedbackDetail = ({ detail }: { detail: StaffFeedbackData }) => {
         bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
         footerClassName="pt-16 pt-sm-20 px-0 pb-0"
       >
-        <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
+      
           <Container className="d-flex flex-column gap-24 animate-fade-in">
             {/* Location & Date */}
             <Row className="g-3 mb-4">
@@ -156,7 +156,7 @@ const StaffFeedbackDetail = ({ detail }: { detail: StaffFeedbackData }) => {
               </Row>
             </div>
           </Container>
-        </div>
+     
       </ModalWrapper>
     </>
   );

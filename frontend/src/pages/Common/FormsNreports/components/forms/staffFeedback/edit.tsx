@@ -91,15 +91,7 @@ const EditStaffFeedback = ({ data }: { data: StaffFeedbackData }) => {
           </>
         }
       >
-        <div
-          style={{
-            maxHeight: "60vh",
-            overflowY: "auto",
-            overflowX: "hidden",
-            scrollbarWidth: "thin",
-          }}
-        >
-          <div className="py-16">
+     
             <StaffFeedbackForm
               footer={false}
               isLoading={isLoading}
@@ -107,8 +99,7 @@ const EditStaffFeedback = ({ data }: { data: StaffFeedbackData }) => {
               initialvalues={initialValues}
               id="edit-staff-report-form"
             />
-          </div>
-        </div>
+       
       </ModalWrapper>
     </>
   );

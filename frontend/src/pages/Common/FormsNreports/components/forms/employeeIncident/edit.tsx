@@ -133,25 +133,14 @@ const EditEmployeeIncident: React.FC<EditEmployeeIncidentProp> = ({ data }) => {
           </>
         }
       >
-        <div
-          style={{
-            maxHeight: "60vh",
-            overflowY: "auto",
-            overflowX: "hidden",
-            scrollbarWidth: "thin",
-          }}
-        >
-          <div className="py-16">
-            {" "}
-            <EmployeeIncidentForm
-              initialvalues={initialValues}
-              footer={false}
-              id="edit-employee-incident-form"
-              handleSubmit={handleSubmit}
-              isLoading={isLoading}
-            />
-          </div>
-        </div>
+        {" "}
+        <EmployeeIncidentForm
+          initialvalues={initialValues}
+          footer={false}
+          id="edit-employee-incident-form"
+          handleSubmit={handleSubmit}
+          isLoading={isLoading}
+        />
       </ModalWrapper>
     </>
   );

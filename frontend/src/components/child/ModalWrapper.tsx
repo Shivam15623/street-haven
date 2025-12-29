@@ -49,7 +49,7 @@ const ModalWrapper: React.FC<ModalWrapperProps> = ({
       centered={centered}
       backdrop={backdrop}
       keyboard={keyboard}
-     contentClassName="overflow"
+      contentClassName="overflow"
     >
       <div className={`position-relative d-flex flex-column ${className}`}>
         {isLoading && ModalLoader}
@@ -79,7 +79,19 @@ const ModalWrapper: React.FC<ModalWrapperProps> = ({
           </Modal.Header>
         )}
 
-        <Modal.Body className={bodyClassName}>{children}</Modal.Body>
+        <Modal.Body className={bodyClassName}>
+          {" "}
+          <div
+            style={{
+              maxHeight: "60vh",
+              overflowY: "auto",
+              overflowX: "hidden",
+              scrollbarWidth: "thin",
+            }}
+          >
+            <div className="py-16">{children}</div>
+          </div>
+        </Modal.Body>
 
         {footer !== undefined ? (
           <Modal.Footer className={footerClassName}>{footer}</Modal.Footer>

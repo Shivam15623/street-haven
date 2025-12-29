@@ -158,15 +158,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
           </>
         }
       >
-        <div
-          style={{
-            maxHeight: "60vh",
-            overflowY: "auto",
-            overflowX: "hidden",
-            scrollbarWidth: "thin",
-          }}
-        >
-          <div className="py-16">
+     
             <Formik
               initialValues={initialValues}
               validationSchema={TicketSchema}
@@ -481,8 +473,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                 </Form>
               )}
             </Formik>
-          </div>
-        </div>
+   
       </ModalWrapper>
     </div>
   );
