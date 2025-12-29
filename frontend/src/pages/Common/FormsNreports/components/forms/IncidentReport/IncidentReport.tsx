@@ -1,10 +1,12 @@
-import ModalWrapper from "../../../../../components/child/ModalWrapper";
+
 import { Badge, Col, Container, Row } from "react-bootstrap";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
-import type { IncidentReport } from "../../../../../services/IncidentReportApi";
+
 import { useState } from "react";
+import type { IncidentReport } from "../../../../../../services/IncidentReportApi";
+import ModalWrapper from "../../../../../../components/child/ModalWrapper";
 
 dayjs.extend(localizedFormat);
 
@@ -127,22 +129,10 @@ const IncidentReportModal = ({ incident }: IncidentReportModalProps) => {
 
             {/* Reporter Info */}
             <div>
-              <h6 className="d-flex align-items-center gap-2 text-xs lg:text-sm mb-8">
-                <Icon icon="mdi:account" width={18} />
-                Reporter Information
-              </h6>
+           
 
               <Row className="g-3 mb-4">
-                <Col md={6}>
-                  <div className="h-100 d-flex flex-column p-16 radius-12 bg-neutral-50 shadow-none border-sh-base-1-2 ">
-                    <div className="card-body">
-                      <small className="text-street-base d-block mb-1">
-                        Reporter Name
-                      </small>
-                      <p className="mb-0 fw-medium">{incident.reporterName}</p>
-                    </div>
-                  </div>
-                </Col>
+                
 
                 <Col md={6}>
                   <div className="h-100 d-flex flex-column p-16 radius-12 bg-neutral-50 shadow-none border-sh-base-1-2 ">

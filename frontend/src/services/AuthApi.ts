@@ -11,7 +11,6 @@ import type {
   LoginVerifyTotpResponse,
   RequestResetPasswordcredential,
   SetUpTotpResponseCredentials,
-
 } from "../interfaces/AuthInterfaces";
 
 export const authApi = api.injectEndpoints({
@@ -23,7 +22,7 @@ export const authApi = api.injectEndpoints({
         body: credentials,
       }),
     }),
-   
+
     logout: builder.mutation<ApiGeneralResponse, void>({
       query: () => ({
         url: "/auth/logout",
@@ -101,6 +100,7 @@ export const authApi = api.injectEndpoints({
             createdAt: user.createdAt,
             title: user.title || "",
             hireDate: new Date(user.hireDate).toISOString(),
+            customPermissions: user.customPermissions || [],
           };
           if (data?.data.accessToken) {
             dispatch(

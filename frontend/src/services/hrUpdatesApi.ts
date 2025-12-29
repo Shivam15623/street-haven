@@ -62,5 +62,5 @@ export const {
   useViewhrUpdatesQuery,
   useCreatehrUpdatesMutation,
   useEdithrupdatesMutation,
-  useDeletehrupdatesMutation,
+  useDeletehrupdatesMutation,useLazyViewhrUpdatesQuery
 } = hrUpdateApi;

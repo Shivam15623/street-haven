@@ -2,22 +2,41 @@ import mongoose from "mongoose";
 
 const NotificationSchema = new mongoose.Schema(
   {
-    type: {
+    category: {
       type: String,
       enum: [
-        "ticket_comment",
-        "success",
-        "warning",
-        "error",
-        "action",
-        "ticket_created",
-        "manual_added",
-        "event_activity",
-        "new_announcement"
+        "ticket",
+        "event",
+        "announcement",
+        "event_minute",
+        "program_mannual",
+        "collective_agreement",
+        "hr_updates",
+        "system",
       ],
       required: true,
     },
 
+    action: {
+      type: String,
+      enum: [
+        "created",
+        "updated",
+        "commented",
+        "assigned",
+        "status_changed",
+        "deleted",
+        "registered",
+        "unregistered"
+      ],
+      required: true,
+    },
+
+    severity: {
+      type: String,
+      enum: ["info", "success", "warning", "error"],
+      default: "info",
+    },
     title: { type: String, required: true },
     message: { type: String, required: true },
     link: { type: String },

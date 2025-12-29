@@ -6,6 +6,7 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import AnnouncementCard from "./AnnouncementCard";
 import StreetPaggination from "../../../../components/child/StreetPaggination";
 import useHasPermission from "../../../../hooks/Auth";
+import { useDebounce } from "../../../../hooks/useDebounce";
 
 const AnnouncementTab = () => {
   const [open, setOpen] = useState(false);
@@ -13,10 +14,11 @@ const AnnouncementTab = () => {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const limit = 10;
+  const debouncedsearch = useDebounce(search, 1000);
   const { data, isLoading, isError } = useViewAnnouncementsQuery({
     limit,
     page,
-    keyword: search,
+    keyword: debouncedsearch,
   });
   const { hasPermission } = useHasPermission();
   const totalPages = data ? data.data.paggination.totalPages : 0;

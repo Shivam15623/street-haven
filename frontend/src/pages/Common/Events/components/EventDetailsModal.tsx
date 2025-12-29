@@ -39,7 +39,7 @@ const EventFormSchema = Yup.object().shape({
     .required("Capacity is required")
     .positive("Capacity must be greater than 0")
     .integer("Capacity must be an integer"),
-  eventDate: Yup.string()
+  eventDate: Yup.date()
     .required("Event date is required")
     .test("not-in-past", "Event date cannot be in the past", (val) => {
       if (!val) return false;
@@ -116,12 +116,32 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
     values: EventFormValues,
     { resetForm }: { resetForm: () => void }
   ) => {
-    const tempDate = new Date(values.eventDate).toISOString().split("T")[0];
+    const eventDate = values.eventDate;
+
+    const [sh, sm] = values.startTime.split(":").map(Number);
+    const [eh, em] = values.endTime.split(":").map(Number);
+
+    const startDateTime = new Date(
+      eventDate.getFullYear(),
+      eventDate.getMonth(),
+      eventDate.getDate(),
+      sh,
+      sm
+    );
+
+    const endDateTime = new Date(
+      eventDate.getFullYear(),
+      eventDate.getMonth(),
+      eventDate.getDate(),
+      eh,
+      em
+    );
+
     const payload = {
       ...values,
-      eventDate: new Date(values.eventDate),
-      startTime: new Date(`${tempDate}T${values.startTime}`),
-      endTime: new Date(`${tempDate}T${values.endTime}`),
+      eventDate, // keep as Date
+      startTime: startDateTime,
+      endTime: endDateTime,
     };
     const res = await editEvent({ cred: payload, id: eventId }).unwrap();
     if (res.success) {
@@ -270,7 +290,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
             description: event.description || "",
 
             capacity: event.capacity || 0,
-            eventDate: dayjs(event.eventDate).format("YYYY-MM-DD"),
+            eventDate: new Date(event.eventDate),
             startTime: dayjs(event.startTime).format("HH:mm"),
             endTime: dayjs(event.endTime).format("HH:mm"),
             locationName: event.location.location_name || "",
@@ -317,12 +337,12 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                         setFieldValue("eventDate", date, true); // ← Add true to validate immediately
                         setFieldTouched("eventDate", true, false); // ← false prevents double validation
                       }}
-                      isInvalid={!!errors.eventDate && touched.eventDate}
+                      isInvalid={!!errors.eventDate && !!touched.eventDate}
                     />
 
                     {errors.eventDate && touched.eventDate && (
                       <div className="invalid-feedback d-block">
-                        {errors.eventDate}
+                        {errors.eventDate as string}
                       </div>
                     )}
                   </Form.Group>

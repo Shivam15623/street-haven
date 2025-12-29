@@ -17,7 +17,6 @@ export const AllEmployees = asyncHandler(async (req, res) => {
   } = req.query;
 
   const query = {}; // always exclude admins for dropdown
- 
 
   // Search
   if (search) {
@@ -84,6 +83,7 @@ export const AddEmployee = asyncHandler(async (req, res) => {
     title,
     hireDate,
     superviserId,
+    customPermissions,
   } = req.body;
 
   const ExistingUser = await User.findOne({
@@ -119,6 +119,7 @@ export const AddEmployee = asyncHandler(async (req, res) => {
     isTOTPEnabled: false,
     isTOTPVerified: false,
     superviserId: superviserId,
+    customPermissions: customPermissions,
   });
 
   if (!newUser) {
@@ -146,6 +147,7 @@ export const EditEmployee = asyncHandler(async (req, res) => {
     title,
     hireDate,
     superviserId,
+    customPermissions,
   } = req.body;
 
   const updates = {};
@@ -177,7 +179,10 @@ export const EditEmployee = asyncHandler(async (req, res) => {
       (hireDate
         ? new Date(hireDate).toISOString() === findUser.hireDate.toISOString()
         : true) &&
-      (superviserId ? superviserId === findUser.superviserId : true);
+      (superviserId ? superviserId === findUser.superviserId : true) &&
+      (customPermissions
+        ? customPermissions === findUser.customPermissions
+        : true);
 
     if (isSame) {
       return res
@@ -201,6 +206,7 @@ export const EditEmployee = asyncHandler(async (req, res) => {
     new Date(hireDate).toISOString() !== findUser.hireDate.toISOString()
   )
     updates.hireDate = new Date(hireDate);
+  if (customPermissions) updates.customPermissions = customPermissions;
   if (superviserId && superviserId !== findUser.superviserId) {
     const superviser = await User.findOne({
       _id: superviserId,
@@ -262,21 +268,67 @@ export const RemoveEmployee = asyncHandler(async (req, res) => {
 });
 export const resetTotp = asyncHandler(async (req, res) => {
   const { id: userId } = req.params;
-  const employee = await User.findById(userId);
+
+  const employee = await User.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        totpSecret: null,
+        isTOTPEnabled: false,
+        isTOTPVerified: false,
+      },
+    },
+    {
+      new: true,
+      runValidators: false, // 👈 VERY IMPORTANT
+    }
+  );
+
   if (!employee) {
     throw new ApiError(404, "No such user found");
   }
-  employee.totpSecret = null;
-  employee.isTOTPEnabled = false;
-  employee.isTOTPVerified = false;
 
-  await employee.save();
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        true,
+        `${employee.firstname} ${employee.lastname}'s TOTP reset successfully`
+      )
+    );
+});
+
+export const employeeSuperviserForm = asyncHandler(async (req, res) => {
+  const employees = await User.find({})
+    .select("firstname lastname title superviserId")
+    .populate({
+      path: "superviserId",
+      select: "firstname lastname title",
+    })
+    .lean();
+
+  const formattedEmployees = employees.map((emp) => ({
+    _id: emp._id,
+    firstname: emp.firstname,
+    lastname: emp.lastname,
+    title: emp.title,
+    superviser: emp.superviserId
+      ? {
+          _id: emp.superviserId._id,
+          firstname: emp.superviserId.firstname,
+          lastname: emp.superviserId.lastname,
+          title: emp.superviserId.title,
+        }
+      : null,
+  }));
+
   return res
     .status(200)
     .json(
       new ApiResponse(
         200,
-        `${employee.firstname} ${employee.lastname}'s Totp Reseted`
+        "Employees with supervisor data fetched successfully",
+        formattedEmployees
       )
     );
 });

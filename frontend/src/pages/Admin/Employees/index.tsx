@@ -38,7 +38,10 @@ const Employees = () => {
   });
 
   const employees = data?.data?.employees ?? [];
-
+  const handleLimitChange = (value: number) => {
+    setLimit(value);
+    setPage(1);
+  };
   if (isLoading) return <p>Loading...</p>;
   return (
     <div className="d-flex flex-column gap-18">
@@ -61,7 +64,7 @@ const Employees = () => {
         <div className="card-body p-16 p-sm-20 radius-12 p-md-24">
           <DataTable
             columns={columns}
-            onLimitChange={setLimit}
+            onLimitChange={handleLimitChange}
             data={employees}
             total={data?.data?.paggination?.total ?? 0}
             page={page}

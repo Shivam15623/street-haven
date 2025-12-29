@@ -2,15 +2,13 @@ import React, { useState } from "react";
 
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
-import {  Container } from "react-bootstrap";
+import { Container } from "react-bootstrap";
 import { Icon } from "@iconify/react";
-import type { employeeIncidentReport } from "../../../../../../services/FormApi";
+import type { EmployeeIncidentReportPopulated } from "../../../../../../services/FormApi";
 import ModalWrapper from "../../../../../../components/child/ModalWrapper";
 import Badge from "../../../../../../components/child/Badge";
 
 dayjs.extend(localizedFormat);
-
-
 
 export const InfoCard = ({
   icon,
@@ -43,12 +41,10 @@ export const SectionTitle = ({
   </h6>
 );
 
-
-
 const EmployeeIncidentReportDetails = ({
   detail,
 }: {
-  detail: employeeIncidentReport;
+  detail: EmployeeIncidentReportPopulated;
 }) => {
   const [showModal, setShowModal] = useState(false);
 
@@ -88,7 +84,7 @@ const EmployeeIncidentReportDetails = ({
 
                     <div className="d-flex flex-column flex-grow-1 ">
                       <p className="fw-semibold text-lg text-street-dark">
-                        {detail.name}
+                        {detail.employee.firstname} {detail.employee.lastname}
                       </p>
                       <p className="text-sm text-street-base d-flex align-items-center gap-1 mt-1">
                         <Icon icon="lucide:briefcase" fontSize={14} />
@@ -97,7 +93,8 @@ const EmployeeIncidentReportDetails = ({
                       <p className="text-sm text-street-base mt-1">
                         Supervisor:{" "}
                         <span className="fw-medium text-street-dark">
-                          {detail.supervisor}
+                          {detail.supervisor.firstname}{" "}
+                          {detail.supervisor.lastname}
                         </span>
                       </p>
                       <div className="d-flex flex-row gap-1 mt-3">
@@ -313,8 +310,7 @@ const EmployeeIncidentReportDetails = ({
 
                         <span>
                           {dayjs(detail.doctorVisitDate).format("MMM DD YYYY")}{" "}
-                          at{" "}
-                          {detail.doctorVisitTime}
+                          at {detail.doctorVisitTime}
                         </span>
                       </div>
                     </div>

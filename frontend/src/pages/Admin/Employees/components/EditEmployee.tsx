@@ -14,6 +14,7 @@ import { PatternFormat } from "react-number-format";
 import { ROLES } from "../../../../interfaces/AuthInterfaces";
 import CustomDatePicker from "../../../../components/child/DatePicker";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
+import { PERMISSIONS } from "../../../../utills/auth/permissions";
 
 // Yup validation schema
 const editEmployeeSchema = yup.object({
@@ -39,6 +40,15 @@ const editEmployeeSchema = yup.object({
   hireDate: yup.date().required("Hire Date is required"),
   timePeriod: yup.string(),
   superviserId: yup.string().nullable(),
+  customPermissions: yup
+    .array()
+    .of(
+      yup
+        .string()
+        .oneOf(Object.values(PERMISSIONS), "Invalid permission selected")
+    )
+    .default([])
+    .nullable(),
 });
 
 type EditEmployeeValues = yup.InferType<typeof editEmployeeSchema>;
@@ -69,13 +79,22 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
       formData.append("phoneNo", values.phoneNo);
       formData.append("role", values.role);
       formData.append("title", values.title);
-      if (values.superviserId && values.superviserId !== null&& values.superviserId!=="")
+      if (
+        values.superviserId &&
+        values.superviserId !== null &&
+        values.superviserId !== ""
+      )
         formData.append("superviserId", values.superviserId);
       function toISODate(value: Date | string | null | undefined) {
         if (!value) return "";
         return value instanceof Date
           ? value.toISOString()
           : new Date(value).toISOString();
+      }
+      if (values.customPermissions?.length) {
+        values.customPermissions.forEach((permission) => {
+          formData.append("customPermissions[]", permission!);
+        });
       }
 
       // Usage
@@ -257,6 +276,55 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
                       component="div"
                       className="invalid-feedback"
                       name="role"
+                    />
+                  </BootstrapForm.Group>
+                  {/* Ticket Permissions */}
+                  <BootstrapForm.Group className="mb-3">
+                    <BootstrapForm.Label>
+                      Ticket Permissions
+                    </BootstrapForm.Label>
+
+                    <BootstrapForm.Check
+                      type="checkbox"
+                      id="view-it-tickets"
+                      label="View It Tickets"
+                      checked={values.customPermissions?.includes(
+                        PERMISSIONS.VIEW_IT_TICKETS
+                      )}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        const permission = PERMISSIONS.VIEW_IT_TICKETS;
+
+                        setFieldValue(
+                          "customPermissions",
+                          checked
+                            ? [...(values.customPermissions ?? []), permission]
+                            : (values.customPermissions ?? []).filter(
+                                (p) => p !== permission
+                              )
+                        );
+                      }}
+                    />
+                    <BootstrapForm.Check
+                      type="checkbox"
+                      id="view-facility-tickets"
+                      label="View Facility Tickets"
+                      checked={values.customPermissions?.includes(
+                        PERMISSIONS.VIEW_PROPERTY_TICKETS
+                      )}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        const permission = PERMISSIONS.VIEW_PROPERTY_TICKETS;
+
+                        setFieldValue(
+                          "customPermissions",
+                          checked
+                            ? [...(values.customPermissions ?? []), permission]
+                            : (values.customPermissions ?? []).filter(
+                                (p) => p !== permission
+                              )
+                        );
+                      }}
                     />
                   </BootstrapForm.Group>
 

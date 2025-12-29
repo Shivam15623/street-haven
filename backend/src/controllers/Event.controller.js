@@ -52,7 +52,9 @@ export const createEvent = asyncHandler(async (req, res) => {
     // 🔔 Create notification for event creation
     const notification = await createNotification(
       {
-        type: "event_activity",
+        action: "created",
+        category: "event",
+        severity: "info",
         title: "New Event Created",
         message: `The event "${title}" has been created by ${firstname} ${lastname}.`,
         link: `/events/${event._id}`,
@@ -326,7 +328,9 @@ export const EventSignUp = asyncHandler(async (req, res) => {
     const notification = await createNotification(
       {
         recipients: [userId],
-        type: "event_activity",
+        action: "registered",
+        category: "system",
+        severity: "info",
         title: "Event Registration Successful",
         message: `You have successfully registered for "${event.title}".`,
         link: `/events/${event._id}`,
@@ -387,7 +391,9 @@ export const EventSignOut = asyncHandler(async (req, res) => {
     const notification = await createNotification(
       {
         recipients: [userId],
-        type: "event_activity",
+        action: "unregistered",
+        category: "system",
+        severity: "info",
         title: "Event Registration Cancelled",
         message: `You have cancelled your registration for "${event.title}".`,
         link: `/events/${event._id}`,

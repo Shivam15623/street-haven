@@ -15,9 +15,7 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
 
   if (!attachmentpath) throw new ApiError(400, "Attachment file is missing");
 
-
-
-  const attachmentData =await uploadAttachment(attachmentpath);
+  const attachmentData = await uploadAttachment(attachmentpath);
 
   // Phase 2: Minimal transaction - DB only
   const session = await mongoose.startSession();
@@ -45,7 +43,9 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
     // Create Notification within the session
     const notification = await createNotification(
       {
-        type: "manual_added",
+        action: "created",
+        category: "program_mannual",
+        severity: "info",
         title: "New Program Manual Added",
         message: `${firstname} added a new Program Manual: "${title}"`,
         link: `/program-manuals/${programmanual[0]._id}`,
@@ -127,8 +127,6 @@ export const EditProgramManual = asyncHandler(async (req, res) => {
 
   // If a new file is uploaded
   if (req?.file?.path) {
-  
-   
     const attachmentData = await uploadAttachment(req?.file.path);
 
     // Only update if different (by URL or size or filename etc.)
@@ -136,7 +134,7 @@ export const EditProgramManual = asyncHandler(async (req, res) => {
     if (
       attachmentData.fileUrl !== currentAttachment.fileUrl ||
       attachmentData.fileName !== currentAttachment.fileName ||
-      attachmentData.size !== currentAttachment.size 
+      attachmentData.size !== currentAttachment.size
     ) {
       updates.attachment = attachmentData;
     }

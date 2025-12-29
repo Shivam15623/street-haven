@@ -52,10 +52,10 @@ const columns: Column[] = [
   {
     header: "Actions",
     accessor: (row) => (
-      <>
+       <div className="d-flex gap-2">
         <EditClientFeedback data={row} />
         <ClientFeedback detail={row} />
-      </>
+      </div>
     ),
   },
 ];

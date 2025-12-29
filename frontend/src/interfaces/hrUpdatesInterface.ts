@@ -22,7 +22,7 @@ export interface hrUpdateData {
     fileName: string;
     fileUrl: string;
     size: number; // Cloudinary gives bytes
-    totalPages: number; // null if not a PDF
+
   };
   createdAt: string;
   updatedAt: string;

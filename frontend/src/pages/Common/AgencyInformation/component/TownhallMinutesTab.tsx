@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useFetchMeetingMinutesQuery } from "../../../../services/meetingminutesApi";
 import ActionstownhallMinutes from "./ActionstownhallMinutes";
@@ -11,12 +11,15 @@ import useHasPermission from "../../../../hooks/Auth";
 const TownhallMinutesTab = () => {
   const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
-  const pageSize = 10;
+ 
   const [searchParams] = useSearchParams();
-  const slugParam = searchParams.get("slug") ?? "";
+  const slugParam = useMemo(
+    () => searchParams.get("slug") ?? "",
+    [searchParams]
+  );
   const { data, isLoading, isError, error } = useFetchMeetingMinutesQuery({
     page: page,
-    limit: pageSize,
+    limit: 10,
     slug: slugParam,
     sortBy: "meetingDate",
     order: "desc",

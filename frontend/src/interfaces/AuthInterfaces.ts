@@ -1,3 +1,4 @@
+import type { AllPermissions } from "../utills/auth/permissions";
 import type { ApiResponse } from "./Response";
 
 interface User {
@@ -12,7 +13,7 @@ interface User {
   createdAt: string;
   title: string;
   hireDate: string;
-
+  customPermissions: AllPermissions[];
 }
 export interface ChangeUserDetailsPayLoad {
   firstName?: string;
@@ -63,7 +64,7 @@ interface UserVerify {
   createdAt: string;
   title: string;
   hireDate: Date;
- 
+  customPermissions: AllPermissions[];
 }
 export interface LoginVerifyTotpResponseData {
   user: UserVerify;
@@ -93,6 +94,7 @@ export interface SignupCredentials {
   phone: string;
   password: string;
   role: Role;
+  customPermissions: string[];
 }
 export interface ForgotPasswordcredential {
   token: string;

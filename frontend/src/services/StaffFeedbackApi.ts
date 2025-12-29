@@ -2,17 +2,45 @@ import type {
   IncidentReportQuery,
   StaffFeedbackSubmissionResponse,
 } from "../interfaces/incidentReport";
+import type { ApiGeneralResponse } from "../interfaces/Response";
 import { api } from "../redux/ApiSlice";
+interface StaffFeedBackCredentials {
+  date: Date;
+  category: string;
+  location: string;
+  description: string;
+  witnesses?: string[];
+  actionsTaken: string;
+}
 
 const StaffFeedbackApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    createStaffFeedback: builder.mutation({
+    createStaffFeedback: builder.mutation<
+      ApiGeneralResponse,
+      StaffFeedBackCredentials
+    >({
       query: (credentials) => ({
         url: "/staff-feedback/create",
         body: credentials,
         method: "POST",
       }),
       invalidatesTags: ["StaffFeedBack"],
+    }),
+    editStaffReport: builder.mutation<
+      ApiGeneralResponse,
+      { id: string; credentials: StaffFeedBackCredentials }
+    >({
+      query: ({ id, credentials }) => ({
+        url: `/staff-feedback/edit/${id}`,
+        method: "PATCH",
+        body: credentials,
+      }),
+    }),
+    deleteStaffReport: builder.mutation<ApiGeneralResponse, { id: string }>({
+      query: ({ id }) => ({
+        url: `/staff-feedback/delete/${id}`,
+        method: "DELETE",
+      }),
     }),
     viewStaffFeedBack: builder.query<
       StaffFeedbackSubmissionResponse,
@@ -33,5 +61,9 @@ const StaffFeedbackApi = api.injectEndpoints({
     }),
   }),
 });
-export const { useCreateStaffFeedbackMutation, useViewStaffFeedBackQuery } =
-  StaffFeedbackApi;
+export const {
+  useCreateStaffFeedbackMutation,
+  useViewStaffFeedBackQuery,
+  useDeleteStaffReportMutation,
+  useEditStaffReportMutation,
+} = StaffFeedbackApi;

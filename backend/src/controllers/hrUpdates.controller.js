@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { addActivityLog } from "../helper/addActivityLogs.js";
-import { getPdfPageCount } from "../helper/pdfpagecount.js";
+
 import HRupdate from "../model/hrupdate.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
@@ -25,7 +25,7 @@ export const createhrUpdate = asyncHandler(async (req, res) => {
 
   try {
     // Count PDF pages
-    const totalPages = await getPdfPageCount(attachmentPath);
+
 
     // Upload file to Cloudinary
     const uploadedFile = await uploadOnCloudinary(attachmentPath);
@@ -37,7 +37,7 @@ export const createhrUpdate = asyncHandler(async (req, res) => {
       fileName: uploadedFile.original_filename || "manual",
       fileUrl: uploadedFile.secure_url,
       size: uploadedFile.bytes,
-      totalPages,
+
     };
 
     // Create HR Update

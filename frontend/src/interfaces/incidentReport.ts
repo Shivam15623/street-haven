@@ -23,7 +23,7 @@ export interface IncidentReportData {
   description: string;
   witnesses: string[];
   actionsTaken: string;
-  reporterName: string;
+
   submittedBy: {
     _id: string;
     firstname: string;
@@ -43,13 +43,14 @@ export interface StaffFeedBackCredentials {
   reporterName?: string;
 }
 export interface StaffFeedbackData {
+  _id:string;
   date: string;
   location: string;
   description: string;
   category: "Other" | "Safety" | "Behavior" | "Equipment";
   witnesses: string[];
   actionsTaken: string;
-  reporterName: string;
+
   submittedBy: {
     _id: string;
     firstname: string;
