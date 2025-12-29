@@ -1,6 +1,7 @@
 import type { Role, SignupCredentials } from "../interfaces/AuthInterfaces";
 import type { ApiGeneralResponse, ApiResponse } from "../interfaces/Response";
 import { api } from "../redux/ApiSlice";
+import type { AllPermissions } from "../utills/auth/permissions";
 export interface EmployeeData {
   _id: string;
   firstname: string;
@@ -11,14 +12,28 @@ export interface EmployeeData {
   profilePic: string;
   createdAt: string;
   updatedAt: string;
-  superviserId:string;
+  superviserId: string;
   title: string;
   hireDate: Date;
   timePeriod: {
     value: number;
     unit: "days" | "weeks" | "months" | "years";
   };
+  customPermissions: AllPermissions[];
 }
+export interface EmployeeSuperviserData {
+  _id: string;
+  firstname: string;
+  lastname: string;
+  title: string;
+  superviser: {
+    firstname: string;
+    lastname: string;
+    title: string;
+    _id: string;
+  };
+}
+export type EmployeeSupFormResponse = ApiResponse<EmployeeSuperviserData[]>;
 export interface RoleForm {
   roleName: string;
   description: string;
@@ -146,6 +161,18 @@ const EmployeeApi = api.injectEndpoints({
         method: "GET",
       }),
     }),
+    resetTotp: builder.mutation<ApiGeneralResponse, { id: string }>({
+      query: ({ id }) => ({
+        url: `employees/resetTotp/${id}`,
+        method: "PATCH",
+      }),
+    }),
+    employeeSuperForm: builder.query<EmployeeSupFormResponse, void>({
+      query: () => ({
+        url: "employees/form-superviser",
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -159,4 +186,6 @@ export const {
   useDeleteRoleMutation,
   useViewRolesQuery,
   useGetRolebyIdQuery,
+  useResetTotpMutation,
+  useEmployeeSuperFormQuery,
 } = EmployeeApi;

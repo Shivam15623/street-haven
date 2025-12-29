@@ -57,10 +57,59 @@ export const CANADA_PROVINCES = [
   { label: "Nunavut", value: "NU" },
   { label: "Yukon", value: "YT" },
 ];
+export interface EmployeeIncidentReportPopulated {
+  _id: string;
+
+  reportType: "Injury" | "Illness" | "Near Miss";
+
+  employee: PopulatedUser;
+
+  jobTitle: string;
+
+  supervisor: PopulatedUser;
+
+  informedSupervisor: boolean;
+
+  injuryDate: string; // ISO date string
+  injuryTime: string;
+
+  witnessName?: string;
+
+  location: string;
+
+  activityAtTime: string;
+
+  description: string;
+
+  preventionSuggestion: string;
+
+  injuredBodyPartOrRisk: string;
+
+  sawDoctor: boolean;
+
+  doctorName?: string;
+  doctorPhone?: string;
+
+  doctorVisitDate?: string;
+  doctorVisitTime?: string;
+
+  previousInjury: boolean;
+  previousInjuryDate?: string;
+
+  createdAt: string;
+  updatedAt: string;
+}
+export interface PopulatedUser {
+  _id: string;
+  firstname: string;
+  lastname: string;
+  title: string;
+}
+
 
 export interface EmployeeIncidentCredentials {
   type: string;
-  name: string;
+  employee: string;
   jobTitle: string;
   supervisor: string;
   informedSupervisor: boolean;
@@ -185,7 +234,7 @@ export interface employeeIncidentReport {
 }
 export interface editemployeeIncidentReportCred {
   reportType: "Injury" | "Illness" | "Near Miss";
-  name: string;
+  employee: string;
   jobTitle: string;
   supervisor: string;
   informedSupervisor: boolean;
@@ -485,7 +534,7 @@ const FormApi = api.injectEndpoints({
     }),
     getAllEmployeeIncidents: builder.query<
       ApiResponse<{
-        data: employeeIncidentReport[];
+        data: EmployeeIncidentReportPopulated[];
         paggination: {
           total: number;
           page: number;

@@ -117,7 +117,7 @@ export const createClientFeedback = asyncHandler(async (req, res) => {
 export const createEmployeeIncident = asyncHandler(async (req, res) => {
   const {
     type,
-    name,
+    employee,
     jobTitle,
     supervisor,
     informedSupervisor,
@@ -137,9 +137,10 @@ export const createEmployeeIncident = asyncHandler(async (req, res) => {
     previousInjury,
     previousInjuryDate,
   } = req.body;
+  console.log(req.body)
   const payload = {
     reportType: type,
-    name: name,
+    employee: employee,
     jobTitle,
     supervisor: supervisor,
     informedSupervisor: informedSupervisor,
@@ -375,7 +376,13 @@ export const GetAllEmployeeIncidents = asyncHandler(async (req, res) => {
     ];
   }
 
-  const data = await EmployeeIncidentReport.find(query)
+  const data = await EmployeeIncidentReport.find(query).populate({
+      path: "employee",
+      select: "firstname lastname title",
+    }).populate({
+      path: "supervisor",
+      select: "firstname lastname title",
+    })
     .sort({ [sortBy]: order === "asc" ? 1 : -1 })
     .skip((page - 1) * limit)
     .limit(Number(limit));

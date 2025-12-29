@@ -18,12 +18,9 @@ export const io = new Server(server, {
 export const activeTicketUsers = {};
 // Handle socket connections
 io.on("connection", (socket) => {
-
-
   // Example: join a room for ticket
   socket.on("joinRoom", ({ ticketId, userId }) => {
     socket.join(ticketId);
-
 
     if (!activeTicketUsers[ticketId]) activeTicketUsers[ticketId] = new Set();
     activeTicketUsers[ticketId].add(userId);
@@ -35,11 +32,11 @@ io.on("connection", (socket) => {
   });
   socket.on("joinUserRoom", ({ userId }) => {
     socket.join(`user_${userId}`);
-
+    logUserRooms();
   });
   socket.on("leaveUserRoom", ({ userId }) => {
     socket.leave(`user_${userId}`);
-
+    logUserRooms();
   });
 
   socket.on("disconnect", () => {
@@ -48,6 +45,25 @@ io.on("connection", (socket) => {
     });
   });
 });
+function logUserRooms() {
+  const rooms = io.sockets.adapter.rooms;
+  const sids = io.sockets.adapter.sids;
+
+  const userRooms = [];
+
+  for (const [roomId, socketsSet] of rooms) {
+    // ❌ skip auto-created socket rooms
+    if (!sids.has(roomId) && roomId.startsWith("user_")) {
+      userRooms.push({
+        roomId,
+        connectedSockets: [...socketsSet],
+        totalUsers: socketsSet.size,
+      });
+    }
+  }
+
+  console.log("🔌 Active User Rooms:", userRooms);
+}
 ConnectDb()
   .then(() => {
     server.listen(process.env.PORT || 8000, () => {

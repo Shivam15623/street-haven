@@ -18,7 +18,7 @@ const OrganizationalChartTab = () => {
            
           </div>
 
-          <div className="d-none  d-sm-block" style={{background:"var(--street-bg-f4)"}}>
+          <div className="d-none  d-sm-block radius-12" style={{background:"var(--street-bg-f4)"}}>
             <TreeGraph />
           </div>
           <MobileTree />

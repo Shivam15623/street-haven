@@ -4,7 +4,9 @@ import {
   AllEmployees,
   EditEmployee,
   EditEmployeePassword,
+  employeeSuperviserForm,
   RemoveEmployee,
+  resetTotp,
 } from "../controllers/employees.controller.js";
 import { upload } from "../middleware/multer.js";
 import { authorizePermissions } from "../middleware/AuthRole.js";
@@ -52,5 +54,11 @@ router
     validateRequest(createEmployeeSchema, "body"),
     AddEmployee
   );
-
+router
+  .route("/resetTotp/:id")
+  .patch(
+    authorizePermissions({ action: PERMISSIONS.CREATE_EMPLOYEE }),
+    resetTotp
+  );
+router.route("/form-superviser").get(employeeSuperviserForm);
 export default router;

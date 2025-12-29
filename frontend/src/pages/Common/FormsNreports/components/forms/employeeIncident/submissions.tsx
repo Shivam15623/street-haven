@@ -3,7 +3,7 @@ import { Icon } from "@iconify/react";
 import SimpleTable from "../../../../../../components/child/SimpleTable";
 import {
   useGetAllEmployeeIncidentsQuery,
-  type employeeIncidentReport,
+  type EmployeeIncidentReportPopulated,
 } from "../../../../../../services/FormApi";
 
 import EditEmployeeIncident from "./edit";
@@ -11,14 +11,18 @@ import EmployeeIncidentReportDetails from "./details";
 
 interface Column {
   header: string;
-  accessor: (row: employeeIncidentReport) => React.ReactNode;
+  accessor: (row: EmployeeIncidentReportPopulated) => React.ReactNode;
 }
 
 // Minimal columns for table view
 const columns: Column[] = [
   {
     header: "Name",
-    accessor: (row) => row.name || "N/A",
+    accessor: (row) => (
+      <div>
+        {row.employee.firstname} {row.employee.lastname}
+      </div>
+    ),
   },
   {
     header: "Job Title",
@@ -37,7 +41,11 @@ const columns: Column[] = [
   },
   {
     header: "Supervisor",
-    accessor: (row) => row.supervisor || "N/A",
+    accessor: (row) => (
+      <div>
+        {row.supervisor.firstname} {row.supervisor.lastname}
+      </div>
+    ),
   },
   {
     header: "Actions",
@@ -62,7 +70,8 @@ const EmployeeIncidentReportSubmission = () => {
 
   if (isLoading) return <div>Loading...</div>;
 
-  const submissions: employeeIncidentReport[] = incidentData?.data?.data ?? [];
+  const submissions: EmployeeIncidentReportPopulated[] =
+    incidentData?.data?.data ?? [];
   const total: number = incidentData?.data?.paggination?.total || 0;
 
   return (

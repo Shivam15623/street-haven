@@ -6,7 +6,7 @@ export interface TicketData {
   description: string;
   priority: "Low" | "Medium" | "High";
   status: "Open" | "In Progress" | "Under Review" | "Completed"; // default: Open
-  category: "IT Help Desk" | "Facilities";
+  category: "IT Help Desk" | "Property Maintenance";
   location?: string;
   photo?: TicketPhoto;
   assignedTo?: userPopulatedData; // or a populated User object if you want

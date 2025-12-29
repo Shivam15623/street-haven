@@ -1,13 +1,14 @@
 import React, { useState } from "react";
-import { useViewStaffFeedBackQuery } from "../../../../../services/StaffFeedbackApi";
+import { useViewStaffFeedBackQuery } from "../../../../../../services/StaffFeedbackApi";
 import type {
   IncidentReportQuery,
   StaffFeedbackData,
-} from "../../../../../interfaces/incidentReport";
+} from "../../../../../../interfaces/incidentReport";
 import { Icon } from "@iconify/react/dist/iconify.js";
-import SimpleTable from "../../../../../components/child/SimpleTable";
+import SimpleTable from "../../../../../../components/child/SimpleTable";
+import StaffFeedbackDetail from "./detail";
+import EditStaffFeedback from "./edit";
 
-import StaffFeedbackDetail from "../modals/StaffFeedbackdetail";
 interface Column {
   header: string;
   accessor: (row: StaffFeedbackData) => React.ReactNode;
@@ -44,7 +45,12 @@ const columns: Column[] = [
   },
   {
     header: "Actions",
-    accessor: (row) => <StaffFeedbackDetail detail={row} />,
+    accessor: (row) => (
+      <div className="d-flex gap-2">
+        <EditStaffFeedback data={row} />
+        <StaffFeedbackDetail detail={row} />
+      </div>
+    ),
   },
 ];
 

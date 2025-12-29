@@ -3,10 +3,10 @@ import ClientFeedbackSubmission from "./forms/clientFeedback/submissions";
 import ClientIncidentReportSubmission from "./forms/clientIncident/submissions";
 import EmployeeIncidentReportSubmission from "./forms/employeeIncident/submissions";
 import FunctionalAbilitiesSubmission from "./SubmissionTabs/FunctionalAbiltiesSubmission";
-import IncidentReportSubmission from "./SubmissionTabs/IncidentReportSubmission";
+import IncidentReportSubmission from "./forms/IncidentReport/submissions";
 import MediaConsentSubmission from "./SubmissionTabs/MediaConsentSubmission";
 import PaymentRequistionSubmission from "./forms/paymentRequisition/submissions";
-import StaffFeedBackSubmission from "./SubmissionTabs/StaffFeedBackSubmission";
+import StaffFeedBackSubmission from "./forms/staffFeedback/submissions";
 
 interface SubmissionsProps {
   activeKey: string;

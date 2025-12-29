@@ -78,9 +78,13 @@ export const PERMISSIONS = {
   DELETE_ORG_CHART: "delete_org_chart",
   VIEW_ORG_CHART: "view_org_chart",
 
-  VIEW_SUBMIT_FORM:"view_submit_form",
-  VIEW_SUBMISSIONS:"view_submissions",
-  EDIT_FORM:"edit_form",
-  DELETE_FORM:"delete_form"
+  VIEW_SUBMIT_FORM: "view_submit_form",
+  VIEW_SUBMISSIONS: "view_submissions",
+  EDIT_FORM: "edit_form",
+  DELETE_FORM: "delete_form",
+  
+  TICKET_VIEW_SELF: "ticket_view_self",
+  VIEW_IT_TICKETS: "view_it_tickets",
+  VIEW_PROPERTY_TICKETS: "view_property_tickets",
 } as const;
-export type AllPermissions=(typeof PERMISSIONS)[keyof typeof PERMISSIONS]
+export type AllPermissions = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
