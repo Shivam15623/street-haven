@@ -7,6 +7,7 @@ import {
   type FunctionalAbility,
 } from "../../../../../services/FormApi";
 import { FunctionalAbilityDetail } from "../modals/functional-abilty/FunctionalAbilty";
+import EditFAbilties from "../forms/functionalAbilties/edit";
 
 // ------------------------------
 // Columns
@@ -71,7 +72,12 @@ const columns: Column[] = [
   },
   {
     header: "Actions",
-    accessor: (row) => <FunctionalAbilityDetail details={row} />,
+    accessor: (row) => (
+      <div className="d-flex gap-2">
+        <EditFAbilties />
+        <FunctionalAbilityDetail details={row} />
+      </div>
+    ),
   },
 ];
 
