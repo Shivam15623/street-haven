@@ -2,54 +2,19 @@ import React, { useState } from "react";
 import { Icon } from "@iconify/react";
 import SimpleTable from "../../../../../../components/child/SimpleTable";
 import {
+  useDeletePaymentRequistionMutation,
   useGetAllPaymentRequisitionsQuery,
   type PaymentRequisition,
 } from "../../../../../../services/FormApi";
 
 import EditPaymentRequistion from "./edit";
 import PaymentRequisitionDetail from "./detail";
+import DeleteConfirmModal from "../delete";
 
 interface Column {
   header: string;
   accessor: (row: PaymentRequisition) => React.ReactNode;
 }
-
-const columns: Column[] = [
-  {
-    header: "Requested Date",
-    accessor: (row) =>
-      new Date(row.requestedDate).toLocaleDateString("en-IN", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }),
-  },
-  {
-    header: "Requested By",
-    accessor: (row) => row.requestedBy,
-  },
-  {
-    header: "Payee",
-    accessor: (row) => row.payeeName,
-  },
-  {
-    header: "Total Amount",
-    accessor: (row) => `$${row.totalAmount}`,
-  },
-  {
-    header: "Approved By",
-    accessor: (row) => row.approvedBy,
-  },
-  {
-    header: "Action",
-    accessor: (row) => (
-      <div className="d-flex gap-2">
-        <EditPaymentRequistion data={row} />
-        <PaymentRequisitionDetail detail={row} />
-      </div>
-    ),
-  },
-];
 
 const PaymentRequistionSubmission = () => {
   const [filter, setFilter] = useState({
@@ -58,16 +23,82 @@ const PaymentRequistionSubmission = () => {
     search: "",
   });
 
-  const { data, isLoading } = useGetAllPaymentRequisitionsQuery(filter);
+  // 🔹 Delete modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  if (isLoading) return <div>Loading...</div>;
+  const { data, isLoading } = useGetAllPaymentRequisitionsQuery(filter);
+  const [deletePaymentReqistion, { isLoading: deleting }] =
+    useDeletePaymentRequistionMutation();
 
   const submissions: PaymentRequisition[] = data?.data?.data ?? [];
   const total: number = data?.data?.paggination?.total || 0;
 
+  const handleDeleteClick = (id: string) => {
+    setSelectedId(id);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedId) return;
+
+    try {
+      await deletePaymentReqistion({ id: selectedId }).unwrap();
+      setShowDeleteModal(false);
+      setSelectedId(null);
+    } catch (error) {
+      console.error("Delete failed", error);
+    }
+  };
+
+  const columns: Column[] = [
+    {
+      header: "Requested Date",
+      accessor: (row) =>
+        new Date(row.requestedDate).toLocaleDateString("en-IN", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
+    },
+    {
+      header: "Requested By",
+      accessor: (row) => row.requestedBy,
+    },
+    {
+      header: "Payee",
+      accessor: (row) => row.payeeName,
+    },
+    {
+      header: "Total Amount",
+      accessor: (row) => `$${row.totalAmount}`,
+    },
+    {
+      header: "Approved By",
+      accessor: (row) => row.approvedBy,
+    },
+    {
+      header: "Action",
+      accessor: (row) => (
+        <div className="d-flex gap-2">
+          <EditPaymentRequistion data={row} />
+          <PaymentRequisitionDetail detail={row} />
+          <button
+            className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
+            onClick={() => handleDeleteClick(row._id)}
+          >
+            <Icon icon="mdi:delete" className="text-xl" />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  if (isLoading) return <div>Loading...</div>;
+
   return (
     <div className="d-flex flex-column gap-24">
-      {/* Search Input */}
+      {/* 🔍 Search */}
       <div className="px-20 py-16 program-input bg-base radius-12 d-flex flex-row align-items-center gap-8">
         <Icon icon="proicons:search" className="text-xl opacity-50" />
         <input
@@ -75,12 +106,25 @@ const PaymentRequistionSubmission = () => {
           placeholder="Search Payment Requisitions"
           value={filter.search}
           onChange={(e) =>
-            setFilter((prev) => ({ ...prev, search: e.target.value, page: 1 }))
+            setFilter((prev) => ({
+              ...prev,
+              search: e.target.value,
+              page: 1,
+            }))
           }
         />
       </div>
 
-      {/* Table */}
+      {/* 🗑️ Delete Modal */}
+      <DeleteConfirmModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete Payment Requisition"
+        isLoading={deleting}
+        onConfirm={handleConfirmDelete}
+      />
+
+      {/* 📋 Table */}
       {submissions.length > 0 ? (
         <SimpleTable
           columns={columns}

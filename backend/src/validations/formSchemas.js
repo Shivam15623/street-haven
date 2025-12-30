@@ -145,7 +145,7 @@ export const functionalAbilitiesSchema = Joi.object({
     otherwise: Joi.forbidden(),
   }),
 
-  commentsOnAbilities: Joi.when("returnToWorkStatus", {
+  commentsOnAbilties: Joi.when("returnToWorkStatus", {
     is: "withRestrictions",
     then: Joi.string()
       .required()
@@ -178,6 +178,25 @@ export const functionalAbilitiesSchema = Joi.object({
   providedTo: Joi.object({
     worker: Joi.boolean(),
     employee: Joi.boolean(),
+  }),
+  recomendedHours: Joi.when("returnToWorkStatus", {
+    is: "withRestrictions",
+    then: Joi.string()
+      .valid("regular", "modified", "graduated")
+      .required()
+      .messages({ "any.required": "recommended Hours of Work is required" }),
+    otherwise: Joi.forbidden(),
+  }),
+  startDate: Joi.when("returnToWorkStatus", {
+    is: "withRestrictions",
+    then: Joi.date()
+      .min("now")
+      .required()
+      .messages({
+        "any.required": "start date is required",
+        "any.min": "start date cant bne in past",
+      }),
+    otherwise: Joi.forbidden(),
   }),
 });
 

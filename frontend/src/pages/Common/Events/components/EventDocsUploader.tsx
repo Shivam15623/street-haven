@@ -229,8 +229,11 @@ const EventDocsUploader: React.FC<EventDocsUploaderProps> = ({
                 return (
                   <div
                     key={file.id}
-                    className="bg-light p-3 rounded d-flex align-items-center gap-3 border"
-                    style={{ animation: `slide-up 0.3s ease ${index * 0.05}s` }}
+                    className=" p-3 rounded d-flex align-items-center gap-3 border"
+                    style={{
+                      animation: `slide-up 0.3s ease ${index * 0.05}s`,
+                      background: "var(--street-card)",
+                    }}
                   >
                     <div
                       className={`rounded d-flex align-items-center justify-content-center`}
@@ -245,7 +248,7 @@ const EventDocsUploader: React.FC<EventDocsUploaderProps> = ({
                     </div>
 
                     <div className="flex-grow-1">
-                      <p className="fw-semibold mb-0 text-truncate">
+                      <p className="fw-semibold text-street-dark mb-0 text-truncate">
                         {file.name}
                       </p>
                       <small className="text-street-base">
