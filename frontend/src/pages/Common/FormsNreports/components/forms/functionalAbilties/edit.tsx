@@ -2,100 +2,317 @@ import { useState } from "react";
 import ModalWrapper from "../../../../../../components/child/ModalWrapper";
 import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
 
+import { Icon } from "@iconify/react/dist/iconify.js";
+import React from "react";
+import AssesmentSection from "./sections/AssesmentSection";
+import {
+  Formik,
+  type FormikErrors,
+  type FormikProps,
+  type FormikTouched,
+} from "formik";
+import { Form } from "react-bootstrap";
+
+import {
+  useEditFAFMutation,
+  type FunctionalAbility,
+} from "../../../../../../services/FormApi";
+import type { FunctionalAbilityFormValues } from "../FunctionalAbiltiesForm";
+import { showSuccess } from "../../../../../../utills/toastutills";
+import {
+  buildInitialValues,
+  extractAbilities,
+  extractRestrictions,
+  SECTION_FIELD_MAP,
+  SECTION_VISIBILITY,
+} from "../../../../../../utills/functionalAbiltyHelpers";
+import { functionalAbilityFormSchema } from "../../../validations";
+import ClaimWorkerSection from "./sections/ClaimSection";
 import EmployerSection from "./sections/EmployerSection";
 import JobInjurySection from "./sections/JobInjurySection";
-import ClaimWorkerSection from "./sections/ClaimSection";
 import AbilitiesSection from "./sections/AbilitiesSection";
 import RestrictionsSection from "./sections/RestrictionsSection";
-import { Icon } from "@iconify/react/dist/iconify.js";
-const SECTIONS = [
-  { key: "claim-worker", label: "Claim & Worker Info" },
+import HealthProfessionalBillSection from "./sections/HealthProfessionalBillSection";
 
-  { key: "employer", label: "Employer Info" },
-  { key: "job", label: "Job & Injury" },
-  { key: "abilities", label: "Functional Abilities" },
-  { key: "restrictions", label: "Restrictions" },
-  { key: "assessment", label: "Assessment" },
-  { key: "review", label: "Review & Submit" },
-] as const;
-interface SidebarProps {
-  active: string;
-  onChange: (key: string) => void;
-}
 type ReturnToWorkStatus = "noRestrictions" | "withRestrictions" | "unable";
+interface Section {
+  key: string;
+  label: string;
+  icon?: React.ReactNode;
+  visibleWhen?: ReturnToWorkStatus[];
+}
 
-const SECTION_VISIBILITY = {
-  abilities: ["withRestrictions", "unable"],
-  restrictions: ["withRestrictions"],
-  assessment: ["noRestrictions", "withRestrictions", "unable"],
-} as const;
+const SECTIONS: Section[] = [
+  {
+    key: "claim-worker",
+    label: "Claim & Worker Info",
+    icon: <Icon icon="mdi:account" width={18} />,
+  },
+  {
+    key: "employer",
+    label: "Employer Info",
+    icon: <Icon icon="mdi:office-building" width={18} />,
+  },
+  {
+    key: "job",
+    label: "Job & Injury",
+    icon: <Icon icon="mdi:briefcase" width={18} />,
+  },
+  {
+    key: "healthPro&bill",
+    label: "Health professional & Billing Information",
+    icon: <Icon icon="mdi:stethoscope" width={18} />,
+  },
 
-const Sidebar: React.FC<SidebarProps & { sections: typeof SECTIONS }> = ({
-  active,
-  onChange,
+  {
+    key: "assessment",
+    label: "Assessment",
+    icon: <Icon icon="mdi:clipboard-check-outline" width={18} />,
+    visibleWhen: ["noRestrictions", "withRestrictions", "unable"],
+  },
+  {
+    key: "abilities",
+    label: "Functional Abilities",
+    icon: <Icon icon="mdi:arm-flex" width={18} />,
+    visibleWhen: ["withRestrictions", "unable"],
+  },
+  {
+    key: "restrictions",
+    label: "Restrictions",
+    icon: <Icon icon="mdi:alert-circle-outline" width={18} />,
+    visibleWhen: ["withRestrictions"],
+  },
+];
+
+interface SidebarProps {
+  sections: Section[];
+  activeSection: string;
+  onSectionChange: (key: string) => void;
+  formik: FormikProps<FunctionalAbilityFormValues>;
+}
+const getByPath = <T extends object>(obj: T, path: string): unknown => {
+  return path.split(".").reduce<unknown>((acc, key) => {
+    if (acc && typeof acc === "object") {
+      return (acc as Record<string, unknown>)[key];
+    }
+    return undefined;
+  }, obj);
+};
+
+const hasSectionErrors = (
+  sectionKey: string,
+  errors: FormikErrors<FunctionalAbilityFormValues>,
+  touched: FormikTouched<FunctionalAbilityFormValues>
+) => {
+  const fields = SECTION_FIELD_MAP[sectionKey] ?? [];
+
+  return fields.some((field) => {
+    const error = getByPath(errors, field);
+    const isTouched = getByPath(touched, field);
+
+    return Boolean(error && isTouched);
+  });
+};
+
+export const Sidebar = ({
   sections,
-}) => {
+  activeSection,
+  onSectionChange,
+  formik,
+}: SidebarProps) => {
   return (
-    <div className="border-end pe-2" style={{ minWidth: "220px" }}>
-      <ul className="nav nav-pills flex-column gap-1">
-        {sections.map((s) => (
-          <li className="nav-item" key={s.key}>
-            <button
-              type="button"
-              className={`nav-link text-start w-100 ${
-                active === s.key ? "active" : "text-dark"
-              }`}
-              onClick={() => onChange(s.key)}
-            >
-              {s.label}
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <nav
+      className="d-flex flex-column gap-2 pe-16 h-100 border-end"
+      style={{ width: "230px", maxWidth: "230px" }}
+    >
+      {sections.map((section) => {
+        const isActive = activeSection === section.key;
+        const hasError = hasSectionErrors(
+          section.key,
+          formik.errors,
+          formik.touched
+        );
+
+        return (
+          <button
+            key={section.key}
+            type="button"
+            onClick={() => onSectionChange(section.key)}
+            className={`btn d-flex align-items-center gap-3 text-start rounded px-3 py-2 radius-8
+              ${
+                hasError
+                  ? "btn-danger"
+                  : isActive
+                  ? "btn-street-primary"
+                  : "btn text-street-base"
+              }
+            `}
+          >
+            <span className="flex-grow-1 fw-medium text-sm">
+              {section.label}
+            </span>
+
+            {/* Icon priority */}
+            {hasError ? (
+              <Icon icon="mdi:alert-circle" width={18} className="text-white" />
+            ) : (
+              section.icon && <span className="opacity-75">{section.icon}</span>
+            )}
+          </button>
+        );
+      })}
+    </nav>
   );
 };
 
-const SectionRenderer = ({ section }: { section: string }) => {
+interface SectionRendererProps {
+  section: string;
+  formik: FormikProps<FunctionalAbilityFormValues>;
+}
+
+const SectionRenderer = ({ section, formik }: SectionRendererProps) => {
   switch (section) {
-    case "claim":
-      return <ClaimWorkerSection />;
+    case "claim-worker":
+      return (
+        <ClaimWorkerSection
+          values={formik.values}
+          errors={formik.errors}
+          touched={formik.touched}
+          handleChange={formik.handleChange}
+          setFieldValue={formik.setFieldValue}
+          setFieldTouched={formik.setFieldTouched}
+        />
+      );
 
     case "employer":
-      return <EmployerSection />;
+      return (
+        <EmployerSection
+          values={formik.values}
+          errors={formik.errors}
+          touched={formik.touched}
+          handleChange={formik.handleChange}
+          setFieldValue={formik.setFieldValue}
+        />
+      );
+
     case "job":
-      return <JobInjurySection />;
+      return (
+        <JobInjurySection
+          values={formik.values}
+          errors={formik.errors}
+          touched={formik.touched}
+          handleChange={formik.handleChange}
+          setFieldValue={formik.setFieldValue}
+          setFieldTouched={formik.setFieldTouched}
+        />
+      );
+    case "healthPro&bill":
+      return (
+        <HealthProfessionalBillSection
+          values={formik.values}
+          errors={formik.errors}
+          touched={formik.touched}
+          handleChange={formik.handleChange}
+          setFieldValue={formik.setFieldValue}
+          setFieldTouched={formik.setFieldTouched}
+        />
+      );
     case "abilities":
-      return <AbilitiesSection />;
+      return (
+        <AbilitiesSection
+          values={formik.values}
+          errors={formik.errors}
+          touched={formik.touched}
+          handleChange={formik.handleChange}
+          setFieldValue={formik.setFieldValue}
+          setFieldTouched={formik.setFieldTouched}
+          handleBlur={formik.handleBlur}
+        />
+      );
+
     case "restrictions":
-      return <RestrictionsSection />;
+      return (
+        <RestrictionsSection
+          values={formik.values}
+          errors={formik.errors}
+          touched={formik.touched}
+          handleChange={formik.handleChange}
+          setFieldValue={formik.setFieldValue}
+          setFieldTouched={formik.setFieldTouched}
+        />
+      );
+
+    case "assessment":
+      return (
+        <AssesmentSection
+          values={formik.values}
+          errors={formik.errors}
+          touched={formik.touched}
+          handleChange={formik.handleChange}
+          setFieldValue={formik.setFieldValue}
+          setFieldTouched={formik.setFieldTouched}
+          handleBlur={formik.handleBlur}
+        />
+      );
 
     default:
       return null;
   }
 };
 
-const EditFAbilties = () => {
+const EditFAbilties = ({ data }: { data: FunctionalAbility }) => {
   const [showModal, setShowModal] = useState(false);
-  const [activeSection, setActiveSection] = useState("claim");
-  //   const returnToWorkStatus: ReturnToWorkStatus =
-  //   watch("returnToWorkStatus");
-  const returnToWorkStatus: ReturnToWorkStatus = "withRestrictions";
-  const visibleSections = SECTIONS.filter((section) => {
-    if (section.key === "abilities") {
-      return SECTION_VISIBILITY.abilities.includes(returnToWorkStatus);
-    }
+  const [editfaf, { isLoading }] = useEditFAFMutation();
+  const [activeSection, setActiveSection] = useState("claim-worker");
+  const handleSubmit = async (
+    values: FunctionalAbilityFormValues,
+    { resetForm }: { resetForm: () => void }
+  ) => {
+    try {
+      const payload: any = { ...values };
+      if (!values.hstAmount) {
+        delete payload.hstAmount;
+      }
+      if (!values.hstRegNo) {
+        delete payload.hstRegNo;
+      }
+      if (!values.hstSrvcCode) {
+        delete payload.hstSrvcCode;
+      }
+      if (values.returnToWorkStatus === "withRestrictions") {
+        payload.abilities = extractAbilities(values.abilities);
+        payload.restrictions = extractRestrictions(values.restrictions);
+      } else if (values.returnToWorkStatus === "noRestrictions") {
+        delete payload.abilities;
+        delete payload.restrictions;
+        delete payload.commentsOnAbilities;
+        delete payload.isDiscussRTWtoPatient;
+        delete payload.assessmentDuration;
+      } else if (values.returnToWorkStatus === "unable") {
+        delete payload.abilities;
+        delete payload.restrictions;
+        delete payload.commentsOnAbilities;
+        delete payload.assessmentDuration;
+      }
 
-    if (section.key === "restrictions") {
-      return SECTION_VISIBILITY.restrictions.includes(returnToWorkStatus);
-    }
+      // Conditional fields
 
-    if (section.key === "assessment") {
-      return SECTION_VISIBILITY.assessment.includes(returnToWorkStatus);
-    }
+      if (values.discussedRTW) delete payload.nodateOfDiscusswill;
+      if (values.designationOfHealthPro !== "Other")
+        delete payload.otherDesignation;
+      if (!values.iswsibRegistered) delete payload.wsibId;
 
-    return true; // always show others
-  });
+      const res = await editfaf({ id: data._id!, creds: payload }).unwrap();
+
+      if (res.success) {
+        showSuccess(res.message);
+        resetForm();
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <>
       {" "}
@@ -112,31 +329,83 @@ const EditFAbilties = () => {
         size="xl"
         title="Employee Incident Report"
         headerClassName="text-xl p-0 pb-20 text-street-dark"
-        className="p-20 gap-16"
-        bodyClassName="p-0 d-flex flex-column gap-16"
+        className="p-20 "
+        bodyClassName="p-0 d-flex flex-column "
         footerClassName="pt-16 px-0 pb-0"
-        isLoading={false}
+        isLoading={isLoading}
         ModalLoader={
           <FormSubmissionLoader
-            isLoading={false}
+            isLoading={isLoading}
             variant="spinner"
             size="lg"
             message="Updating Incident Report"
           />
         }
+        footer={
+          <>
+            <button
+              className="btn btn-street-primary btn-street-lg radius-12 d-flex align-items-center justify-content-center"
+              type="submit"
+              form="edit-functional-abilty-form"
+            >
+              Update
+            </button>
+          </>
+        }
       >
         <div className="d-flex" style={{ minHeight: "56vh" }}>
-          {/* Sidebar */}
-          <Sidebar
-            active={activeSection}
-            onChange={setActiveSection}
-            sections={visibleSections}
-          />
+          <Formik
+            initialValues={buildInitialValues(data)}
+            validationSchema={functionalAbilityFormSchema}
+            onSubmit={handleSubmit}
+          >
+            {(formik) => {
+              const returnToWorkStatus = formik.values
+                .returnToWorkStatus as ReturnToWorkStatus;
 
-          {/* Content */}
-          <div className="flex-grow-1 ps-4">
-            <SectionRenderer section={activeSection} />
-          </div>
+              const visibleSections = SECTIONS.filter((section) => {
+                if (section.key === "abilities") {
+                  return SECTION_VISIBILITY.abilities.includes(
+                    returnToWorkStatus
+                  );
+                }
+                if (section.key === "restrictions") {
+                  return SECTION_VISIBILITY.restrictions.includes(
+                    returnToWorkStatus
+                  );
+                }
+                return true;
+              });
+
+              return (
+                <Form
+                  className="d-flex"
+                  id="edit-functional-abilty-form"
+                  onSubmit={formik.handleSubmit}
+                >
+                  {/* Sidebar */}
+                  <div
+                    className="p-16 "
+                    style={{ background: "var(--street-bg-f2)" }}
+                  >
+                    {" "}
+                    <Sidebar
+                      onSectionChange={(key) => setActiveSection(key)}
+                      activeSection={activeSection}
+                      sections={visibleSections}
+                      formik={formik}
+                    />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-grow-1 p-24">
+                    {" "}
+                    <SectionRenderer section={activeSection} formik={formik} />
+                  </div>
+                </Form>
+              );
+            }}
+          </Formik>
         </div>
       </ModalWrapper>
     </>

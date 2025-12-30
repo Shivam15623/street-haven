@@ -106,7 +106,6 @@ export interface PopulatedUser {
   title: string;
 }
 
-
 export interface EmployeeIncidentCredentials {
   type: string;
   employee: string;
@@ -493,6 +492,13 @@ const FormApi = api.injectEndpoints({
         body: credentials,
       }),
     }),
+    editFAF: builder.mutation<ApiGeneralResponse, { id: string; creds: any }>({
+      query: ({ id, creds }) => ({
+        url: `/form/functionalAbilties/${id}`,
+        method: "PATCH",
+        body: creds,
+      }),
+    }),
     createmediaConsent: builder.mutation<ApiGeneralResponse, any>({
       query: (credentials) => ({
         url: "/form/mediaConsent",
@@ -612,4 +618,5 @@ export const {
   useEditClientIncidentMutation,
   useEditEmployeeIncidentMutation,
   useEditPaymentRequistionMutation,
+  useEditFAFMutation,
 } = FormApi;

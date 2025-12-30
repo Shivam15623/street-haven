@@ -20,6 +20,11 @@ import QuillEditor from "../../../../components/child/QuillEditor";
 import DOMPurify from "dompurify";
 import useHasPermission from "../../../../hooks/Auth";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
+import StreetTab from "../../../../components/StreetTab";
+import FileTab from "../../../../components/child/FileTab";
+import type { FileItem } from "../../../../interfaces/fileinterface";
+import FileViewer from "../../../../components/FileViewer/FileViewer";
+import EventDocsUploader from "./EventDocsUploader";
 
 interface EventDetailsModalProps {
   event: EventUpcomingData;
@@ -84,7 +89,9 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
     useSignOutFromEventMutation();
   const [editEvent, { isLoading: isEditing }] = useEditEventMutation();
   const { hasPermission } = useHasPermission();
-
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [docopen, setDocOpen] = useState(false);
   if (!event) return null;
   const {
     _id: eventId,
@@ -95,13 +102,43 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
     endTime,
     startTime,
     location,
-
+    documents,
     description,
     title,
     totalRegistered,
     createdAt,
   } = event;
   const isPastEvent = dayjs(eventDate).isBefore(dayjs(), "day");
+
+  // --- GROUP FILES ---
+
+  const images = isPastEvent
+    ? documents.filter((f) => f.fileType === "image")
+    : [];
+
+  const docs = isPastEvent
+    ? documents.filter((f) =>
+        ["pdf", "doc", "docx", "txt", "ppt", "pptx"].includes(f.fileType)
+      )
+    : [];
+
+  const videos = isPastEvent
+    ? documents.filter((f) => f.fileType === "video")
+    : [];
+
+  const others = isPastEvent
+    ? documents.filter(
+        (f) => !images.includes(f) && !docs.includes(f) && !videos.includes(f)
+      )
+    : [];
+  // --- OPEN CORRECT FILE IN VIEWER ---
+  const handleOpenFile = (file: FileItem) => {
+    const globalIndex = documents.findIndex((f) => f.fileUrl === file.fileUrl);
+    setSelectedIndex(globalIndex);
+    setViewerOpen(true);
+  };
+
+
 
   const formattedTimeRange =
     startTime && endTime
@@ -203,7 +240,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
         {(isRegistering || isUnregistering) && (
           <Spinner animation="border" size="sm" className="me-2" />
         )}
-        {isFull ? "Full" : isRegistered ? "Cancel Registration" : "Sign Up"}
+        {isFull ? "Full" : isRegistered ? "Cancel Registration" : "Register"}
       </button>
     );
   }
@@ -230,8 +267,36 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
         />
       }
       footer={
-        <>
-          <>
+        <div
+          className={`d-flex w-100 flex-row ${
+            isPastEvent ? "justify-content-between" : "justify-content-end"
+          }`}
+        >
+          {isPastEvent &&
+            hasPermission({
+              action: "view_registerations",
+            }) && (
+              <button
+                className="btn btn-street-outline-primary d-flex flex-row align-items-center justify-content-center radius-12"
+                onClick={() => setDocOpen(true)}
+              >
+                <Icon icon="lucide:upload" className="text-xl" />{" "}
+                <span>Upload Documents</span>
+              </button>
+            )}
+
+          {isPastEvent &&
+            hasPermission({
+              action: "view_registerations",
+            }) && (
+              <EventDocsUploader
+                open={docopen}
+                eventId={event._id}
+                onOpenChange={setDocOpen}
+                eventName={event.title}
+              />
+            )}
+          <div className="d-flex gap-3">
             {editMode ? (
               <>
                 <button
@@ -259,7 +324,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                 {hasPermission({ action: "edit_event" }) && (
                   <button
                     type="button"
-                    className="btn btn-street-primary  btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+                    className="btn btn-street-edit  btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
                     onClick={(e) => {
                       e.preventDefault(); // 🛑 Stops any form submission event
                       e.stopPropagation(); // 🛑 Stops bubbling to parent form
@@ -270,17 +335,10 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                   </button>
                 )}
                 {commonActionButton}
-                <button
-                  type="button"
-                  className="btn btn-street-neutral  btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
-                  onClick={handleClose}
-                >
-                  Close
-                </button>
               </>
             )}
-          </>
-        </>
+          </div>
+        </div>
       }
     >
       {editMode ? (
@@ -557,6 +615,69 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
               {createdBy.firstname + " " + createdBy.lastname}
             </p>
           </div>
+          {isPastEvent && documents?.length > 0 && (
+            <>
+              <StreetTab
+                tabs={[
+                  {
+                    key: "images",
+                    label: "Images",
+                    content: (
+                      <FileTab
+                        files={images}
+                        tab="Images"
+                        handleOpenFile={handleOpenFile}
+                        eventId={eventId}
+                      />
+                    ),
+                  },
+                  {
+                    key: "docs",
+                    label: "Documents",
+                    content: (
+                      <FileTab
+                        files={docs}
+                        tab="Documents"
+                        handleOpenFile={handleOpenFile}
+                        eventId={eventId}
+                      />
+                    ),
+                  },
+                  {
+                    key: "videos",
+                    label: "Videos",
+                    content: (
+                      <FileTab
+                        files={videos}
+                        tab="Videos"
+                        handleOpenFile={handleOpenFile}
+                        eventId={eventId}
+                      />
+                    ),
+                  },
+                  {
+                    key: "others",
+                    label: "Others",
+                    content: (
+                      <FileTab
+                        files={others}
+                        tab="Other Documents"
+                        handleOpenFile={handleOpenFile}
+                        eventId={eventId}
+                      />
+                    ),
+                  },
+                ]}
+              />
+
+              <FileViewer
+                files={documents}
+                initialIndex={selectedIndex}
+                open={viewerOpen}
+                onOpenChange={setViewerOpen}
+              />
+            </>
+          )}
         </div>
       )}
     </ModalWrapper>

@@ -30,7 +30,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
     endTime,
     startTime,
     location,
-   
+
     description,
     title,
     totalRegistered,
@@ -159,7 +159,11 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
 
           <span className="d-none d-sm-inline-block ">
             {" "}
-            {isFull ? "Full" : isRegistered ? "Cancel Registration" : "Register"}
+            {isFull
+              ? "Full"
+              : isRegistered
+              ? "Cancel Registration"
+              : "Register"}
           </span>
         </button>
       </div>
@@ -197,15 +201,12 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
             </a>
           </div>
 
-  
-       
-            <div className="col-6 col-md-4 d-flex flex-column gap-1">
-              <p className="text-xxs xs:text-xs fw-normal">Created By</p>
-              <p className="text-xs xs:text-sm fw-semibold">
-                {createdBy.firstname + " " + createdBy.lastname}
-              </p>
-            </div>
-      
+          <div className="col-6 col-md-4 d-flex flex-column gap-1">
+            <p className="text-xxs xs:text-xs fw-normal">Created By</p>
+            <p className="text-xs xs:text-sm fw-semibold">
+              {createdBy.firstname + " " + createdBy.lastname}
+            </p>
+          </div>
         </div>
       </div>
 

@@ -74,7 +74,7 @@ const columns: Column[] = [
     header: "Actions",
     accessor: (row) => (
       <div className="d-flex gap-2">
-        <EditFAbilties />
+        <EditFAbilties data={row}/>
         <FunctionalAbilityDetail details={row} />
       </div>
     ),

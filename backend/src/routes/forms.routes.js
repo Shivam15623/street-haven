@@ -9,6 +9,7 @@ import {
   editClientFeedback,
   editClientIncident,
   editEmployeeIncident,
+  editFAF,
   editMediaConsent,
   editPaymentRequisition,
   GetAllClientFeedback,
@@ -22,6 +23,7 @@ import { upload } from "../middleware/multer.js";
 
 import { validateRequest } from "../middleware/validate.js";
 import { functionalAbilitiesSchema } from "../validations/formSchemas.js";
+import { idParamSchema } from "../validations/common.js";
 
 const router = Router();
 
@@ -78,5 +80,11 @@ router
   .route("/employeeIncident/:id")
   // .get(getEmployeeIncidentById)
   .patch(editEmployeeIncident);
-
+router
+  .route("/functionalAbilties/:id")
+  .patch(
+    validateRequest(idParamSchema, "params"),
+    validateRequest(functionalAbilitiesSchema, "body"),
+    editFAF
+  );
 export default router;
