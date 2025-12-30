@@ -1,5 +1,8 @@
 import React, { useState } from "react";
-import { useViewStaffFeedBackQuery } from "../../../../../../services/StaffFeedbackApi";
+import {
+  useDeleteStaffReportMutation,
+  useViewStaffFeedBackQuery,
+} from "../../../../../../services/StaffFeedbackApi";
 import type {
   IncidentReportQuery,
   StaffFeedbackData,
@@ -8,6 +11,7 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import SimpleTable from "../../../../../../components/child/SimpleTable";
 import StaffFeedbackDetail from "./detail";
 import EditStaffFeedback from "./edit";
+import DeleteConfirmModal from "../delete";
 
 interface Column {
   header: string;
@@ -15,44 +19,6 @@ interface Column {
 }
 
 // Define columns for Staff Feedback
-const columns: Column[] = [
-  {
-    header: "Date",
-    accessor: (row) =>
-      new Date(row.date).toLocaleDateString("en-IN", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }),
-  },
-  {
-    header: "Time",
-    accessor: (row) =>
-      new Date(row.date).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-  },
-  { header: "Location", accessor: (row) => row.location || "N/A" },
-  { header: "Category", accessor: (row) => row.category },
-
-  {
-    header: "Witnesses",
-    accessor: (row) =>
-      Array.isArray(row.witnesses) && row.witnesses.length > 0
-        ? row.witnesses.join(", ")
-        : "None",
-  },
-  {
-    header: "Actions",
-    accessor: (row) => (
-      <div className="d-flex gap-2">
-        <EditStaffFeedback data={row} />
-        <StaffFeedbackDetail detail={row} />
-      </div>
-    ),
-  },
-];
 
 // Staff Feedback Component using table
 const StaffFeedBackSubmission = () => {
@@ -62,10 +28,73 @@ const StaffFeedBackSubmission = () => {
     order: "desc",
     search: "",
   });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  const [deleteStaffFeedback, { isLoading: deleting }] =
+    useDeleteStaffReportMutation();
+  const handleDeleteClick = (id: string) => {
+    setSelectedId(id);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedId) return;
+
+    try {
+      await deleteStaffFeedback({ id: selectedId }).unwrap();
+      setShowDeleteModal(false);
+      setSelectedId(null);
+    } catch (error) {
+      console.error("Delete failed", error);
+    }
+  };
   const { data: feedBackSubmissions, isLoading } =
     useViewStaffFeedBackQuery(filter);
+  const columns: Column[] = [
+    {
+      header: "Date",
+      accessor: (row) =>
+        new Date(row.date).toLocaleDateString("en-IN", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
+    },
+    {
+      header: "Time",
+      accessor: (row) =>
+        new Date(row.date).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+    },
+    { header: "Location", accessor: (row) => row.location || "N/A" },
+    { header: "Category", accessor: (row) => row.category },
 
+    {
+      header: "Witnesses",
+      accessor: (row) =>
+        Array.isArray(row.witnesses) && row.witnesses.length > 0
+          ? row.witnesses.join(", ")
+          : "None",
+    },
+    {
+      header: "Actions",
+      accessor: (row) => (
+        <div className="d-flex gap-2">
+          <EditStaffFeedback data={row} />
+          <StaffFeedbackDetail detail={row} />
+          <button
+            className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
+            onClick={() => handleDeleteClick(row._id)}
+          >
+            <Icon icon="mdi:delete" className="text-xl" />
+          </button>
+        </div>
+      ),
+    },
+  ];
   if (isLoading) return <div>Loading...</div>;
 
   const submissions: StaffFeedbackData[] =
@@ -86,7 +115,13 @@ const StaffFeedBackSubmission = () => {
           }
         />
       </div>
-
+      <DeleteConfirmModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete Staff Feedback Report"
+        isLoading={deleting}
+        onConfirm={handleConfirmDelete}
+      />
       {/* Table */}
       {submissions.length > 0 ? (
         <SimpleTable

@@ -1,5 +1,8 @@
 import React, { useState } from "react";
-import { useViewIncidentReportQuery } from "../../../../../../services/IncidentReportApi";
+import {
+  useDeleteIncidentReportMutation,
+  useViewIncidentReportQuery,
+} from "../../../../../../services/IncidentReportApi";
 import type {
   IncidentReportQuery,
   IncidentReportData,
@@ -8,46 +11,12 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import SimpleTable from "../../../../../../components/child/SimpleTable";
 import IncidentReportModal from "./IncidentReport";
 import EditIncidentReport from "./edit";
+import DeleteConfirmModal from "../delete";
 
 interface Column {
   header: string;
   accessor: (row: IncidentReportData) => React.ReactNode;
 }
-
-const columns: Column[] = [
-  {
-    header: "Date",
-    accessor: (row) => new Date(row.dateOfIncident).toLocaleDateString(),
-  },
-  {
-    header: "Time",
-    accessor: (row) =>
-      new Date(row.dateOfIncident).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-  },
-  {
-    header: "Location",
-    accessor: (row) => row.location || "N/A",
-  },
-
-  {
-    header: "Witnesses",
-    accessor: (row) =>
-      row.witnesses.length > 0 ? row.witnesses.join(", ") : "None",
-  },
-
-  {
-    header: "Actions",
-    accessor: (row) => (
-      <div className="d-flex gap-2">
-        <EditIncidentReport data={row} />
-        <IncidentReportModal incident={row} />
-      </div>
-    ),
-  },
-];
 
 const IncidentReportSubmission = () => {
   const [filter, setFilter] = useState<IncidentReportQuery>({
@@ -56,9 +25,68 @@ const IncidentReportSubmission = () => {
     order: "desc",
     search: "",
   });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [deleteIncidentReport, { isLoading: deleting }] =
+    useDeleteIncidentReportMutation();
+  const handleDeleteClick = (id: string) => {
+    setSelectedId(id);
+    setShowDeleteModal(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!selectedId) return;
+
+    try {
+      await deleteIncidentReport({ id: selectedId }).unwrap();
+      setShowDeleteModal(false);
+      setSelectedId(null);
+    } catch (error) {
+      console.error("Delete failed", error);
+    }
+  };
   const { data: incidentSubmissions, isLoading } =
     useViewIncidentReportQuery(filter);
+  const columns: Column[] = [
+    {
+      header: "Date",
+      accessor: (row) => new Date(row.dateOfIncident).toLocaleDateString(),
+    },
+    {
+      header: "Time",
+      accessor: (row) =>
+        new Date(row.dateOfIncident).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+    },
+    {
+      header: "Location",
+      accessor: (row) => row.location || "N/A",
+    },
+
+    {
+      header: "Witnesses",
+      accessor: (row) =>
+        row.witnesses.length > 0 ? row.witnesses.join(", ") : "None",
+    },
+
+    {
+      header: "Actions",
+      accessor: (row) => (
+        <div className="d-flex gap-2">
+          <EditIncidentReport data={row} />
+          <IncidentReportModal incident={row} />
+          <button
+            className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
+            onClick={() => handleDeleteClick(row._id)}
+          >
+            <Icon icon="mdi:delete" className="text-xl" />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   if (isLoading) return <div>Loading...</div>;
 
@@ -76,7 +104,13 @@ const IncidentReportSubmission = () => {
           }
         />
       </div>
-
+      <DeleteConfirmModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete Incident Report"
+        isLoading={deleting}
+        onConfirm={handleConfirmDelete}
+      />
       {/* Data Table */}
       <SimpleTable
         columns={columns}

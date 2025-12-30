@@ -51,12 +51,14 @@ const IncidentReportApi = api.injectEndpoints({
         method: "PATCH",
         body: credentials,
       }),
+      invalidatesTags: ["IncidentReport"],
     }),
     deleteIncidentReport: builder.mutation<ApiGeneralResponse, { id: string }>({
       query: ({ id }) => ({
         url: `/incident-reports/delete/${id}`,
         method: "DELETE",
       }),
+      invalidatesTags: ["IncidentReport"],
     }),
     viewIncidentReport: builder.query<
       IncidentFormSubmissionResponse,
