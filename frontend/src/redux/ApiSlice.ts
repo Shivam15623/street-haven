@@ -83,6 +83,11 @@ export const api = createApi({
     "Notification",
     "Announcement",
     "Agreement",
+    "client-incident",
+    "client-feedback",
+    "employee-incident",
+    "payment-requistion",
+    "functional-abilty",
   ],
   endpoints: () => ({}),
 });

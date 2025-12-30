@@ -106,7 +106,6 @@ export interface PopulatedUser {
   title: string;
 }
 
-
 export interface EmployeeIncidentCredentials {
   type: string;
   employee: string;
@@ -402,6 +401,8 @@ export interface FunctionalAbility {
     worker: boolean;
     employer: boolean;
   };
+  recomendedHours?: "regular" | "modified" | "graduated";
+  startDate?: Date;
 }
 
 // ----------------- API -----------------
@@ -417,6 +418,7 @@ const FormApi = api.injectEndpoints({
         method: "POST",
         body: credentials,
       }),
+      invalidatesTags: ["client-incident"],
     }),
     editClientIncident: builder.mutation<
       ApiGeneralResponse,
@@ -427,6 +429,7 @@ const FormApi = api.injectEndpoints({
         method: "PATCH",
         body: data,
       }),
+      invalidatesTags: ["client-incident"],
     }),
     createClientFeedback: builder.mutation<
       ApiGeneralResponse,
@@ -437,6 +440,7 @@ const FormApi = api.injectEndpoints({
         method: "POST",
         body: credentials,
       }),
+      invalidatesTags: ["client-feedback"],
     }),
     editClientFeedBack: builder.mutation<
       ApiGeneralResponse,
@@ -447,6 +451,7 @@ const FormApi = api.injectEndpoints({
         method: "PATCH",
         body: data,
       }),
+      invalidatesTags: ["client-feedback"],
     }),
 
     createEmployeeIncident: builder.mutation<
@@ -458,6 +463,7 @@ const FormApi = api.injectEndpoints({
         method: "POST",
         body: credentials,
       }),
+      invalidatesTags: ["employee-incident"],
     }),
     editEmployeeIncident: builder.mutation<
       ApiGeneralResponse,
@@ -468,6 +474,7 @@ const FormApi = api.injectEndpoints({
         method: "PATCH",
         body: data,
       }),
+      invalidatesTags: ["employee-incident"],
     }),
     createPaymentRequistion: builder.mutation<ApiGeneralResponse, FormData>({
       query: (formData) => ({
@@ -475,6 +482,7 @@ const FormApi = api.injectEndpoints({
         method: "POST",
         body: formData,
       }),
+      invalidatesTags: ["payment-requistion"],
     }),
     editPaymentRequistion: builder.mutation<
       ApiGeneralResponse,
@@ -485,6 +493,7 @@ const FormApi = api.injectEndpoints({
         method: "PATCH",
         body: data,
       }),
+      invalidatesTags: ["payment-requistion"],
     }),
     createFAf: builder.mutation<ApiGeneralResponse, any>({
       query: (credentials) => ({
@@ -492,6 +501,15 @@ const FormApi = api.injectEndpoints({
         method: "POST",
         body: credentials,
       }),
+      invalidatesTags: ["functional-abilty"],
+    }),
+    editFAF: builder.mutation<ApiGeneralResponse, { id: string; creds: any }>({
+      query: ({ id, creds }) => ({
+        url: `/form/functionalAbilties/${id}`,
+        method: "PATCH",
+        body: creds,
+      }),
+      invalidatesTags: ["functional-abilty"],
     }),
     createmediaConsent: builder.mutation<ApiGeneralResponse, any>({
       query: (credentials) => ({
@@ -516,6 +534,7 @@ const FormApi = api.injectEndpoints({
     >({
       query: ({ page = 1, limit = 10, search = "" }) =>
         `/form/clientFeedback?page=${page}&limit=${limit}&search=${search}`,
+      providesTags: ["client-feedback"],
     }),
     getAllClientIncidents: builder.query<
       ApiResponse<{
@@ -531,6 +550,7 @@ const FormApi = api.injectEndpoints({
     >({
       query: ({ page = 1, limit = 10, search = "" }) =>
         `/form/clientIncident?page=${page}&limit=${limit}&search=${search}`,
+      providesTags: ["client-incident"],
     }),
     getAllEmployeeIncidents: builder.query<
       ApiResponse<{
@@ -546,6 +566,7 @@ const FormApi = api.injectEndpoints({
     >({
       query: ({ page = 1, limit = 10, search = "" }) =>
         `/form/employeeIncident?page=${page}&limit=${limit}&search=${search}`,
+      providesTags: ["employee-incident"],
     }),
     getAllPaymentRequisitions: builder.query<
       ApiResponse<{
@@ -561,6 +582,7 @@ const FormApi = api.injectEndpoints({
     >({
       query: ({ page = 1, limit = 10, search = "" }) =>
         `/form/paymentRequistion?page=${page}&limit=${limit}&search=${search}`,
+      providesTags: ["payment-requistion"],
     }),
     getAllFAF: builder.query<
       ApiResponse<{
@@ -576,6 +598,7 @@ const FormApi = api.injectEndpoints({
     >({
       query: ({ page = 1, limit = 10, search = "" }) =>
         `/form/functionalAbilties?page=${page}&limit=${limit}&search=${search}`,
+      providesTags: ["functional-abilty"],
     }),
     getAllMediaConsent: builder.query<
       ApiResponse<{
@@ -592,6 +615,103 @@ const FormApi = api.injectEndpoints({
       query: ({ page = 1, limit = 10, search = "" }) =>
         `/form/mediaConsent?page=${page}&limit=${limit}&search=${search}`,
     }),
+    deleteFaf: builder.mutation<ApiGeneralResponse, { id: string }>({
+      query: ({ id }) => ({
+        url: `/form/functionalAbilties/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["functional-abilty"],
+    }),
+    deletePaymentRequistion: builder.mutation<
+      ApiGeneralResponse,
+      { id: string }
+    >({
+      query: ({ id }) => ({
+        url: `/form/paymentRequistion/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["payment-requistion"],
+    }),
+    deleteClientFeedback: builder.mutation<ApiGeneralResponse, { id: string }>({
+      query: ({ id }) => ({
+        url: `/form/functionalAbilties/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["client-feedback"],
+    }),
+    deleteEmployeeIncident: builder.mutation<
+      ApiGeneralResponse,
+      { id: string }
+    >({
+      query: ({ id }) => ({
+        url: `/form/employeeIncident/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["employee-incident"],
+    }),
+
+    deleteClientIncident: builder.mutation<ApiGeneralResponse, { id: string }>({
+      query: ({ id }) => ({
+        url: `/form/clientIncident/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["client-incident"],
+    }),
+    getFafById: builder.query<ApiResponse<FunctionalAbility>, { id: string }>({
+      query: ({ id }) => ({
+        url: `/form/functionalAbilties/${id}`,
+        method: "GET",
+      }),
+    }),
+    getPaymentRequisitionById: builder.query<
+      ApiResponse<PaymentRequisition>,
+      { id: string }
+    >({
+      query: ({ id }) => ({
+        url: `/form/paymentRequistion/${id}`,
+        method: "GET",
+      }),
+    }),
+    getClientFeedbackById: builder.query<
+      ApiResponse<clientFeedbackData>,
+      { id: string }
+    >({
+      query: ({ id }) => ({
+        url: `/form/clientFeedback/${id}`,
+        method: "GET",
+      }),
+    }),
+    getClientIncidentById: builder.query<
+      ApiResponse<clientIncidentReport>,
+      { id: string }
+    >({
+      query: ({ id }) => ({
+        url: `/form/clientIncident/${id}`,
+        method: "GET",
+      }),
+    }),
+    getEmployeeIncidentById: builder.query<
+      ApiResponse<employeeIncidentReport>,
+      { id: string }
+    >({
+      query: ({ id }) => ({
+        url: `/form/employeeIncident/${id}`,
+        method: "GET",
+      }),
+    }),
+
+    // deleteFaf: builder.mutation<ApiGeneralResponse, { id: string }>({
+    //   query: ({ id }) => ({
+    //     url: `/form/functionalAbilties/${id}`,
+    //     method: "DELETE",
+    //   }),
+    // }),
+    // deleteFaf: builder.mutation<ApiGeneralResponse, { id: string }>({
+    //   query: ({ id }) => ({
+    //     url: `/form/functionalAbilties/${id}`,
+    //     method: "DELETE",
+    //   }),
+    // }),
   }),
 });
 
@@ -612,4 +732,14 @@ export const {
   useEditClientIncidentMutation,
   useEditEmployeeIncidentMutation,
   useEditPaymentRequistionMutation,
+  useEditFAFMutation,
+  useDeleteClientFeedbackMutation,
+  useDeleteClientIncidentMutation,
+  useDeleteEmployeeIncidentMutation,
+  useDeleteFafMutation,
+  useDeletePaymentRequistionMutation,
+  useGetClientFeedbackByIdQuery,
+  useGetClientIncidentByIdQuery,
+  useGetEmployeeIncidentByIdQuery,
+  useGetFafByIdQuery,
 } = FormApi;
