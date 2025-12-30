@@ -137,7 +137,13 @@ const FunctionalAbilitySchema = new mongoose.Schema(
       type: String,
       enum: ["1-2 days", "3-7 days", "8-14 days", "14+ days"],
     },
-
+    recomendedHours:{
+      type:String,
+      enum:["regular","modified","graduated"]
+    },
+    startDate:{
+      type:Date,
+    },
     isDiscussRTWtoPatient: Boolean,
     nextAppointmentDate: Date,
     providedTo: {

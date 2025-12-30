@@ -152,10 +152,11 @@ export const buildInitialValues = (
     assesmentDate: data.assesmentDate,
     assessmentDuration: data.assessmentDuration ?? "1-2 days",
 
-    commentsOnAbilities: data.commentsOnAbilties ?? "",
+    commentsOnAbilties: data.commentsOnAbilties ?? "",
     isDiscussRTWtoPatient: data.isDiscussRTWtoPatient ?? false,
     nextAppointmentDate: data.nextAppointmentDate ?? new Date(),
-
+    recomendedHours: data.recomendedHours ?? "",
+    startDate: data.startDate ?? new Date(),
     returnToWorkStatus: data.returnToWorkStatus,
 
     providedTo: {
@@ -281,7 +282,7 @@ export const SECTION_FIELD_MAP: Record<string, string[]> = {
   ],
 
   assessment: [
-    "commentsOnAbilities",
+    "commentsOnAbilties",
     "assessmentDuration",
     "returnToWorkStatus",
     "providedTo",

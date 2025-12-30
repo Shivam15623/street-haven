@@ -3,11 +3,13 @@ import { Icon } from "@iconify/react";
 import SimpleTable from "../../../../../components/child/SimpleTable";
 
 import {
+  useDeleteFafMutation,
   useGetAllFAFQuery,
   type FunctionalAbility,
 } from "../../../../../services/FormApi";
 import { FunctionalAbilityDetail } from "../modals/functional-abilty/FunctionalAbilty";
 import EditFAbilties from "../forms/functionalAbilties/edit";
+import DeleteConfirmModal from "../forms/delete";
 
 // ------------------------------
 // Columns
@@ -34,53 +36,6 @@ interface Column {
   accessor: (row: FunctionalAbility) => React.ReactNode;
 }
 
-const columns: Column[] = [
-  {
-    header: "Claim No",
-    accessor: (row) => row.claimNo || "N/A",
-  },
-  {
-    header: "Worker Name",
-    accessor: (row) =>
-      `${row.worker?.firstName ?? ""} ${row.worker?.lastName ?? ""}`.trim() ||
-      "N/A",
-  },
-  {
-    header: "Telephone",
-    accessor: (row) => row.worker?.telephone || "N/A",
-  },
-  {
-    header: "Accident Date",
-    accessor: (row) =>
-      row.dateOfAccident
-        ? new Date(row.dateOfAccident).toLocaleDateString("en-IN")
-        : "N/A",
-  },
-  {
-    header: "Return Status",
-    accessor: (row) => {
-      const config = statusConfig[row.returnToWorkStatus];
-      return (
-        <span
-          className={config.className + " d-inline-flex align-items-center"}
-        >
-          <Icon icon={config.icon} width="14" height="14" className="me-1" />
-          {config.label}
-        </span>
-      );
-    },
-  },
-  {
-    header: "Actions",
-    accessor: (row) => (
-      <div className="d-flex gap-2">
-        <EditFAbilties data={row}/>
-        <FunctionalAbilityDetail details={row} />
-      </div>
-    ),
-  },
-];
-
 // ------------------------------
 // Component
 // ------------------------------
@@ -90,9 +45,80 @@ const FunctionalAbilitiesSubmission = () => {
     limit: 10,
     search: "",
   });
-
+  // 🔹 Delete modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data: abilityData, isLoading } = useGetAllFAFQuery(filter);
+  const [deleteFaf, { isLoading: Deleting }] = useDeleteFafMutation();
+  const handleDeleteClick = (id: string) => {
+    setSelectedId(id);
+    setShowDeleteModal(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!selectedId) return;
+
+    try {
+      await deleteFaf({ id: selectedId }).unwrap();
+      setShowDeleteModal(false);
+      setSelectedId(null);
+    } catch (error) {
+      console.error("Delete failed", error);
+    }
+  };
+
+  const columns: Column[] = [
+    {
+      header: "Claim No",
+      accessor: (row) => row.claimNo || "N/A",
+    },
+    {
+      header: "Worker Name",
+      accessor: (row) =>
+        `${row.worker?.firstName ?? ""} ${row.worker?.lastName ?? ""}`.trim() ||
+        "N/A",
+    },
+    {
+      header: "Telephone",
+      accessor: (row) => row.worker?.telephone || "N/A",
+    },
+    {
+      header: "Accident Date",
+      accessor: (row) =>
+        row.dateOfAccident
+          ? new Date(row.dateOfAccident).toLocaleDateString("en-IN")
+          : "N/A",
+    },
+    {
+      header: "Return Status",
+      accessor: (row) => {
+        const config = statusConfig[row.returnToWorkStatus];
+        return (
+          <span
+            className={config.className + " d-inline-flex align-items-center"}
+          >
+            <Icon icon={config.icon} width="14" height="14" className="me-1" />
+            {config.label}
+          </span>
+        );
+      },
+    },
+    {
+      header: "Actions",
+      accessor: (row) => (
+        <div className="d-flex gap-2">
+          <EditFAbilties data={row} />
+          <FunctionalAbilityDetail details={row} />
+          <button
+            className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
+            onClick={() => handleDeleteClick(row._id!)}
+          >
+            <Icon icon="mdi:delete" className="text-xl" />
+          </button>
+        </div>
+      ),
+    },
+  ];
   if (isLoading) return <div>Loading...</div>;
 
   const submissions: FunctionalAbility[] = abilityData?.data?.data ?? [];
@@ -117,6 +143,14 @@ const FunctionalAbilitiesSubmission = () => {
         />
       </div>
 
+      {/* 🗑️ Delete Modal */}
+      <DeleteConfirmModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete Functional Abilty"
+        isLoading={Deleting}
+        onConfirm={handleConfirmDelete}
+      />
       {/* Table */}
       {submissions.length > 0 ? (
         <SimpleTable

@@ -450,7 +450,7 @@ export const functionalAbilityFormSchema = Yup.object({
     otherwise: (schema) => schema.strip(), // ⬅️ remove restrictions if not needed
   }),
 
-  commentsOnAbilities: Yup.string().when("returnToWorkStatus", {
+  commentsOnAbilties: Yup.string().when("returnToWorkStatus", {
     is: "withRestrictions",
     then: (s) => s.required("Comments are required"),
     otherwise: (s) => s.strip(),
@@ -469,7 +469,23 @@ export const functionalAbilityFormSchema = Yup.object({
     then: (s) => s.required("Please select Yes/No"),
     otherwise: (s) => s.strip(),
   }),
+  recomendedHours: Yup.string().when("returnToWorkStatus", {
+    is: "withRestrictions",
+    then: (schema) =>
+      schema
+        .oneOf(["regular", "modified", "graduated"])
+        .required("recommended Hours of Work is required"),
+    otherwise: (schema) => schema.notRequired().strip(),
+  }),
 
+  startDate: Yup.date().when("returnToWorkStatus", {
+    is: "withRestrictions",
+    then: (schema) =>
+      schema
+        .min(new Date(), "start date cant be in past")
+        .required("start date is required"),
+    otherwise: (schema) => schema.notRequired().strip(),
+  }),
   nextAppointmentDate: Yup.date().when("returnToWorkStatus", {
     is: "noRestrictions",
     then: (s) => s.notRequired(),

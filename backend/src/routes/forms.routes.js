@@ -6,6 +6,11 @@ import {
   createFAF,
   createMediaConsent,
   createPaymentRequisition,
+  deleteClientFeedback,
+  deleteClientIncident,
+  deleteEmployeeIncident,
+  deleteFAF,
+  deletePaymentRequisition,
   editClientFeedback,
   editClientIncident,
   editEmployeeIncident,
@@ -18,6 +23,10 @@ import {
   GetAllFunctionalAbilities,
   GetAllMediaConsent,
   GetAllPaymentRequisitions,
+  getClientFeedbackById,
+  getClientIncidentById,
+  getEmployeeIncidentById,
+  getPaymentRequisitionById,
 } from "../controllers/form.controller.js";
 import { upload } from "../middleware/multer.js";
 
@@ -59,12 +68,14 @@ router.route("/paymentRequistion").get(GetAllPaymentRequisitions);
 
 router
   .route("/clientIncident/:id")
-  // .get(getClientIncidentById)
+  .get(getClientIncidentById)
+  .delete(deleteClientIncident)
   .patch(editClientIncident);
 
 router
   .route("/clientFeedback/:id")
-  // .get(getClientFeedbackById)
+  .get(getClientFeedbackById)
+  .delete(deleteClientFeedback)
   .patch(editClientFeedback);
 
 router
@@ -74,14 +85,17 @@ router
 
 router
   .route("/paymentRequistion/:id")
-  // .get(getPaymentRequisitionById)
+  .get(getPaymentRequisitionById)
+  .delete(deletePaymentRequisition)
   .patch(upload.single("invoiceAttachment"), editPaymentRequisition);
 router
   .route("/employeeIncident/:id")
-  // .get(getEmployeeIncidentById)
+  .get(getEmployeeIncidentById)
+  .delete(deleteEmployeeIncident)
   .patch(editEmployeeIncident);
 router
   .route("/functionalAbilties/:id")
+  .delete(deleteFAF)
   .patch(
     validateRequest(idParamSchema, "params"),
     validateRequest(functionalAbilitiesSchema, "body"),

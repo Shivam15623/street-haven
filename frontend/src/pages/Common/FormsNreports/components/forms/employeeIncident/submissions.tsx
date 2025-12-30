@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import { Icon } from "@iconify/react";
 import SimpleTable from "../../../../../../components/child/SimpleTable";
 import {
+  useDeleteEmployeeIncidentMutation,
   useGetAllEmployeeIncidentsQuery,
   type EmployeeIncidentReportPopulated,
 } from "../../../../../../services/FormApi";
 
 import EditEmployeeIncident from "./edit";
 import EmployeeIncidentReportDetails from "./details";
+import DeleteConfirmModal from "../delete";
 
 interface Column {
   header: string;
@@ -15,48 +17,6 @@ interface Column {
 }
 
 // Minimal columns for table view
-const columns: Column[] = [
-  {
-    header: "Name",
-    accessor: (row) => (
-      <div>
-        {row.employee.firstname} {row.employee.lastname}
-      </div>
-    ),
-  },
-  {
-    header: "Job Title",
-    accessor: (row) => row.jobTitle || "N/A",
-  },
-  {
-    header: "Injury Date",
-    accessor: (row) =>
-      row.injuryDate
-        ? new Date(row.injuryDate).toLocaleDateString("en-IN")
-        : "N/A",
-  },
-  {
-    header: "Location",
-    accessor: (row) => row.location || "N/A",
-  },
-  {
-    header: "Supervisor",
-    accessor: (row) => (
-      <div>
-        {row.supervisor.firstname} {row.supervisor.lastname}
-      </div>
-    ),
-  },
-  {
-    header: "Actions",
-    accessor: (row) => (
-      <div className="d-flex gap-2">
-        <EditEmployeeIncident data={row} />
-        <EmployeeIncidentReportDetails detail={row} />
-      </div>
-    ),
-  },
-];
 
 const EmployeeIncidentReportSubmission = () => {
   const [filter, setFilter] = useState({
@@ -64,9 +24,79 @@ const EmployeeIncidentReportSubmission = () => {
     limit: 10,
     search: "",
   });
-
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data: incidentData, isLoading } =
     useGetAllEmployeeIncidentsQuery(filter);
+
+  const [deletEmployeeIncident, { isLoading: deleting }] =
+    useDeleteEmployeeIncidentMutation();
+
+  const handleDeleteClick = (id: string) => {
+    setSelectedId(id);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedId) return;
+
+    try {
+      await deletEmployeeIncident({ id: selectedId }).unwrap();
+      setShowDeleteModal(false);
+      setSelectedId(null);
+    } catch (error) {
+      console.error("Delete failed", error);
+    }
+  };
+
+  const columns: Column[] = [
+    {
+      header: "Name",
+      accessor: (row) => (
+        <div>
+          {row.employee.firstname} {row.employee.lastname}
+        </div>
+      ),
+    },
+    {
+      header: "Job Title",
+      accessor: (row) => row.jobTitle || "N/A",
+    },
+    {
+      header: "Injury Date",
+      accessor: (row) =>
+        row.injuryDate
+          ? new Date(row.injuryDate).toLocaleDateString("en-IN")
+          : "N/A",
+    },
+    {
+      header: "Location",
+      accessor: (row) => row.location || "N/A",
+    },
+    {
+      header: "Supervisor",
+      accessor: (row) => (
+        <div>
+          {row.supervisor.firstname} {row.supervisor.lastname}
+        </div>
+      ),
+    },
+    {
+      header: "Actions",
+      accessor: (row) => (
+        <div className="d-flex gap-2">
+          <EditEmployeeIncident data={row} />
+          <EmployeeIncidentReportDetails detail={row} />
+          <button
+            className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
+            onClick={() => handleDeleteClick(row._id)}
+          >
+            <Icon icon="mdi:delete" className="text-xl" />
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   if (isLoading) return <div>Loading...</div>;
 
@@ -92,6 +122,14 @@ const EmployeeIncidentReportSubmission = () => {
           }
         />
       </div>
+      {/* 🗑️ Delete Modal */}
+      <DeleteConfirmModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete Employee incident Report"
+        isLoading={deleting}
+        onConfirm={handleConfirmDelete}
+      />
 
       {/* Table */}
       {submissions.length > 0 ? (

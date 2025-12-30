@@ -165,7 +165,7 @@ export interface FunctionalAbilityFormValues {
     };
   };
 
-  commentsOnAbilities: string;
+  commentsOnAbilties: string;
 
   assessmentDuration: "1-2 days" | "3-7 days" | "8-14 days" | "14+ days";
 
@@ -176,6 +176,8 @@ export interface FunctionalAbilityFormValues {
     worker: boolean;
     employer: boolean;
   };
+  recomendedHours: "regular" | "modified" | "graduated" | "";
+  startDate: Date;
 }
 
 const handleDownload = async (url: string, filename: string) => {
@@ -236,14 +238,19 @@ const FunctionalAbiltiesForm = () => {
       } else if (values.returnToWorkStatus === "noRestrictions") {
         delete payload.abilities;
         delete payload.restrictions;
-        delete payload.commentsOnAbilities;
+        delete payload.commentsOnAbilties;
         delete payload.isDiscussRTWtoPatient;
         delete payload.assessmentDuration;
+        delete payload.recomendedHours;
+        delete payload.startdate;
       } else if (values.returnToWorkStatus === "unable") {
         delete payload.abilities;
         delete payload.restrictions;
-        delete payload.commentsOnAbilities;
+        delete payload.commentsOnAbilties;
         delete payload.assessmentDuration;
+        delete payload.recomendedHours;
+        delete payload.startdate;
+        delete payload.isDiscussRTWtoPatient;
       }
 
       // Conditional fields
@@ -336,7 +343,7 @@ const FunctionalAbiltiesForm = () => {
         right: { gripping: false, pinching: false, other: false },
       },
     },
-    commentsOnAbilities: "",
+    commentsOnAbilties: "",
     assessmentDuration: "1-2 days", // ✅ fixed
     isDiscussRTWtoPatient: false,
     nextAppointmentDate: new Date(),
@@ -344,6 +351,8 @@ const FunctionalAbiltiesForm = () => {
       worker: false,
       employer: false,
     },
+    recomendedHours: "regular",
+    startDate: new Date(),
   };
 
   return (
@@ -1521,6 +1530,7 @@ const FunctionalAbiltiesForm = () => {
               errors={errors}
               HandFields={HandFields}
               travelWorkField={travelWorkField}
+              setFieldTouched={setFieldTouched}
             />
 
             {(values.returnToWorkStatus === "withRestrictions" ||

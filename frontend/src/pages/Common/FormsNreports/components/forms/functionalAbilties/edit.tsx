@@ -285,14 +285,19 @@ const EditFAbilties = ({ data }: { data: FunctionalAbility }) => {
       } else if (values.returnToWorkStatus === "noRestrictions") {
         delete payload.abilities;
         delete payload.restrictions;
-        delete payload.commentsOnAbilities;
+        delete payload.commentsOnAbilties;
         delete payload.isDiscussRTWtoPatient;
         delete payload.assessmentDuration;
+        delete payload.recomendedHours;
+        delete payload.startdate;
       } else if (values.returnToWorkStatus === "unable") {
         delete payload.abilities;
         delete payload.restrictions;
-        delete payload.commentsOnAbilities;
+        delete payload.commentsOnAbilties;
         delete payload.assessmentDuration;
+        delete payload.recomendedHours;
+        delete payload.startdate;
+        delete payload.isDiscussRTWtoPatient;
       }
 
       // Conditional fields

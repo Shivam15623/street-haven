@@ -137,7 +137,7 @@ export const createEmployeeIncident = asyncHandler(async (req, res) => {
     previousInjury,
     previousInjuryDate,
   } = req.body;
-  console.log(req.body)
+  console.log(req.body);
   const payload = {
     reportType: type,
     employee: employee,
@@ -376,10 +376,12 @@ export const GetAllEmployeeIncidents = asyncHandler(async (req, res) => {
     ];
   }
 
-  const data = await EmployeeIncidentReport.find(query).populate({
+  const data = await EmployeeIncidentReport.find(query)
+    .populate({
       path: "employee",
       select: "firstname lastname title",
-    }).populate({
+    })
+    .populate({
       path: "supervisor",
       select: "firstname lastname title",
     })
@@ -653,9 +655,7 @@ export const editPaymentRequisition = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(
-      new ApiResponse(200,"Payment requisition updated successfully")
-    );
+    .json(new ApiResponse(200, "Payment requisition updated successfully"));
 });
 
 export const editMediaConsent = asyncHandler(async (req, res) => {
@@ -672,4 +672,145 @@ export const editMediaConsent = asyncHandler(async (req, res) => {
   res
     .status(200)
     .json(new ApiResponse(200, "Media consent updated successfully", consent));
+});
+
+export const getClientIncidentById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const incident = await ClientIncident.findById(id);
+  if (!incident) {
+    throw new ApiError(404, "Client Incident not found");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, "Client Incident fetched successfully", incident)
+    );
+});
+
+export const deleteClientIncident = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const incident = await ClientIncident.findByIdAndDelete(id);
+  if (!incident) {
+    throw new ApiError(404, "Client Incident not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Client Incident deleted successfully"));
+});
+
+export const getClientFeedbackById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const feedback = await ClientFeedback.findById(id);
+  if (!feedback) {
+    throw new ApiError(404, "Client Feedback not found");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, "Client Feedback fetched successfully", feedback)
+    );
+});
+
+export const deleteClientFeedback = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const feedback = await ClientFeedback.findByIdAndDelete(id);
+  if (!feedback) {
+    throw new ApiError(404, "Client Feedback not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Client Feedback deleted successfully"));
+});
+
+export const getEmployeeIncidentById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const incident = await EmployeeIncidentReport.findById(id)
+    .populate("employee", "firstname lastname title")
+    .populate("supervisor", "firstname lastname title");
+
+  if (!incident) {
+    throw new ApiError(404, "Employee Incident not found");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, "Employee Incident fetched successfully", incident)
+    );
+});
+
+export const deleteEmployeeIncident = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const incident = await EmployeeIncidentReport.findByIdAndDelete(id);
+  if (!incident) {
+    throw new ApiError(404, "Employee Incident not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Employee Incident deleted successfully"));
+});
+
+export const getPaymentRequisitionById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const payment = await PaymentRequisition.findById(id);
+  if (!payment) {
+    throw new ApiError(404, "Payment Requisition not found");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, "Payment Requisition fetched successfully", payment)
+    );
+});
+
+export const deletePaymentRequisition = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const payment = await PaymentRequisition.findByIdAndDelete(id);
+  if (!payment) {
+    throw new ApiError(404, "Payment Requisition not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Payment Requisition deleted successfully"));
+});
+
+export const getFAFById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const faf = await FunctionalAbility.findById(id);
+  if (!faf) {
+    throw new ApiError(404, "Functional Ability Form not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Form fetched successfully", faf));
+});
+
+export const deleteFAF = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const faf = await FunctionalAbility.findByIdAndDelete(id);
+  if (!faf) {
+    throw new ApiError(404, "Functional Ability Form not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Form deleted successfully"));
 });

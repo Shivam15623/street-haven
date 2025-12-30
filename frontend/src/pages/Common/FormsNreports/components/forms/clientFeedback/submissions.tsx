@@ -3,12 +3,14 @@ import { Icon } from "@iconify/react";
 
 import SimpleTable from "../../../../../../components/child/SimpleTable";
 import {
+  useDeleteClientFeedbackMutation,
   useGetAllClientFeedbackQuery,
   type clientFeedbackData,
 } from "../../../../../../services/FormApi";
 
 import EditClientFeedback from "./edit";
 import ClientFeedback from "./details";
+import DeleteConfirmModal from "../delete";
 
 interface Column {
   header: string;
@@ -16,56 +18,82 @@ interface Column {
 }
 
 // Define table columns
-const columns: Column[] = [
-  {
-    header: "Visit Date",
-    accessor: (row) =>
-      new Date(row.visitDate).toLocaleDateString("en-IN", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }),
-  },
-  {
-    header: "Visit Location",
-    accessor: (row) => row.visitLocation || "N/A",
-  },
-  {
-    header: "Client Name",
-    accessor: (row) => row.clientName || "Anonymous",
-  },
-  {
-    header: "Client Email",
-    accessor: (row) => row.clientEmail || "N/A",
-  },
-
-  {
-    header: "Complaint Nature",
-    accessor: (row) => {
-      if (row.complaintNature === "Other") {
-        return row.otherComplaintText;
-      }
-
-      return row.complaintNature;
-    },
-  },
-  {
-    header: "Actions",
-    accessor: (row) => (
-       <div className="d-flex gap-2">
-        <EditClientFeedback data={row} />
-        <ClientFeedback detail={row} />
-      </div>
-    ),
-  },
-];
 
 const ClientFeedbackSubmission = () => {
   const [filter, setFilter] = useState({ page: 1, limit: 10, search: "" });
-
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [deleteclientFeedback, { isLoading: deleting }] =
+    useDeleteClientFeedbackMutation();
   const { data: feedbackData, isLoading } =
     useGetAllClientFeedbackQuery(filter);
 
+  const handleDeleteClick = (id: string) => {
+    setSelectedId(id);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedId) return;
+
+    try {
+      await deleteclientFeedback({ id: selectedId }).unwrap();
+      setShowDeleteModal(false);
+      setSelectedId(null);
+    } catch (error) {
+      console.error("Delete failed", error);
+    }
+  };
+
+  const columns: Column[] = [
+    {
+      header: "Visit Date",
+      accessor: (row) =>
+        new Date(row.visitDate).toLocaleDateString("en-IN", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
+    },
+    {
+      header: "Visit Location",
+      accessor: (row) => row.visitLocation || "N/A",
+    },
+    {
+      header: "Client Name",
+      accessor: (row) => row.clientName || "Anonymous",
+    },
+    {
+      header: "Client Email",
+      accessor: (row) => row.clientEmail || "N/A",
+    },
+
+    {
+      header: "Complaint Nature",
+      accessor: (row) => {
+        if (row.complaintNature === "Other") {
+          return row.otherComplaintText;
+        }
+
+        return row.complaintNature;
+      },
+    },
+    {
+      header: "Actions",
+      accessor: (row) => (
+        <div className="d-flex gap-2">
+          <EditClientFeedback data={row} />
+          <ClientFeedback detail={row} />
+          <button
+            className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
+            onClick={() => handleDeleteClick(row._id)}
+          >
+            <Icon icon="mdi:delete" className="text-xl" />
+          </button>
+        </div>
+      ),
+    },
+  ];
   if (isLoading) return <div>Loading...</div>;
 
   const submissions: clientFeedbackData[] =
@@ -86,6 +114,14 @@ const ClientFeedbackSubmission = () => {
           }
         />
       </div>
+      {/* 🗑️ Delete Modal */}
+      <DeleteConfirmModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete Client Feedback"
+        isLoading={deleting}
+        onConfirm={handleConfirmDelete}
+      />
 
       {/* Table */}
       {submissions.length > 0 ? (

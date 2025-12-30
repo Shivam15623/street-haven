@@ -5,13 +5,20 @@ import { type FormikValues } from "formik";
 import NestedCheckboxGroup from "./NestedCheckboxGroup";
 import CheckboxWithDetails from "./CheckBoxWithDetails";
 import AbilityBlock from "./AbiltyBlock";
+import CustomDatePicker from "../../../../components/child/DatePicker";
 
 interface AbilitiesRestrictionsProps {
   values: FormikValues;
-  setFieldValue: (field: string, value: any) => void;
+
   handleChange: React.ChangeEventHandler<HTMLInputElement>;
   touched: any;
   errors: any;
+  setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void;
+  setFieldTouched: (
+    field: string,
+    touched?: boolean,
+    shouldValidate?: boolean
+  ) => void;
   HandFields: { label: string; value: string }[];
   travelWorkField: { key: string; label: string }[];
 }
@@ -24,6 +31,7 @@ const AbilitiesRestrictions: React.FC<AbilitiesRestrictionsProps> = ({
   errors,
   HandFields,
   travelWorkField,
+  setFieldTouched,
 }) => {
   if (values.returnToWorkStatus !== "withRestrictions") return null;
 
@@ -231,10 +239,7 @@ const AbilitiesRestrictions: React.FC<AbilitiesRestrictionsProps> = ({
                 />
                 <span className="text-xs ">Limited Use Of Hands</span>
               </label>
-              <div
-                className="d-flex align-items-center text-xs justify-content-between my-2"
-               
-              >
+              <div className="d-flex align-items-center text-xs justify-content-between my-2">
                 <span>Left</span>
                 <span className="flex-grow-1"> </span>
                 <span>Right</span>
@@ -245,7 +250,6 @@ const AbilitiesRestrictions: React.FC<AbilitiesRestrictionsProps> = ({
                   <div
                     key={field.label}
                     className="d-flex align-items-center text-xs justify-content-between my-2"
-                 
                   >
                     <input
                       type="checkbox"
@@ -313,13 +317,13 @@ const AbilitiesRestrictions: React.FC<AbilitiesRestrictionsProps> = ({
           </Form.Label>
           <Form.Control
             style={{ height: "40px" }}
-            name="commentsOnAbilities"
-            value={values.commentsOnAbilities}
+            name="commentsOnAbilties"
+            value={values.commentsOnAbilties}
             onChange={handleChange}
           />
-          {touched.commentsOnAbilities && errors.commentsOnAbilities && (
+          {touched.commentsOnAbilties && errors.commentsOnAbilties && (
             <div className="text-danger text-sm">
-              {errors.commentsOnAbilities}
+              {errors.commentsOnAbilties}
             </div>
           )}
         </Form.Group>
@@ -384,6 +388,67 @@ const AbilitiesRestrictions: React.FC<AbilitiesRestrictionsProps> = ({
             ))}
           </div>
         </Form.Group>
+        <hr style={{ backgroundColor: "#00000033" }} />
+        <div className="row">
+          {" "}
+          <div className="col-md-8">
+            <Form.Label className="text-xs fw-medium">
+              6. Recommended Hours of Work
+            </Form.Label>
+
+            <div className="d-flex gap-20 mt-2">
+              {[
+                { label: "Regular", value: "regular" },
+                { label: "Modified", value: "modified" },
+                { label: "Graduated", value: "graduated" },
+              ].map((opt) => (
+                <label
+                  key={opt.value}
+                  className="d-flex align-items-center gap-2 text-xs"
+                >
+                  <input
+                    type="radio"
+                    name="recomendedHours"
+                    value={opt.value}
+                    checked={values.recomendedHours === opt.value}
+                    onChange={() => setFieldValue("recomendedHours", opt.value)}
+                    className="form-check-input"
+                  />
+                  {opt.label}
+                </label>
+              ))}
+            </div>
+
+            {touched.recommendedHours && errors.recommendedHours && (
+              <div className="text-danger text-xs mt-1">
+                {errors.recommendedHours}
+              </div>
+            )}
+          </div>
+          <div className="col-md-4">
+            <Form.Group className="d-flex flex-column gap-2 mb-3">
+              <Form.Label>Date Of Birth</Form.Label>
+              <CustomDatePicker
+                className="h-40-px"
+                value={
+                  values.worker.dateOfBirth
+                    ? new Date(values.worker.dateOfBirth)
+                    : null
+                }
+                onChange={(date) => {
+                  setFieldValue("startDate", date, true);
+                  setFieldTouched("startDate", true, false);
+                }}
+                isInvalid={Boolean(touched.startDate && errors.startDate)}
+              />
+              {touched.startDate && errors.startDate && (
+                <div className="text-danger text-sm">
+                  {String(errors.startDate)}
+                </div>
+              )}
+            </Form.Group>
+          </div>
+        </div>
       </div>
     </div>
   );

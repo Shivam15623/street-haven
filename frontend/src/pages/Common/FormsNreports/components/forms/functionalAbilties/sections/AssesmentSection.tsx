@@ -3,7 +3,6 @@ import { Form } from "react-bootstrap";
 import CustomDatePicker from "../../../../../../../components/child/DatePicker";
 import type { FunctionalAbilityFormValues } from "../../FunctionalAbiltiesForm";
 
-
 interface SectionProps {
   values: FunctionalAbilityFormValues;
   errors: FormikErrors<FunctionalAbilityFormValues>;
@@ -123,14 +122,12 @@ const AssesmentSection: React.FC<SectionProps> = ({
         </Form.Label>
         <Form.Control
           style={{ height: "40px" }}
-          name="commentsOnAbilities"
-          value={values.commentsOnAbilities}
+          name="commentsOnAbilties"
+          value={values.commentsOnAbilties}
           onChange={handleChange}
         />
-        {touched.commentsOnAbilities && errors.commentsOnAbilities && (
-          <div className="text-danger text-sm">
-            {errors.commentsOnAbilities}
-          </div>
+        {touched.commentsOnAbilties && errors.commentsOnAbilties && (
+          <div className="text-danger text-sm">{errors.commentsOnAbilties}</div>
         )}
       </Form.Group>
 
@@ -274,6 +271,67 @@ const AssesmentSection: React.FC<SectionProps> = ({
           <div className="text-danger small mt-2">{errors.providedTo}</div>
         )}
       </Form.Group>
+      <hr style={{ backgroundColor: "#00000033" }} />
+      <div className="row">
+        {" "}
+        <div className="col-md-8">
+          <Form.Label className="text-xs fw-medium">
+            6. Recommended Hours of Work
+          </Form.Label>
+
+          <div className="d-flex gap-20 mt-2">
+            {[
+              { label: "Regular", value: "regular" },
+              { label: "Modified", value: "modified" },
+              { label: "Graduated", value: "graduated" },
+            ].map((opt) => (
+              <label
+                key={opt.value}
+                className="d-flex align-items-center gap-2 text-xs"
+              >
+                <input
+                  type="radio"
+                  name="recomendedHours"
+                  value={opt.value}
+                  checked={values.recomendedHours === opt.value}
+                  onChange={() => setFieldValue("recomendedHours", opt.value)}
+                  className="form-check-input"
+                />
+                {opt.label}
+              </label>
+            ))}
+          </div>
+
+          {touched.recomendedHours && errors.recomendedHours && (
+            <div className="text-danger text-xs mt-1">
+              {errors.recomendedHours}
+            </div>
+          )}
+        </div>
+        <div className="col-md-4">
+          <Form.Group className="d-flex flex-column gap-2 mb-3">
+            <Form.Label>Date Of Birth</Form.Label>
+            <CustomDatePicker
+              className="h-40-px"
+              value={
+                values.worker.dateOfBirth
+                  ? new Date(values.worker.dateOfBirth)
+                  : null
+              }
+              onChange={(date) => {
+                setFieldValue("startDate", date, true);
+                setFieldTouched("startDate", true, false);
+              }}
+              isInvalid={Boolean(touched.startDate && errors.startDate)}
+            />
+            {touched.startDate && errors.startDate && (
+              <div className="text-danger text-sm">
+                {String(errors.startDate)}
+              </div>
+            )}
+          </Form.Group>
+        </div>
+      </div>
     </div>
   );
 };
