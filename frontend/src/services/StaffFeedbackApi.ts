@@ -35,12 +35,14 @@ const StaffFeedbackApi = api.injectEndpoints({
         method: "PATCH",
         body: credentials,
       }),
+      invalidatesTags: ["StaffFeedBack"],
     }),
     deleteStaffReport: builder.mutation<ApiGeneralResponse, { id: string }>({
       query: ({ id }) => ({
         url: `/staff-feedback/delete/${id}`,
         method: "DELETE",
       }),
+      invalidatesTags: ["StaffFeedBack"],
     }),
     viewStaffFeedBack: builder.query<
       StaffFeedbackSubmissionResponse,
