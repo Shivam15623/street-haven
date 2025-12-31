@@ -310,14 +310,10 @@ const AssesmentSection: React.FC<SectionProps> = ({
         </div>
         <div className="col-md-4">
           <Form.Group className="d-flex flex-column gap-2 mb-3">
-            <Form.Label>Date Of Birth</Form.Label>
+            <Form.Label>Start Date: </Form.Label>
             <CustomDatePicker
               className="h-40-px"
-              value={
-                values.worker.dateOfBirth
-                  ? new Date(values.worker.dateOfBirth)
-                  : null
-              }
+              value={values.startDate ? new Date(values.startDate) : null}
               onChange={(date) => {
                 setFieldValue("startDate", date, true);
                 setFieldTouched("startDate", true, false);

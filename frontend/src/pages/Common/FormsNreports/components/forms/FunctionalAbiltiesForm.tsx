@@ -416,7 +416,9 @@ const FunctionalAbiltiesForm = () => {
                       </div>
                     </div>
                     <Form.Group className="d-flex flex-column gap-10 ">
-                      <Form.Label>claim No:</Form.Label>
+                      <Form.Label>
+                        claim No: <span className="text-danger">*</span>
+                      </Form.Label>
                       <Form.Control
                         style={{ height: "40px" }}
                         name="claimNo"
@@ -445,7 +447,9 @@ const FunctionalAbiltiesForm = () => {
                 <Row>
                   <Col sm={12} md={4}>
                     <Form.Group className="d-flex flex-column gap-2 mb-3">
-                      <Form.Label>First Name</Form.Label>
+                      <Form.Label>
+                        First Name: <span className="text-danger">*</span>
+                      </Form.Label>
                       <Form.Control
                         style={{ height: "40px" }}
                         name="worker.firstName"
@@ -463,7 +467,9 @@ const FunctionalAbiltiesForm = () => {
 
                   <Col sm={12} md={4}>
                     <Form.Group className="d-flex flex-column gap-2 mb-3">
-                      <Form.Label>Last Name</Form.Label>
+                      <Form.Label>
+                        Last Name: <span className="text-danger">*</span>
+                      </Form.Label>
                       <Form.Control
                         style={{ height: "40px" }}
                         name="worker.lastName"
@@ -480,7 +486,9 @@ const FunctionalAbiltiesForm = () => {
 
                   <Col sm={12} md={4}>
                     <Form.Group className="d-flex flex-column gap-2 mb-3">
-                      <Form.Label>Telephone</Form.Label>
+                      <Form.Label>
+                        Telephone: <span className="text-danger">*</span>
+                      </Form.Label>
                       <PatternFormat
                         format="+1 (###) ###-####"
                         allowEmptyFormatting
@@ -514,7 +522,10 @@ const FunctionalAbiltiesForm = () => {
                 <Row>
                   <Col sm={12} md={4}>
                     <Form.Group className="d-flex flex-column gap-2 mb-3">
-                      <Form.Label>Address (no., street, apt.)</Form.Label>
+                      <Form.Label>
+                        Address (no., street, apt.):{" "}
+                        <span className="text-danger">*</span>
+                      </Form.Label>
                       <Form.Control
                         style={{ height: "40px" }}
                         name="worker.address"
@@ -533,7 +544,9 @@ const FunctionalAbiltiesForm = () => {
                     <Row>
                       <Col sm={12} md={4}>
                         <Form.Group className="d-flex flex-column gap-2 mb-3">
-                          <Form.Label>City/Town</Form.Label>
+                          <Form.Label>
+                            City/Town: <span className="text-danger">*</span>
+                          </Form.Label>
                           <Form.Control
                             style={{ height: "40px" }}
                             name="worker.cityTown"
@@ -629,7 +642,10 @@ const FunctionalAbiltiesForm = () => {
                       style={{ border: "1px solid #0000001A" }}
                     >
                       <Form.Group className="d-flex flex-column gap-2 mb-3">
-                        <Form.Label>Employer's Name</Form.Label>
+                        <Form.Label>
+                          Employer's Name:{" "}
+                          <span className="text-danger">*</span>
+                        </Form.Label>
                         <Form.Control
                           style={{ height: "40px" }}
                           name="employer.fullName"
@@ -646,7 +662,8 @@ const FunctionalAbiltiesForm = () => {
 
                       <Form.Group className="d-flex flex-column gap-2 mb-3">
                         <Form.Label>
-                          Full Address (No., Street, Apt.)
+                          Full Address (No., Street, Apt.):{" "}
+                          <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Control
                           style={{ height: "40px" }}
@@ -665,7 +682,9 @@ const FunctionalAbiltiesForm = () => {
                       <Row>
                         <Col sm={12} md={4}>
                           <Form.Group className="d-flex flex-column gap-2 mb-3">
-                            <Form.Label>City/Town</Form.Label>
+                            <Form.Label>
+                              City/Town: <span className="text-danger">*</span>
+                            </Form.Label>
                             <Form.Control
                               style={{ height: "40px" }}
                               name="employer.cityTown"
@@ -684,7 +703,7 @@ const FunctionalAbiltiesForm = () => {
                         <Col sm={12} md={2}>
                           <Form.Group className="d-flex flex-column gap-2 mb-3">
                             <Form.Label>
-                              Province <span className="text-danger">*</span>
+                              Province: <span className="text-danger">*</span>
                             </Form.Label>
 
                             <Form.Select
@@ -759,7 +778,9 @@ const FunctionalAbiltiesForm = () => {
                   <Col sm={12} md={4}>
                     <div className="d-flex flex-column gap-20">
                       <Form.Group className="d-flex flex-column gap-2 mb-3">
-                        <Form.Label>Date Of Birth</Form.Label>
+                        <Form.Label>
+                          Date Of Birth: <span className="text-danger">*</span>
+                        </Form.Label>
                         <CustomDatePicker
                           className="h-40-px"
                           value={
@@ -786,7 +807,8 @@ const FunctionalAbiltiesForm = () => {
 
                       <Form.Group className="d-flex flex-column gap-2 mb-3">
                         <Form.Label>
-                          Date of Accident / Awareness of Illness
+                          Date of Accident / Awareness of Illness:{" "}
+                          <span className="text-danger">*</span>
                         </Form.Label>
                         <CustomDatePicker
                           className="h-40-px"
@@ -811,7 +833,10 @@ const FunctionalAbiltiesForm = () => {
                       </Form.Group>
 
                       <Form.Group className="d-flex flex-column gap-2 mb-3">
-                        <Form.Label>Employer's Telephone</Form.Label>
+                        <Form.Label>
+                          Employer's Telephone:{" "}
+                          <span className="text-danger">*</span>
+                        </Form.Label>
                         <PatternFormat
                           format="+1 (###) ###-####"
                           allowEmptyFormatting
@@ -841,7 +866,10 @@ const FunctionalAbiltiesForm = () => {
                       </Form.Group>
 
                       <Form.Group className="d-flex flex-column gap-2 mb-3">
-                        <Form.Label>Employer's Fax No.</Form.Label>
+                        <Form.Label>
+                          Employer's Fax No.:{" "}
+                          <span className="text-danger">*</span>
+                        </Form.Label>
                         <Form.Control
                           name="employerFaxNo"
                           value={values.employerFaxNo}
@@ -863,7 +891,8 @@ const FunctionalAbiltiesForm = () => {
                     <Form.Group className="d-flex flex-column gap-2 mb-3">
                       <Form.Label>
                         1. Type of job at time of accident (where available,
-                        please attach description of job activities)
+                        please attach description of job activities):{" "}
+                        <span className="text-danger">*</span>
                       </Form.Label>
                       <Form.Control
                         className="h-40-px"
@@ -883,7 +912,8 @@ const FunctionalAbiltiesForm = () => {
                   <Col sm={12} md={4}>
                     <Form.Group className="d-flex flex-column gap-2 mb-3">
                       <Form.Label>
-                        Area(s) of injury(ies)/illness(es)
+                        Area(s) of injury(ies)/illness(es):{" "}
+                        <span className="text-danger">*</span>
                       </Form.Label>
                       <Form.Control
                         className="h-40-px"
@@ -903,7 +933,7 @@ const FunctionalAbiltiesForm = () => {
                     <Form.Group className="d-flex flex-column gap-8">
                       <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
                         2. Have the worker and the employer discussed Return To
-                        Work
+                        Work: <span className="text-danger">*</span>
                       </Form.Label>
 
                       <div className="d-flex flex-row gap-3 p-3  rounded">
@@ -994,7 +1024,9 @@ const FunctionalAbiltiesForm = () => {
                   </Col>
                   <Col sm={12} md={4}>
                     <Form.Group className="d-flex flex-column gap-2 mb-3">
-                      <Form.Label>Position</Form.Label>
+                      <Form.Label>
+                        Position: <span className="text-danger">*</span>
+                      </Form.Label>
                       <Form.Control
                         className="h-40-px"
                         name="position"
@@ -1020,7 +1052,8 @@ const FunctionalAbiltiesForm = () => {
                 </h3>
                 <Form.Group className="d-flex flex-column gap-8">
                   <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                    Health Professional's Designation
+                    Health Professional's Designation:{" "}
+                    <span className="text-danger">*</span>
                   </Form.Label>
 
                   <div className="d-flex flex-row gap-20 p-3 flex-wrap">
@@ -1274,7 +1307,10 @@ const FunctionalAbiltiesForm = () => {
                 <Row>
                   <Col sm={12} md={6}>
                     <Form.Group className="d-flex flex-column gap-2 mb-3">
-                      <Form.Label>Health Professional's Name</Form.Label>
+                      <Form.Label>
+                        Health Professional's Name:{" "}
+                        <span className="text-danger">*</span>
+                      </Form.Label>
                       <Form.Control
                         className="h-40-px"
                         name="healthProfessionalName"
@@ -1292,7 +1328,10 @@ const FunctionalAbiltiesForm = () => {
                   </Col>
                   <Col sm={12} md={6}>
                     <Form.Group className="d-flex flex-column gap-2 mb-3">
-                      <Form.Label>Address (No. Street, Apt.)</Form.Label>
+                      <Form.Label>
+                        Address (No. Street, Apt.):{" "}
+                        <span className="text-danger">*</span>
+                      </Form.Label>
                       <Form.Control
                         className="h-40-px"
                         name="hproAddress"
@@ -1313,7 +1352,9 @@ const FunctionalAbiltiesForm = () => {
                     <Row>
                       <Col sm={4} md={4}>
                         <Form.Group className="d-flex flex-column gap-2 mb-3">
-                          <Form.Label>City/Town</Form.Label>
+                          <Form.Label>
+                            City/Town: <span className="text-danger">*</span>
+                          </Form.Label>
                           <Form.Control
                             className="h-40-px"
                             name="hprocityTown"
@@ -1331,7 +1372,9 @@ const FunctionalAbiltiesForm = () => {
                       <Col sm={2} md={2}>
                         {" "}
                         <Form.Group className="d-flex flex-column gap-2 mb-3">
-                          <Form.Label>Province</Form.Label>
+                          <Form.Label>
+                            Province: <span className="text-danger">*</span>
+                          </Form.Label>
                           <Form.Select
                             style={{ height: "40px" }}
                             name="hproProvince"
@@ -1362,7 +1405,9 @@ const FunctionalAbiltiesForm = () => {
                       <Col sm={6} md={6}>
                         {" "}
                         <Form.Group className="d-flex flex-column gap-2 mb-3">
-                          <Form.Label>Postal Code</Form.Label>
+                          <Form.Label>
+                            Postal Code: <span className="text-danger">*</span>
+                          </Form.Label>
                           <ReactInputMask
                             mask="a9a 9a9"
                             value={values.hproPostalCode}
@@ -1393,7 +1438,9 @@ const FunctionalAbiltiesForm = () => {
                   <Col sm={12} md={4}>
                     {" "}
                     <Form.Group className="d-flex flex-column gap-2 mb-3">
-                      <Form.Label>Fax</Form.Label>
+                      <Form.Label>
+                        Fax: <span className="text-danger">*</span>
+                      </Form.Label>
                       <Form.Control
                         className="h-40-px"
                         name="hproFax"
@@ -1423,7 +1470,10 @@ const FunctionalAbiltiesForm = () => {
                 <Row>
                   <Col sm={12} md={4}>
                     <Form.Group className="d-flex flex-column gap-2 mb-3">
-                      <Form.Label>1. Date of Assessment</Form.Label>
+                      <Form.Label>
+                        1. Date of Assessment:{" "}
+                        <span className="text-danger">*</span>
+                      </Form.Label>
                       <CustomDatePicker
                         className="h-40-px"
                         value={
@@ -1449,7 +1499,12 @@ const FunctionalAbiltiesForm = () => {
                   <Col sm={12} md={8} className="justify-content-end">
                     <Form.Group className="d-flex flex-column gap-10">
                       <Form.Label>
-                        2. <span> Please check one:</span>
+                        2.{" "}
+                        <span>
+                          {" "}
+                          Please check one:{" "}
+                          <span className="text-danger">*</span>
+                        </span>
                       </Form.Label>{" "}
                       <div className="d-flex flex-column flex-sm-row gap-20">
                         <Form.Check
@@ -1544,7 +1599,8 @@ const FunctionalAbiltiesForm = () => {
                     <Form.Label className="text-xs text-street-dark fw-normal">
                       {" "}
                       Recommended date of next appointment to review Abilities
-                      and/or Restrictions.
+                      and/or Restrictions.{" "}
+                      <span className="text-danger">*</span>
                     </Form.Label>
                     <div style={{ maxWidth: "300px" }}>
                       <CustomDatePicker
@@ -1580,7 +1636,8 @@ const FunctionalAbiltiesForm = () => {
                 <Form.Group className="d-flex flex-column gap-20">
                   {/* Label */}
                   <Form.Label className="fw-semibold text-xl mb-0">
-                    I have provided this completed Functional Abilities Form to:
+                    I have provided this completed Functional Abilities Form to:{" "}
+                    <span className="text-danger">*</span>
                   </Form.Label>
 
                   {/* Options */}

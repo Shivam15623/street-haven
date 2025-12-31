@@ -10,6 +10,7 @@ import {
 import { FunctionalAbilityDetail } from "../modals/functional-abilty/FunctionalAbilty";
 import EditFAbilties from "../forms/functionalAbilties/edit";
 import DeleteConfirmModal from "../forms/delete";
+import { useDebounce } from "../../../../../hooks/useDebounce";
 
 // ------------------------------
 // Columns
@@ -48,7 +49,12 @@ const FunctionalAbilitiesSubmission = () => {
   // 🔹 Delete modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { data: abilityData, isLoading } = useGetAllFAFQuery(filter);
+  const debouncedSearch = useDebounce(filter.search, 1000);
+  const { data: abilityData, isLoading } = useGetAllFAFQuery({
+    page: filter.page,
+    limit: filter.limit,
+    search: debouncedSearch,
+  });
   const [deleteFaf, { isLoading: Deleting }] = useDeleteFafMutation();
   const handleDeleteClick = (id: string) => {
     setSelectedId(id);

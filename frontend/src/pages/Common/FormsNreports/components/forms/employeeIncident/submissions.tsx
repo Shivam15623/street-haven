@@ -10,6 +10,7 @@ import {
 import EditEmployeeIncident from "./edit";
 import EmployeeIncidentReportDetails from "./details";
 import DeleteConfirmModal from "../delete";
+import { useDebounce } from "../../../../../../hooks/useDebounce";
 
 interface Column {
   header: string;
@@ -26,8 +27,12 @@ const EmployeeIncidentReportSubmission = () => {
   });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { data: incidentData, isLoading } =
-    useGetAllEmployeeIncidentsQuery(filter);
+  const debouncedSearch = useDebounce(filter.search, 1000);
+  const { data: incidentData, isLoading } = useGetAllEmployeeIncidentsQuery({
+    page: filter.page,
+    limit: filter.limit,
+    search: debouncedSearch,
+  });
 
   const [deletEmployeeIncident, { isLoading: deleting }] =
     useDeleteEmployeeIncidentMutation();

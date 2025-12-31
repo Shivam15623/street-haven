@@ -94,6 +94,7 @@ export interface SignupCredentials {
   phone: string;
   password: string;
   role: Role;
+  superviserId: string;
   customPermissions: string[];
 }
 export interface ForgotPasswordcredential {

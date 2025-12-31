@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react"; // example for edit icon
 
 const PdfField = ({
   isEdit,
+  isRequired = false,
   existingPdf,
   name,
   fieldLabel,
@@ -11,6 +12,7 @@ const PdfField = ({
   isEdit: boolean;
   existingPdf?: { fileName: string; fileUrl: string };
   name: string;
+  isRequired?: boolean;
   fieldLabel: string;
 }) => {
   const [editMode, setEditMode] = useState(false);
@@ -23,7 +25,8 @@ const PdfField = ({
         ) : (
           <p>
             <span className="fw-medium mb-2 text-street-dark form-label">
-              {fieldLabel}
+              {fieldLabel}{" "}
+              {isRequired && <span className="text-danger">*</span>}
             </span>
             :
             <a

@@ -12,10 +12,22 @@ const baseQuery = fetchBaseQuery({
     const token = (getState() as RootState).auth.accessToken;
 
     if (token) {
-      headers.set("Accept", "application/json");
       headers.set("authorization", `Bearer ${token}`);
     }
     return headers;
+  },
+  responseHandler: async (response) => {
+    const contentType = response.headers.get("content-type");
+
+    if (contentType?.includes("application/pdf")) {
+      return await response.blob(); // 👈 IMPORTANT
+    }
+
+    if (contentType?.includes("application/json")) {
+      return await response.json();
+    }
+
+    return await response.text();
   },
 });
 

@@ -1,22 +1,55 @@
 import { Icon } from "@iconify/react";
 import { format } from "date-fns";
 import { Row, Col, Container } from "react-bootstrap";
-
 import { useState, type JSX } from "react";
+
 import type { BadgeVariant } from "../../../../../../components/child/Badge";
-import type { clientIncidentReport } from "../../../../../../services/FormApi";
+import {
+  useGetClientIncidentByIdQuery,
+  useLazyGetClientIncidentPdfQuery,
+  type clientIncidentReport,
+} from "../../../../../../services/FormApi";
 import ModalWrapper from "../../../../../../components/child/ModalWrapper";
 import Badge from "../../../../../../components/child/Badge";
+import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
 
 interface ClientIncidentModalProps {
-  incident: clientIncidentReport | null;
+  incident: clientIncidentReport;
 }
 
-export function ClientIncidentReportDetail({
-  incident,
-}: ClientIncidentModalProps) {
+const ClientIncidentReportDetail = ({ incident }: ClientIncidentModalProps) => {
   const [showModal, setShowModal] = useState(false);
-  if (!incident) return null;
+
+  const {
+    data: response,
+    isLoading,
+    isFetching,
+  } = useGetClientIncidentByIdQuery(
+    { id: incident._id! },
+    { skip: !showModal }
+  );
+
+  const [getClientincidentPdf, { isFetching: pdfloading }] =
+    useLazyGetClientIncidentPdfQuery();
+  const handleDownload = async () => {
+    try {
+      const blob = await getClientincidentPdf(incident._id).unwrap();
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "client-incident-report.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to download PDF", err);
+    }
+  };
+
+  const detail = response?.data;
+  const loading = isLoading || isFetching;
 
   const getIncidentTypeBadge = (type: string): JSX.Element => {
     const severityMap: Record<string, BadgeVariant> = {
@@ -44,6 +77,7 @@ export function ClientIncidentReportDetail({
       >
         View Details
       </button>
+
       <ModalWrapper
         show={showModal}
         onHide={() => setShowModal(false)}
@@ -52,184 +86,201 @@ export function ClientIncidentReportDetail({
         headerClassName="text-xl p-0 pb-20 text-street-dark"
         className="p-20 p-sm-24 p-md-32"
         bodyClassName="p-0"
+        isLoading={loading}
+        ModalLoader={
+          <FormSubmissionLoader
+            isLoading={loading}
+            variant="spinner"
+            size="lg"
+            message="Loading incident details..."
+          />
+        }
+        footer={
+          <button
+            className="d-flex gap-2 align-items-center btn-street-lg justify-content-center btn btn-street-outline-primary radius-12 p-0"
+            onClick={handleDownload}
+          >
+            {" "}
+            {pdfloading ? "fetching" : "download"}
+          </button>
+        }
       >
-    
-          <Container className="d-flex flex-column gap-24 ">
+        {/* ✅ Render only when data is ready */}
+        {!loading && detail && (
+          <Container className="d-flex flex-column gap-24">
             {/* Incident Type */}
             <div className="p-3 rounded border border-danger bg-danger bg-opacity-10 mb-4">
               <div className="d-flex justify-content-between align-items-center">
                 <span className="text-sm text-street-base">Incident Type</span>
-                {getIncidentTypeBadge(incident.incidentType)}
+                {getIncidentTypeBadge(detail.incidentType)}
               </div>
-              {incident.incidentType === "Other" &&
-                incident.otherincidentText && (
-                  <p className="mt-2 mb-0 text-sm">
-                    {incident.otherincidentText}
-                  </p>
-                )}
+
+              {detail.incidentType === "Other" && detail.otherincidentText && (
+                <p className="mt-2 mb-0 text-sm">{detail.otherincidentText}</p>
+              )}
             </div>
 
             {/* Date / Time / Place */}
             <Row className="g-3 mb-4">
               <Col md={4}>
-                <div className="p-3 border rounded-3 card h-100">
-                  <div className="d-flex align-items-center gap-2 text-street-base mb-1">
-                    <Icon icon="lucide:calendar" width={16} />
-                    <small>Date</small>
-                  </div>
-                  <strong>
-                    {format(new Date(incident.incidentDate), "MMM d, yyyy")}
-                  </strong>
-                </div>
+                <InfoCard
+                  icon="lucide:calendar"
+                  label="Date"
+                  value={format(new Date(detail.incidentDate), "MMM d, yyyy")}
+                />
               </Col>
               <Col md={4}>
-                <div className="p-3 border rounded-3 card h-100">
-                  <div className="d-flex align-items-center gap-2 text-street-base mb-1">
-                    <Icon icon="lucide:clock" width={16} />
-                    <small>Time</small>
-                  </div>
-                  <strong>{incident.incidentTime}</strong>
-                </div>
+                <InfoCard
+                  icon="lucide:clock"
+                  label="Time"
+                  value={detail.incidentTime}
+                />
               </Col>
               <Col md={4}>
-                <div className="p-3 border rounded-3 card h-100">
-                  <div className="d-flex align-items-center gap-2 text-street-base mb-1">
-                    <Icon icon="lucide:map-pin" width={16} />
-                    <small>Place</small>
-                  </div>
-                  <strong className="text-sm">{incident.incidentPlace}</strong>
-                </div>
+                <InfoCard
+                  icon="lucide:map-pin"
+                  label="Place"
+                  value={detail.incidentPlace}
+                />
               </Col>
             </Row>
 
             {/* People */}
             <Row className="g-3 mb-4">
               <Col md={6}>
-                <div className="p-3 border card rounded-3 h-100">
-                  <div className="d-flex align-items-center gap-2 mb-2">
-                    <Icon icon="lucide:user" width={16} />
-                    <span className="fw-medium">Affected Person</span>
-                  </div>
-                  <p className="fw-semibold mb-0">{incident.affectedPerson}</p>
-                </div>
+                <InfoCard
+                  icon="lucide:user"
+                  label="Affected Person"
+                  value={detail.affectedPerson}
+                />
               </Col>
               <Col md={6}>
-                <div className="p-3 border card rounded-3 h-100">
-                  <div className="d-flex align-items-center gap-2 mb-2">
-                    <Icon icon="lucide:user" width={16} />
-                    <span className="fw-medium">Staff Member</span>
-                  </div>
-                  <p className="fw-semibold mb-0">{incident.staffName}</p>
-                  <small className="text-street-base d-flex align-items-center gap-1 mt-1">
-                    <Icon icon="lucide:mail" width={14} />
-                    {incident.staffEmail}
-                  </small>
-                </div>
+                <InfoCard
+                  icon="lucide:user"
+                  label="Staff Member"
+                  value={`${detail.staffName} (${detail.staffEmail})`}
+                />
               </Col>
             </Row>
 
-            {/* Witness */}
-            {incident.witnessName && (
-              <div className="p-3 border card rounded-3 d-flex flex-row align-items-center  gap-2 mb-4">
-                <Icon icon="lucide:eye" width={16} />
-                <span>
-                  Witness: <strong>{incident.witnessName}</strong>
-                </span>
-              </div>
+            {detail.witnessName && (
+              <InfoCard
+                icon="lucide:eye"
+                label="Witness"
+                value={detail.witnessName}
+              />
             )}
 
             <hr />
 
-            {/* Details */}
-            <div className="mt-4">
-              <div className="p-3 border card rounded-3 mb-3">
-                <div className="d-flex align-items-center gap-2 mb-2">
-                  <Icon icon="lucide:file-text" width={16} />
-                  <span className="fw-medium">Incident Description</span>
-                </div>
-                <p className="mb-0 text-sm">{incident.incidentDescription}</p>
-              </div>
+            {/* Description */}
+            <Section
+              icon="lucide:file-text"
+              title="Incident Description"
+              content={detail.incidentDescription}
+            />
 
-              <div className="p-3 border border-success bg-success bg-opacity-10 rounded mb-3">
-                <div className="d-flex align-items-center gap-2 mb-2">
-                  <Icon
-                    icon="lucide:check-circle-2"
-                    width={16}
-                    className="text-success"
-                  />
-                  <span className="fw-medium text-success">Action Taken</span>
-                </div>
-                <p className="mb-0 text-sm">{incident.ActionTaken}</p>
-              </div>
+            <Section
+              icon="lucide:check-circle-2"
+              title="Action Taken"
+              content={detail.ActionTaken}
+              variant="success"
+            />
 
-              <div className="p-16 border rounded-3  border-sh-primary-50 bg-street-primary-10 ">
-                <div className="d-flex align-items-center  gap-2 mb-2">
-                  <Icon
-                    icon="lucide:message-square"
-                    width={16}
-                    className="text-street-primary"
-                  />
-                  <span className="fw-medium text-street-primary">Debrief</span>
-                </div>
-                <p className="mb-0 text-sm">{incident.debrief}</p>
-              </div>
-            </div>
+            <Section
+              icon="lucide:message-square"
+              title="Debrief"
+              content={detail.debrief}
+              variant="primary"
+            />
 
             <hr />
-            <div>
-              {" "}
-              <h6 className="d-flex align-items-center gap-2 mb-3">
-                <Icon icon="lucide:clipboard-list" width={16} />
-                Reporting Details
-              </h6>
-              <Row className="g-3">
-                <Col md={6}>
-                  <div className="p-3 border card rounded-3">
-                    <div className="d-flex align-items-center gap-2 mb-10">
-                      <Icon icon="lucide:user" width={16} />
-                      <span className="fw-medium">Reported By</span>
-                    </div>
-                    <p className="fw-semibold mb-1">
-                      {incident.reportingStaffName}
-                    </p>
-                    <small className="text-street-base d-flex align-items-center gap-1">
-                      <Icon icon="lucide:calendar" width={14} />
-                      {format(new Date(incident.reportingDate), "MMM d, yyyy")}
-                    </small>
-                  </div>
-                </Col>
-                <Col md={6}>
-                  <div className="p-3 border card rounded-3">
-                    <div className="d-flex align-items-center gap-2 mb-10">
-                      <Icon icon="lucide:send" width={16} />
-                      <span className="fw-medium">Reported To</span>
-                    </div>
-                    <p className="fw-semibold mb-1">{incident.reportedTo}</p>
-                    <small className="text-street-base d-flex align-items-center gap-1">
-                      <Icon icon="lucide:calendar" width={14} />
-                      {format(new Date(incident.reportedToDate), "MMM d, yyyy")}
-                    </small>
-                  </div>
-                </Col>
-              </Row>
-            </div>
 
             {/* Reporting */}
+            <Row className="g-3">
+              <Col md={6}>
+                <InfoCard
+                  icon="lucide:user"
+                  label="Reported By"
+                  value={`${detail.reportingStaffName} (${format(
+                    new Date(detail.reportingDate),
+                    "MMM d, yyyy"
+                  )})`}
+                />
+              </Col>
+              <Col md={6}>
+                <InfoCard
+                  icon="lucide:send"
+                  label="Reported To"
+                  value={`${detail.reportedTo} (${format(
+                    new Date(detail.reportedToDate),
+                    "MMM d, yyyy"
+                  )})`}
+                />
+              </Col>
+            </Row>
 
-            {/* Follow-up */}
-            {incident.followup && (
-              <div className="bg-neutral-50 border-sh-base-1-2 rounded-3 shadow-none mt-2 card p-16">
-                <div className="d-flex align-items-center gap-2 mb-10">
-                  <Icon icon="lucide:clipboard-list" width={16} />
-                  <span className="fw-medium">Follow-up</span>
-                </div>
-                <p className="mb-0 text-sm">{incident.followup}</p>
-              </div>
+            {detail.followup && (
+              <Section
+                icon="lucide:clipboard-list"
+                title="Follow-up"
+                content={detail.followup}
+              />
             )}
           </Container>
-    
+        )}
       </ModalWrapper>
     </>
   );
-}
+};
+
 export default ClientIncidentReportDetail;
+
+/* ---------- Small helpers ---------- */
+
+const InfoCard = ({
+  icon,
+  label,
+  value,
+}: {
+  icon: string;
+  label: string;
+  value: string;
+}) => (
+  <div className="p-3 border rounded-3 card h-100">
+    <div className="d-flex align-items-center gap-2 text-street-base mb-1">
+      <Icon icon={icon} width={16} />
+      <small>{label}</small>
+    </div>
+    <strong className="text-sm">{value}</strong>
+  </div>
+);
+
+const Section = ({
+  icon,
+  title,
+  content,
+  variant,
+}: {
+  icon: string;
+  title: string;
+  content: string;
+  variant?: "success" | "primary";
+}) => {
+  const bg =
+    variant === "success"
+      ? "bg-success bg-opacity-10 border-success"
+      : variant === "primary"
+      ? "bg-street-primary-10 border-sh-primary-50"
+      : "border";
+
+  return (
+    <div className={`p-3 border rounded mb-3 ${bg}`}>
+      <div className="d-flex align-items-center gap-2 mb-2">
+        <Icon icon={icon} width={16} />
+        <span className="fw-medium">{title}</span>
+      </div>
+      <p className="mb-0 text-sm">{content}</p>
+    </div>
+  );
+};

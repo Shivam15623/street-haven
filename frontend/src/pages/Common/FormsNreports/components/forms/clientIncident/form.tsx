@@ -95,16 +95,20 @@ const ClientIncidentFormSchema = Yup.object({
   reportingStaffName: Yup.string().required("Reporting staff name is required"),
   repotingDate: Yup.date()
     .required("reporting Date is required")
-    .test("not-future-date", "reporting Date cannot be in the future", (val) => {
-      if (!val) return true;
-      const today = new Date();
-      const selected = new Date(val);
-      // ignore time when comparing
-      selected.setHours(0, 0, 0, 0);
-      today.setHours(0, 0, 0, 0);
+    .test(
+      "not-future-date",
+      "reporting Date cannot be in the future",
+      (val) => {
+        if (!val) return true;
+        const today = new Date();
+        const selected = new Date(val);
+        // ignore time when comparing
+        selected.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
 
-      return selected <= today;
-    }),
+        return selected <= today;
+      }
+    ),
 
   reportedTo: Yup.string().required("Reported to (name) is required"),
   reportedToDate: Yup.date()
@@ -170,7 +174,7 @@ const ClientIncidentForm: React.FC<FormProp> = ({
                 <Col xs={12} md={6}>
                   <Form.Group className="d-flex flex-column gap-8">
                     <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                      Date of Incident
+                      Date of Incident <span className="text-danger">*</span>
                     </Form.Label>
 
                     <CustomDatePicker
@@ -197,7 +201,7 @@ const ClientIncidentForm: React.FC<FormProp> = ({
                     className="d-flex flex-column gap-8"
                   >
                     <Form.Label className="text-xs xs:text-sm  fw-medium text-street-dark">
-                      Time of Incident
+                      Time of Incident <span className="text-danger">*</span>
                     </Form.Label>
 
                     <TimePicker
@@ -219,7 +223,7 @@ const ClientIncidentForm: React.FC<FormProp> = ({
               </Row>
               <Form.Group className="d-flex flex-column gap-8">
                 <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                  Place:
+                  Place: <span className="text-danger">*</span>
                 </Form.Label>
                 <Form.Control
                   as="textarea"
@@ -239,7 +243,8 @@ const ClientIncidentForm: React.FC<FormProp> = ({
                 <Col xs={12} md={6} className="d-flex flex-column gap-24">
                   <Form.Group className="d-flex flex-column gap-8">
                     <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                      Affected Client Name:
+                      Affected Client Name:{" "}
+                      <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
                       type="text"
@@ -278,7 +283,7 @@ const ClientIncidentForm: React.FC<FormProp> = ({
                 <Col xs={12} md={6} className="d-flex flex-column gap-24">
                   <Form.Group className="d-flex flex-column gap-8">
                     <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                      Staff Name:
+                      Staff Name: <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
                       type="text"
@@ -295,7 +300,7 @@ const ClientIncidentForm: React.FC<FormProp> = ({
                   </Form.Group>
                   <Form.Group className="d-flex flex-column gap-8">
                     <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                      Staff Email:
+                      Staff Email: <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
                       type="email"
@@ -314,7 +319,7 @@ const ClientIncidentForm: React.FC<FormProp> = ({
               </Row>
               <Form.Group>
                 <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark mb-3">
-                  Type of Incident:
+                  Type of Incident: <span className="text-danger">*</span>
                 </Form.Label>
                 <div className="row gy-3 gx-4 ">
                   {[
@@ -403,7 +408,8 @@ const ClientIncidentForm: React.FC<FormProp> = ({
               </div>
               <Form.Group className="d-flex flex-column gap-8">
                 <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                  Clear Concise Description of the Incident:
+                  Clear Concise Description of the Incident:{" "}
+                  <span className="text-danger">*</span>
                 </Form.Label>
                 <Form.Control
                   as="textarea"
@@ -437,7 +443,7 @@ const ClientIncidentForm: React.FC<FormProp> = ({
               </div>
               <Form.Group className="d-flex flex-column gap-8">
                 <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                  Action Taken:
+                  Action Taken: <span className="text-danger">*</span>
                 </Form.Label>
                 <Form.Control
                   as="textarea"
@@ -469,7 +475,7 @@ const ClientIncidentForm: React.FC<FormProp> = ({
               </div>
               <Form.Group className="d-flex flex-column gap-8">
                 <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                  Debrief:
+                  Debrief: <span className="text-danger">*</span>
                 </Form.Label>
                 <Form.Control
                   as="textarea"
@@ -490,7 +496,8 @@ const ClientIncidentForm: React.FC<FormProp> = ({
                   {" "}
                   <Form.Group className="d-flex flex-column gap-8">
                     <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                      Reporting Staff Name:
+                      Reporting Staff Name:{" "}
+                      <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
                       type="text"
@@ -513,7 +520,7 @@ const ClientIncidentForm: React.FC<FormProp> = ({
                   {" "}
                   <Form.Group className="d-flex flex-column gap-8">
                     <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                      Reporting Date:
+                      Reporting Date: <span className="text-danger">*</span>
                     </Form.Label>
                     <CustomDatePicker
                       value={
@@ -543,7 +550,7 @@ const ClientIncidentForm: React.FC<FormProp> = ({
                   {" "}
                   <Form.Group className="d-flex flex-column gap-8">
                     <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                      Reported To:
+                      Reported To: <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
                       type="text"
@@ -563,7 +570,7 @@ const ClientIncidentForm: React.FC<FormProp> = ({
                   {" "}
                   <Form.Group className="d-flex flex-column gap-8">
                     <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                      Reported Date:
+                      Reported Date: <span className="text-danger">*</span>
                     </Form.Label>
                     <CustomDatePicker
                       value={
@@ -601,7 +608,7 @@ const ClientIncidentForm: React.FC<FormProp> = ({
                 }}
               >
                 Section 5: Follow Up (Post Incident) *To be completed by
-                management
+                management <span className="text-danger">*</span>
               </div>
               <Form.Group className="d-flex flex-column gap-8">
                 <Form.Control

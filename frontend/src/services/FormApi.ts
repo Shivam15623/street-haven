@@ -40,7 +40,7 @@ export interface ClientFeedbackCredentials {
   impact: string;
   outcome: string;
   description: string;
-  preferredContactMethod: string;
+  preferredContactMethod: ("Phone" | "Email")[];
 }
 export const CANADA_PROVINCES = [
   { label: "Alberta", value: "AB" },
@@ -119,7 +119,7 @@ export interface EmployeeIncidentCredentials {
   activityAtTime: string;
   description: string;
   preventionSuggestion: string;
-  injuredBodyPartOrRisk: string;
+  injuredBodyPartOrRisk?: string;
   doctorName?: string;
   sawDoctor: boolean;
   doctorPhone?: string;
@@ -136,7 +136,7 @@ export interface clientFeedbackData {
   clientEmail: string | null;
   clientPhone: string | null;
   clientAddress: string | null;
-  preferredContactMethod: "Phone" | "Email" | "Either";
+  preferredContactMethod: ("Phone" | "Email")[];
   complaintNature:
     | "Service Issue"
     | "Product Issue"
@@ -157,7 +157,7 @@ export interface editclientFeedbackCredentials {
   clientEmail: string | null;
   clientPhone: string | null;
   clientAddress: string | null;
-  preferredContactMethod: "Phone" | "Email" | "Either";
+  preferredContactMethod: ("Phone" | "Email")[];
   complaintNature:
     | "Service Issue"
     | "Product Issue"
@@ -243,7 +243,7 @@ export interface editemployeeIncidentReportCred {
   activityAtTime: string;
   description: string;
   preventionSuggestion: string;
-  injuredBodyPartOrRisk: string;
+  injuredBodyPartOrRisk?: string;
   sawDoctor: boolean;
   witnessName?: string;
   doctorName?: string;
@@ -334,7 +334,7 @@ export interface Restrictions {
   };
 }
 export interface FunctionalAbility {
-  _id?: string;
+  _id: string;
 
   claimNo: string;
 
@@ -691,11 +691,59 @@ const FormApi = api.injectEndpoints({
       }),
     }),
     getEmployeeIncidentById: builder.query<
-      ApiResponse<employeeIncidentReport>,
+      ApiResponse<EmployeeIncidentReportPopulated>,
       { id: string }
     >({
       query: ({ id }) => ({
         url: `/form/employeeIncident/${id}`,
+        method: "GET",
+      }),
+    }),
+    getPaymentRequisitionPdf: builder.query<Blob, string>({
+      query: (id) => ({
+        url: `/form/paymentRequistion/pdfForm/${id}`,
+        method: "GET",
+      }),
+    }),
+
+    getStaffFeedbackPdf: builder.query<Blob, string>({
+      query: (id) => ({
+        url: `/form/staffFeedback/pdfForm/${id}`,
+        method: "GET",
+      }),
+    }),
+
+    getClientIncidentPdf: builder.query<Blob, string>({
+      query: (id) => ({
+        url: `/form/clientIncident/pdfForm/${id}`,
+        method: "GET",
+      }),
+    }),
+
+    getClientFeedbackPdf: builder.query<Blob, string>({
+      query: (id) => ({
+        url: `/form/clientFeedback/pdfForm/${id}`,
+        method: "GET",
+      }),
+    }),
+
+    getIncidentReportPdf: builder.query<Blob, string>({
+      query: (id) => ({
+        url: `/form/incidentReport/pdfForm/${id}`,
+        method: "GET",
+      }),
+    }),
+
+    getMediaConsentPdf: builder.query<Blob, string>({
+      query: (id) => ({
+        url: `/form/mediaConsent/pdfForm/${id}`,
+        method: "GET",
+      }),
+    }),
+
+    getEmployeeIncidentPdf: builder.query<Blob, string>({
+      query: (id) => ({
+        url: `/form/employeeIncident/pdfForm/${id}`,
         method: "GET",
       }),
     }),
@@ -742,4 +790,12 @@ export const {
   useGetClientIncidentByIdQuery,
   useGetEmployeeIncidentByIdQuery,
   useGetFafByIdQuery,
+  useGetPaymentRequisitionByIdQuery,
+  useLazyGetClientFeedbackPdfQuery,
+  useLazyGetClientIncidentPdfQuery,
+  useLazyGetEmployeeIncidentPdfQuery,
+  useLazyGetIncidentReportPdfQuery,
+  useLazyGetMediaConsentPdfQuery,
+  useLazyGetPaymentRequisitionPdfQuery,
+  useLazyGetStaffFeedbackPdfQuery
 } = FormApi;

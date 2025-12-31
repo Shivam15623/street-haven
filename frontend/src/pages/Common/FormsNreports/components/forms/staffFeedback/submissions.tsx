@@ -12,6 +12,7 @@ import SimpleTable from "../../../../../../components/child/SimpleTable";
 import StaffFeedbackDetail from "./detail";
 import EditStaffFeedback from "./edit";
 import DeleteConfirmModal from "../delete";
+import { useDebounce } from "../../../../../../hooks/useDebounce";
 
 interface Column {
   header: string;
@@ -30,7 +31,7 @@ const StaffFeedBackSubmission = () => {
   });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-
+  const debouncedSearch = useDebounce(filter.search, 1000);
   const [deleteStaffFeedback, { isLoading: deleting }] =
     useDeleteStaffReportMutation();
   const handleDeleteClick = (id: string) => {
@@ -49,8 +50,11 @@ const StaffFeedBackSubmission = () => {
       console.error("Delete failed", error);
     }
   };
-  const { data: feedBackSubmissions, isLoading } =
-    useViewStaffFeedBackQuery(filter);
+  const { data: feedBackSubmissions, isLoading } = useViewStaffFeedBackQuery({
+    page: filter.page,
+    limit: filter.limit,
+    search: debouncedSearch,
+  });
   const columns: Column[] = [
     {
       header: "Date",
