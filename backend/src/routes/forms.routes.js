@@ -17,6 +17,13 @@ import {
   editFAF,
   editMediaConsent,
   editPaymentRequisition,
+  generateFilledclientFeedbackPdf,
+  generateFilledClientIncident,
+  generateFilledEmployeeIncidentPdf,
+  generateFilledIncidentReport,
+  generateFilledMediaConsent,
+  generatefilledPaymentPdf,
+  generatefilledStaffFeedbackpdf,
   GetAllClientFeedback,
   GetAllClientIncidents,
   GetAllEmployeeIncidents,
@@ -26,6 +33,7 @@ import {
   getClientFeedbackById,
   getClientIncidentById,
   getEmployeeIncidentById,
+  getFAFById,
   getPaymentRequisitionById,
 } from "../controllers/form.controller.js";
 import { upload } from "../middleware/multer.js";
@@ -95,10 +103,21 @@ router
   .patch(editEmployeeIncident);
 router
   .route("/functionalAbilties/:id")
+  .get(getFAFById)
   .delete(deleteFAF)
   .patch(
     validateRequest(idParamSchema, "params"),
     validateRequest(functionalAbilitiesSchema, "body"),
     editFAF
   );
+router.route("/paymentRequistion/pdfForm/:id").get(generatefilledPaymentPdf);
+
+router.route("/staffFeedback/pdfForm/:id").get(generatefilledStaffFeedbackpdf);
+router.route("/clientIncident/pdfForm/:id").get(generateFilledClientIncident);
+router
+  .route("/clientFeedback/pdfForm/:id")
+  .get(generateFilledclientFeedbackPdf);
+router.route("/incidentReport/pdfForm/:id").get(generateFilledIncidentReport);
+router.route("/mediaConsent/pdfForm/:id").get(generateFilledMediaConsent);
+router.route("/employeeIncident/pdfForm/:id").get(generateFilledEmployeeIncidentPdf)
 export default router;

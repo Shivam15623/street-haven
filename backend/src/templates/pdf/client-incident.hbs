@@ -1,0 +1,329 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Client Incident Report</title>
+    <script src="/_sdk/element_sdk.js"></script>
+    <style>
+      * { box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+      body { box-sizing: border-box; margin: 0; padding: 0; background: white;padding:
+      40px 20px;
+      font-family: "Arial", "Helvetica", sans-serif; width: 100%; min-height:
+      100%; color: #000000; } html { height: 100%; width: 100%; }
+      .page-container { width: 100%; max-width: 900px; margin: 0 auto; padding:
+      40px 20px; } .form-wrapper { background: white; border: 3px solid #000000;
+      padding: 0; } .header { border-bottom: 3px solid #000000; padding: 24px
+      40px; display: flex; align-items: center; gap: 32px; } .logo-section {
+      flex-shrink: 0; } .logo { display: block; } .header-text { flex: 1;
+      text-align: left; } .organization-name { font-size: 11px; font-weight:
+      bold; letter-spacing: 2px; margin: 0 0 8px 0; text-transform: uppercase; }
+      .header h1 { margin: 0 0 12px 0; font-size: 24px; font-weight: bold;
+      letter-spacing: 1px; text-transform: uppercase; } .header p { margin: 12px
+      0 0 0; font-size: 11px; line-height: 1.5; font-style: italic; }
+      .form-content { padding: 32px 40px; } .section { margin-bottom: 32px;
+      padding-bottom: 24px; border-bottom: 2px solid #000000; }
+      .section:last-of-type { border-bottom: none; } .section-title { font-size:
+      14px; font-weight: bold; margin: 0 0 20px 0; text-transform: uppercase;
+      letter-spacing: 1px; background: #000000; color: white; padding: 8px 12px;
+      } .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+      margin-bottom: 16px; } .field-group { margin-bottom: 16px; } .field-label
+      { display: block; font-size: 11px; font-weight: bold; margin-bottom: 4px;
+      text-transform: uppercase; letter-spacing: 0.3px; } .underline-field {
+      border: none; border-bottom: 1px solid #000000; background: transparent;
+      width: 100%; padding: 6px 2px; font-size: 12px; font-family: inherit;
+      color: #000000; } .underline-field:focus { outline: none; border-bottom:
+      2px solid #000000; } .checkbox-group { display: grid;
+      grid-template-columns: 1fr; gap: 8px; margin-bottom: 12px; }
+      .checkbox-item { display: flex; align-items: flex-start; gap: 8px; }
+      .checkbox-box { width: 14px; height: 14px; border: 2px solid #000000;
+      background: white; flex-shrink: 0; cursor: pointer; position: relative;
+      margin-top: 2px; } .checkbox-item input[type="checkbox"] { position:
+      absolute; opacity: 0; cursor: pointer; } .checkbox-item
+      input[type="checkbox"]:checked + .checkbox-box::after { content: "✓";
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      font-size: 14px; font-weight: bold; line-height: 1; } .checkbox-item label
+      { font-size: 11px; cursor: pointer; user-select: none; line-height: 1.4; }
+      .critical-note { font-size: 10px; font-style: italic; color: #000000;
+      margin-left: 4px; } .textarea-box { width: 100%; min-height: 120px;
+      border: 2px solid #000000; background: white; padding: 10px; font-size:
+      12px; font-family: inherit; resize: vertical; line-height: 1.6; }
+      .textarea-box:focus { outline: none; border: 3px solid #000000; }
+      .subsection-label { font-size: 12px; font-weight: bold; margin: 20px 0
+      12px 0; text-decoration: underline; } .signature-row { display: grid;
+      grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 20px; } @media
+      print { .page-container { padding: 0; } .form-wrapper { border: 2px solid
+      #000000; } .section-title { background: #000000 !important; color: #ffffff
+      !important; -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important; } } .text-content { white-space:
+      pre-wrap; word-break: break-word; min-height: 120px; } /* @media
+      (max-width: 768px) { .form-content { padding: 24px; } .header { padding:
+      20px 24px; flex-direction: column; align-items: center; text-align:
+      center; } .header-text { text-align: center; } .header h1 { font-size:
+      20px; } .field-row, .signature-row { grid-template-columns: 1fr; gap:
+      16px; } } */
+    </style>
+    <style>
+      @view-transition { navigation: auto; }
+    </style>
+    <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+    <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+  </head>
+  <body>
+    <div class="page-container">
+      <div class="form-wrapper">
+        <header class="header">
+          <div class="logo-section">
+            <img class="logo" width="120" height="90" src="{{companyLogo}}" />
+          </div>
+          <div class="header-text">
+            <div class="organization-name" id="org-name">STREET HAVEN</div>
+            <h1 id="form-title">CLIENT INCIDENT REPORT</h1>
+            <p id="submission-note">
+              *All incident reports are to be submitted to your reporting
+              manager and covering Manager/Director if applicable, as well as HR
+            </p>
+          </div>
+        </header>
+        <main class="form-content">
+
+      
+          <!-- Section 1: Background -->
+          <section class="section">
+            <h2 class="section-title">SECTION 1: BACKGROUND</h2>
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label" for="date-incident">Date of Incident</label>
+                <input
+                  type="text"
+                  id="date-incident"
+                  class="underline-field"
+                  value="{{incidentDate}}"
+                />
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="time-incident">Time of Incident</label>
+                <input
+                  type="text"
+                  id="time-incident"
+                  class="underline-field"
+                  value="{{incidentTime}}"
+                />
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label" for="place-incident">Place of Incident</label>
+
+              <input
+                class="underline-field"
+                value="{{incidentPlace}}"
+                readonly
+              />
+            </div>
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label" for="affected-person">Affected
+                  Client/Person</label>
+
+                <input
+                  class="underline-field"
+                  value="{{affectedPerson}}"
+                  readonly
+                />
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="staff-name">Staff Name</label>
+                <input class="underline-field" value="{{staffName}}" readonly />
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label" for="witness-name">Witness Name</label>
+                <input
+                  class="underline-field"
+                  value="{{witnessName}}"
+                  readonly
+                />
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="staff-email">Staff Email</label>
+                <input
+                  class="underline-field"
+                  value="{{staffEmail}}"
+                  readonly
+                />
+              </div>
+            </div>
+            <div class="subsection-label">Type of Incident</div>
+            <div class="checkbox-group">
+             <div class="checkbox-item">
+  <input type="checkbox" {{#if incidentTypes.disaster}}checked{{/if}} />
+  <div class="checkbox-box"></div>
+  <label>Disaster</label>
+</div>
+
+<div class="checkbox-item">
+  <input type="checkbox" {{#if incidentTypes.drugs}}checked{{/if}} />
+  <div class="checkbox-box"></div>
+  <label>Drugs</label>
+</div>
+
+<div class="checkbox-item">
+  <input type="checkbox" {{#if incidentTypes.property}}checked{{/if}} />
+  <div class="checkbox-box"></div>
+  <label>Property Destruction</label>
+</div>
+
+<div class="checkbox-item">
+  <input type="checkbox" {{#if incidentTypes.theft}}checked{{/if}} />
+  <div class="checkbox-box"></div>
+  <label>Theft</label>
+</div>
+
+<div class="checkbox-item">
+  <input type="checkbox" {{#if incidentTypes.medical}}checked{{/if}} />
+  <div class="checkbox-box"></div>
+  <label>Medical / Injury</label>
+</div>
+
+<div class="checkbox-item">
+  <input type="checkbox" {{#if incidentTypes.intruders}}checked{{/if}} />
+  <div class="checkbox-box"></div>
+  <label>Intruders</label>
+</div>
+
+<div class="checkbox-item">
+  <input type="checkbox" {{#if incidentTypes.police}}checked{{/if}} />
+  <div class="checkbox-box"></div>
+  <label>Police Action</label>
+</div>
+
+<div class="checkbox-item">
+  <input type="checkbox" {{#if incidentTypes.physical}}checked{{/if}} />
+  <div class="checkbox-box"></div>
+  <label>Actual Physical / Sexual Violence</label>
+</div>
+
+<div class="checkbox-item">
+  <input type="checkbox" {{#if incidentTypes.threat}}checked{{/if}} />
+  <div class="checkbox-box"></div>
+  <label>Threat of Physical / Sexual Violence</label>
+</div>
+
+<div class="checkbox-item">
+  <input type="checkbox" {{#if incidentTypes.bomb}}checked{{/if}} />
+  <div class="checkbox-box"></div>
+  <label>Bomb Threat</label>
+</div>
+
+<div class="checkbox-item">
+  <input type="checkbox" {{#if incidentTypes.other}}checked{{/if}} />
+  <div class="checkbox-box"></div>
+  <label>Other</label>
+</div>
+
+<input
+  class="underline-field"
+  value="{{otherincidentText}}"
+  readonly
+/>
+
+          </section>
+          <!-- Section 2: Incident -->
+          <section class="section">
+            <h2 class="section-title">SECTION 2: INCIDENT</h2>
+            <div class="field-group">
+              <label class="field-label" for="incident-description">Clear
+                Concise Description of the Incident:</label>
+          <div class="textarea-box text-content">
+  {{incidentDescription}}
+</div>
+            </div>
+          </section>
+          <!-- Section 3: Action Taken -->
+          <section class="section">
+            <h2 class="section-title">SECTION 3: ACTION TAKEN</h2>
+            <div class="field-group">
+             <div class="textarea-box text-content">
+  {{ActionTaken}}
+</div>
+
+            </div>
+          </section>
+          <!-- Section 4: Debrief -->
+          <section class="section">
+            <h2 class="section-title">SECTION 4: DEBRIEF</h2>
+            <div class="field-group">
+             <div class="textarea-box text-content">
+  {{debrief}}
+</div>
+            </div>
+
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label" for="reporting-staff">Reporting Staff
+                  Name</label>
+              <input class="underline-field" value="{{reportingStaffName}}" readonly />
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="reporting-date">Date</label>
+                <input
+                  type="text"
+                  id="reporting-date"
+                  class="underline-field"
+                  value="{{reportingDate}}"
+                />
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-group">
+                <label class="field-label" for="reported-to">Reported to</label>
+               <input class="underline-field" value="{{reportedTo}}" readonly />
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="reported-date">Date</label>
+                <input
+                  type="text"
+                  id="reported-date"
+                  class="underline-field"
+                  value="{{reportedToDate}}"
+                />
+              </div>
+            </div>
+            <div class="signature-row">
+              <div class="field-group">
+                <label class="field-label" for="staff-signature">Reporting Staff
+                  Signature</label>
+                <input
+                  type="text"
+                  id="staff-signature"
+                  class="underline-field"
+                />
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="manager-signature">Manager's
+                  Signature</label>
+                <input
+                  type="text"
+                  id="manager-signature"
+                  class="underline-field"
+                />
+              </div>
+            </div>
+          </section>
+          <!-- Section 5: Follow Up -->
+          <section class="section">
+            <h2 class="section-title">SECTION 5: FOLLOW UP (Post Incident)</h2>
+            <p style="font-size: 11px; font-style: italic; margin-bottom: 12px">
+              *To be completed by management
+            </p>
+            <div class="field-group">
+              <div class="textarea-box text-content">
+  {{followup}}
+</div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>
