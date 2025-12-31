@@ -55,8 +55,9 @@ const ClientFeedBackFormSchema = Yup.object({
     .required("complaint Type is required"),
 
   otherComplaintDescription: Yup.string().nullable(),
-  preferredContactMethod: Yup.mixed<"Phone" | "Email" | "Either">()
-    .oneOf(["Phone", "Email", "Either"], "Select a preferred contact method")
+  preferredContactMethod: Yup.array()
+    .of(Yup.string().oneOf(["Phone", "Email"]))
+    .min(1, "Select at least one contact method")
     .required("Preferred contact method is required"),
 
   description: Yup.string().required("description is required"),
@@ -107,7 +108,7 @@ const ClientFeedBackForm: React.FC<FormProp> = ({
                 <Col xs={12} md={6}>
                   <Form.Group className="d-flex flex-column gap-8">
                     <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                      Date of Visit:
+                      Date of Visit: <span className="text-danger">*</span>
                     </Form.Label>
 
                     <CustomDatePicker
@@ -132,7 +133,7 @@ const ClientFeedBackForm: React.FC<FormProp> = ({
                 <Col xs={12} md={6}>
                   <Form.Group className="d-flex flex-column gap-8">
                     <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                      Location
+                      Location <span className="text-danger">*</span>
                     </Form.Label>
 
                     <Form.Control
@@ -245,35 +246,61 @@ const ClientFeedBackForm: React.FC<FormProp> = ({
               </Form.Group>
               <Form.Group className="d-flex flex-column gap-8">
                 <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                  Preferred Method of Contact
+                  Preferred Method of Contact{" "}
+                  <span className="text-danger">*</span>
                 </Form.Label>
 
                 <div className="d-flex flex-row gap-20">
-                  {["Phone", "Email", "Either"].map((method) => (
-                    <label
-                      key={method}
-                      className="d-flex align-items-center gap-2"
-                      style={{ cursor: "pointer" }}
-                    >
-                      <input
-                        type="radio"
-                        name="preferredContactMethod"
-                        value={method}
-                        checked={values.preferredContactMethod === method}
-                        onChange={() =>
-                          setFieldValue("preferredContactMethod", method)
-                        }
-                        className="form-check-input"
-                      />
-                      <span className="text-xs xs:text-sm">{method}</span>
-                    </label>
-                  ))}
+                  {["Phone", "Email"].map((method) => {
+                    const checked =
+                      values.preferredContactMethod.includes(method);
+
+                    return (
+                      <label
+                        key={method}
+                        className="d-flex align-items-center gap-2"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => {
+                            if (checked) {
+                              // remove
+                              setFieldValue(
+                                "preferredContactMethod",
+                                values.preferredContactMethod.filter(
+                                  (m) => m !== method
+                                )
+                              );
+                              console.log(
+                                values.preferredContactMethod,
+                                typeof values.preferredContactMethod
+                              );
+                            } else {
+                              // add
+                              setFieldValue("preferredContactMethod", [
+                                ...values.preferredContactMethod,
+                                method,
+                              ]);
+                              console.log(
+                                values.preferredContactMethod,
+                                typeof values.preferredContactMethod
+                              );
+                            }
+                          }}
+                          className="form-check-input"
+                        />
+                        <span className="text-xs xs:text-sm">{method}</span>
+                      </label>
+                    );
+                  })}
                 </div>
 
                 {touched.preferredContactMethod &&
                   errors.preferredContactMethod && (
                     <div className="text-danger text-xs mt-1">
-                      {errors.preferredContactMethod}
+                      {errors.preferredContactMethod as string}
                     </div>
                   )}
               </Form.Group>
@@ -290,7 +317,7 @@ const ClientFeedBackForm: React.FC<FormProp> = ({
               {/* Nature of Complaint (Checkbox style, single-select) */}
               <Form.Group className="d-flex flex-column gap-8">
                 <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                  Nature of Complaint:
+                  Nature of Complaint: <span className="text-danger">*</span>
                 </Form.Label>
 
                 <div className="d-flex flex-row gap-20">
@@ -355,7 +382,8 @@ const ClientFeedBackForm: React.FC<FormProp> = ({
               {/* Description */}
               <Form.Group className="d-flex flex-column gap-8">
                 <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                  Please describe your concern:
+                  Please describe your concern:{" "}
+                  <span className="text-danger">*</span>
                 </Form.Label>
                 <Form.Control
                   as="textarea"
@@ -378,13 +406,14 @@ const ClientFeedBackForm: React.FC<FormProp> = ({
           <Card className="shadow-sm border-0">
             <Card.Body className="d-flex flex-column gap-20 p-20">
               <h5 className="fw-semibold text-md md:text-lg text-street-dark ">
-                Impact & Desired Outcome
+                Impact & Desired Outcome <span className="text-danger">*</span>
               </h5>
 
               {/* Impact */}
               <Form.Group className="d-flex flex-column gap-8">
                 <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                  How has this issue affected you?
+                  How has this issue affected you?{" "}
+                  <span className="text-danger">*</span>
                 </Form.Label>
                 <Form.Control
                   as="textarea"
@@ -404,7 +433,8 @@ const ClientFeedBackForm: React.FC<FormProp> = ({
               {/* Desired Outcome */}
               <Form.Group className="d-flex flex-column gap-8">
                 <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                  What outcome would you like?
+                  What outcome would you like?{" "}
+                  <span className="text-danger">*</span>
                 </Form.Label>
                 <Form.Control
                   as="textarea"

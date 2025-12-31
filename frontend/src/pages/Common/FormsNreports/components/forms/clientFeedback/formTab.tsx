@@ -22,7 +22,10 @@ const ClientFeedbackFormTab = () => {
         description: values.description,
         impact: values.impact,
         outcome: values.desiredOutcome,
-        preferredContactMethod: values.preferredContactMethod,
+        preferredContactMethod: values.preferredContactMethod as (
+          | "Phone"
+          | "Email"
+        )[],
       };
 
       // Optional fields mapping
@@ -84,7 +87,7 @@ const ClientFeedbackFormTab = () => {
           description: "",
           impact: "",
           desiredOutcome: "",
-          preferredContactMethod: "Either",
+          preferredContactMethod: [] as ("Phone" | "Email")[],
         }}
         isLoading={isLoading}
       />

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import ModalWrapper from "../../../../../../components/child/ModalWrapper";
 import {
   useEditPaymentRequistionMutation,
+  useGetPaymentRequisitionByIdQuery,
   type PaymentRequisition,
 } from "../../../../../../services/FormApi";
 import { Icon } from "@iconify/react/dist/iconify.js";
@@ -17,27 +18,14 @@ const EditPaymentRequistion: React.FC<EditPaymentRequistionProp> = ({
   data,
 }) => {
   const [showModal, setShowModal] = useState(false);
+  const {
+    data: response,
+    isLoading: isfetching,
+    isFetching: isReFetching,
+  } = useGetPaymentRequisitionByIdQuery({ id: data._id }, { skip: !showModal });
+  const loading = isfetching || isReFetching;
+  const detail = response?.data;
   const [editpayrequest, { isLoading }] = useEditPaymentRequistionMutation();
-  const initialValues: FormValues = {
-    payeeName: data.payeeName,
-    totalAmount: data.totalAmount,
-    requestedBy: data.requestedBy,
-    requestedDate: new Date(data.requestedDate),
-    approvedBy: data.approvedBy,
-    approvedDate: new Date(data.approvedDate),
-    invoices: null,
-    purchaseDetails: data.paymentDetails.map((p) => {
-      return {
-        date: new Date(p.purchaseDate),
-        nature: p.purchaseNature,
-        program: p.program,
-        expenseCode: p.expenseCode,
-        netAmount: p.netAmount,
-        totalAmount: p.totalAmount,
-        hst: p.hst,
-      };
-    }),
-  };
 
   const handleSubmit = async (
     values: FormValues,
@@ -126,13 +114,15 @@ const EditPaymentRequistion: React.FC<EditPaymentRequistionProp> = ({
         className="p-20 gap-16"
         bodyClassName="p-0 d-flex flex-column gap-16"
         footerClassName="pt-16 px-0 pb-0"
-        isLoading={isLoading}
+        isLoading={loading || isLoading}
         ModalLoader={
           <FormSubmissionLoader
-            isLoading={isLoading}
+            isLoading={loading || isLoading}
             variant="spinner"
             size="lg"
-            message="Updating feedback"
+            message={
+              isLoading ? "Updating Payment Requistion" : "Loading Data..."
+            }
           />
         }
         footer={
@@ -141,25 +131,44 @@ const EditPaymentRequistion: React.FC<EditPaymentRequistionProp> = ({
               className="btn btn-street-primary btn-street-lg radius-12 d-flex align-items-center justify-content-center"
               type="submit"
               form="edit-Payment-Requistion-form"
-              disabled={isLoading}
+              disabled={isLoading || loading}
             >
               {isLoading ? "Updating..." : "Update"}
             </button>
           </>
         }
       >
-      
-            {" "}
-            <PaymentRequisitionForm
-              footer={false}
-              id="edit-Payment-Requistion-form"
-              isEdit={true}
-              FileUrl={data.invoiceAttachment}
-              initialvalues={initialValues}
-              handleSubmit={handleSubmit}
-              isLoading={isLoading}
-            />
-
+        {" "}
+        {!loading && detail && (
+          <PaymentRequisitionForm
+            footer={false}
+            id="edit-Payment-Requistion-form"
+            isEdit={true}
+            FileUrl={detail.invoiceAttachment}
+            initialvalues={{
+              payeeName: detail.payeeName,
+              totalAmount: detail.totalAmount,
+              requestedBy: detail.requestedBy,
+              requestedDate: new Date(detail.requestedDate),
+              approvedBy: detail.approvedBy,
+              approvedDate: new Date(detail.approvedDate),
+              invoices: null,
+              purchaseDetails: detail.paymentDetails.map((p) => {
+                return {
+                  date: new Date(p.purchaseDate),
+                  nature: p.purchaseNature,
+                  program: p.program,
+                  expenseCode: p.expenseCode,
+                  netAmount: p.netAmount,
+                  totalAmount: p.totalAmount,
+                  hst: p.hst,
+                };
+              }),
+            }}
+            handleSubmit={handleSubmit}
+            isLoading={isLoading}
+          />
+        )}
       </ModalWrapper>
     </>
   );

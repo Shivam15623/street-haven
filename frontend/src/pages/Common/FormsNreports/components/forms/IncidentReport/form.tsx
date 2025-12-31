@@ -124,7 +124,7 @@ const IncidentReportForm: React.FC<FormProp> = ({
                     className="d-flex flex-column gap-8"
                   >
                     <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                      Date of Incident
+                      Date of Incident <span className="text-danger">*</span>
                     </Form.Label>
 
                     <CustomDatePicker
@@ -153,7 +153,7 @@ const IncidentReportForm: React.FC<FormProp> = ({
                     className="d-flex flex-column gap-8"
                   >
                     <Form.Label className="text-xs xs:text-sm  fw-medium text-street-dark">
-                      Time of Incident
+                      Time of Incident <span className="text-danger">*</span>
                     </Form.Label>
 
                     <TimePicker
@@ -180,7 +180,7 @@ const IncidentReportForm: React.FC<FormProp> = ({
                 className="d-flex flex-column gap-8"
               >
                 <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                  Location
+                  Location <span className="text-danger">*</span>
                 </Form.Label>
                 <Form.Control
                   type="text"
@@ -202,7 +202,7 @@ const IncidentReportForm: React.FC<FormProp> = ({
                 className="d-flex flex-column gap-8"
               >
                 <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                  Detailed Description
+                  Detailed Description <span className="text-danger">*</span>
                 </Form.Label>
                 <QuillEditor
                   content={values.description}
@@ -294,7 +294,7 @@ const IncidentReportForm: React.FC<FormProp> = ({
                 className="d-flex flex-column gap-8"
               >
                 <Form.Label className=" text-xs xs:text-sm fw-medium text-street-dark">
-                  Actions Taken
+                  Actions Taken <span className="text-danger">*</span>
                 </Form.Label>
                 <Form.Control
                   as="textarea"

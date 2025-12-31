@@ -66,9 +66,11 @@ export const EmployeeIncidentFormSchema = Yup.object({
 
   prevention: Yup.string().required("This field is required"),
 
-  injuredBodyParts: Yup.string().required("This field is required"),
+  injuredBodyParts: Yup.string(),
 
-  doctorVisited: Yup.boolean().required("This Field is Required"),
+  doctorVisited: Yup.boolean()
+    .default(false)
+    .required("This Field is Required"),
 
   doctorName: Yup.string().when("doctorVisited", {
     is: true,
@@ -153,7 +155,7 @@ export const EmployeeIncidentFormSchema = Yup.object({
     otherwise: (schema) => schema.nullable(),
   }),
 
-  previousInjury: Yup.boolean().required(),
+  previousInjury: Yup.boolean().default(false).required(),
 
   previousInjuryDate: Yup.date().when("previousInjury", {
     is: true,
@@ -220,8 +222,6 @@ const EmployeeIncidentForm: React.FC<FormProp> = ({
         setFieldTouched,
         handleBlur,
       }) => {
-        console.log("Formik Errors:", errors);
-        console.log("Formik Touched:", touched);
         return (
           <Form
             id={id ? id : "employeeincident"}
@@ -233,7 +233,8 @@ const EmployeeIncidentForm: React.FC<FormProp> = ({
                 {" "}
                 <Form.Group className="d-flex flex-column gap-8">
                   <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                    I am reporting a work related: *
+                    I am reporting a work related:{" "}
+                    <span className="text-danger">*</span>
                   </Form.Label>
 
                   <div className="d-flex flex-row gap-2 p-3 ">
@@ -268,13 +269,15 @@ const EmployeeIncidentForm: React.FC<FormProp> = ({
               </Card.Body>
             </Card>
             <Card className="shadow-sm border-0">
-              <Card.Body className="d-flex flex-column gap-10 p-20">
+              <Card.Body className="d-flex flex-column gap-20 p-20">
                 {" "}
                 <h5 className="fw-semibold text-md md:text-lg text-street-dark">
                   Employee Information
                 </h5>
                 <Form.Group className="d-flex flex-column gap-8">
-                  <Form.Label>Employee</Form.Label>
+                  <Form.Label>
+                    Employee Name: <span className="text-danger">*</span>
+                  </Form.Label>
 
                   {fetchLoad ? (
                     <div className="d-flex align-items-center gap-2 text-muted">
@@ -326,12 +329,16 @@ const EmployeeIncidentForm: React.FC<FormProp> = ({
                 </Form.Group>
                 {/* Job Title */}
                 <Form.Group className="d-flex flex-column gap-8">
-                  <Form.Label>Job Title</Form.Label>
+                  <Form.Label>
+                    Job Title: <span className="text-danger">*</span>
+                  </Form.Label>
                   <Form.Control value={values.jobTitle} readOnly />
                 </Form.Group>
                 {/* Supervisor */}
                 <Form.Group className="d-flex flex-column gap-8">
-                  <Form.Label>Supervisor</Form.Label>
+                  <Form.Label>
+                    Supervisor Name: <span className="text-danger">*</span>
+                  </Form.Label>
                   <Form.Control
                     value={values.superviserName}
                     disabled
@@ -346,7 +353,8 @@ const EmployeeIncidentForm: React.FC<FormProp> = ({
                 </Form.Group>
                 <Form.Group className="d-flex flex-column gap-8">
                   <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                    Have you told your supervisor about this injury/near miss?
+                    Have you told your supervisor about this injury/near miss?:{" "}
+                    <span className="text-danger">*</span>
                   </Form.Label>
 
                   <div className="d-flex flex-row gap-3 p-3  rounded">
@@ -381,7 +389,7 @@ const EmployeeIncidentForm: React.FC<FormProp> = ({
               </Card.Body>
             </Card>
             <Card className="shadow-sm border-0">
-              <Card.Body className="d-flex flex-column gap-10 p-20">
+              <Card.Body className="d-flex flex-column gap-20 p-20">
                 {" "}
                 <h5 className="fw-semibold text-md md:text-lg text-street-dark">
                   Incident Details
@@ -391,7 +399,8 @@ const EmployeeIncidentForm: React.FC<FormProp> = ({
                   <Col xs={12} md={6}>
                     <Form.Group className="d-flex flex-column gap-8">
                       <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                        Date of Injury/Near Miss
+                        Date of Injury/Near Miss:{" "}
+                        <span className="text-danger">*</span>
                       </Form.Label>
 
                       <CustomDatePicker
@@ -420,7 +429,8 @@ const EmployeeIncidentForm: React.FC<FormProp> = ({
                       className="d-flex flex-column gap-8"
                     >
                       <Form.Label className="text-xs xs:text-sm  fw-medium text-street-dark">
-                        Time of injury/near miss
+                        Time of injury/near miss:{" "}
+                        <span className="text-danger">*</span>
                       </Form.Label>
 
                       <TimePicker
@@ -461,7 +471,8 @@ const EmployeeIncidentForm: React.FC<FormProp> = ({
                 </Form.Group>
                 <Form.Group className="d-flex flex-column gap-8">
                   <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                    Where, exactly did it happen?
+                    Where, exactly did it happen?:{" "}
+                    <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
                     type="text"
@@ -478,7 +489,8 @@ const EmployeeIncidentForm: React.FC<FormProp> = ({
                 </Form.Group>
                 <Form.Group className="d-flex flex-column gap-8">
                   <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                    What were you doing at the time?:
+                    What were you doing at the time?:{" "}
+                    <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
                     as="textarea"
@@ -498,7 +510,8 @@ const EmployeeIncidentForm: React.FC<FormProp> = ({
                 </Form.Group>
                 <Form.Group className="d-flex flex-column gap-8">
                   <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                    Describe step by step what led up to the injury/near miss:
+                    Describe step by step what led up to the injury/near miss:{" "}
+                    <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
                     as="textarea"
@@ -519,7 +532,8 @@ const EmployeeIncidentForm: React.FC<FormProp> = ({
                 </Form.Group>
                 <Form.Group className="d-flex flex-column gap-8">
                   <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                    What could have been done to prevent this injury/near miss?
+                    What could have been done to prevent this injury/near miss?:{" "}
+                    <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
                     as="textarea"
@@ -566,10 +580,11 @@ const EmployeeIncidentForm: React.FC<FormProp> = ({
                 </h5>
                 <Form.Group className="d-flex flex-column gap-8">
                   <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                    Did you see a doctor about this injury/illness?
+                    Did you see a doctor about this injury/illness?{" "}
+                    <span className="text-danger">*</span>
                   </Form.Label>
 
-                  <div className="d-flex flex-row gap-3 p-3  rounded">
+                  <div className="d-flex flex-row gap-3 p-2  rounded">
                     {[
                       { label: "Yes", value: true },
                       { label: "No", value: false },
@@ -720,10 +735,11 @@ const EmployeeIncidentForm: React.FC<FormProp> = ({
                 )}
                 <Form.Group className="d-flex flex-column gap-8">
                   <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                    Has this part of your body been injured before?
+                    Has this part of your body been injured before?{" "}
+                    <span className="text-danger">*</span>
                   </Form.Label>
 
-                  <div className="d-flex flex-row gap-3 p-3  rounded">
+                  <div className="d-flex flex-row gap-3 p-2  rounded">
                     {[
                       { label: "Yes", value: true },
                       { label: "No", value: false },

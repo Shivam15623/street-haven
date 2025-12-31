@@ -6,9 +6,11 @@ import { AbilitiesGrid } from "./AbiltiesGrid";
 import { RestrictionsGrid } from "./RestrictionGrid";
 import {
   CANADA_PROVINCES,
+  useGetFafByIdQuery,
   type FunctionalAbility,
 } from "../../../../../../services/FormApi";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
 
 interface FunctionalAbilityDetailProps {
   details: FunctionalAbility;
@@ -20,6 +22,14 @@ export function FunctionalAbilityDetail({
   details,
 }: FunctionalAbilityDetailProps) {
   const [showModal, setShowModal] = useState(false);
+  const {
+    data: response,
+    isLoading: isFetching,
+    isFetching: isRefetching,
+  } = useGetFafByIdQuery({ id: details._id! }, { skip: !showModal });
+  const fAbility = response?.data;
+  const loading = isFetching || isRefetching;
+  console.log(fAbility);
 
   return (
     <>
@@ -39,9 +49,19 @@ export function FunctionalAbilityDetail({
         bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
         footerClassName="pt-16 pt-sm-20 px-0 pb-0"
         onHide={() => setShowModal(false)}
+        isLoading={loading}
+        ModalLoader={
+          <FormSubmissionLoader
+            isLoading={loading}
+            variant="spinner"
+            size="lg"
+            message={"Loading Data..."}
+          />
+        }
       >
         {/* Scrollable Modal Body */}
-   
+
+        {!loading && fAbility && (
           <div className="p-6 d-flex flex-column gap-20">
             {/* Section A: Claim & Worker Information */}
             <FormSection
@@ -55,7 +75,7 @@ export function FunctionalAbilityDetail({
                   <div className="col-12">
                     <FormField
                       label="Claim No"
-                      value={details.claimNo}
+                      value={fAbility.claimNo}
                       type="text"
                       highlight
                     />
@@ -63,7 +83,7 @@ export function FunctionalAbilityDetail({
                   <div className="col-6 col-md-3">
                     <FormField
                       label="Date of Accident"
-                      value={details.dateOfAccident}
+                      value={fAbility.dateOfAccident}
                       type="date"
                       highlight
                     />
@@ -72,14 +92,14 @@ export function FunctionalAbilityDetail({
                   <div className="col-6 col-md-3">
                     <FormField
                       label="Type of Job"
-                      value={details.typeOfJobAtAccident}
+                      value={fAbility.typeOfJobAtAccident}
                     />
                   </div>
 
                   <div className="col-12 col-md-6">
                     <FormField
                       label="Areas of Injury"
-                      value={details.areasOfInjury}
+                      value={fAbility.areasOfInjury}
                     />
                   </div>
                 </div>
@@ -95,37 +115,37 @@ export function FunctionalAbilityDetail({
                   <div className="form-field-grid">
                     <FormField
                       label="First Name"
-                      value={details.worker?.firstName}
+                      value={fAbility.worker?.firstName}
                     />
                     <FormField
                       label="Last Name"
-                      value={details.worker?.lastName}
+                      value={fAbility.worker?.lastName}
                     />
                     <FormField
                       label="Date of Birth"
-                      value={details.worker?.dateOfBirth}
+                      value={fAbility.worker?.dateOfBirth}
                       type="date"
                     />
                     <FormField
                       label="Telephone"
-                      value={details.worker?.telephone}
+                      value={fAbility.worker?.telephone}
                     />
                     <FormField
                       label="Address"
-                      value={details.worker?.address}
+                      value={fAbility.worker?.address}
                       className="lg:col-span-2"
                     />
                     <FormField
                       label="City/Town"
-                      value={details.worker?.cityTown}
+                      value={fAbility.worker?.cityTown}
                     />
                     <FormField
                       label="Province"
-                      value={provinceLabel(details.worker?.province)}
+                      value={provinceLabel(fAbility.worker?.province)}
                     />
                     <FormField
                       label="Postal Code"
-                      value={details.worker?.postalCode}
+                      value={fAbility.worker?.postalCode}
                     />
                   </div>
                 </div>
@@ -138,29 +158,29 @@ export function FunctionalAbilityDetail({
                 <div className="form-field-grid">
                   <FormField
                     label="Employer Name"
-                    value={details.employer?.fullName}
+                    value={fAbility.employer?.fullName}
                   />
                   <FormField
                     label="Telephone"
-                    value={details.employer?.telephone}
+                    value={fAbility.employer?.telephone}
                   />
-                  <FormField label="Fax No." value={details.employerFaxNo} />
+                  <FormField label="Fax No." value={fAbility.employerFaxNo} />
                   <FormField
                     label="Address"
-                    value={details.employer?.address}
+                    value={fAbility.employer?.address}
                     className="lg:col-span-2"
                   />
                   <FormField
                     label="City/Town"
-                    value={details.employer?.cityTown}
+                    value={fAbility.employer?.cityTown}
                   />
                   <FormField
                     label="Province"
-                    value={provinceLabel(details.employer?.province)}
+                    value={provinceLabel(fAbility.employer?.province)}
                   />
                   <FormField
                     label="Postal Code"
-                    value={details.employer?.postalCode}
+                    value={fAbility.employer?.postalCode}
                   />
                 </div>
 
@@ -170,7 +190,7 @@ export function FunctionalAbilityDetail({
                   <div className="col-6 col-md-3">
                     <FormField
                       label="Discussed RTW"
-                      value={details.discussedRTW}
+                      value={fAbility.discussedRTW}
                       type="boolean"
                     />
                   </div>
@@ -178,7 +198,7 @@ export function FunctionalAbilityDetail({
                     {" "}
                     <FormField
                       label="Discussion Date"
-                      value={details.nodateOfDiscusswill}
+                      value={fAbility.nodateOfDiscusswill}
                       type="date"
                     />
                   </div>
@@ -187,11 +207,11 @@ export function FunctionalAbilityDetail({
                     {" "}
                     <FormField
                       label="Contact Name"
-                      value={details.employerContactName}
+                      value={fAbility.employerContactName}
                     />
                   </div>
                   <div className="col-6 col-md-3">
-                    <FormField label="Position" value={details.position} />
+                    <FormField label="Position" value={fAbility.position} />
                   </div>
                 </div>
               </div>
@@ -207,20 +227,23 @@ export function FunctionalAbilityDetail({
                 <div className="form-field-grid">
                   <FormField
                     label="Designation"
-                    value={details.designationOfHealthPro}
+                    value={fAbility.designationOfHealthPro}
                   />
                   <FormField
                     label="Professional Name"
-                    value={details.healthProfessionalName}
+                    value={fAbility.healthProfessionalName}
                   />
                   <FormField
                     label="WSIB Registered"
-                    value={details.iswsibRegistered}
+                    value={fAbility.iswsibRegistered}
                     type="boolean"
                   />
-                  <FormField label="WSIB ID" value={details.wsibId} />
-                  <FormField label="Invoice Number" value={details.invoiceNo} />
-                  <FormField label="Service Code" value={details.srvCode} />
+                  <FormField label="WSIB ID" value={fAbility.wsibId} />
+                  <FormField
+                    label="Invoice Number"
+                    value={fAbility.invoiceNo}
+                  />
+                  <FormField label="Service Code" value={fAbility.srvCode} />
                 </div>
 
                 <hr />
@@ -229,19 +252,19 @@ export function FunctionalAbilityDetail({
                 <div className="form-field-grid">
                   <FormField
                     label="Address"
-                    value={details.hproAddress}
+                    value={fAbility.hproAddress}
                     className="lg:col-span-2"
                   />
-                  <FormField label="City/Town" value={details.hprocityTown} />
+                  <FormField label="City/Town" value={fAbility.hprocityTown} />
                   <FormField
                     label="Province"
-                    value={provinceLabel(details.hproProvince)}
+                    value={provinceLabel(fAbility.hproProvince)}
                   />
                   <FormField
                     label="Postal Code"
-                    value={details.hproPostalCode}
+                    value={fAbility.hproPostalCode}
                   />
-                  <FormField label="Fax" value={details.hproFax} />
+                  <FormField label="Fax" value={fAbility.hproFax} />
                 </div>
 
                 <hr />
@@ -255,14 +278,14 @@ export function FunctionalAbilityDetail({
                     <div className="col-6 col-md-3">
                       <FormField
                         label="HST Registration No."
-                        value={details.hstRegNo}
+                        value={fAbility.hstRegNo}
                       />
                     </div>
                     <div className="col-6 col-md-3">
                       {" "}
                       <FormField
                         label="HST Service Code"
-                        value={details.hstSrvcCode}
+                        value={fAbility.hstSrvcCode}
                       />
                     </div>
 
@@ -270,7 +293,7 @@ export function FunctionalAbilityDetail({
                       {" "}
                       <FormField
                         label="HST Amount"
-                        value={details.hstAmount}
+                        value={fAbility.hstAmount}
                         type="currency"
                       />
                     </div>
@@ -289,17 +312,17 @@ export function FunctionalAbilityDetail({
                 <div className="col-6 ">
                   <FormField
                     label="Assessment Date"
-                    value={details.assesmentDate}
+                    value={fAbility.assesmentDate}
                     type="date"
                     highlight
                   />
                 </div>
                 <div className="col-6 ">
                   {" "}
-                  {details.returnToWorkStatus && (
+                  {fAbility.returnToWorkStatus && (
                     <StatusField
                       label="Return to Work Status"
-                      status={details.returnToWorkStatus}
+                      status={fAbility.returnToWorkStatus}
                       className="sm:col-span-2"
                     />
                   )}
@@ -309,20 +332,20 @@ export function FunctionalAbilityDetail({
 
             {/* Section E: Abilities */}
             <FormSection title="Functional Abilities" sectionId="E" variant="e">
-              <AbilitiesGrid abilities={details.abilities} />
+              <AbilitiesGrid abilities={fAbility.abilities} />
             </FormSection>
 
             {/* Section E.2: Restrictions */}
             <FormSection title="Restrictions" sectionId="E" variant="e">
-              <RestrictionsGrid restrictions={details.restrictions} />
+              <RestrictionsGrid restrictions={fAbility.restrictions} />
 
-              {details.commentsOnAbilties && (
+              {fAbility.commentsOnAbilties && (
                 <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-street-base-foreground mb-2">
                     Additional Comments
                   </h4>
                   <p className="text-sm text-foreground">
-                    {details.commentsOnAbilties}
+                    {fAbility.commentsOnAbilties}
                   </p>
                 </div>
               )}
@@ -338,14 +361,14 @@ export function FunctionalAbilityDetail({
                 <div className="col-6 col-md-3">
                   <FormField
                     label="Assessment Duration"
-                    value={details.assessmentDuration}
+                    value={fAbility.assessmentDuration}
                   />
                 </div>
                 <div className="col-6 col-md-3">
                   {" "}
                   <FormField
                     label="Discussed RTW with Patient"
-                    value={details.isDiscussRTWtoPatient}
+                    value={fAbility.isDiscussRTWtoPatient}
                     type="boolean"
                   />
                 </div>
@@ -353,7 +376,7 @@ export function FunctionalAbilityDetail({
                 <div className="col-6 col-md-3">
                   <FormField
                     label="Next Appointment"
-                    value={details.nextAppointmentDate}
+                    value={fAbility.nextAppointmentDate}
                     type="date"
                     highlight
                   />
@@ -371,12 +394,12 @@ export function FunctionalAbilityDetail({
                   <div className="d-flex align-items-center gap-2">
                     <Icon
                       icon={
-                        details.providedTo?.worker
+                        fAbility.providedTo?.worker
                           ? "mdi:checkbox-marked"
                           : "mdi:checkbox-blank-outline"
                       }
                       className={
-                        details.providedTo?.worker
+                        fAbility.providedTo?.worker
                           ? "text-success"
                           : "text-street-base"
                       }
@@ -391,12 +414,12 @@ export function FunctionalAbilityDetail({
                   <div className="d-flex align-items-center gap-2">
                     <Icon
                       icon={
-                        details.providedTo?.employer
+                        fAbility.providedTo?.employer
                           ? "mdi:checkbox-marked"
                           : "mdi:checkbox-blank-outline"
                       }
                       className={
-                        details.providedTo?.employer
+                        fAbility.providedTo?.employer
                           ? "text-success"
                           : "text-street-base"
                       }
@@ -408,7 +431,7 @@ export function FunctionalAbilityDetail({
               </div>
             </FormSection>
           </div>
-
+        )}
       </ModalWrapper>
     </>
   );

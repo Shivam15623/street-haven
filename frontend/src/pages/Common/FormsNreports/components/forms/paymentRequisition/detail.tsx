@@ -3,10 +3,14 @@ import { useState } from "react";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import dayjs from "dayjs";
 import { Col, Container, Row } from "react-bootstrap";
-import type { PaymentRequisition } from "../../../../../../services/FormApi";
+import {
+  useGetPaymentRequisitionByIdQuery,
+  type PaymentRequisition,
+} from "../../../../../../services/FormApi";
 import ModalWrapper from "../../../../../../components/child/ModalWrapper";
 import Badge from "../../../../../../components/child/Badge";
 import FileViewer from "../../../../../../components/FileViewer/FileViewer";
+import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
 
 const PaymentRequisitionDetail = ({
   detail,
@@ -14,6 +18,16 @@ const PaymentRequisitionDetail = ({
   detail: PaymentRequisition;
 }) => {
   const [showModal, setShowModal] = useState(false);
+  const {
+    data: response,
+    isLoading: isfetching,
+    isFetching: isReFetching,
+  } = useGetPaymentRequisitionByIdQuery(
+    { id: detail._id },
+    { skip: !showModal }
+  );
+  const loading = isfetching || isReFetching;
+  const data = response?.data;
   const [openFile, setOpenFile] = useState(false);
   return (
     <>
@@ -33,8 +47,17 @@ const PaymentRequisitionDetail = ({
         bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
         footerClassName="pt-16 pt-sm-20 px-0 pb-0"
         onHide={() => setShowModal(false)}
+        isLoading={loading}
+        ModalLoader={
+          <FormSubmissionLoader
+            isLoading={loading}
+            variant="spinner"
+            size="lg"
+            message={"Loading Data..."}
+          />
+        }
       >
-   
+        {data && !loading && (
           <Container className="d-flex flex-column gap-24 animate-fade-in">
             <div className="p-16 border rounded-3 border-sh-primary-50 bg-street-primary-10 ">
               <div className="d-flex flex-row align-items-center justify-content-between">
@@ -50,7 +73,7 @@ const PaymentRequisitionDetail = ({
                 </div>
                 <span className="text-2xl fw-bold text-street-primary">
                   $
-                  {detail.totalAmount.toLocaleString("en-CA", {
+                  {data.totalAmount.toLocaleString("en-CA", {
                     minimumFractionDigits: 2,
                   })}
                 </span>
@@ -71,12 +94,12 @@ const PaymentRequisitionDetail = ({
                       </span>
                     </div>
 
-                    <p className="fw-semibold text-md">{detail.requestedBy}</p>
+                    <p className="fw-semibold text-md">{data.requestedBy}</p>
 
                     <p className="text-sm text-street-base d-flex align-items-center gap-1 mt-1">
                       <Icon icon="lucide:calendar" fontSize={14} />
                       <span>
-                        {dayjs(detail.requestedDate).format("MMMM D Y")}
+                        {dayjs(data.requestedDate).format("MMMM D Y")}
                       </span>
                     </p>
                   </div>
@@ -97,13 +120,11 @@ const PaymentRequisitionDetail = ({
                       </span>
                     </div>
 
-                    <p className="fw-semibold text-md">{detail.approvedBy}</p>
+                    <p className="fw-semibold text-md">{data.approvedBy}</p>
 
                     <p className="text-sm text-street-base d-flex align-items-center gap-1 mt-1">
                       <Icon icon="lucide:calendar" fontSize={14} />
-                      <span>
-                        {dayjs(detail.approvedDate).format("MMMM D Y")}
-                      </span>
+                      <span>{dayjs(data.approvedDate).format("MMMM D Y")}</span>
                     </p>
                   </div>
                 </div>
@@ -123,7 +144,7 @@ const PaymentRequisitionDetail = ({
                 </div>
 
                 <p className="fw-semibold text-street-dark text-lg">
-                  {detail.payeeName}
+                  {data.payeeName}
                 </p>
 
                 <div className="d-flex align-items-center gap-2 mt-8">
@@ -141,9 +162,9 @@ const PaymentRequisitionDetail = ({
               <hr className="bg-street-base" />
               <h3 className="text-sm fw-semibold  d-flex align-items-center gap-2">
                 <Icon icon="lucide:file-text" fontSize={18} />
-                Purchase Details ({detail.paymentDetails.length})
+                Purchase Details ({data.paymentDetails.length})
               </h3>
-              {detail.paymentDetails.map((p) => (
+              {data.paymentDetails.map((p) => (
                 <div className="bg-neutral-50 border-sh-base-1-2 rounded-3 shadow-none card p-16">
                   <div className="card-body p-0">
                     <div className="d-flex flex-row align-items-start justify-content-between">
@@ -187,14 +208,15 @@ const PaymentRequisitionDetail = ({
               ))}
             </div>
           </Container>
-   
-        {openFile && (
+        )}
+
+        {!loading && data && openFile && (
           <FileViewer
             files={[
               {
                 _id: "1",
                 fileName: "invoice",
-                fileUrl: detail.invoiceAttachment,
+                fileUrl: data.invoiceAttachment,
                 fileType: "pdf",
               },
             ]}

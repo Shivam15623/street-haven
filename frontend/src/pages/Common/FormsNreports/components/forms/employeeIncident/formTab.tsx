@@ -28,10 +28,13 @@ const EmployeeIncidentFormTab = () => {
         activityAtTime: values.activityAtTime,
         description: values.incidentDescription,
         preventionSuggestion: values.prevention,
-        injuredBodyPartOrRisk: values.injuredBodyParts,
+
         sawDoctor: values.doctorVisited,
         previousInjury: values.previousInjury,
       };
+      if (values.injuredBodyParts) {
+        payload.injuredBodyPartOrRisk = values.injuredBodyParts;
+      }
       if (values.witnessName) {
         payload.witnessName = values.witnessName;
       }

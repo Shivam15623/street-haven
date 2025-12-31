@@ -4,9 +4,11 @@ import SimpleTable from "../../../../../components/child/SimpleTable";
 
 import {
   useGetAllMediaConsentQuery,
+  useLazyGetMediaConsentPdfQuery,
   type MediaConsent,
 } from "../../../../../services/FormApi";
 import EditMediaConsent from "../modals/EditMediaConsent";
+import { useDebounce } from "../../../../../hooks/useDebounce";
 
 // ------------------------------
 // Columns
@@ -15,37 +17,6 @@ interface Column {
   header: string;
   accessor: (row: MediaConsent) => React.ReactNode;
 }
-
-const columns: Column[] = [
-  {
-    header: "Name",
-    accessor: (row) => row.name || "N/A",
-  },
-  {
-    header: "Printed Name",
-    accessor: (row) => row.printedname || "N/A",
-  },
-  {
-    header: "Consent Date",
-    accessor: (row) =>
-      row.date ? new Date(row.date).toLocaleDateString("en-IN") : "N/A",
-  },
-  {
-    header: "Created",
-    accessor: (row) =>
-      row.createdAt
-        ? new Date(row.createdAt).toLocaleDateString("en-IN")
-        : "N/A",
-  },
-  {
-    header: "Actions",
-    accessor: (row) => (
-      <>
-        <EditMediaConsent data={row} />
-      </>
-    ),
-  },
-];
 
 // ------------------------------
 // Component
@@ -56,13 +27,74 @@ const MediaConsentSubmission = () => {
     limit: 10,
     search: "",
   });
+  const debouncedSearch = useDebounce(filter.search, 1000);
+  const { data: consentData, isLoading } = useGetAllMediaConsentQuery({
+    page: filter.page,
+    limit: filter.limit,
+    search: debouncedSearch,
+  });
+  const [getMediaConsentPdf] =
+    useLazyGetMediaConsentPdfQuery();
+  const handleDownload = async (id: string) => {
+    try {
+      const blob = await getMediaConsentPdf(id).unwrap();
 
-  const { data: consentData, isLoading } = useGetAllMediaConsentQuery(filter);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "employee-incident-report.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to download PDF", err);
+    }
+  };
 
   if (isLoading) return <div>Loading...</div>;
 
   const submissions: MediaConsent[] = consentData?.data?.data ?? [];
   const total: number = consentData?.data?.paggination?.total || 0;
+  const columns: Column[] = [
+    {
+      header: "Name",
+      accessor: (row) => row.name || "N/A",
+    },
+    {
+      header: "Printed Name",
+      accessor: (row) => row.printedname || "N/A",
+    },
+    {
+      header: "Consent Date",
+      accessor: (row) =>
+        row.date ? new Date(row.date).toLocaleDateString("en-IN") : "N/A",
+    },
+    {
+      header: "Created",
+      accessor: (row) =>
+        row.createdAt
+          ? new Date(row.createdAt).toLocaleDateString("en-IN")
+          : "N/A",
+    },
+    {
+      header: "Actions",
+      accessor: (row) => {
+        return (
+          <div className="d-flex gap-2">
+            <EditMediaConsent data={row} />
+            <button
+              className="d-flex gap-2 align-items-center justify-content-center btn btn-street-outline-primary radius-12 p-0"
+              style={{ width: "43px", height: "40px" }}
+              onClick={() => handleDownload(row._id!)}
+            >
+              <Icon icon={"mdi:download"} width={18} />
+            </button>
+          </div>
+        );
+      },
+    },
+  ];
 
   return (
     <div className="d-flex flex-column gap-24">

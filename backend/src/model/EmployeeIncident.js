@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 
 const EmployeeIncidentSchema = new mongoose.Schema(
@@ -14,11 +13,11 @@ const EmployeeIncidentSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    jobTitle: { type: String ,required:true},
+    jobTitle: { type: String, required: true },
     supervisor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      default:null,
+      default: null,
       required: true,
     },
 
@@ -39,7 +38,7 @@ const EmployeeIncidentSchema = new mongoose.Schema(
 
     injuredBodyPartOrRisk: { type: String },
 
-    sawDoctor: { type: Boolean, required: true },
+    sawDoctor: { type: Boolean, default: false, required: true },
     doctorName: { type: String },
     doctorPhone: {
       type: String,
@@ -52,7 +51,7 @@ const EmployeeIncidentSchema = new mongoose.Schema(
     doctorVisitDate: { type: Date },
     doctorVisitTime: { type: String },
 
-    previousInjury: { type: Boolean, required: true },
+    previousInjury: { type: Boolean, default: false, required: true },
     previousInjuryDate: { type: Date },
   },
   { timestamps: true }

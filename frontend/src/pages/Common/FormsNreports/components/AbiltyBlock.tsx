@@ -37,7 +37,7 @@ const AbilityBlock: React.FC<AbilityBlockProps> = ({
     <div className="col">
       <Form.Group className="d-flex flex-column gap-8">
         <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-          {label}:
+          {label}: <span className="text-danger">*</span>
         </Form.Label>
 
         {options.map((opt) => (

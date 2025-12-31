@@ -10,6 +10,7 @@ import {
 import EditPaymentRequistion from "./edit";
 import PaymentRequisitionDetail from "./detail";
 import DeleteConfirmModal from "../delete";
+import { useDebounce } from "../../../../../../hooks/useDebounce";
 
 interface Column {
   header: string;
@@ -26,8 +27,12 @@ const PaymentRequistionSubmission = () => {
   // 🔹 Delete modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-
-  const { data, isLoading } = useGetAllPaymentRequisitionsQuery(filter);
+  const debouncedSearch = useDebounce(filter.search, 1000);
+  const { data, isLoading } = useGetAllPaymentRequisitionsQuery({
+    page: filter.page,
+    limit: filter.limit,
+    search: debouncedSearch,
+  });
   const [deletePaymentReqistion, { isLoading: deleting }] =
     useDeletePaymentRequistionMutation();
 

@@ -1,9 +1,13 @@
+import { generatePdf } from "../helper/generatePdf.js";
+import { buildHtmlFromTemplate } from "../helper/generateTemplates.js";
 import ClientFeedback from "../model/clientFeedback.js";
 import ClientIncident from "../model/clientIncidentReport.js";
 import EmployeeIncidentReport from "../model/EmployeeIncident.js";
 import FunctionalAbility from "../model/functionalAbilties.js";
+import IncidentReport from "../model/incidentreport.js";
 import MediaConsent from "../model/mediaConsent.js";
 import PaymentRequisition from "../model/PaymentRequistion.js";
+import StaffFeedback from "../model/staffFeedback.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
@@ -164,6 +168,9 @@ export const createEmployeeIncident = asyncHandler(async (req, res) => {
   }
   if (previousInjury === true) {
     payload.previousInjuryDate = previousInjuryDate;
+  }
+  if (injuredBodyPartOrRisk) {
+    payload.injuredBodyPartOrRisk = injuredBodyPartOrRisk;
   }
   const cEmpIncident = await EmployeeIncidentReport.create(payload);
   if (!cEmpIncident) {
@@ -334,11 +341,12 @@ export const GetAllClientIncidents = asyncHandler(async (req, res) => {
     query.$or = [
       { affectedPerson: { $regex: search, $options: "i" } },
       { staffName: { $regex: search, $options: "i" } },
-      { description: { $regex: search, $options: "i" } },
+      { incidentType: { $regex: search, $options: "i" } },
     ];
   }
 
   const data = await ClientIncident.find(query)
+    .select("affectedPerson staffName incidentType incidentTime incidentDate")
     .sort({ [sortBy]: order === "asc" ? 1 : -1 })
     .skip((page - 1) * limit)
     .limit(Number(limit));
@@ -367,38 +375,103 @@ export const GetAllEmployeeIncidents = asyncHandler(async (req, res) => {
     order = "desc",
   } = req.query;
 
-  const query = {};
+  const matchStage = {};
+
   if (search) {
-    query.$or = [
-      { name: { $regex: search, $options: "i" } },
+    matchStage.$or = [
       { location: { $regex: search, $options: "i" } },
-      { description: { $regex: search, $options: "i" } },
+      { jobTitle: { $regex: search, $options: "i" } },
+      {
+        $expr: {
+          $regexMatch: {
+            input: {
+              $concat: ["$employee.firstname", " ", "$employee.lastname"],
+            },
+            regex: search,
+            options: "i",
+          },
+        },
+      },
+      {
+        $expr: {
+          $regexMatch: {
+            input: {
+              $concat: ["$supervisor.firstname", " ", "$supervisor.lastname"],
+            },
+            regex: search,
+            options: "i",
+          },
+        },
+      },
     ];
   }
 
-  const data = await EmployeeIncidentReport.find(query)
-    .populate({
-      path: "employee",
-      select: "firstname lastname title",
-    })
-    .populate({
-      path: "supervisor",
-      select: "firstname lastname title",
-    })
-    .sort({ [sortBy]: order === "asc" ? 1 : -1 })
-    .skip((page - 1) * limit)
-    .limit(Number(limit));
+  const pipeline = [
+    {
+      $lookup: {
+        from: "users",
+        localField: "employee",
+        foreignField: "_id",
+        as: "employee",
+      },
+    },
+    { $unwind: "$employee" },
 
-  const totalCount = await EmployeeIncidentReport.countDocuments(query);
+    {
+      $lookup: {
+        from: "users",
+        localField: "supervisor",
+        foreignField: "_id",
+        as: "supervisor",
+      },
+    },
+    { $unwind: "$supervisor" },
+
+    { $match: matchStage },
+    {
+      $project: {
+        injuryDate: 1,
+        injuryTime: 1,
+        location: 1,
+        jobTitle: 1,
+        description: 1,
+
+        "employee._id": 1,
+        "employee.firstname": 1,
+        "employee.lastname": 1,
+        "employee.title": 1,
+
+        "supervisor._id": 1,
+        "supervisor.firstname": 1,
+        "supervisor.lastname": 1,
+        "supervisor.title": 1,
+      },
+    },
+    {
+      $sort: { [sortBy]: order === "asc" ? 1 : -1 },
+    },
+    { $skip: (page - 1) * limit },
+    { $limit: Number(limit) },
+  ];
+
+  const data = await EmployeeIncidentReport.aggregate(pipeline);
+
+  const totalCount = await EmployeeIncidentReport.aggregate([
+    ...pipeline.slice(
+      0,
+      pipeline.findIndex((s) => s.$sort)
+    ),
+    { $count: "count" },
+  ]);
 
   res.status(200).json(
     new ApiResponse(200, "Employee Incidents fetched successfully", {
       data,
       pagination: {
-        total: totalCount,
+        total: totalCount[0]?.count || 0,
         page: Number(page),
         limit: Number(limit),
-        totalPages: Math.ceil(totalCount / limit),
+        totalPages: Math.ceil((totalCount[0]?.count || 0) / limit),
       },
     })
   );
@@ -416,12 +489,24 @@ export const GetAllFunctionalAbilities = asyncHandler(async (req, res) => {
   const query = {};
   if (search) {
     query.$or = [
-      { workerName: { $regex: search, $options: "i" } },
-      { description: { $regex: search, $options: "i" } },
+      {
+        $expr: {
+          $regexMatch: {
+            input: { $concat: ["$worker.firstName", " ", "$worker.lastName"] },
+            regex: search,
+            options: "i",
+          },
+        },
+      },
+      { "worker.telephone": { $regex: search, $options: "i" } },
+      { returnToWorkStatus: { $regex: search, $options: "i" } },
+      { claimNo: { $regex: search, $options: "i" } },
+      {},
     ];
   }
 
   const data = await FunctionalAbility.find(query)
+    .select("worker returnToWorkStatus claimNo dateOfAccident")
     .sort({ [sortBy]: order === "asc" ? 1 : -1 })
     .skip((page - 1) * limit)
     .limit(Number(limit));
@@ -491,10 +576,12 @@ export const GetAllPaymentRequisitions = asyncHandler(async (req, res) => {
     query.$or = [
       { payeeName: { $regex: search, $options: "i" } },
       { requestedBy: { $regex: search, $options: "i" } },
+      { approvedBy: { $regex: search, $options: "i" } },
     ];
   }
 
   const data = await PaymentRequisition.find(query)
+    .select("payeeName requestedBy approvedBy totalAmount requestedDate")
     .sort({ [sortBy]: order === "asc" ? 1 : -1 })
     .skip((page - 1) * limit)
     .limit(Number(limit));
@@ -814,3 +901,266 @@ export const deleteFAF = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, "Form deleted successfully"));
 });
+
+export const generatefilledPaymentPdf = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const dataFromDB = await PaymentRequisition.findById(id);
+
+  console.log(dataFromDB);
+  const plainData = dataFromDB.toObject();
+  const html = buildHtmlFromTemplate("payment-requistion", plainData);
+
+  const pdf = await generatePdf(html);
+  res.set({
+    "Content-Type": "application/pdf",
+    "Content-Disposition": "attachment; filename=payment.pdf",
+  });
+
+  res.send(pdf);
+});
+
+export const generatefilledStaffFeedbackpdf = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const dataFromDB = await StaffFeedback.findById(id).populate(
+    "submittedBy",
+    "firstname lastname"
+  );
+
+  const payload = {
+    date: dataFromDB.date ? dataFromDB.date.toLocaleDateString() : "",
+    time: dataFromDB.date ? dataFromDB.date.toLocaleTimeString() : "",
+    location: dataFromDB.location || "",
+    category: dataFromDB.category || "",
+    description: dataFromDB.description || "",
+    witnesses: dataFromDB.witnesses || [],
+    actionsTaken: dataFromDB.actionsTaken || "",
+    reporterName:
+      `${dataFromDB.submittedBy?.firstname} ${dataFromDB.submittedBy?.lastname}` ||
+      "",
+  };
+  const html = buildHtmlFromTemplate("staff-feedback", payload);
+
+  const pdf = await generatePdf(html);
+  res.set({
+    "Content-Type": "application/pdf",
+    "Content-Disposition": "attachment; filename=staff-feedback.pdf",
+  });
+
+  res.send(pdf);
+});
+
+export const generateFilledClientIncident = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const doc = await ClientIncident.findById(id);
+
+  console.log(doc);
+
+  const payload = {
+    incidentDate: new Date(doc.incidentDate).toLocaleDateString(),
+    incidentTime: doc.incidentTime,
+    incidentPlace: doc.incidentPlace,
+    affectedPerson: doc.affectedPerson,
+    staffName: doc.staffName,
+    staffEmail: doc.staffEmail,
+    witnessName: doc.witnessName,
+
+    incidentDescription: doc.incidentDescription,
+    ActionTaken: doc.ActionTaken,
+    debrief: doc.debrief,
+    followup: doc.followup,
+
+    reportingStaffName: doc.reportingStaffName,
+    reportingDate: new Date(doc.reportingDate).toLocaleDateString(),
+    reportedTo: doc.reportedTo,
+    reportedToDate: new Date(doc.reportedToDate).toLocaleDateString(),
+
+    incidentTypes: {
+      disaster: doc.incidentType === "Disaster",
+      drugs: doc.incidentType === "Drugs",
+      property: doc.incidentType === "Property Destruction",
+      theft: doc.incidentType === "Theft",
+      medical: doc.incidentType.includes("Medical"),
+      intruders: doc.incidentType === "Intruders",
+      police: doc.incidentType === "Police Action",
+      physical: doc.incidentType === "Actual Physical / Sexual Violence",
+      threat: doc.incidentType === "Threat of Physical / Sexual Violence",
+      bomb: doc.incidentType === "Bomb Threat",
+      other: doc.incidentType === "Other",
+    },
+
+    otherincidentText: doc.otherincidentText,
+  };
+
+  const html = buildHtmlFromTemplate("client-incident", payload);
+
+  const pdf = await generatePdf(html);
+  res.set({
+    "Content-Type": "application/pdf",
+    "Content-Disposition": "attachment; filename=client-incident.pdf",
+  });
+
+  res.send(pdf);
+});
+
+export const generateFilledclientFeedbackPdf = asyncHandler(
+  async (req, res) => {
+    const { id } = req.params;
+    const doc = await ClientFeedback.findById(id);
+    const payload = {
+      visitDate: new Date(doc.visitDate).toLocaleDateString(),
+      visitLocation: doc.visitLocation,
+
+      clientName: doc.clientName || "N-A",
+      clientPhone: doc.clientPhone || "N-A",
+      clientEmail: doc.clientEmail || "N-A",
+      clientAddress: doc.clientAddress || "N-A",
+
+      complaintDescription: doc.complaintDescription,
+      impact: doc.impact,
+      desiredOutcome: doc.desiredOutcome,
+      otherComplaintText: doc.otherComplaintText || "",
+
+      preferredContactMethod: doc.preferredContactMethod?.join(", ") || "",
+
+      complaintNature: {
+        staff: doc.complaintNature === "Staff Behaviour",
+        product: doc.complaintNature === "Product Issue",
+        service: doc.complaintNature === "Service Issue",
+        other: doc.complaintNature === "Other",
+      },
+    };
+    const html = buildHtmlFromTemplate("client-feedback", payload);
+
+    const pdf = await generatePdf(html);
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": "attachment; filename=client-feedback.pdf",
+    });
+
+    res.send(pdf);
+  }
+);
+export const generateFilledIncidentReport = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const dataFromDB = await IncidentReport.findById(id).populate(
+    "submittedBy",
+    "firstname lastname"
+  );
+
+  const payload = {
+    date: dataFromDB.dateOfIncident
+      ? dataFromDB.dateOfIncident.toLocaleDateString()
+      : "",
+    time: dataFromDB.dateOfIncident
+      ? dataFromDB.dateOfIncident.toLocaleTimeString()
+      : "",
+    location: dataFromDB.location || "",
+
+    description: dataFromDB.description || "",
+    witnesses: dataFromDB.witnesses || [],
+    actionsTaken: dataFromDB.actionsTaken || "",
+    reporterName:
+      `${dataFromDB.submittedBy?.firstname} ${dataFromDB.submittedBy?.lastname}` ||
+      "",
+  };
+  const html = buildHtmlFromTemplate("incident-report", payload);
+
+  const pdf = await generatePdf(html);
+  res.set({
+    "Content-Type": "application/pdf",
+    "Content-Disposition": "attachment; filename=incident-report.pdf",
+  });
+
+  res.send(pdf);
+});
+
+export const generateFilledMediaConsent = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const dataFromDB = await MediaConsent.findById(id);
+  const payload = {
+    date: dataFromDB.date ? dataFromDB.date.toLocaleDateString() : "",
+    name: dataFromDB.name,
+    printedname: dataFromDB.printedname,
+  };
+  const html = buildHtmlFromTemplate("media-consent", payload);
+
+  const pdf = await generatePdf(html);
+  res.set({
+    "Content-Type": "application/pdf",
+    "Content-Disposition": "attachment; filename=media-consent.pdf",
+  });
+
+  res.send(pdf);
+});
+
+export const generateFilledEmployeeIncidentPdf = asyncHandler(
+  async (req, res) => {
+    const { id } = req.params;
+
+    const doc = await EmployeeIncidentReport.findById(id)
+      .populate("employee", "firstname lastname")
+      .populate("supervisor", "firstname lastname");
+
+    if (!doc) {
+      res.status(404);
+      throw new Error("Incident report not found");
+    }
+
+    const payload = {
+      employeeName: `${doc.employee.firstname} ${doc.employee.lastname}`,
+      jobTitle: doc.jobTitle,
+      supervisorName: doc.supervisor
+        ? `${doc.supervisor.firstname} ${doc.supervisor.lastname}`
+        : "",
+
+      reportType: {
+        injury: doc.reportType === "Injury",
+        illness: doc.reportType === "Illness",
+        nearMiss: doc.reportType === "Near Miss",
+      },
+
+      informedSupervisor: {
+        yes: doc.informedSupervisor === true,
+        no: doc.informedSupervisor === false,
+      },
+
+      injuryDate: new Date().toDateString(),
+      injuryTime: doc.injuryTime,
+
+      witnessName: doc.witnessName || "N-A",
+      location: doc.location,
+
+      activityAtTime: doc.activityAtTime,
+      description: doc.description,
+      preventionSuggestion: doc.preventionSuggestion,
+      injuredBodyPartOrRisk: doc.injuredBodyPartOrRisk || "N-A",
+
+      sawDoctor: {
+        yes: doc.sawDoctor === true,
+        no: doc.sawDoctor === false,
+      },
+
+      doctorName: doc.doctorName || "N-A",
+      doctorPhone: doc.doctorPhone || "N-A",
+
+      doctorVisitDate: new Date(doc.doctorVisitDate).toDateString()||"N-A",
+      doctorVisitTime: doc.doctorVisitTime || "N-A",
+
+      previousInjury: {
+        yes: doc.previousInjury === true,
+        no: doc.previousInjury === false,
+      },
+
+      previousInjuryDate: new Date(doc.previousInjuryDate).toDateString(),
+    };
+
+    const html = buildHtmlFromTemplate("employee-incident", payload);
+    const pdf = await generatePdf(html);
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": "attachment; filename=employee-incident.pdf",
+    });
+
+    res.send(pdf);
+  }
+);
