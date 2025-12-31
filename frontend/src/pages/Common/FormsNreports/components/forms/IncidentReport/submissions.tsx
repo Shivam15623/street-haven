@@ -12,6 +12,7 @@ import SimpleTable from "../../../../../../components/child/SimpleTable";
 import IncidentReportModal from "./IncidentReport";
 import EditIncidentReport from "./edit";
 import DeleteConfirmModal from "../delete";
+import { useDebounce } from "../../../../../../hooks/useDebounce";
 
 interface Column {
   header: string;
@@ -27,6 +28,7 @@ const IncidentReportSubmission = () => {
   });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const debouncedSearch = useDebounce(filter.search, 1000);
   const [deleteIncidentReport, { isLoading: deleting }] =
     useDeleteIncidentReportMutation();
   const handleDeleteClick = (id: string) => {
@@ -45,8 +47,11 @@ const IncidentReportSubmission = () => {
       console.error("Delete failed", error);
     }
   };
-  const { data: incidentSubmissions, isLoading } =
-    useViewIncidentReportQuery(filter);
+  const { data: incidentSubmissions, isLoading } = useViewIncidentReportQuery({
+    page: filter.page,
+    limit: filter.limit,
+    search: debouncedSearch,
+  });
   const columns: Column[] = [
     {
       header: "Date",

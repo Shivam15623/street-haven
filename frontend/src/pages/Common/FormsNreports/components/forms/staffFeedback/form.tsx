@@ -1,16 +1,16 @@
-import React from 'react'
+import React from "react";
 import { Col, Form, Row } from "react-bootstrap";
 import { FieldArray, Formik } from "formik";
 import * as Yup from "yup";
-import { handleDownload } from '../../../../../../utills/handleDownload';
-import Badge from '../../../../../../components/child/Badge';
-import CustomDatePicker from '../../../../../../components/child/DatePicker';
-import TimePicker from '../../../../../../components/child/TimePicker';
-import QuillEditor from '../../../../../../components/child/QuillEditor';
+import { handleDownload } from "../../../../../../utills/handleDownload";
+import Badge from "../../../../../../components/child/Badge";
+import CustomDatePicker from "../../../../../../components/child/DatePicker";
+import TimePicker from "../../../../../../components/child/TimePicker";
+import QuillEditor from "../../../../../../components/child/QuillEditor";
 const staffFeedbackSchema = Yup.object({
   date: Yup.date()
     .required("Date of incident is required")
-   
+
     .test("not-future-date", "Date cannot be in the future", (val) => {
       if (!val) return true;
       const today = new Date();
@@ -52,12 +52,10 @@ const staffFeedbackSchema = Yup.object({
     .min(1, "At least one witness is required")
     .max(5, "At most five witness is required"),
 
-  actionsTaken: Yup.string().max(
-    500,
-    "Actions taken cannot exceed 500 characters"
-  ).required("Actions Taken is required"),
+  actionsTaken: Yup.string()
+    .max(500, "Actions taken cannot exceed 500 characters")
+    .required("Actions Taken is required"),
   newWitness: Yup.string(),
-
 });
 
 interface FormProp {
@@ -71,7 +69,7 @@ interface FormProp {
   ) => void;
 }
 export type FormValues = Yup.InferType<typeof staffFeedbackSchema>;
-const StaffFeedbackForm:React.FC<FormProp> = ({
+const StaffFeedbackForm: React.FC<FormProp> = ({
   footer,
   isLoading,
   handleSubmit,
@@ -79,303 +77,297 @@ const StaffFeedbackForm:React.FC<FormProp> = ({
   id,
 }) => {
   return (
-         <Formik
-          validationSchema={staffFeedbackSchema}
-          
-          validateOnChange={false}
-          validateOnBlur={true}
-          initialValues={initialvalues}
-       
-          onSubmit={handleSubmit}
-        >
-          {({
-            handleSubmit,
-            handleChange,
-            values,
-            errors,
-            touched,
-            setFieldValue,
-            setFieldTouched,
-            handleBlur,
-            handleReset,
-          }) => {
-          
-            return (
-              <div
-                className={`position-relative ${
-                  isLoading ? "pointer-events-none" : ""
-                }`}
-              >
-                <Form
-                  noValidate
-                  id={id?id:"create-staff-report"}
-                  onSubmit={handleSubmit}
-                  className="d-flex flex-column gap-20"
-                >
-                  {/* Date + Time */}
-                  <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
-                    {/* Date */}
-                    <Col xs={12} md={6}>
-                      <Form.Group
-                        controlId="date"
-                        className="d-flex flex-column gap-8"
-                      >
-                        <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                          Date of Incident
-                        </Form.Label>
-
-                        <CustomDatePicker
-                          value={values.date ? new Date(values.date) : null}
-                          onChange={(date) => {
-                            setFieldValue("date", date, true); // ← Add true to validate immediately
-                            setFieldTouched("date", true, false); // ← false prevents double validation
-                          }}
-                          onBlur={handleBlur}
-                          isInvalid={!!errors.date && !!touched.date}
-                        />
-
-                        {/* Show error manually */}
-                        {errors.date && touched.date && (
-                          <div className="invalid-feedback d-block">
-                            {String(errors.date)}
-                          </div>
-                        )}
-                      </Form.Group>
-                    </Col>
-
-                    {/* Time */}
-                    <Col xs={12} md={6}>
-                      <Form.Group
-                        controlId="time"
-                        className="d-flex flex-column gap-8"
-                      >
-                        <Form.Label className="text-xs xs:text-sm  fw-medium text-street-dark">
-                          Time of Incident
-                        </Form.Label>
-
-                        <TimePicker
-                          value={values.time}
-                          onChange={(val) => setFieldValue("time", val)}
-                          // isInvalid={!!errors.time && touched.time}
-                          className={
-                            touched.time && errors.time ? "is-invalid" : ""
-                          }
-                          onBlur={() => setFieldTouched("time", true)}
-                        />
-
-                        {errors.time && touched.time && (
-                          <div className="invalid-feedback d-block">
-                            {errors.time}
-                          </div>
-                        )}
-                      </Form.Group>
-                    </Col>
-                  </Row>
-
-                  {/* Location */}
+    <Formik
+      validationSchema={staffFeedbackSchema}
+      validateOnChange={false}
+      validateOnBlur={true}
+      initialValues={initialvalues}
+      onSubmit={handleSubmit}
+    >
+      {({
+        handleSubmit,
+        handleChange,
+        values,
+        errors,
+        touched,
+        setFieldValue,
+        setFieldTouched,
+        handleBlur,
+        handleReset,
+      }) => {
+        return (
+          <div
+            className={`position-relative ${
+              isLoading ? "pointer-events-none" : ""
+            }`}
+          >
+            <Form
+              noValidate
+              id={id ? id : "create-staff-report"}
+              onSubmit={handleSubmit}
+              className="d-flex flex-column gap-20"
+            >
+              {/* Date + Time */}
+              <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
+                {/* Date */}
+                <Col xs={12} md={6}>
                   <Form.Group
-                    controlId="location"
+                    controlId="date"
                     className="d-flex flex-column gap-8"
                   >
                     <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                      Location
+                      Date of Incident <span className="text-danger">*</span>
                     </Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="location"
-                      value={values.location}
-                      onChange={handleChange}
-                      isInvalid={!!errors.location && touched.location}
+
+                    <CustomDatePicker
+                      value={values.date ? new Date(values.date) : null}
+                      onChange={(date) => {
+                        setFieldValue("date", date, true); // ← Add true to validate immediately
+                        setFieldTouched("date", true, false); // ← false prevents double validation
+                      }}
+                      onBlur={handleBlur}
+                      isInvalid={!!errors.date && !!touched.date}
                     />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.location}
-                    </Form.Control.Feedback>
-                  </Form.Group>
 
-                  {/* Category */}
+                    {/* Show error manually */}
+                    {errors.date && touched.date && (
+                      <div className="invalid-feedback d-block">
+                        {String(errors.date)}
+                      </div>
+                    )}
+                  </Form.Group>
+                </Col>
+
+                {/* Time */}
+                <Col xs={12} md={6}>
                   <Form.Group
-                    controlId="category"
+                    controlId="time"
                     className="d-flex flex-column gap-8"
                   >
-                    <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                      Category
+                    <Form.Label className="text-xs xs:text-sm  fw-medium text-street-dark">
+                      Time of Incident <span className="text-danger">*</span>
                     </Form.Label>
-                    <Form.Select
-                      name="category"
-                      value={values.category}
-                      onChange={handleChange}
-                      isInvalid={!!errors.category && touched.category}
-                    >
-                      <option value="Other">Other</option>
-                      <option value="Behavior">Behavior</option>
-                      <option value="Equipment">Equipment</option>
-                      <option value="Safety">Safety</option>
-                    </Form.Select>
-                    <Form.Control.Feedback type="invalid">
-                      {errors.category}
-                    </Form.Control.Feedback>
-                  </Form.Group>
 
-                  {/* Description */}
-                  <Form.Group
-                    controlId="description"
-                    className="d-flex flex-column gap-8"
-                  >
-                    <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                      Detailed Description
-                    </Form.Label>
-                    <QuillEditor
-                      content={values.description}
-                      onChange={(val) => setFieldValue("description", val)}
-                      isInvalid={touched.description && !!errors.description}
-                      errorMessage={errors.description as string}
-                    />
-                    <div>{values.description.length}/500 characters</div>
-                    <Form.Control.Feedback type="invalid">
-                      {errors.description}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-
-                  {/* Witnesses */}
-                  <Form.Group
-                    controlId="witnesses"
-                    className="d-flex flex-column gap-8"
-                  >
-                    <Form.Label className=" text-xs xs:text-sm fw-medium text-street-dark">
-                      Witnesses
-                    </Form.Label>
-                    <FieldArray name="witnesses">
-                      {({ push, remove }) => (
-                        <>
-                          <div className="d-flex gap-2 mb-2">
-                            <Form.Control
-                              type="text"
-                              placeholder="Add a witness"
-                              value={values.newWitness ?? ""}
-                              onChange={(e) =>
-                                setFieldValue("newWitness", e.target.value)
-                              }
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  e.preventDefault();
-                                  const witnessesArray = values.witnesses ?? [];
-                                  if (
-                                    values.newWitness &&
-                                    !witnessesArray.includes(values.newWitness)
-                                  ) {
-                                    push(values.newWitness);
-                                    setFieldValue("newWitness", "");
-                                  }
-                                }
-                              }}
-                            />
-                            <button
-                              className="btn-street-primary radius-8 px-3 text-lg"
-                              type="button"
-                              onClick={() => {
-                                if (
-                                  values.newWitness &&
-                                  values.witnesses &&
-                                  values?.witnesses.length < 5
-                                ) {
-                                  push(values.newWitness);
-                                  setFieldValue("newWitness", "");
-                                }
-                              }}
-                            >
-                              +
-                            </button>
-                          </div>
-
-                          <div className="d-flex gap-2 flex-wrap mb-2">
-                            {(values.witnesses ?? []).map((w, i) => (
-                              <Badge key={i} variant="primary-soft">
-                                {w}{" "}
-                                <span
-                                  style={{ cursor: "pointer" }}
-                                  onClick={() => remove(i)}
-                                >
-                                  ×
-                                </span>
-                              </Badge>
-                            ))}
-                          </div>
-
-                          {/* 🔥 Add this */}
-                          {touched.witnesses && errors.witnesses && (
-                            <div className="text-danger small mt-1">
-                              {errors.witnesses as string}
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </FieldArray>
-                  </Form.Group>
-
-                  {/* Actions Taken */}
-                  <Form.Group
-                    controlId="actionsTaken"
-                    className="d-flex flex-column gap-8"
-                  >
-                    <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                      Actions Taken
-                    </Form.Label>
-                    <Form.Control
-                      as="textarea"
-                      rows={2}
-                      name="actionsTaken"
-                      value={values.actionsTaken}
-                      onChange={handleChange}
-                      isInvalid={!!errors.actionsTaken && touched.actionsTaken}
-                    />
-                    <div>
-                      {values.actionsTaken ? values.actionsTaken.length : 0}/500
-                      characters
-                    </div>
-                    <Form.Control.Feedback type="invalid">
-                      {errors.actionsTaken}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-
-                  
-
-                  {/* Actions */}
-                  {footer&&  <div className="d-flex justify-content-end gap-2 mt-3">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleDownload(
-                          "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764759586/staffFeedback_hd8upo.pdf",
-                          "Staff Feedback Form"
-                        )
+                    <TimePicker
+                      value={values.time}
+                      onChange={(val) => setFieldValue("time", val)}
+                      // isInvalid={!!errors.time && touched.time}
+                      className={
+                        touched.time && errors.time ? "is-invalid" : ""
                       }
-                      className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-                    >
-                      Download
-                    </button>
-                    <button
-                      type="submit"
-                      className="btn btn-street-primary btn-street-lg d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-                    >
-                      Submit Report
-                    </button>
+                      onBlur={() => setFieldTouched("time", true)}
+                    />
 
-                    <button
-                      className="btn btn-street-neutral btn-street-lg d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-                      onClick={handleReset}
-                    >
-                      Cancel
-                    </button>
-                  </div>}
-                
-                </Form>
+                    {errors.time && touched.time && (
+                      <div className="invalid-feedback d-block">
+                        {errors.time}
+                      </div>
+                    )}
+                  </Form.Group>
+                </Col>
+              </Row>
 
-               
-              </div>
-            );
-          }}
-        </Formik>
-  )
-}
+              {/* Location */}
+              <Form.Group
+                controlId="location"
+                className="d-flex flex-column gap-8"
+              >
+                <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
+                  Location <span className="text-danger">*</span>
+                </Form.Label>
+                <Form.Control
+                  type="text"
+                  name="location"
+                  value={values.location}
+                  onChange={handleChange}
+                  isInvalid={!!errors.location && touched.location}
+                />
+                <Form.Control.Feedback type="invalid">
+                  {errors.location}
+                </Form.Control.Feedback>
+              </Form.Group>
 
-export default StaffFeedbackForm
+              {/* Category */}
+              <Form.Group
+                controlId="category"
+                className="d-flex flex-column gap-8"
+              >
+                <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
+                  Category <span className="text-danger">*</span>
+                </Form.Label>
+                <Form.Select
+                  name="category"
+                  value={values.category}
+                  onChange={handleChange}
+                  isInvalid={!!errors.category && touched.category}
+                >
+                  <option value="Other">Other</option>
+                  <option value="Behavior">Behavior</option>
+                  <option value="Equipment">Equipment</option>
+                  <option value="Safety">Safety</option>
+                </Form.Select>
+                <Form.Control.Feedback type="invalid">
+                  {errors.category}
+                </Form.Control.Feedback>
+              </Form.Group>
+
+              {/* Description */}
+              <Form.Group
+                controlId="description"
+                className="d-flex flex-column gap-8"
+              >
+                <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
+                  Detailed Description <span className="text-danger">*</span>
+                </Form.Label>
+                <QuillEditor
+                  content={values.description}
+                  onChange={(val) => setFieldValue("description", val)}
+                  isInvalid={touched.description && !!errors.description}
+                  errorMessage={errors.description as string}
+                />
+                <div>{values.description.length}/500 characters</div>
+                <Form.Control.Feedback type="invalid">
+                  {errors.description}
+                </Form.Control.Feedback>
+              </Form.Group>
+
+              {/* Witnesses */}
+              <Form.Group
+                controlId="witnesses"
+                className="d-flex flex-column gap-8"
+              >
+                <Form.Label className=" text-xs xs:text-sm fw-medium text-street-dark">
+                  Witnesses
+                </Form.Label>
+                <FieldArray name="witnesses">
+                  {({ push, remove }) => (
+                    <>
+                      <div className="d-flex gap-2 mb-2">
+                        <Form.Control
+                          type="text"
+                          placeholder="Add a witness"
+                          value={values.newWitness ?? ""}
+                          onChange={(e) =>
+                            setFieldValue("newWitness", e.target.value)
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              const witnessesArray = values.witnesses ?? [];
+                              if (
+                                values.newWitness &&
+                                !witnessesArray.includes(values.newWitness)
+                              ) {
+                                push(values.newWitness);
+                                setFieldValue("newWitness", "");
+                              }
+                            }
+                          }}
+                        />
+                        <button
+                          className="btn-street-primary radius-8 px-3 text-lg"
+                          type="button"
+                          onClick={() => {
+                            if (
+                              values.newWitness &&
+                              values.witnesses &&
+                              values?.witnesses.length < 5
+                            ) {
+                              push(values.newWitness);
+                              setFieldValue("newWitness", "");
+                            }
+                          }}
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <div className="d-flex gap-2 flex-wrap mb-2">
+                        {(values.witnesses ?? []).map((w, i) => (
+                          <Badge key={i} variant="primary-soft">
+                            {w}{" "}
+                            <span
+                              style={{ cursor: "pointer" }}
+                              onClick={() => remove(i)}
+                            >
+                              ×
+                            </span>
+                          </Badge>
+                        ))}
+                      </div>
+
+                      {/* 🔥 Add this */}
+                      {touched.witnesses && errors.witnesses && (
+                        <div className="text-danger small mt-1">
+                          {errors.witnesses as string}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </FieldArray>
+              </Form.Group>
+
+              {/* Actions Taken */}
+              <Form.Group
+                controlId="actionsTaken"
+                className="d-flex flex-column gap-8"
+              >
+                <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
+                  Actions Taken <span className="text-danger">*</span>
+                </Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={2}
+                  name="actionsTaken"
+                  value={values.actionsTaken}
+                  onChange={handleChange}
+                  isInvalid={!!errors.actionsTaken && touched.actionsTaken}
+                />
+                <div>
+                  {values.actionsTaken ? values.actionsTaken.length : 0}/500
+                  characters
+                </div>
+                <Form.Control.Feedback type="invalid">
+                  {errors.actionsTaken}
+                </Form.Control.Feedback>
+              </Form.Group>
+
+              {/* Actions */}
+              {footer && (
+                <div className="d-flex justify-content-end gap-2 mt-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleDownload(
+                        "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764759586/staffFeedback_hd8upo.pdf",
+                        "Staff Feedback Form"
+                      )
+                    }
+                    className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                  >
+                    Download
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-street-primary btn-street-lg d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                  >
+                    Submit Report
+                  </button>
+
+                  <button
+                    className="btn btn-street-neutral btn-street-lg d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                    onClick={handleReset}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </Form>
+          </div>
+        );
+      }}
+    </Formik>
+  );
+};
+
+export default StaffFeedbackForm;

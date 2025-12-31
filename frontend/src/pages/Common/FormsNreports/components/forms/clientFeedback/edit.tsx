@@ -1,52 +1,71 @@
 import { useState } from "react";
 import ModalWrapper from "../../../../../../components/child/ModalWrapper";
-
-import { showError, showSuccess } from "../../../../../../utills/toastutills";
-import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
+import { Icon } from "@iconify/react";
 import {
   useEditClientFeedBackMutation,
+  useGetClientFeedbackByIdQuery,
   type clientFeedbackData,
   type editclientFeedbackCredentials,
 } from "../../../../../../services/FormApi";
-import { Icon } from "@iconify/react/dist/iconify.js";
+import { showError, showSuccess } from "../../../../../../utills/toastutills";
+import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
 import ClientFeedBackForm, { type FormValues } from "./form";
 
 interface EditClientFeedbackProps {
-  data: clientFeedbackData; // existing feedback record
+  data: clientFeedbackData;
 }
 
 const EditClientFeedback = ({ data }: EditClientFeedbackProps) => {
-  const [updateFeedback, { isLoading }] = useEditClientFeedBackMutation();
   const [showModal, setShowModal] = useState(false);
+
+  /** UPDATE */
+  const [updateFeedback, { isLoading: isUpdating }] =
+    useEditClientFeedBackMutation();
+
+  /** FETCH */
+  const {
+    data: feedbackResponse,
+    isLoading: isFetching,
+    isFetching: isRefetching,
+  } = useGetClientFeedbackByIdQuery({ id: data._id }, { skip: !showModal });
+
+  const feedback = feedbackResponse?.data;
+  const loading = isFetching || isRefetching || isUpdating;
+
   const handleSubmit = async (
     values: FormValues,
     { resetForm }: { resetForm: () => void }
   ) => {
     try {
-
       const payload: editclientFeedbackCredentials = {
         visitDate: new Date(values.date),
         visitLocation: values.location,
-        clientName: values.name ? values.name : null,
-        clientEmail: values.email ? values.email : null,
-        clientPhone: values.phone ? values.phone : null,
-        clientAddress: values.address ? values.address : null,
-        preferredContactMethod: values.preferredContactMethod,
+        clientName: values.name || null,
+        clientEmail: values.email || null,
+        clientPhone: values.phone || null,
+        clientAddress: values.address || null,
+        preferredContactMethod: values.preferredContactMethod as (
+          | "Phone"
+          | "Email"
+        )[],
         complaintNature: values.natureOfComplaint,
         complaintDescription: values.description,
         desiredOutcome: values.desiredOutcome,
         impact: values.impact,
       };
+
       if (
-        values.otherComplaintDescription &&
-        values.natureOfComplaint === "Other"
+        values.natureOfComplaint === "Other" &&
+        values.otherComplaintDescription
       ) {
         payload.otherComplaintText = values.otherComplaintDescription;
       }
+
       const res = await updateFeedback({
-        id: data._id,
+        id: feedback!._id,
         data: payload,
       }).unwrap();
+
       if (res.success) {
         showSuccess("Client feedback updated successfully");
         resetForm();
@@ -57,8 +76,6 @@ const EditClientFeedback = ({ data }: EditClientFeedbackProps) => {
     }
   };
 
-  if (!data) return null;
-
   return (
     <>
       <button
@@ -68,6 +85,7 @@ const EditClientFeedback = ({ data }: EditClientFeedbackProps) => {
       >
         <Icon icon="tabler:edit" className="text-xl" />
       </button>
+
       <ModalWrapper
         show={showModal}
         onHide={() => setShowModal(false)}
@@ -77,51 +95,53 @@ const EditClientFeedback = ({ data }: EditClientFeedbackProps) => {
         className="p-20 gap-16"
         bodyClassName="p-0 d-flex flex-column gap-16"
         footerClassName="pt-16 px-0 pb-0"
-        isLoading={isLoading}
+        isLoading={loading}
         ModalLoader={
           <FormSubmissionLoader
-            isLoading={isLoading}
+            isLoading={loading}
             variant="spinner"
             size="lg"
-            message="Updating feedback"
+            message={
+              isFetching || isRefetching
+                ? "Loading feedback details..."
+                : "Updating feedback..."
+            }
           />
         }
         footer={
-          <>
-            <button
-              className="btn btn-street-primary btn-street-lg radius-12 d-flex align-items-center justify-content-center"
-              type="submit"
-              form="edit-client-feedback-form"
-              disabled={isLoading}
-            >
-              {isLoading ? "Updating..." : "Update"}
-            </button>
-          </>
+          <button
+            className="btn btn-street-primary btn-street-lg radius-12"
+            type="submit"
+            form="edit-client-feedback-form"
+            disabled={isUpdating}
+          >
+            {isUpdating ? "Updating..." : "Update"}
+          </button>
         }
       >
-   
-            {" "}
-            <ClientFeedBackForm
-              id="edit-client-feedback-form"
-              footer={false}
-              handleSubmit={handleSubmit}
-              isLoading={isLoading}
-              initialvalues={{
-                date: new Date(data.visitDate),
-                location: data.visitLocation,
-                name: data.clientName,
-                phone: data.clientPhone,
-                email: data.clientEmail,
-                address: data.clientAddress,
-                natureOfComplaint: data.complaintNature,
-                otherComplaintDescription: data.otherComplaintText,
-                description: data.complaintDescription,
-                impact: data.impact,
-                desiredOutcome: data.desiredOutcome,
-                preferredContactMethod: data.preferredContactMethod,
-              }}
-            />
-      
+        {/* ✅ Render only when data is ready */}
+        {!isFetching && feedback && (
+          <ClientFeedBackForm
+            id="edit-client-feedback-form"
+            footer={false}
+            handleSubmit={handleSubmit}
+            isLoading={isUpdating}
+            initialvalues={{
+              date: new Date(feedback.visitDate),
+              location: feedback.visitLocation,
+              name: feedback.clientName,
+              phone: feedback.clientPhone,
+              email: feedback.clientEmail,
+              address: feedback.clientAddress,
+              natureOfComplaint: feedback.complaintNature,
+              otherComplaintDescription: feedback.otherComplaintText,
+              description: feedback.complaintDescription,
+              impact: feedback.impact,
+              desiredOutcome: feedback.desiredOutcome,
+              preferredContactMethod: feedback.preferredContactMethod??[],
+            }}
+          />
+        )}
       </ModalWrapper>
     </>
   );

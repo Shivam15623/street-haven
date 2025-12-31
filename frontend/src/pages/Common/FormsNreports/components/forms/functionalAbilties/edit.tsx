@@ -15,6 +15,7 @@ import { Form } from "react-bootstrap";
 
 import {
   useEditFAFMutation,
+  useGetFafByIdQuery,
   type FunctionalAbility,
 } from "../../../../../../services/FormApi";
 import type { FunctionalAbilityFormValues } from "../FunctionalAbiltiesForm";
@@ -263,7 +264,14 @@ const SectionRenderer = ({ section, formik }: SectionRendererProps) => {
 const EditFAbilties = ({ data }: { data: FunctionalAbility }) => {
   const [showModal, setShowModal] = useState(false);
   const [editfaf, { isLoading }] = useEditFAFMutation();
+  const {
+    data: response,
+    isLoading: isFetching,
+    isFetching: isRefetching,
+  } = useGetFafByIdQuery({ id: data._id! }, { skip: !showModal });
+  const fAbility = response?.data;
   const [activeSection, setActiveSection] = useState("claim-worker");
+  const loading = isFetching || isRefetching;
   const handleSubmit = async (
     values: FunctionalAbilityFormValues,
     { resetForm }: { resetForm: () => void }
@@ -337,13 +345,13 @@ const EditFAbilties = ({ data }: { data: FunctionalAbility }) => {
         className="p-20 "
         bodyClassName="p-0 d-flex flex-column "
         footerClassName="pt-16 px-0 pb-0"
-        isLoading={isLoading}
+        isLoading={loading || isLoading}
         ModalLoader={
           <FormSubmissionLoader
-            isLoading={isLoading}
+            isLoading={loading || isLoading}
             variant="spinner"
             size="lg"
-            message="Updating Incident Report"
+            message={loading ? "Loading Data.." : "Updating Incident Report"}
           />
         }
         footer={
@@ -358,60 +366,74 @@ const EditFAbilties = ({ data }: { data: FunctionalAbility }) => {
           </>
         }
       >
-        <div className="d-flex" style={{ minHeight: "56vh" }}>
-          <Formik
-            initialValues={buildInitialValues(data)}
-            validationSchema={functionalAbilityFormSchema}
-            onSubmit={handleSubmit}
-          >
-            {(formik) => {
-              const returnToWorkStatus = formik.values
-                .returnToWorkStatus as ReturnToWorkStatus;
+        {!loading && fAbility && (
+          <div className="d-flex" style={{ minHeight: "56vh" }}>
+            <Formik
+              initialValues={buildInitialValues(fAbility)}
+              validationSchema={functionalAbilityFormSchema}
+              onSubmit={handleSubmit}
+            >
+              {(formik) => {
+                const returnToWorkStatus = formik.values
+                  .returnToWorkStatus as ReturnToWorkStatus;
 
-              const visibleSections = SECTIONS.filter((section) => {
-                if (section.key === "abilities") {
-                  return SECTION_VISIBILITY.abilities.includes(
-                    returnToWorkStatus
-                  );
-                }
-                if (section.key === "restrictions") {
-                  return SECTION_VISIBILITY.restrictions.includes(
-                    returnToWorkStatus
-                  );
-                }
-                return true;
-              });
+                const visibleSections = SECTIONS.filter((section) => {
+                  if (section.key === "abilities") {
+                    return SECTION_VISIBILITY.abilities.includes(
+                      returnToWorkStatus
+                    );
+                  }
+                  if (section.key === "restrictions") {
+                    return SECTION_VISIBILITY.restrictions.includes(
+                      returnToWorkStatus
+                    );
+                  }
+                  return true;
+                });
 
-              return (
-                <Form
-                  className="d-flex"
-                  id="edit-functional-abilty-form"
-                  onSubmit={formik.handleSubmit}
-                >
-                  {/* Sidebar */}
-                  <div
-                    className="p-16 "
-                    style={{ background: "var(--street-bg-f2)" }}
+                return (
+                  <Form
+                    className="d-flex"
+                    id="edit-functional-abilty-form"
+                    onSubmit={formik.handleSubmit}
                   >
-                    {" "}
-                    <Sidebar
-                      onSectionChange={(key) => setActiveSection(key)}
-                      activeSection={activeSection}
-                      sections={visibleSections}
-                      formik={formik}
-                    />
-                  </div>
+                    {/* Sidebar */}
+                    <div
+                      className="p-16 "
+                      style={{ background: "var(--street-bg-f2)" }}
+                    >
+                      {" "}
+                      <Sidebar
+                        onSectionChange={(key) => setActiveSection(key)}
+                        activeSection={activeSection}
+                        sections={visibleSections}
+                        formik={formik}
+                      />
+                    </div>
 
-                  {/* Content */}
-                  <div className="flex-grow-1 p-24">
-                    {" "}
-                    <SectionRenderer section={activeSection} formik={formik} />
-                  </div>
-                </Form>
-              );
-            }}
-          </Formik>
-        </div>
+                    {/* Content */}
+                    <div className="flex-grow-1 p-24">
+                      <div
+                        style={{
+                          maxHeight: "50vh",
+                          overflowY: "auto",
+                          overflowX: "hidden",
+                          scrollbarWidth: "thin",
+                        }}
+                      >
+                        {" "}
+                        <SectionRenderer
+                          section={activeSection}
+                          formik={formik}
+                        />
+                      </div>{" "}
+                    </div>
+                  </Form>
+                );
+              }}
+            </Formik>
+          </div>
+        )}
       </ModalWrapper>
     </>
   );

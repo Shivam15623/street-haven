@@ -90,7 +90,11 @@ const getFormSchema = (isEdit: boolean) =>
 
           return selected <= today;
         }
-      ).min(Yup.ref("requestedDate"),"approved date cant be earlier then Date of Request"),
+      )
+      .min(
+        Yup.ref("requestedDate"),
+        "approved date cant be earlier then Date of Request"
+      ),
 
     purchaseDetails: Yup.array()
       .of(
@@ -184,7 +188,7 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                   <Col xs={12} md={6}>
                     <Form.Group className="d-flex flex-column gap-8">
                       <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                        Payee Name:
+                        Payee Name: <span className="text-danger">*</span>
                       </Form.Label>
                       <Form.Control
                         type="text"
@@ -205,7 +209,7 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                   <Col xs={12} md={6}>
                     <Form.Group className="d-flex flex-column gap-8">
                       <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                        Total Amount:
+                        Total Amount: <span className="text-danger">*</span>
                       </Form.Label>
                       <Form.Control
                         type="number"
@@ -435,7 +439,7 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                   <Col xs={12} md={6}>
                     <Form.Group className="d-flex flex-column gap-8">
                       <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                        Requested By:
+                        Requested By: <span className="text-danger">*</span>
                       </Form.Label>
                       <Form.Control
                         type="text"
@@ -454,7 +458,7 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                   <Col xs={12} md={6}>
                     <Form.Group className="d-flex flex-column gap-8">
                       <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                        Date:
+                        Date: <span className="text-danger">*</span>
                       </Form.Label>
 
                       <CustomDatePicker
@@ -485,7 +489,7 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                   <Col xs={12} md={6}>
                     <Form.Group className="d-flex flex-column gap-8">
                       <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                        Approved By:
+                        Approved By: <span className="text-danger">*</span>
                       </Form.Label>
                       <Form.Control
                         type="text"
@@ -504,7 +508,7 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                   <Col xs={12} md={6}>
                     <Form.Group className="d-flex flex-column gap-8">
                       <Form.Label className="text-xs xs:text-sm fw-medium text-street-dark">
-                        Date:
+                        Date: <span className="text-danger">*</span>
                       </Form.Label>
 
                       <CustomDatePicker

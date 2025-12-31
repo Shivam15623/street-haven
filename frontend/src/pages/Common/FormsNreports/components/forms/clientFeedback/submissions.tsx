@@ -11,6 +11,7 @@ import {
 import EditClientFeedback from "./edit";
 import ClientFeedback from "./details";
 import DeleteConfirmModal from "../delete";
+import { useDebounce } from "../../../../../../hooks/useDebounce";
 
 interface Column {
   header: string;
@@ -23,10 +24,14 @@ const ClientFeedbackSubmission = () => {
   const [filter, setFilter] = useState({ page: 1, limit: 10, search: "" });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const debouncedSearch = useDebounce(filter.search, 1000);
   const [deleteclientFeedback, { isLoading: deleting }] =
     useDeleteClientFeedbackMutation();
-  const { data: feedbackData, isLoading } =
-    useGetAllClientFeedbackQuery(filter);
+  const { data: feedbackData, isLoading } = useGetAllClientFeedbackQuery({
+    page: filter.page,
+    limit: filter.limit,
+    search: debouncedSearch,
+  });
 
   const handleDeleteClick = (id: string) => {
     setSelectedId(id);

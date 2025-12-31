@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { useAddEmployeeMutation } from "../../../../services/EmployeeApi";
+import {
+  useAddEmployeeMutation,
+  useAllEmployeesQuery,
+} from "../../../../services/EmployeeApi";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
 import * as Yup from "yup";
 import { Formik } from "formik";
@@ -23,6 +26,7 @@ interface AddEmployeeValues {
   password: string;
   role: Role;
   title: string;
+  superviserId: string;
   hireDate: string; // <-- keep as string for HTML input
   timePeriod: string;
   customPermissions: string[];
@@ -70,6 +74,7 @@ const AddEmployeeSchema = Yup.object({
     .matches(/[@$!%*?&#]/, "Must contain at least one special character"),
   hireDate: Yup.date().required("Hire Date is required"),
   timePeriod: Yup.string(),
+  superviserId: Yup.string().required("Supervisonr is required"),
   customPermissions: Yup.array()
     .of(
       Yup.string().oneOf(
@@ -83,7 +88,8 @@ const AddEmployeeSchema = Yup.object({
 const AddEmployee = () => {
   const [showModal, setShowModal] = useState(false);
   const [addEmployee, { isLoading }] = useAddEmployeeMutation();
-
+  const { data: employeeData, isLoading: isEmployeeLoading } =
+    useAllEmployeesQuery({ forDropdown: true }, { skip: !showModal });
   const handleAddEmployee = async (values: AddEmployeeValues) => {
     try {
       const res = await addEmployee(values).unwrap();
@@ -146,6 +152,7 @@ const AddEmployee = () => {
             password: "",
             title: "",
             role: "employee",
+            superviserId: "",
             hireDate: "",
             timePeriod: "",
             customPermissions: [],
@@ -272,7 +279,44 @@ const AddEmployee = () => {
                   </Form.Group>
                 </Col>
               </Row>
+              <Row>
+                <Col>
+                  <Form.Group className="mb-3">
+                    <Form.Label
+                      className="align-items-center d-flex"
+                      column
+                      sm={2}
+                    >
+                      Manager
+                    </Form.Label>
 
+                    <Form.Select
+                      size="sm"
+                      name="superviserId"
+                      value={values.superviserId ?? ""}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      isInvalid={touched.superviserId && !!errors.superviserId}
+                    >
+                      <option value="">Select Supervisor</option>
+
+                      {isEmployeeLoading ? (
+                        <option disabled>Loading...</option>
+                      ) : (
+                        employeeData?.data.employees.map((emp) => (
+                          <option key={emp._id} value={emp._id}>
+                            {emp.firstname} {emp.lastname} ({emp.email})
+                          </option>
+                        ))
+                      )}
+                    </Form.Select>
+
+                    <Form.Control.Feedback type="invalid">
+                      {String(errors.superviserId)}
+                    </Form.Control.Feedback>
+                  </Form.Group>
+                </Col>
+              </Row>
               {/* Phone */}
               <Row>
                 <Col>

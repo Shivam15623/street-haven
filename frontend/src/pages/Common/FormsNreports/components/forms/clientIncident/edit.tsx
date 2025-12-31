@@ -3,6 +3,7 @@ import ModalWrapper from "../../../../../../components/child/ModalWrapper";
 
 import {
   useEditClientIncidentMutation,
+  useGetClientIncidentByIdQuery,
   type clientIncidentReport,
   type editclientIncident,
 } from "../../../../../../services/FormApi";
@@ -16,8 +17,20 @@ interface EditClientIncidentProp {
   data: clientIncidentReport;
 }
 const EditClientIncident: React.FC<EditClientIncidentProp> = ({ data }) => {
-  const [updateIncident, { isLoading }] = useEditClientIncidentMutation();
   const [showModal, setShowModal] = useState(false);
+
+  /** UPDATE mutation */
+  const [updateIncident, { isLoading: isUpdating }] =
+    useEditClientIncidentMutation();
+
+  /** GET incident */
+  const { data: incidentdata, isLoading: isFetching } =
+    useGetClientIncidentByIdQuery(
+      { id: data._id! },
+      { skip: !showModal } // 🔥 fetch only when modal opens
+    );
+
+  const incident = incidentdata?.data;
   const handleSubmit = async (
     values: FormValues,
     { resetForm }: { resetForm: () => void }
@@ -43,7 +56,7 @@ const EditClientIncident: React.FC<EditClientIncidentProp> = ({ data }) => {
         reportedToDate: values.reportedToDate,
       };
       const res = await updateIncident({
-        id: data._id,
+        id: incident!._id,
         data: payload,
       }).unwrap();
       if (res.success) {
@@ -74,68 +87,72 @@ const EditClientIncident: React.FC<EditClientIncidentProp> = ({ data }) => {
         className="p-20 gap-16"
         bodyClassName="p-0 d-flex flex-column gap-16"
         footerClassName="pt-16 px-0 pb-0"
-        isLoading={isLoading}
+        isLoading={isFetching || isUpdating}
         ModalLoader={
           <FormSubmissionLoader
-            isLoading={isLoading}
+            isLoading={isFetching || isUpdating}
             variant="spinner"
             size="lg"
-            message="Updating feedback"
+            message={
+              isFetching
+                ? "Loading incident details..."
+                : "Updating incident..."
+            }
           />
         }
         footer={
           <>
             <button
-              className="btn btn-street-primary btn-street-lg radius-12 d-flex align-items-center justify-content-center"
+              className="btn btn-street-primary btn-street-lg radius-12"
               type="submit"
               form="edit-client-incident-form"
-              disabled={isLoading}
+              disabled={isUpdating}
             >
-              {isLoading ? "Updating..." : "Update"}
+              {isUpdating ? "Updating..." : "Update"}
             </button>
           </>
         }
       >
-  
-            {" "}
-            <ClientIncidentForm
-              footer={false}
-              id={"edit-client-incident-form"}
-              isLoading={isLoading}
-              handleSubmit={handleSubmit}
-              initialvalues={{
-                date: new Date(data.incidentDate),
-                time: data.incidentTime,
-                place: data.incidentPlace,
-                affectedClientname: data.affectedPerson,
-                staffName: data.staffName,
-                WitnessName: data.witnessName,
-                staffEmail: data.staffEmail,
-                incidentType: data.incidentType as
-                  | "Disaster"
-                  | "Drugs"
-                  | "Property Destruction"
-                  | "Theft"
-                  | "Medical / Injury / Health Emergency"
-                  | "Intruders"
-                  | "Police Action"
-                  | "Actual Physical / Sexual Violence"
-                  | "Threat of Physical / Sexual Violence"
-                  | "Bomb Threat"
-                  | "Other"
-                  | "", // allow empty initially
-                otherIncidentDescription: data.otherincidentText,
-                incidentDescription: data.incidentDescription,
-                ActionTaken: data.ActionTaken,
-                debrief: data.debrief,
-                reportingStaffName: data.reportingStaffName,
-                reportedTo: data.reportedTo,
-                repotingDate: new Date(data.reportingDate),
-                reportedToDate: new Date(data.reportedToDate),
-                followUp: data.followup,
-              }}
-            />
-
+        {" "}
+        {!isFetching && incident && (
+          <ClientIncidentForm
+            footer={false}
+            id={"edit-client-incident-form"}
+            isLoading={isUpdating}
+            handleSubmit={handleSubmit}
+            initialvalues={{
+              date: new Date(incident.incidentDate),
+              time: incident.incidentTime,
+              place: incident.incidentPlace,
+              affectedClientname: incident.affectedPerson,
+              staffName: incident.staffName,
+              WitnessName: incident.witnessName,
+              staffEmail: incident.staffEmail,
+              incidentType: incident.incidentType as
+                | "Disaster"
+                | "Drugs"
+                | "Property Destruction"
+                | "Theft"
+                | "Medical / Injury / Health Emergency"
+                | "Intruders"
+                | "Police Action"
+                | "Actual Physical / Sexual Violence"
+                | "Threat of Physical / Sexual Violence"
+                | "Bomb Threat"
+                | "Other"
+                | "", // allow empty initially
+              otherIncidentDescription: incident.otherincidentText,
+              incidentDescription: incident.incidentDescription,
+              ActionTaken: incident.ActionTaken,
+              debrief: incident.debrief,
+              reportingStaffName: incident.reportingStaffName,
+              reportedTo: incident.reportedTo,
+              repotingDate: new Date(incident.reportingDate),
+              reportedToDate: new Date(incident.reportedToDate),
+              followUp: incident.followup,
+            }}
+          />
+        )}
       </ModalWrapper>
     </>
   );

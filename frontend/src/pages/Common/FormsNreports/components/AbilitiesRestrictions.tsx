@@ -137,7 +137,9 @@ const AbilitiesRestrictions: React.FC<AbilitiesRestrictionsProps> = ({
           {/* Travel to Work */}
           <div className="col">
             <Form.Group className="d-flex flex-column gap-10">
-              <Form.Label className="fw-medium">Travel to work</Form.Label>
+              <Form.Label className="fw-medium">
+                Travel to work: <span className="text-danger">*</span>
+              </Form.Label>
               <div className="d-flex flex-row gap-8">
                 {travelWorkField.map((item) => (
                   <div key={item.key} className="d-flex flex-column gap-1">
@@ -313,7 +315,8 @@ const AbilitiesRestrictions: React.FC<AbilitiesRestrictionsProps> = ({
         <hr style={{ backgroundColor: "#00000033" }} />
         <Form.Group className="d-flex flex-column gap-2 mb-3">
           <Form.Label className="text-xs text-street-dark fw-normal">
-            3. Additional Comments on Abilities and/or Restrictions
+            3. Additional Comments on Abilities and/or Restrictions{" "}
+            <span className="text-danger">*</span>
           </Form.Label>
           <Form.Control
             style={{ height: "40px" }}
@@ -333,7 +336,7 @@ const AbilitiesRestrictions: React.FC<AbilitiesRestrictionsProps> = ({
         <Form.Group className="d-flex flex-column gap-2 mb-3">
           <Form.Label className="text-xs text-street-dark fw-normal">
             4. From the date of this assessment, the above will apply for
-            approximately
+            approximately <span className="text-danger">*</span>
           </Form.Label>
           <div className="d-flex flex-row gap-20 align-items-center">
             {[
@@ -393,7 +396,8 @@ const AbilitiesRestrictions: React.FC<AbilitiesRestrictionsProps> = ({
           {" "}
           <div className="col-md-8">
             <Form.Label className="text-xs fw-medium">
-              6. Recommended Hours of Work
+              6. Recommended Hours of Work{" "}
+              <span className="text-danger">*</span>
             </Form.Label>
 
             <div className="d-flex gap-20 mt-2">
@@ -427,14 +431,12 @@ const AbilitiesRestrictions: React.FC<AbilitiesRestrictionsProps> = ({
           </div>
           <div className="col-md-4">
             <Form.Group className="d-flex flex-column gap-2 mb-3">
-              <Form.Label>Date Of Birth</Form.Label>
+              <Form.Label>
+                Start Date <span className="text-danger">*</span>
+              </Form.Label>
               <CustomDatePicker
                 className="h-40-px"
-                value={
-                  values.worker.dateOfBirth
-                    ? new Date(values.worker.dateOfBirth)
-                    : null
-                }
+                value={values.startDate ? new Date(values.startDate) : null}
                 onChange={(date) => {
                   setFieldValue("startDate", date, true);
                   setFieldTouched("startDate", true, false);

@@ -1,27 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import ModalWrapper from "../../../../../../components/child/ModalWrapper";
-
 import { Icon } from "@iconify/react/dist/iconify.js";
+
 import {
   useEditEmployeeIncidentMutation,
+  useGetEmployeeIncidentByIdQuery,
   type editemployeeIncidentReportCred,
-  type EmployeeIncidentReportPopulated,
 } from "../../../../../../services/FormApi";
 
 import EmployeeIncidentForm, { type FormValues } from "./form";
 import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
 import { showError, showSuccess } from "../../../../../../utills/toastutills";
+
 interface EditEmployeeIncidentProp {
-  data: EmployeeIncidentReportPopulated;
+  data: { _id: string }; // only need ID now
 }
+
 const EditEmployeeIncident: React.FC<EditEmployeeIncidentProp> = ({ data }) => {
   const [showModal, setShowModal] = useState(false);
+
+  const {
+    data: response,
+    isLoading: isFetching,
+    isFetching: isRefetching,
+  } = useGetEmployeeIncidentByIdQuery({ id: data._id }, { skip: !showModal });
+
   const [updateIncident, { isLoading }] = useEditEmployeeIncidentMutation();
+
   const handleSubmit = async (
     values: FormValues,
     { resetForm }: { resetForm: () => void }
   ) => {
-    console.log("Tottle");
     try {
       const payload: editemployeeIncidentReportCred = {
         reportType: values.reportingFor!,
@@ -35,64 +44,75 @@ const EditEmployeeIncident: React.FC<EditEmployeeIncidentProp> = ({ data }) => {
         activityAtTime: values.activityAtTime,
         description: values.incidentDescription,
         preventionSuggestion: values.prevention,
-        injuredBodyPartOrRisk: values.injuredBodyParts,
         sawDoctor: values.doctorVisited,
-
         previousInjury: values.previousInjury,
       };
 
-      if (values.witnessName) {
-        payload.witnessName = values.witnessName;
+      if (values.witnessName) payload.witnessName = values.witnessName;
+      if (values.injuredBodyParts) {
+        payload.injuredBodyPartOrRisk = values.injuredBodyParts;
       }
-      if (values.doctorVisited === true) {
+      if (values.doctorVisited) {
         payload.doctorName = values.doctorName;
         payload.doctorPhone = values.doctorPhone;
         payload.doctorVisitDate = new Date(values.doctorVisitDate!);
         payload.doctorVisitTime = values.doctorVisitTime;
       }
-      if (payload.previousInjury === true) {
+
+      if (values.previousInjury) {
         payload.previousInjuryDate = new Date(values.previousInjuryDate!);
       }
+
       const res = await updateIncident({
         id: data._id,
         data: payload,
       }).unwrap();
+
       if (res.success) {
-        showSuccess("employee incident Record updated successfully");
+        showSuccess("Employee incident updated successfully");
         resetForm();
         setShowModal(false);
       }
     } catch (error: any) {
-      showError(`error:${error.message}`);
-      console.log(error);
+      showError(error?.message || "Update failed");
     }
   };
-  const initialValues = {
-    reportingFor: data.reportType,
-    employeeId: data.employee._id,
-    employeeName: `${data.employee.firstname} ${data.employee.lastname}`,
-    superviserId: data.supervisor._id,
-    jobTitle: data.jobTitle,
-    superviserName: `${data.supervisor.firstname} ${data.supervisor.lastname}`,
-    informedSuperviser: data.informedSupervisor,
-    injuryDate: new Date(data.injuryDate),
-    injuryTime: data.injuryTime,
-    witnessName: data.witnessName,
-    exactLocation: data.location,
-    activityAtTime: data.activityAtTime,
-    incidentDescription: data.description,
-    prevention: data.preventionSuggestion,
-    injuredBodyParts: data.injuredBodyPartOrRisk,
-    doctorVisited: data.sawDoctor,
-    doctorName: data.doctorName,
-    doctorPhone: data.doctorPhone,
-    doctorVisitDate: data.doctorVisitDate
-      ? new Date(data.doctorVisitDate)
-      : new Date(),
-    doctorVisitTime: "",
-    previousInjury: data.previousInjury,
-    previousInjuryDate: new Date(),
-  };
+
+  const incident = response?.data;
+
+  const initialValues = useMemo(() => {
+    if (!incident) return null;
+
+    return {
+      reportingFor: incident.reportType,
+      employeeId: incident.employee._id,
+      employeeName: `${incident.employee.firstname} ${incident.employee.lastname}`,
+      superviserId: incident.supervisor._id,
+      superviserName: `${incident.supervisor.firstname} ${incident.supervisor.lastname}`,
+      jobTitle: incident.jobTitle,
+      informedSuperviser: incident.informedSupervisor,
+      injuryDate: new Date(incident.injuryDate),
+      injuryTime: incident.injuryTime,
+      witnessName: incident.witnessName,
+      exactLocation: incident.location,
+      activityAtTime: incident.activityAtTime,
+      incidentDescription: incident.description,
+      prevention: incident.preventionSuggestion,
+      injuredBodyParts: incident.injuredBodyPartOrRisk,
+      doctorVisited: incident.sawDoctor,
+      doctorName: incident.doctorName,
+      doctorPhone: incident.doctorPhone,
+      doctorVisitDate: incident.doctorVisitDate
+        ? new Date(incident.doctorVisitDate)
+        : new Date(),
+      doctorVisitTime: "",
+      previousInjury: incident.previousInjury,
+      previousInjuryDate: incident.previousInjuryDate
+        ? new Date(incident.previousInjuryDate)
+        : new Date(),
+    };
+  }, [incident]);
+
   return (
     <>
       <button
@@ -102,45 +122,45 @@ const EditEmployeeIncident: React.FC<EditEmployeeIncidentProp> = ({ data }) => {
       >
         <Icon icon="tabler:edit" className="text-xl" />
       </button>
+
       <ModalWrapper
         show={showModal}
         onHide={() => setShowModal(false)}
         size="lg"
         title="Employee Incident Report"
-        headerClassName="text-xl p-0 pb-20 text-street-dark"
-        className="p-20 gap-16"
-        bodyClassName="p-0 d-flex flex-column gap-16"
-        footerClassName="pt-16 px-0 pb-0"
-        isLoading={isLoading}
+        isLoading={isFetching || isRefetching || isLoading}
         ModalLoader={
           <FormSubmissionLoader
-            isLoading={isLoading}
+            isLoading={isFetching || isRefetching || isLoading}
             variant="spinner"
             size="lg"
-            message="Updating Incident Report"
+            message={
+              isFetching || isRefetching
+                ? "Loading incident details"
+                : "Submitting incident details"
+            }
           />
         }
         footer={
-          <>
-            <button
-              className="btn btn-street-primary btn-street-lg radius-12 d-flex align-items-center justify-content-center"
-              type="submit"
-              form="edit-employee-incident-form"
-              disabled={isLoading}
-            >
-              {isLoading ? "Updating..." : "Update"}
-            </button>
-          </>
+          <button
+            className="btn btn-street-primary btn-street-lg"
+            type="submit"
+            form="edit-employee-incident-form"
+            disabled={isLoading}
+          >
+            {isLoading ? "Updating..." : "Update"}
+          </button>
         }
       >
-        {" "}
-        <EmployeeIncidentForm
-          initialvalues={initialValues}
-          footer={false}
-          id="edit-employee-incident-form"
-          handleSubmit={handleSubmit}
-          isLoading={isLoading}
-        />
+        {initialValues && (
+          <EmployeeIncidentForm
+            id="edit-employee-incident-form"
+            initialvalues={initialValues}
+            footer={false}
+            handleSubmit={handleSubmit}
+            isLoading={isLoading}
+          />
+        )}
       </ModalWrapper>
     </>
   );
