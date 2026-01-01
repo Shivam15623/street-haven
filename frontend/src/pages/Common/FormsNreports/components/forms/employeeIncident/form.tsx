@@ -1,12 +1,12 @@
 import { Formik } from "formik";
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, Col, Form, Row, Spinner } from "react-bootstrap";
 import { PatternFormat } from "react-number-format";
 import * as Yup from "yup";
 import { handleDownload } from "../../../../../../utills/handleDownload";
 import CustomDatePicker from "../../../../../../components/child/DatePicker";
 import TimePicker from "../../../../../../components/child/TimePicker";
-import { useEmployeeSuperFormQuery } from "../../../../../../services/EmployeeApi";
+import { useLazyEmployeeSuperFormQuery } from "../../../../../../services/EmployeeApi";
 export const EmployeeIncidentFormSchema = Yup.object({
   reportingFor: Yup.string()
     .oneOf(["Injury", "Illness", "Near Miss"], "Invalid option")
@@ -186,6 +186,7 @@ export const EmployeeIncidentFormSchema = Yup.object({
 interface FormProp {
   footer: boolean;
   isLoading: boolean;
+  isActive: boolean;
   initialvalues: FormValues;
   id?: string;
   handleSubmit: (
@@ -199,10 +200,16 @@ const EmployeeIncidentForm: React.FC<FormProp> = ({
   isLoading,
   handleSubmit,
   initialvalues,
+  isActive,
   id,
 }) => {
-  const { data, isLoading: fetchLoad } = useEmployeeSuperFormQuery(undefined);
-  console.log("emplo", data);
+  const [getEmpSup, { data, isLoading: fetchLoad }] =
+    useLazyEmployeeSuperFormQuery();
+  useEffect(() => {
+    if (isActive) {
+      getEmpSup();
+    }
+  }, [isActive, getEmpSup]);
 
   return (
     <Formik

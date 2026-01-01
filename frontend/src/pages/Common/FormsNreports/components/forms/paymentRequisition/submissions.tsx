@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
 import SimpleTable from "../../../../../../components/child/SimpleTable";
 import {
   useDeletePaymentRequistionMutation,
-  useGetAllPaymentRequisitionsQuery,
+  useLazyGetAllPaymentRequisitionsQuery,
   type PaymentRequisition,
 } from "../../../../../../services/FormApi";
 
@@ -11,13 +11,14 @@ import EditPaymentRequistion from "./edit";
 import PaymentRequisitionDetail from "./detail";
 import DeleteConfirmModal from "../delete";
 import { useDebounce } from "../../../../../../hooks/useDebounce";
+import type { AgentTabProp } from "../../../../AgencyInformation/component/CollectiveAgreementTab";
 
 interface Column {
   header: string;
   accessor: (row: PaymentRequisition) => React.ReactNode;
 }
 
-const PaymentRequistionSubmission = () => {
+const PaymentRequistionSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
   const [filter, setFilter] = useState({
     page: 1,
     limit: 10,
@@ -28,11 +29,23 @@ const PaymentRequistionSubmission = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const debouncedSearch = useDebounce(filter.search, 1000);
-  const { data, isLoading } = useGetAllPaymentRequisitionsQuery({
-    page: filter.page,
-    limit: filter.limit,
-    search: debouncedSearch,
-  });
+  const [getPaymentRequistion, { data, isLoading }] =
+    useLazyGetAllPaymentRequisitionsQuery();
+  useEffect(() => {
+    if (isActive) {
+      getPaymentRequistion({
+        page: filter.page,
+        limit: filter.limit,
+        search: debouncedSearch,
+      });
+    }
+  }, [
+    isActive,
+    getPaymentRequistion,
+    filter.page,
+    filter.limit,
+    debouncedSearch,
+  ]);
   const [deletePaymentReqistion, { isLoading: deleting }] =
     useDeletePaymentRequistionMutation();
 

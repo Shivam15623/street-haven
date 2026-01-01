@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   useDeleteIncidentReportMutation,
-  useViewIncidentReportQuery,
+  useLazyViewIncidentReportQuery,
 } from "../../../../../../services/IncidentReportApi";
 import type {
   IncidentReportQuery,
@@ -13,13 +13,14 @@ import IncidentReportModal from "./IncidentReport";
 import EditIncidentReport from "./edit";
 import DeleteConfirmModal from "../delete";
 import { useDebounce } from "../../../../../../hooks/useDebounce";
+import type { AgentTabProp } from "../../../../AgencyInformation/component/CollectiveAgreementTab";
 
 interface Column {
   header: string;
   accessor: (row: IncidentReportData) => React.ReactNode;
 }
 
-const IncidentReportSubmission = () => {
+const IncidentReportSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
   const [filter, setFilter] = useState<IncidentReportQuery>({
     page: 1,
     limit: 10,
@@ -47,11 +48,17 @@ const IncidentReportSubmission = () => {
       console.error("Delete failed", error);
     }
   };
-  const { data: incidentSubmissions, isLoading } = useViewIncidentReportQuery({
-    page: filter.page,
-    limit: filter.limit,
-    search: debouncedSearch,
-  });
+  const [getviewIncident, { data: incidentSubmissions, isLoading }] =
+    useLazyViewIncidentReportQuery();
+  useEffect(() => {
+    if (isActive) {
+      getviewIncident({
+        page: filter.page,
+        limit: filter.limit,
+        search: debouncedSearch,
+      });
+    }
+  }, [isActive, getviewIncident, filter.page, filter.limit, debouncedSearch]);
   const columns: Column[] = [
     {
       header: "Date",

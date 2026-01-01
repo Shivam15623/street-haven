@@ -24,6 +24,7 @@ const meetingMinutesApi = api.injectEndpoints({
         method: "GET",
         params: { page, limit, search, sortBy, order, slug },
       }),
+      keepUnusedDataFor: 300,
       providesTags: ["Meetings"],
     }),
     createmeetingMinutes: builder.mutation({
@@ -68,5 +69,5 @@ export const {
   useCreatemeetingMinutesMutation,
   useEditmeetingMinutesMutation,
   useDeletemeetingMinutesMutation,
-  useLazyFetchMeetingMinutesQuery
+  useLazyFetchMeetingMinutesQuery,
 } = meetingMinutesApi;

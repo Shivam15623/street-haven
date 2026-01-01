@@ -66,5 +66,5 @@ export const {
   useGetTreeNodesQuery,
   useAddNodeMutation,
   useEditNodeMutation,
-  useDeleteNodeMutation,
+  useDeleteNodeMutation,useLazyGetTreeNodesQuery
 } = OrgApi;

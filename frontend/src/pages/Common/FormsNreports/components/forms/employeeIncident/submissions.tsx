@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
 import SimpleTable from "../../../../../../components/child/SimpleTable";
 import {
   useDeleteEmployeeIncidentMutation,
-  useGetAllEmployeeIncidentsQuery,
+  useLazyGetAllEmployeeIncidentsQuery,
   type EmployeeIncidentReportPopulated,
 } from "../../../../../../services/FormApi";
 
@@ -11,6 +11,7 @@ import EditEmployeeIncident from "./edit";
 import EmployeeIncidentReportDetails from "./details";
 import DeleteConfirmModal from "../delete";
 import { useDebounce } from "../../../../../../hooks/useDebounce";
+import type { AgentTabProp } from "../../../../AgencyInformation/component/CollectiveAgreementTab";
 
 interface Column {
   header: string;
@@ -19,7 +20,9 @@ interface Column {
 
 // Minimal columns for table view
 
-const EmployeeIncidentReportSubmission = () => {
+const EmployeeIncidentReportSubmission: React.FC<AgentTabProp> = ({
+  isActive,
+}) => {
   const [filter, setFilter] = useState({
     page: 1,
     limit: 10,
@@ -28,12 +31,23 @@ const EmployeeIncidentReportSubmission = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const debouncedSearch = useDebounce(filter.search, 1000);
-  const { data: incidentData, isLoading } = useGetAllEmployeeIncidentsQuery({
-    page: filter.page,
-    limit: filter.limit,
-    search: debouncedSearch,
-  });
-
+  const [getEmployeeIncident, { data: incidentData, isLoading }] =
+    useLazyGetAllEmployeeIncidentsQuery();
+  useEffect(() => {
+    if (isActive) {
+      getEmployeeIncident({
+        page: filter.page,
+        limit: filter.limit,
+        search: debouncedSearch,
+      });
+    }
+  }, [
+    isActive,
+    getEmployeeIncident,
+    filter.page,
+    filter.limit,
+    debouncedSearch,
+  ]);
   const [deletEmployeeIncident, { isLoading: deleting }] =
     useDeleteEmployeeIncidentMutation();
 

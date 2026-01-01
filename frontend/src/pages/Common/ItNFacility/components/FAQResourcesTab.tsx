@@ -2,8 +2,8 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 
 import AddCategory from "./FAqComponents/AddCategory";
 import {
-  useAllCategoriesQuery,
-  useViewEmergencyContactsQuery,
+  useLazyAllCategoriesQuery,
+  useLazyViewEmergencyContactsQuery,
 } from "../../../../services/FAQapi";
 import AddFaqs from "./FAqComponents/AddFaqs";
 
@@ -14,6 +14,8 @@ import EmergencyContact from "./FAqComponents/ActionContact";
 import DeleteEmergencyContact from "./FAqComponents/DeletePhone";
 import { Col, Row } from "react-bootstrap";
 import useHasPermission from "../../../../hooks/Auth";
+import type { AgentTabProp } from "../../AgencyInformation/component/CollectiveAgreementTab";
+import { useEffect } from "react";
 
 interface FAQItem {
   _id: string;
@@ -27,9 +29,15 @@ interface FAQCard {
   faqs: FAQItem[];
 }
 
-const FAQResourcesTab = () => {
-  const { data } = useAllCategoriesQuery();
-  const { data: contacts } = useViewEmergencyContactsQuery();
+const FAQResourcesTab: React.FC<AgentTabProp> = ({ isActive }) => {
+  const [getCategories, { data }] = useLazyAllCategoriesQuery();
+  const [getContacts, { data: contacts }] = useLazyViewEmergencyContactsQuery();
+  useEffect(() => {
+    if (isActive) {
+      getCategories();
+      getContacts();
+    }
+  }, [isActive, getCategories, getContacts]);
   const { hasPermission } = useHasPermission();
 
   return (

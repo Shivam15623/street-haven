@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
 import SimpleTable from "../../../../../components/child/SimpleTable";
 
 import {
-  useGetAllMediaConsentQuery,
+
+  useLazyGetAllMediaConsentQuery,
   useLazyGetMediaConsentPdfQuery,
   type MediaConsent,
 } from "../../../../../services/FormApi";
 import EditMediaConsent from "../modals/EditMediaConsent";
 import { useDebounce } from "../../../../../hooks/useDebounce";
+import type { AgentTabProp } from "../../../AgencyInformation/component/CollectiveAgreementTab";
 
 // ------------------------------
 // Columns
@@ -21,20 +23,25 @@ interface Column {
 // ------------------------------
 // Component
 // ------------------------------
-const MediaConsentSubmission = () => {
+const MediaConsentSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
   const [filter, setFilter] = useState({
     page: 1,
     limit: 10,
     search: "",
   });
   const debouncedSearch = useDebounce(filter.search, 1000);
-  const { data: consentData, isLoading } = useGetAllMediaConsentQuery({
-    page: filter.page,
-    limit: filter.limit,
-    search: debouncedSearch,
-  });
-  const [getMediaConsentPdf] =
-    useLazyGetMediaConsentPdfQuery();
+  const [getMediacon, { data: consentData, isLoading }] =
+    useLazyGetAllMediaConsentQuery();
+  useEffect(() => {
+    if (isActive) {
+      getMediacon({
+        page: filter.page,
+        limit: filter.limit,
+        search: debouncedSearch,
+      });
+    }
+  }, [isActive, getMediacon, filter.page, filter.limit, debouncedSearch]);
+  const [getMediaConsentPdf] = useLazyGetMediaConsentPdfQuery();
   const handleDownload = async (id: string) => {
     try {
       const blob = await getMediaConsentPdf(id).unwrap();

@@ -44,6 +44,7 @@ const FAQapi = api.injectEndpoints({
         url: "/faq/category",
         method: "GET",
       }),
+      keepUnusedDataFor: 300,
       providesTags: ["FAQ"],
     }),
     deleteCategory: builder.mutation<ApiGeneralResponse, { id: string }>({
@@ -139,4 +140,5 @@ export const {
   useDeleteEmergencyContactMutation,
   useEditEmergencyContactMutation,
   useViewEmergencyContactsQuery,
+  useLazyAllCategoriesQuery,useLazyViewEmergencyContactsQuery
 } = FAQapi;

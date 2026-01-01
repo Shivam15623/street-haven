@@ -20,6 +20,7 @@ const hrUpdateApi = api.injectEndpoints({
         url: "/hr-updates/view",
         params: { page, limit, search, sortBy, slug, order },
       }),
+      keepUnusedDataFor: 300,
       providesTags: ["HrUpdates"],
     }),
     createhrUpdates: builder.mutation({
@@ -62,5 +63,6 @@ export const {
   useViewhrUpdatesQuery,
   useCreatehrUpdatesMutation,
   useEdithrupdatesMutation,
-  useDeletehrupdatesMutation,useLazyViewhrUpdatesQuery
+  useDeletehrupdatesMutation,
+  useLazyViewhrUpdatesQuery,
 } = hrUpdateApi;

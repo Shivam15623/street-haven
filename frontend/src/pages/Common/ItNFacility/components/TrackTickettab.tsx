@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TicketCard from "./TicketCard";
 import { TicketCountCard } from "./TicketCountCard";
 import type { TicketFetchQuery } from "../../../../interfaces/Ticket";
-import { useFetchTicketsQuery } from "../../../../services/ticketApi";
+import { useLazyFetchTicketsQuery } from "../../../../services/ticketApi";
 import { useSearchParams } from "react-router-dom";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import StreetPaggination from "../../../../components/child/StreetPaggination";
+import type { AgentTabProp } from "../../AgencyInformation/component/CollectiveAgreementTab";
 
-const TrackTickettab = () => {
+const TrackTickettab: React.FC<AgentTabProp> = ({ isActive }) => {
   const [searchParams] = useSearchParams();
   const statusParam = searchParams.get("status") ?? "All";
   // Filter state (page included here)
@@ -26,8 +27,13 @@ const TrackTickettab = () => {
   });
 
   // Fetch tickets with filter
-  const { data: ticketData, isLoading } = useFetchTicketsQuery(filter);
-
+  const [getTickets, { data: ticketData, isLoading }] =
+    useLazyFetchTicketsQuery();
+  useEffect(() => {
+    if (isActive) {
+      getTickets(filter);
+    }
+  }, [isActive, filter, getTickets]);
   // Pagination calculation
   const total = ticketData?.data?.paggination?.total ?? 0;
   const totalPages = Math.ceil(total / filter?.limit);

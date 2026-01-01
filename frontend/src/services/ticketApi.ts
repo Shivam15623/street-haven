@@ -43,6 +43,7 @@ const ticketApi = api.injectEndpoints({
         method: "GET",
         params: filter,
       }),
+      keepUnusedDataFor: 300,
       providesTags: ["Ticket"],
     }),
     createTicket: builder.mutation<ApiGeneralResponse, FormData>({
@@ -86,6 +87,7 @@ const ticketApi = api.injectEndpoints({
         method: "GET",
         params: { page, limit },
       }),
+      keepUnusedDataFor: 300,
     }),
   }),
 });
@@ -95,4 +97,6 @@ export const {
   useEditTicketMutation,
   useAddCommentMutation,
   useViewCommentsQuery,
+  useLazyViewCommentsQuery,
+  useLazyFetchTicketsQuery,
 } = ticketApi;

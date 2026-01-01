@@ -1,15 +1,16 @@
 import FullCalendar from "@fullcalendar/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { Button, Spinner } from "react-bootstrap"; // ✅ Import Spinner
 import { MonthYearPicker } from "../../../../components/MonthYearPicker";
-import { useFetchEventsCalendarQuery } from "../../../../services/EventApi";
+import { useLazyFetchEventsCalendarQuery } from "../../../../services/EventApi";
 import type { EventUpcomingData } from "../../../../interfaces/EventInterfaces";
 import EventDetailsModal from "./EventDetailsModal";
 import type { EventClickArg } from "@fullcalendar/core";
-const EventCalendarView = () => {
+import type { AgentTabProp } from "../../AgencyInformation/component/CollectiveAgreementTab";
+const EventCalendarView: React.FC<AgentTabProp> = ({ isActive }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<EventUpcomingData | null>(
     null
@@ -32,10 +33,16 @@ const EventCalendarView = () => {
   };
 
   const { startDate, endDate } = getMonthRange(currentDate);
-  const { data, isLoading } = useFetchEventsCalendarQuery({
-    startDate,
-    endDate,
-  });
+  const [getEvents, { data, isLoading }] = useLazyFetchEventsCalendarQuery();
+
+  useEffect(() => {
+    if (isActive) {
+      getEvents({
+        startDate,
+        endDate,
+      });
+    }
+  }, [isActive, startDate, endDate, getEvents]);
 
   const calendarRef = useRef<FullCalendar | null>(null);
 

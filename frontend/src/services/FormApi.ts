@@ -534,6 +534,7 @@ const FormApi = api.injectEndpoints({
     >({
       query: ({ page = 1, limit = 10, search = "" }) =>
         `/form/clientFeedback?page=${page}&limit=${limit}&search=${search}`,
+      keepUnusedDataFor: 300,
       providesTags: ["client-feedback"],
     }),
     getAllClientIncidents: builder.query<
@@ -550,6 +551,7 @@ const FormApi = api.injectEndpoints({
     >({
       query: ({ page = 1, limit = 10, search = "" }) =>
         `/form/clientIncident?page=${page}&limit=${limit}&search=${search}`,
+      keepUnusedDataFor: 300,
       providesTags: ["client-incident"],
     }),
     getAllEmployeeIncidents: builder.query<
@@ -566,6 +568,7 @@ const FormApi = api.injectEndpoints({
     >({
       query: ({ page = 1, limit = 10, search = "" }) =>
         `/form/employeeIncident?page=${page}&limit=${limit}&search=${search}`,
+      keepUnusedDataFor: 300,
       providesTags: ["employee-incident"],
     }),
     getAllPaymentRequisitions: builder.query<
@@ -582,6 +585,7 @@ const FormApi = api.injectEndpoints({
     >({
       query: ({ page = 1, limit = 10, search = "" }) =>
         `/form/paymentRequistion?page=${page}&limit=${limit}&search=${search}`,
+      keepUnusedDataFor: 300,
       providesTags: ["payment-requistion"],
     }),
     getAllFAF: builder.query<
@@ -614,6 +618,7 @@ const FormApi = api.injectEndpoints({
     >({
       query: ({ page = 1, limit = 10, search = "" }) =>
         `/form/mediaConsent?page=${page}&limit=${limit}&search=${search}`,
+      keepUnusedDataFor: 300,
     }),
     deleteFaf: builder.mutation<ApiGeneralResponse, { id: string }>({
       query: ({ id }) => ({
@@ -770,12 +775,14 @@ export const {
   useCreatePaymentRequistionMutation,
   useCreateFAfMutation,
   useCreatemediaConsentMutation,
-  useGetAllClientFeedbackQuery,
-  useGetAllClientIncidentsQuery,
-  useGetAllEmployeeIncidentsQuery,
-  useGetAllPaymentRequisitionsQuery,
-  useGetAllFAFQuery,
-  useGetAllMediaConsentQuery,
+  useLazyGetAllClientFeedbackQuery,
+  useLazyGetAllClientIncidentsQuery,
+  useLazyGetAllEmployeeIncidentsQuery,
+  useLazyGetAllFAFQuery,
+  useLazyGetAllMediaConsentQuery,
+  useLazyGetAllPaymentRequisitionsQuery,
+
+
   useEditClientFeedBackMutation,
   useEditClientIncidentMutation,
   useEditEmployeeIncidentMutation,
@@ -797,5 +804,5 @@ export const {
   useLazyGetIncidentReportPdfQuery,
   useLazyGetMediaConsentPdfQuery,
   useLazyGetPaymentRequisitionPdfQuery,
-  useLazyGetStaffFeedbackPdfQuery
+  useLazyGetStaffFeedbackPdfQuery,
 } = FormApi;

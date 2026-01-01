@@ -90,7 +90,7 @@ const EmployeeApi = api.injectEndpoints({
         url: "/employees/view",
         method: "GET",
         params: { page, limit, search, sortBy, order, forDropdown },
-      }),
+      }), keepUnusedDataFor: 300,
       providesTags: ["Employees"],
     }),
     editEmployee: builder.mutation<
@@ -220,5 +220,6 @@ export const {
   useGetRolebyIdQuery,
   useResetTotpMutation,
   useEmployeeSuperFormQuery,
+  useLazyEmployeeSuperFormQuery,
   useFetchEmployeeByIdQuery,
 } = EmployeeApi;

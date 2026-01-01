@@ -39,6 +39,7 @@ export const announcementApi = api.injectEndpoints({
         method: "GET",
         params: { id, page, limit, keyword },
       }),
+      keepUnusedDataFor: 300,
       providesTags: ["Announcement"],
     }),
     createAnnouncement: builder.mutation({
@@ -91,5 +92,6 @@ export const {
   useCreateAnnouncementMutation,
   useEditAnnouncementMutation,
   useDeleteAnnouncementMutation,
+  useLazyViewAnnouncementsQuery,
   useRecentAnnouncementcountQuery,
 } = announcementApi;
