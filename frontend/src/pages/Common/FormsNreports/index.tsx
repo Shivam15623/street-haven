@@ -59,6 +59,7 @@ const FormsNreports = () => {
       {activeTab === "form" && (
         <FormsNDReports
           activeKey={activeKey}
+          isViewActive={activeTab === "form"}
           onTabChange={(key) => setActiveKey(key)}
         />
       )}
@@ -66,6 +67,7 @@ const FormsNreports = () => {
         hasPermission({ action: "view_submissions" }) && (
           <Submissions
             activeKey={activeKey}
+             isViewActive={activeTab === "submissions"}
             onTabChange={(key) => setActiveKey(key)}
           />
         )}

@@ -85,4 +85,5 @@ export const {
   useEditIncidentReportMutation,
   useViewIncidentReportQuery,
   useDeleteIncidentReportMutation,
+  useLazyViewIncidentReportQuery,
 } = IncidentReportApi;

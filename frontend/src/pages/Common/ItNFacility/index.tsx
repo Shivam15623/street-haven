@@ -4,10 +4,12 @@ import FAQResourcesTab from "./components/FAQResourcesTab";
 import TrackTickettab from "./components/TrackTickettab";
 import "@assets/css/PageCss/ItFacility.css";
 import { useSearchParams } from "react-router-dom";
+import { useState } from "react";
 
 const HelpDesk = () => {
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get("tab") ?? "submit_request";
+  const [active, setActive] = useState<string>(tabParam);
   return (
     <div className="d-flex flex-column gap-4">
       {" "}
@@ -20,7 +22,8 @@ const HelpDesk = () => {
         </p>
       </div>
       <StreetTab
-        defaultActiveKey={tabParam}
+        activeKey={active}
+        onTabChange={(key) => setActive(key)}
         tabs={[
           {
             content: <SubmitRequestTab />,
@@ -28,12 +31,12 @@ const HelpDesk = () => {
             label: "Submit Request",
           },
           {
-            content: <TrackTickettab />,
+            content: <TrackTickettab isActive={active === "track_tickets"} />,
             key: "track_tickets",
             label: "Track Tickets",
           },
           {
-            content: <FAQResourcesTab />,
+            content: <FAQResourcesTab isActive={active === "faq_resources"} />,
             key: "faq_resources",
             label: "FAQ & Resources",
           },

@@ -225,7 +225,7 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
                   : undefined
               }
               name="attachment"
-              fieldLabel="attachment"
+              fieldLabel="Attachment"
             />
           </BootstrapForm>
         )}

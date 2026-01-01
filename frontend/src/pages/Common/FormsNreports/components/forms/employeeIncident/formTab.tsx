@@ -5,8 +5,9 @@ import {
 import { showError, showSuccess } from "../../../../../../utills/toastutills";
 import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
 import EmployeeIncidentForm, { type FormValues } from "./form";
+import type { AgentTabProp } from "../../../../AgencyInformation/component/CollectiveAgreementTab";
 
-const EmployeeIncidentFormTab = () => {
+const EmployeeIncidentFormTab: React.FC<AgentTabProp> = ({ isActive }) => {
   const [createIncident, { isLoading }] = useCreateEmployeeIncidentMutation();
 
   const handleSubmit = async (
@@ -77,6 +78,7 @@ const EmployeeIncidentFormTab = () => {
 
       {/* ✅ FORM START */}
       <EmployeeIncidentForm
+        isActive={isActive}
         isLoading={isLoading}
         footer={true}
         handleSubmit={handleSubmit}

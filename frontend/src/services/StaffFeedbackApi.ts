@@ -68,4 +68,5 @@ export const {
   useViewStaffFeedBackQuery,
   useDeleteStaffReportMutation,
   useEditStaffReportMutation,
+  useLazyViewStaffFeedBackQuery
 } = StaffFeedbackApi;

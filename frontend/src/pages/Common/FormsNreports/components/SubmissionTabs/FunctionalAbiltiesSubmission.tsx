@@ -1,16 +1,17 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
 import SimpleTable from "../../../../../components/child/SimpleTable";
 
 import {
   useDeleteFafMutation,
-  useGetAllFAFQuery,
+  useLazyGetAllFAFQuery,
   type FunctionalAbility,
 } from "../../../../../services/FormApi";
 import { FunctionalAbilityDetail } from "../modals/functional-abilty/FunctionalAbilty";
 import EditFAbilties from "../forms/functionalAbilties/edit";
 import DeleteConfirmModal from "../forms/delete";
 import { useDebounce } from "../../../../../hooks/useDebounce";
+import type { AgentTabProp } from "../../../AgencyInformation/component/CollectiveAgreementTab";
 
 // ------------------------------
 // Columns
@@ -40,7 +41,9 @@ interface Column {
 // ------------------------------
 // Component
 // ------------------------------
-const FunctionalAbilitiesSubmission = () => {
+const FunctionalAbilitiesSubmission: React.FC<AgentTabProp> = ({
+  isActive,
+}) => {
   const [filter, setFilter] = useState({
     page: 1,
     limit: 10,
@@ -50,11 +53,16 @@ const FunctionalAbilitiesSubmission = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const debouncedSearch = useDebounce(filter.search, 1000);
-  const { data: abilityData, isLoading } = useGetAllFAFQuery({
-    page: filter.page,
-    limit: filter.limit,
-    search: debouncedSearch,
-  });
+  const [getFaf, { data: abilityData, isLoading }] = useLazyGetAllFAFQuery();
+  useEffect(() => {
+    if (isActive) {
+      getFaf({
+        page: filter.page,
+        limit: filter.limit,
+        search: debouncedSearch,
+      });
+    }
+  }, [isActive, getFaf, filter.page, filter.limit, debouncedSearch]);
   const [deleteFaf, { isLoading: Deleting }] = useDeleteFafMutation();
   const handleDeleteClick = (id: string) => {
     setSelectedId(id);

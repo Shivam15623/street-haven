@@ -6,10 +6,11 @@ import "@assets/css/PageCss/orgchart.css";
 import HrUpdatesTab from "./component/HrUpdatesTab";
 import { useSearchParams } from "react-router-dom";
 import AnnouncementTab from "./component/AnnouncementTab";
+import { useState } from "react";
 const AgencyInfo = () => {
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get("tab") ?? "collective_agreement";
-
+  const [active, setActive] = useState<string>(tabParam);
   return (
     <div className="d-flex flex-column gap-4">
       {" "}
@@ -23,17 +24,24 @@ const AgencyInfo = () => {
         </p>
       </div>
       <StreetTab
-        defaultActiveKey={tabParam}
+        activeKey={active}
+        onTabChange={(key) => setActive(key)}
         tabs={[
           {
             key: "collective_agreement",
             label: "Collective Agreement",
-            content: <CollectiveAgreementTab />,
+            content: (
+              <CollectiveAgreementTab
+                isActive={active === "collective_agreement"}
+              />
+            ),
           },
           {
             key: "event_minutes",
             label: "Event Minutes",
-            content: <TownhallMinutesTab />,
+            content: (
+              <TownhallMinutesTab isActive={active === "event_minutes"} />
+            ),
           },
           {
             key: "organizational_chart",
@@ -43,12 +51,12 @@ const AgencyInfo = () => {
           {
             key: "hr_updates",
             label: "HR updates",
-            content: <HrUpdatesTab />,
+            content: <HrUpdatesTab isActive={active === "hr_updates"} />,
           },
           {
             key: "announcements",
             label: "Announcement",
-            content: <AnnouncementTab />,
+            content: <AnnouncementTab isActive={active === "announcements"} />,
           },
         ]}
       />

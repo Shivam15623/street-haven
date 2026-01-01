@@ -154,6 +154,7 @@ const EditEmployeeIncident: React.FC<EditEmployeeIncidentProp> = ({ data }) => {
       >
         {initialValues && (
           <EmployeeIncidentForm
+            isActive={showModal}
             id="edit-employee-incident-form"
             initialvalues={initialValues}
             footer={false}

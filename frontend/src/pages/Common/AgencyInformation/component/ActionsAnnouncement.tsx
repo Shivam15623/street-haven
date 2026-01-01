@@ -166,7 +166,7 @@ const ActionsAnnouncement: React.FC<ActionsAnnouncementsProps> = ({
 
             {/* message */}
             <BootstrapForm.Group className="d-flex flex-column gap-8">
-              <BootstrapForm.Label>message</BootstrapForm.Label>
+              <BootstrapForm.Label>Message</BootstrapForm.Label>
               <QuillEditor
                 content={values.message}
                 onChange={(state) => setFieldValue("message", state)}
@@ -199,7 +199,7 @@ const ActionsAnnouncement: React.FC<ActionsAnnouncementsProps> = ({
                   : undefined
               }
               name="attachment"
-              fieldLabel="attachment"
+              fieldLabel="Attachment"
             />
           </BootstrapForm>
         )}

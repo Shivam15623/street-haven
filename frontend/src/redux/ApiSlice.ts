@@ -16,6 +16,7 @@ const baseQuery = fetchBaseQuery({
     }
     return headers;
   },
+
   responseHandler: async (response) => {
     const contentType = response.headers.get("content-type");
 
@@ -78,6 +79,8 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 // ✅ Create the API with endpoints directly
 export const api = createApi({
   reducerPath: "api",
+  refetchOnFocus: false,
+  refetchOnReconnect: false,
   baseQuery: baseQueryWithReauth,
   tagTypes: [
     "Event",

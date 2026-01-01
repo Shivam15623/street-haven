@@ -1,25 +1,35 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ActionsAnnouncement from "./ActionsAnnouncement";
 
-import { useViewAnnouncementsQuery } from "../../../../services/AnnouncementApi";
+import {
+  useLazyViewAnnouncementsQuery,
+
+} from "../../../../services/AnnouncementApi";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import AnnouncementCard from "./AnnouncementCard";
 import StreetPaggination from "../../../../components/child/StreetPaggination";
 import useHasPermission from "../../../../hooks/Auth";
 import { useDebounce } from "../../../../hooks/useDebounce";
+import type { AgentTabProp } from "./CollectiveAgreementTab";
 
-const AnnouncementTab = () => {
+const AnnouncementTab: React.FC<AgentTabProp> = ({ isActive }) => {
   const [open, setOpen] = useState(false);
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const limit = 10;
   const debouncedsearch = useDebounce(search, 1000);
-  const { data, isLoading, isError } = useViewAnnouncementsQuery({
-    limit,
-    page,
-    keyword: debouncedsearch,
-  });
+  const [getAnnouncements, { data, isLoading, isError }] =
+    useLazyViewAnnouncementsQuery();
+  useEffect(() => {
+    if (isActive) {
+      getAnnouncements({
+        limit,
+        page,
+        keyword: debouncedsearch,
+      });
+    }
+  }, [isActive, limit, page, debouncedsearch, getAnnouncements]);
   const { hasPermission } = useHasPermission();
   const totalPages = data ? data.data.paggination.totalPages : 0;
   const handleSearchChange = (value: string) => {

@@ -1,4 +1,3 @@
-
 import StreetTab from "../../../../components/StreetTab";
 import EmployeeIncidentForm from "./forms/employeeIncident/formTab";
 import FunctionalAbiltiesForm from "./forms/FunctionalAbiltiesForm";
@@ -12,11 +11,13 @@ import StaffFeedbackFormTab from "./forms/staffFeedback/formTab";
 interface FormsNDReportsProps {
   activeKey: string;
   onTabChange?: (key: string) => void;
+  isViewActive: boolean;
 }
 
 const FormsNDReports: React.FC<FormsNDReportsProps> = ({
   activeKey,
   onTabChange,
+  isViewActive,
 }) => {
   return (
     <StreetTab
@@ -47,7 +48,13 @@ const FormsNDReports: React.FC<FormsNDReportsProps> = ({
         {
           key: "employee_incident_report",
           label: "Employee Incident Report Form",
-          content: <EmployeeIncidentForm />,
+          content: (
+            <EmployeeIncidentForm
+              isActive={
+                activeKey === "employee_incident_report" && isViewActive
+              }
+            />
+          ),
         },
         {
           key: "payment_requisition",

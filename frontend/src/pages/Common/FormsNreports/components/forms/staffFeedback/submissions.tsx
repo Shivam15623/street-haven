@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   useDeleteStaffReportMutation,
-  useViewStaffFeedBackQuery,
+  useLazyViewStaffFeedBackQuery,
 } from "../../../../../../services/StaffFeedbackApi";
 import type {
   IncidentReportQuery,
@@ -13,6 +13,7 @@ import StaffFeedbackDetail from "./detail";
 import EditStaffFeedback from "./edit";
 import DeleteConfirmModal from "../delete";
 import { useDebounce } from "../../../../../../hooks/useDebounce";
+import type { AgentTabProp } from "../../../../AgencyInformation/component/CollectiveAgreementTab";
 
 interface Column {
   header: string;
@@ -22,7 +23,7 @@ interface Column {
 // Define columns for Staff Feedback
 
 // Staff Feedback Component using table
-const StaffFeedBackSubmission = () => {
+const StaffFeedBackSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
   const [filter, setFilter] = useState<IncidentReportQuery>({
     page: 1,
     limit: 10,
@@ -50,11 +51,17 @@ const StaffFeedBackSubmission = () => {
       console.error("Delete failed", error);
     }
   };
-  const { data: feedBackSubmissions, isLoading } = useViewStaffFeedBackQuery({
-    page: filter.page,
-    limit: filter.limit,
-    search: debouncedSearch,
-  });
+  const [getFeedback, { data: feedBackSubmissions, isLoading }] =
+    useLazyViewStaffFeedBackQuery();
+  useEffect(() => {
+    if (isActive) {
+      getFeedback({
+        page: filter.page,
+        limit: filter.limit,
+        search: debouncedSearch,
+      });
+    }
+  }, [isActive, getFeedback, filter.page, filter.limit, debouncedSearch]);
   const columns: Column[] = [
     {
       header: "Date",

@@ -47,6 +47,7 @@ export const EventApi = api.injectEndpoints({
         method: "GET",
         params: { page, limit, search, slug, sortBy, order },
       }),
+      keepUnusedDataFor: 300,
       providesTags: ["Event"],
     }),
     fetchEventsPast: builder.query<EventUpcomingResponse, EventUpcomingQuery>({
@@ -62,6 +63,7 @@ export const EventApi = api.injectEndpoints({
         method: "GET",
         params: { page, limit, search, slug, sortBy, order },
       }),
+      keepUnusedDataFor: 300,
       providesTags: ["Event"],
     }),
     fetchEventsCalendar: builder.query<
@@ -73,6 +75,7 @@ export const EventApi = api.injectEndpoints({
         method: "POST",
         body: credentials,
       }),
+      keepUnusedDataFor: 300,
       providesTags: ["Event"],
     }),
     signUpForEvent: builder.mutation<ApiGeneralResponse, string>({
@@ -138,7 +141,10 @@ export const {
   useSignUpForEventMutation,
   useSignOutFromEventMutation,
   useFetchEventsPastQuery,
-  useGetEventRegistrationsQuery,
+  useLazyFetchEventsCalendarQuery,
+  useLazyFetchEventsupcomingQuery,
+  useLazyFetchEventsPastQuery,
+  useLazyGetEventRegistrationsQuery,
   useGetEventDetailQuery,
   useEventuploadDocumentMutation,
   useEventdeleteDocumentMutation,
