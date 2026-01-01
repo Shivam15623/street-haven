@@ -173,7 +173,9 @@ const MemoCustomNode = React.memo(CustomNode);
 function Flow() {
   const containerRef = useRef<HTMLDivElement>(null);
   const width = useContainerWidth(containerRef);
-  const { data } = useGetTreeNodesQuery();
+  const { data } = useGetTreeNodesQuery(undefined,{
+    refetchOnMountOrArgChange: false,
+  });
   const [selectedNode, setSelectedNode] = useState<OrgNodeData | null>(null);
   const [showModal, setShowModal] = useState(false);
 

@@ -28,14 +28,19 @@ const Employees = () => {
   }, [search]);
 
   // 🔹 Fetch employees using current table state
-  const { data, isLoading } = useAllEmployeesQuery({
-    page,
-    limit,
-    order,
-    sortBy,
-    search: debouncedSearch,
-    forDropdown: false,
-  });
+  const { data, isLoading } = useAllEmployeesQuery(
+    {
+      page,
+      limit,
+      order,
+      sortBy,
+      search: debouncedSearch,
+      forDropdown: false,
+    },
+    {
+      refetchOnMountOrArgChange: false,
+    }
+  );
 
   const employees = data?.data?.employees ?? [];
   const handleLimitChange = (value: number) => {

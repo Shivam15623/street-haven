@@ -67,7 +67,10 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
   const [showModal, setShowModal] = useState(false);
   const [editEmployee, { isLoading }] = useEditEmployeeMutation();
   const { data: employeeData, isLoading: isEmployeeLoading } =
-    useAllEmployeesQuery({ forDropdown: true });
+    useAllEmployeesQuery(
+      { forDropdown: true },
+      { skip: !showModal, refetchOnMountOrArgChange: false }
+    );
   const handleSave = async (values: EditEmployeeValues) => {
     try {
       // Ensure timePeriod exists

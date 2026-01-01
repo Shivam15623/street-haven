@@ -5,7 +5,8 @@ import type { TicketData } from "../../../../interfaces/Ticket";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import {
   useAddCommentMutation,
-  useViewCommentsQuery,
+  useLazyViewCommentsQuery,
+
   type commentData,
 } from "../../../../services/ticketApi";
 import { useSelector } from "react-redux";
@@ -249,6 +250,7 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
   const { user } = useSelector(selectAuth);
 
   const [page, setPage] = useState(1);
+  const [open, setOpen] = useState(false);
   const [comments, setComments] = useState<commentData[]>([]);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [message, setMessage] = useState("");
@@ -259,22 +261,26 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const {
-    data: commentData,
-    isLoading,
-    isFetching,
-  } = useViewCommentsQuery({
-    ticketId: ticket._id,
-    page,
-    limit: COMMENTS_PER_PAGE,
-  });
+  const [
+    getComments,
+    { data: commentData, isLoading, isFetching, isUninitialized },
+  ] = useLazyViewCommentsQuery();
 
   const totalPages = commentData?.data?.paggination.totalPages || 1;
   const hasMore = page < totalPages;
 
   const handleLoadMore = useCallback(() => {
-    setPage((p) => p + 1);
-  }, []);
+    if (isFetching || !hasMore) return;
+
+    const nextPage = page + 1;
+    setPage(nextPage);
+
+    getComments({
+      ticketId: ticket._id,
+      page: nextPage,
+      limit: COMMENTS_PER_PAGE,
+    });
+  }, [page, hasMore, isFetching, ticket._id, getComments]);
 
   const { restoreScrollPosition } = useInfiniteScroll(
     containerRef,
@@ -309,7 +315,7 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
 
   // Socket listener
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !open) return;
 
     socket.emit("joinRoom", { ticketId: ticket._id, userId: user?._id });
 
@@ -440,6 +446,23 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
       title="Ticket Comments"
       size={600}
       placement="end"
+      show={open}
+      onClose={() => setOpen(false)}
+      onOpen={() => {
+        setOpen(true);
+
+        // 🔥 load only once
+        if (isUninitialized) {
+          setPage(1);
+          setComments([]);
+
+          getComments({
+            ticketId: ticket._id,
+            page: 1,
+            limit: COMMENTS_PER_PAGE,
+          });
+        }
+      }}
       bodyclassName="p-0"
       trigger={
         <button

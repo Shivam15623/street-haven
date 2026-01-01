@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
 import SimpleTable from "../../../../../../components/child/SimpleTable";
 import {
   useDeleteClientIncidentMutation,
-  useGetAllClientIncidentsQuery,
+  useLazyGetAllClientIncidentsQuery,
   type clientIncidentReport,
 } from "../../../../../../services/FormApi";
 
@@ -11,24 +11,33 @@ import EditClientIncident from "./edit";
 import ClientIncidentReportDetail from "./detail";
 import DeleteConfirmModal from "../delete";
 import { useDebounce } from "../../../../../../hooks/useDebounce";
+import type { AgentTabProp } from "../../../../AgencyInformation/component/CollectiveAgreementTab";
 
 interface Column {
   header: string;
   accessor: (row: clientIncidentReport) => React.ReactNode;
 }
 
-const ClientIncidentReportSubmission = () => {
+const ClientIncidentReportSubmission: React.FC<AgentTabProp> = ({
+  isActive,
+}) => {
   const [filter, setFilter] = useState({ page: 1, limit: 10, search: "" });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const debouncedSearch = useDebounce(filter.search, 1000);
   const [deleteclientIncident, { isLoading: deleting }] =
     useDeleteClientIncidentMutation();
-  const { data: incidentData, isLoading } = useGetAllClientIncidentsQuery({
-    page: filter.page,
-    limit: filter.limit,
-    search: debouncedSearch,
-  });
+  const [getClientIncident, { data: incidentData, isLoading }] =
+    useLazyGetAllClientIncidentsQuery();
+  useEffect(() => {
+    if (isActive) {
+      getClientIncident({
+        page: filter.page,
+        limit: filter.limit,
+        search: debouncedSearch,
+      });
+    }
+  }, [isActive, getClientIncident, filter.page, filter.limit, debouncedSearch]);
 
   const handleDeleteClick = (id: string) => {
     setSelectedId(id);

@@ -59,7 +59,11 @@ const Events = () => {
       </div>
       {hasPermission({ action: "create_event" }) && <ActionsEvent />}
 
-      {view === "list" ? <EventListView /> : <EventCalendarView />}
+      {view === "list" ? (
+        <EventListView />
+      ) : (
+        <EventCalendarView isActive={view !== "list"} />
+      )}
     </div>
   );
 };

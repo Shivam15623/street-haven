@@ -22,6 +22,7 @@ const programManualsApi = api.injectEndpoints({
         method: "GET",
         params: { page, limit, search, type, slug, sortBy, order },
       }),
+      keepUnusedDataFor: 300,
       providesTags: ["Manual"],
     }),
     createManuals: builder.mutation({
@@ -33,6 +34,7 @@ const programManualsApi = api.injectEndpoints({
           data,
           onProgress,
         }),
+
       invalidatesTags: ["Manual"],
     }),
 

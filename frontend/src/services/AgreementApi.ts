@@ -51,6 +51,8 @@ const AgreementApi = api.injectEndpoints({
         url: "/collective-agreements",
         method: "GET",
       }),
+      keepUnusedDataFor: 300, // cache for 5 minutes
+     
       providesTags: ["Agreement"],
     }),
     deleteAgreement: builder.mutation<ApiGeneralResponse, { id: string }>({
@@ -58,6 +60,7 @@ const AgreementApi = api.injectEndpoints({
         url: `/collective-agreements/delete/${id}`,
         method: "DELETE",
       }),
+
       invalidatesTags: ["Agreement"],
     }),
   }),
@@ -66,6 +69,7 @@ const AgreementApi = api.injectEndpoints({
 export const {
   useCreateAgreementMutation,
   useFetchAgreementsQuery,
+  useLazyFetchAgreementsQuery,
   useEditAgreementMutation,
   useDeleteAgreementMutation,
 } = AgreementApi;

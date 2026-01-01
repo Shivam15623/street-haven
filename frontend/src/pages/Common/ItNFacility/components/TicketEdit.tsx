@@ -52,7 +52,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
 
   const { hasPermission } = useHasPermission();
   const { data: employeeData, isLoading: isEmployeeLoading } =
-    useAllEmployeesQuery({ forDropdown: true });
+    useAllEmployeesQuery({ forDropdown: true }, { skip: !showModal });
   const [editTicket, { isLoading }] = useEditTicketMutation();
   const hasEditStatus = hasPermission({ action: categorybased }) || isAssigned;
   const hasEditAssign = hasPermission({ action: categorybased });
@@ -158,322 +158,314 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
           </>
         }
       >
-     
-            <Formik
-              initialValues={initialValues}
-              validationSchema={TicketSchema}
-              onSubmit={handleEdit}
+        <Formik
+          initialValues={initialValues}
+          validationSchema={TicketSchema}
+          onSubmit={handleEdit}
+        >
+          {({
+            handleSubmit,
+            handleChange,
+            values,
+            errors,
+            touched,
+            setFieldValue,
+          }) => (
+            <Form
+              noValidate
+              onSubmit={handleSubmit}
+              as={FormikForm}
+              id="ticket-form"
             >
-              {({
-                handleSubmit,
-                handleChange,
-                values,
-                errors,
-                touched,
-                setFieldValue,
-              }) => (
-                <Form
-                  noValidate
-                  onSubmit={handleSubmit}
-                  as={FormikForm}
-                  id="ticket-form"
-                >
-                  <div
-                    className={`position-relative ${
-                      isLoading ? "pointer-events-none" : ""
-                    }`}
+              <div
+                className={`position-relative ${
+                  isLoading ? "pointer-events-none" : ""
+                }`}
+              >
+                {/* Request Title */}
+                <Row className="mb-3">
+                  <Form.Label
+                    className="align-items-center d-flex"
+                    column
+                    sm={2}
                   >
-                    {/* Request Title */}
-                    <Row className="mb-3">
-                      <Form.Label
-                        className="align-items-center d-flex"
-                        column
-                        sm={2}
-                      >
-                        Request Title
-                      </Form.Label>
-                      <Col sm={10}>
-                        <Form.Control
-                          size="sm"
-                          type="text"
-                          name="requestTitle"
-                          value={values.requestTitle}
-                          disabled={!isRequester}
-                          onChange={handleChange}
-                          isInvalid={
-                            touched.requestTitle && !!errors.requestTitle
-                          }
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.requestTitle}
-                        </Form.Control.Feedback>
-                      </Col>
-                    </Row>
+                    Request Title
+                  </Form.Label>
+                  <Col sm={10}>
+                    <Form.Control
+                      size="sm"
+                      type="text"
+                      name="requestTitle"
+                      value={values.requestTitle}
+                      disabled={!isRequester}
+                      onChange={handleChange}
+                      isInvalid={touched.requestTitle && !!errors.requestTitle}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.requestTitle}
+                    </Form.Control.Feedback>
+                  </Col>
+                </Row>
 
-                    {/* Requester */}
-                    <Row className="mb-3">
-                      <Form.Label
-                        className="align-items-center d-flex"
-                        column
-                        sm={2}
-                      >
-                        Requester
-                      </Form.Label>
-                      <Col sm={10}>
-                        <Form.Control
-                          size="sm"
-                          type="text"
-                          name="requester"
-                          disabled
-                          value={values.requester}
-                          onChange={handleChange}
-                          isInvalid={touched.requester && !!errors.requester}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.requester}
-                        </Form.Control.Feedback>
-                      </Col>
-                    </Row>
+                {/* Requester */}
+                <Row className="mb-3">
+                  <Form.Label
+                    className="align-items-center d-flex"
+                    column
+                    sm={2}
+                  >
+                    Requester
+                  </Form.Label>
+                  <Col sm={10}>
+                    <Form.Control
+                      size="sm"
+                      type="text"
+                      name="requester"
+                      disabled
+                      value={values.requester}
+                      onChange={handleChange}
+                      isInvalid={touched.requester && !!errors.requester}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.requester}
+                    </Form.Control.Feedback>
+                  </Col>
+                </Row>
 
-                    {/* Assignee */}
-                    <Row className="mb-3">
-                      <Form.Label
-                        className="align-items-center d-flex"
-                        column
-                        sm={2}
-                      >
-                        Assignee
-                      </Form.Label>
-                      <Col sm={10}>
-                        <Form.Select
-                          size="sm"
-                          name="assignedId"
-                          value={values.assignedId}
-                          onChange={handleChange}
-                          disabled={!hasEditAssign}
-                          isInvalid={touched.assignedId && !!errors.assignedId}
-                        >
-                          <option value="">Select Assignee</option>
-                          {isEmployeeLoading ? (
-                            <option disabled>Loading...</option>
-                          ) : (
-                            employeeData?.data.employees.map((emp) => (
-                              <option key={emp._id} value={emp._id}>
-                                {emp.firstname} {emp.lastname} ({emp.email})
-                              </option>
-                            ))
-                          )}
-                        </Form.Select>
-                        <Form.Control.Feedback type="invalid">
-                          {errors.assignedId}
-                        </Form.Control.Feedback>
-                      </Col>
-                    </Row>
-
-                    {/* Status */}
-                    <Row className="mb-3">
-                      <Form.Label
-                        className="align-items-center d-flex"
-                        column
-                        sm={2}
-                      >
-                        Status
-                      </Form.Label>
-                      <Col sm={10}>
-                        <Form.Select
-                          size="sm"
-                          name="status"
-                          value={values.status}
-                          disabled={!hasEditStatus}
-                          onChange={handleChange}
-                          isInvalid={touched.status && !!errors.status}
-                        >
-                          <option value="">Select Status</option>
-                          {statusOptions.map((status) => (
-                            <option key={status} value={status}>
-                              {status}
-                            </option>
-                          ))}
-                        </Form.Select>
-                        <Form.Control.Feedback type="invalid">
-                          {errors.status}
-                        </Form.Control.Feedback>
-                      </Col>
-                    </Row>
-
-                    {/* Ticket ID */}
-                    <Row className="mb-3">
-                      <Form.Label
-                        className="align-items-center d-flex"
-                        column
-                        sm={2}
-                      >
-                        Ticket ID
-                      </Form.Label>
-                      <Col sm={10}>
-                        <Form.Control
-                          type="text"
-                          size="sm"
-                          name="id"
-                          disabled
-                          value={values.id}
-                          onChange={handleChange}
-                          isInvalid={touched.id && !!errors.id}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.id}
-                        </Form.Control.Feedback>
-                      </Col>
-                    </Row>
-
-                    {/* Description */}
-                    <Row className="mb-3">
-                      <Form.Label
-                        className="align-items-center d-flex"
-                        column
-                        sm={2}
-                      >
-                        Description
-                      </Form.Label>
-                      <Col sm={10}>
-                        <QuillEditor
-                          content={values.description}
-                          onChange={(val) => setFieldValue("description", val)}
-                          disabled={!isRequester}
-                          isInvalid={
-                            touched.description && !!errors.description
-                          }
-                          errorMessage={errors.description as string}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.description}
-                        </Form.Control.Feedback>
-                      </Col>
-                    </Row>
-
-                    {/* Priority */}
-                    <Row className="mb-3">
-                      <Form.Label
-                        className="align-items-center d-flex"
-                        column
-                        sm={2}
-                      >
-                        Priority
-                      </Form.Label>
-                      <Col sm={10}>
-                        <Form.Select
-                          name="priority"
-                          size="sm"
-                          value={values.priority}
-                          disabled={!isRequester}
-                          onChange={handleChange}
-                          className="text-street-base"
-                          isInvalid={touched.priority && !!errors.priority}
-                        >
-                          <option value="">Select Priority</option>
-                          <option value="Low">Low</option>
-                          <option value="Medium">Medium</option>
-                          <option value="High">High</option>
-                        </Form.Select>
-                        <Form.Control.Feedback type="invalid">
-                          {errors.priority}
-                        </Form.Control.Feedback>
-                      </Col>
-                    </Row>
-
-                    {/* Category */}
-                    <Row className="mb-3">
-                      <Form.Label
-                        className="align-items-center d-flex"
-                        column
-                        sm={2}
-                      >
-                        Category
-                      </Form.Label>
-                      <Col sm={10}>
-                        <Form.Select
-                          name="category"
-                          size="sm"
-                          value={values.category}
-                          onChange={handleChange}
-                          disabled={!isRequester}
-                          className="text-street-base"
-                          isInvalid={touched.category && !!errors.category}
-                        >
-                          <option value="">Select category</option>
-                          {["IT Help Desk", "Property Maintenance"].map(
-                            (cat) => (
-                              <option key={cat} value={cat}>
-                                {cat}
-                              </option>
-                            )
-                          )}
-                        </Form.Select>
-                        <Form.Control.Feedback type="invalid">
-                          {errors.category}
-                        </Form.Control.Feedback>
-                      </Col>
-                    </Row>
-
-                    {/* Location */}
-                    <Row className="mb-3">
-                      <Form.Label
-                        className="align-items-center d-flex"
-                        column
-                        sm={2}
-                      >
-                        Location
-                      </Form.Label>
-                      <Col sm={10}>
-                        <Form.Control
-                          type="text"
-                          size="sm"
-                          name="location"
-                          disabled={!isRequester}
-                          value={values.location}
-                          onChange={handleChange}
-                          isInvalid={touched.location && !!errors.location}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.location}
-                        </Form.Control.Feedback>
-                      </Col>
-                    </Row>
-
-                    {/* Attachment */}
-                    <Row className="mb-3  ">
-                      <Col sm={2}>
-                        <p className="form-label">Attachment</p>
-                      </Col>
-                      {!(editphoto || !ticket.photo) && (
-                        <Col sm={10}>
-                          <Icon icon="lucide:paperclip" className="me-1" />
-                          <Link
-                            className="text-street-primary mt-1 mt-sm-0 text-xs fw-normal"
-                            to="#"
-                          >
-                            {ticket.photo?.fileName}
-                          </Link>
-                          {!!isRequester && (
-                            <Icon
-                              icon="mdi:file-edit"
-                              className="ms-2 icon-street-edit"
-                              onClick={() => seteditphoto(true)}
-                            />
-                          )}
-                        </Col>
+                {/* Assignee */}
+                <Row className="mb-3">
+                  <Form.Label
+                    className="align-items-center d-flex"
+                    column
+                    sm={2}
+                  >
+                    Assignee
+                  </Form.Label>
+                  <Col sm={10}>
+                    <Form.Select
+                      size="sm"
+                      name="assignedId"
+                      value={values.assignedId}
+                      onChange={handleChange}
+                      disabled={!hasEditAssign}
+                      isInvalid={touched.assignedId && !!errors.assignedId}
+                    >
+                      <option value="">Select Assignee</option>
+                      {isEmployeeLoading ? (
+                        <option disabled>Loading...</option>
+                      ) : (
+                        employeeData?.data.employees.map((emp) => (
+                          <option key={emp._id} value={emp._id}>
+                            {emp.firstname} {emp.lastname} ({emp.email})
+                          </option>
+                        ))
                       )}
-                      {(editphoto || !ticket.photo) && (
-                        <Col sm={10}>
-                          <ImageUpload name="photo" />
-                        </Col>
+                    </Form.Select>
+                    <Form.Control.Feedback type="invalid">
+                      {errors.assignedId}
+                    </Form.Control.Feedback>
+                  </Col>
+                </Row>
+
+                {/* Status */}
+                <Row className="mb-3">
+                  <Form.Label
+                    className="align-items-center d-flex"
+                    column
+                    sm={2}
+                  >
+                    Status
+                  </Form.Label>
+                  <Col sm={10}>
+                    <Form.Select
+                      size="sm"
+                      name="status"
+                      value={values.status}
+                      disabled={!hasEditStatus}
+                      onChange={handleChange}
+                      isInvalid={touched.status && !!errors.status}
+                    >
+                      <option value="">Select Status</option>
+                      {statusOptions.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </Form.Select>
+                    <Form.Control.Feedback type="invalid">
+                      {errors.status}
+                    </Form.Control.Feedback>
+                  </Col>
+                </Row>
+
+                {/* Ticket ID */}
+                <Row className="mb-3">
+                  <Form.Label
+                    className="align-items-center d-flex"
+                    column
+                    sm={2}
+                  >
+                    Ticket ID
+                  </Form.Label>
+                  <Col sm={10}>
+                    <Form.Control
+                      type="text"
+                      size="sm"
+                      name="id"
+                      disabled
+                      value={values.id}
+                      onChange={handleChange}
+                      isInvalid={touched.id && !!errors.id}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.id}
+                    </Form.Control.Feedback>
+                  </Col>
+                </Row>
+
+                {/* Description */}
+                <Row className="mb-3">
+                  <Form.Label
+                    className="align-items-center d-flex"
+                    column
+                    sm={2}
+                  >
+                    Description
+                  </Form.Label>
+                  <Col sm={10}>
+                    <QuillEditor
+                      content={values.description}
+                      onChange={(val) => setFieldValue("description", val)}
+                      disabled={!isRequester}
+                      isInvalid={touched.description && !!errors.description}
+                      errorMessage={errors.description as string}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.description}
+                    </Form.Control.Feedback>
+                  </Col>
+                </Row>
+
+                {/* Priority */}
+                <Row className="mb-3">
+                  <Form.Label
+                    className="align-items-center d-flex"
+                    column
+                    sm={2}
+                  >
+                    Priority
+                  </Form.Label>
+                  <Col sm={10}>
+                    <Form.Select
+                      name="priority"
+                      size="sm"
+                      value={values.priority}
+                      disabled={!isRequester}
+                      onChange={handleChange}
+                      className="text-street-base"
+                      isInvalid={touched.priority && !!errors.priority}
+                    >
+                      <option value="">Select Priority</option>
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                    </Form.Select>
+                    <Form.Control.Feedback type="invalid">
+                      {errors.priority}
+                    </Form.Control.Feedback>
+                  </Col>
+                </Row>
+
+                {/* Category */}
+                <Row className="mb-3">
+                  <Form.Label
+                    className="align-items-center d-flex"
+                    column
+                    sm={2}
+                  >
+                    Category
+                  </Form.Label>
+                  <Col sm={10}>
+                    <Form.Select
+                      name="category"
+                      size="sm"
+                      value={values.category}
+                      onChange={handleChange}
+                      disabled={!isRequester}
+                      className="text-street-base"
+                      isInvalid={touched.category && !!errors.category}
+                    >
+                      <option value="">Select category</option>
+                      {["IT Help Desk", "Property Maintenance"].map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </Form.Select>
+                    <Form.Control.Feedback type="invalid">
+                      {errors.category}
+                    </Form.Control.Feedback>
+                  </Col>
+                </Row>
+
+                {/* Location */}
+                <Row className="mb-3">
+                  <Form.Label
+                    className="align-items-center d-flex"
+                    column
+                    sm={2}
+                  >
+                    Location
+                  </Form.Label>
+                  <Col sm={10}>
+                    <Form.Control
+                      type="text"
+                      size="sm"
+                      name="location"
+                      disabled={!isRequester}
+                      value={values.location}
+                      onChange={handleChange}
+                      isInvalid={touched.location && !!errors.location}
+                    />
+                    <Form.Control.Feedback type="invalid">
+                      {errors.location}
+                    </Form.Control.Feedback>
+                  </Col>
+                </Row>
+
+                {/* Attachment */}
+                <Row className="mb-3  ">
+                  <Col sm={2}>
+                    <p className="form-label">Attachment</p>
+                  </Col>
+                  {!(editphoto || !ticket.photo) && (
+                    <Col sm={10}>
+                      <Icon icon="lucide:paperclip" className="me-1" />
+                      <Link
+                        className="text-street-primary mt-1 mt-sm-0 text-xs fw-normal"
+                        to="#"
+                      >
+                        {ticket.photo?.fileName}
+                      </Link>
+                      {!!isRequester && (
+                        <Icon
+                          icon="mdi:file-edit"
+                          className="ms-2 icon-street-edit"
+                          onClick={() => seteditphoto(true)}
+                        />
                       )}
-                    </Row>
-                  </div>
-                </Form>
-              )}
-            </Formik>
-   
+                    </Col>
+                  )}
+                  {(editphoto || !ticket.photo) && (
+                    <Col sm={10}>
+                      <ImageUpload name="photo" />
+                    </Col>
+                  )}
+                </Row>
+              </div>
+            </Form>
+          )}
+        </Formik>
       </ModalWrapper>
     </div>
   );

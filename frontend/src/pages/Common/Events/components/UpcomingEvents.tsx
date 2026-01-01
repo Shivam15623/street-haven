@@ -1,17 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import StreetPaggination from "../../../../components/child/StreetPaggination";
-import { useFetchEventsupcomingQuery } from "../../../../services/EventApi";
+import { useLazyFetchEventsupcomingQuery } from "../../../../services/EventApi";
 import EventCard from "./EventCard";
+import type { AgentTabProp } from "../../AgencyInformation/component/CollectiveAgreementTab";
 
-const UpcomingEvents = () => {
+const UpcomingEvents: React.FC<AgentTabProp> = ({ isActive }) => {
   const [page, setPage] = useState(1);
   const limit = 10;
-  const { data: upcomingEvents, isFetching ,isError} = useFetchEventsupcomingQuery({
-    page: 1,
-    limit: limit,
-    slug: "",
-    order: "desc",
-  });
+  const [getupcoming, { data: upcomingEvents, isFetching, isError }] =
+    useLazyFetchEventsupcomingQuery();
+  useEffect(() => {
+    if (isActive) {
+      getupcoming({
+        page: page,
+        limit: limit,
+        slug: "",
+        order: "desc",
+      });
+    }
+  }, [getupcoming, page, limit, isActive]);
   const totalPages = upcomingEvents?.data?.paggination?.totalPages || 1;
   const events = upcomingEvents?.data?.events || [];
 

@@ -11,10 +11,12 @@ import StaffFeedBackSubmission from "./forms/staffFeedback/submissions";
 interface SubmissionsProps {
   activeKey: string;
   onTabChange?: (key: string) => void;
+  isViewActive: boolean;
 }
 
 const Submissions: React.FC<SubmissionsProps> = ({
   activeKey,
+  isViewActive,
   onTabChange,
 }) => {
   return (
@@ -26,42 +28,76 @@ const Submissions: React.FC<SubmissionsProps> = ({
         {
           key: "incident_report",
           label: "Incident Report Form Submission",
-          content: <IncidentReportSubmission />,
+          content: (
+            <IncidentReportSubmission
+              isActive={activeKey === "incident_report" && isViewActive}
+            />
+          ),
         },
         {
           key: "staff_feedback",
           label: "Staff Feedback Form Submission",
-          content: <StaffFeedBackSubmission />,
+          content: (
+            <StaffFeedBackSubmission
+              isActive={activeKey === "staff_feedback" && isViewActive}
+            />
+          ),
         },
         {
           key: "client_feedback",
           label: "Client Feedback Form Submission",
-          content: <ClientFeedbackSubmission />,
+          content: (
+            <ClientFeedbackSubmission
+              isActive={activeKey === "client_feedback" && isViewActive}
+            />
+          ),
         },
         {
           key: "client_incident_report",
           label: "Client Incident Report Form Submission",
-          content: <ClientIncidentReportSubmission />,
+          content: (
+            <ClientIncidentReportSubmission
+              isActive={activeKey === "client_incident_report" && isViewActive}
+            />
+          ),
         },
         {
           key: "employee_incident_report",
           label: "Employee Incident Report Form Submission",
-          content: <EmployeeIncidentReportSubmission />,
+          content: (
+            <EmployeeIncidentReportSubmission
+              isActive={
+                activeKey === "employee_incident_report" && isViewActive
+              }
+            />
+          ),
         },
         {
           key: "payment_requisition",
           label: "Payment Requisition Form Submission",
-          content: <PaymentRequistionSubmission />,
+          content: (
+            <PaymentRequistionSubmission
+              isActive={activeKey === "payment_requisition" && isViewActive}
+            />
+          ),
         },
         {
           key: "functional_ability",
           label: "Functional Ability Form Submission",
-          content: <FunctionalAbilitiesSubmission />,
+          content: (
+            <FunctionalAbilitiesSubmission
+              isActive={activeKey === "functional_ability" && isViewActive}
+            />
+          ),
         },
         {
           key: "media_consent",
           label: "Media Consent Form Submission",
-          content: <MediaConsentSubmission />,
+          content: (
+            <MediaConsentSubmission
+              isActive={activeKey === "media_consent" && isViewActive}
+            />
+          ),
         },
       ]}
     />

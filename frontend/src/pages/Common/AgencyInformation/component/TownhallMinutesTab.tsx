@@ -1,29 +1,39 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { useFetchMeetingMinutesQuery } from "../../../../services/meetingminutesApi";
+import {
+
+  useLazyFetchMeetingMinutesQuery,
+} from "../../../../services/meetingminutesApi";
 import ActionstownhallMinutes from "./ActionstownhallMinutes";
 import TownhallMinuteCard from "./TownhallMinuteCard";
 import { useSearchParams } from "react-router-dom";
 
 import StreetPaggination from "../../../../components/child/StreetPaggination";
 import useHasPermission from "../../../../hooks/Auth";
+import type { AgentTabProp } from "./CollectiveAgreementTab";
 
-const TownhallMinutesTab = () => {
+const TownhallMinutesTab: React.FC<AgentTabProp> = ({ isActive }) => {
   const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
- 
+
   const [searchParams] = useSearchParams();
   const slugParam = useMemo(
     () => searchParams.get("slug") ?? "",
     [searchParams]
   );
-  const { data, isLoading, isError, error } = useFetchMeetingMinutesQuery({
-    page: page,
-    limit: 10,
-    slug: slugParam,
-    sortBy: "meetingDate",
-    order: "desc",
-  });
+  const [getEventMinutes, { data, isLoading, isError, error }] =
+    useLazyFetchMeetingMinutesQuery();
+  useEffect(() => {
+    if (isActive) {
+      getEventMinutes({
+        page: page,
+        limit: 10,
+        slug: slugParam,
+        sortBy: "meetingDate",
+        order: "desc",
+      });
+    }
+  }, [page, slugParam, getEventMinutes, isActive]);
   const totalPages = data ? data.data.paggination.totalPages : 0;
   const { hasPermission } = useHasPermission();
   const handlePageChange = (newPage: number) => {

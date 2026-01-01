@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
 
 import SimpleTable from "../../../../../../components/child/SimpleTable";
 import {
   useDeleteClientFeedbackMutation,
-  useGetAllClientFeedbackQuery,
+  useLazyGetAllClientFeedbackQuery,
   type clientFeedbackData,
 } from "../../../../../../services/FormApi";
 
@@ -12,6 +12,7 @@ import EditClientFeedback from "./edit";
 import ClientFeedback from "./details";
 import DeleteConfirmModal from "../delete";
 import { useDebounce } from "../../../../../../hooks/useDebounce";
+import type { AgentTabProp } from "../../../../AgencyInformation/component/CollectiveAgreementTab";
 
 interface Column {
   header: string;
@@ -20,19 +21,25 @@ interface Column {
 
 // Define table columns
 
-const ClientFeedbackSubmission = () => {
+const ClientFeedbackSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
   const [filter, setFilter] = useState({ page: 1, limit: 10, search: "" });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const debouncedSearch = useDebounce(filter.search, 1000);
   const [deleteclientFeedback, { isLoading: deleting }] =
     useDeleteClientFeedbackMutation();
-  const { data: feedbackData, isLoading } = useGetAllClientFeedbackQuery({
-    page: filter.page,
-    limit: filter.limit,
-    search: debouncedSearch,
-  });
+  const [getClientfeedback, { data: feedbackData, isLoading }] =
+    useLazyGetAllClientFeedbackQuery();
 
+  useEffect(() => {
+    if (isActive) {
+      getClientfeedback({
+        page: filter.page,
+        limit: filter.limit,
+        search: debouncedSearch,
+      });
+    }
+  }, [isActive, getClientfeedback, filter.page, filter.limit, debouncedSearch]);
   const handleDeleteClick = (id: string) => {
     setSelectedId(id);
     setShowDeleteModal(true);

@@ -1,59 +1,72 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import HRUpdateCard from "./HRUpdateCard";
-import { useViewhrUpdatesQuery } from "../../../../services/hrUpdatesApi";
+import { useLazyViewhrUpdatesQuery } from "../../../../services/hrUpdatesApi";
 import ActionsHrUpdates from "./ActionsHrUpdates";
 import StreetPaggination from "../../../../components/child/StreetPaggination";
 import useHasPermission from "../../../../hooks/Auth";
-import  { useDebounce } from "../../../../hooks/useDebounce";
+import { useDebounce } from "../../../../hooks/useDebounce";
+import type { AgentTabProp } from "./CollectiveAgreementTab";
 
-const HrUpdatesTab = () => {
+const HrUpdatesTab: React.FC<AgentTabProp> = ({ isActive }) => {
   const [search, setSearch] = useState("");
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [showModal, setShowModal] = useState(false);
-  const  debouncedsearch=useDebounce(search,1000)
+  const debouncedSearch = useDebounce(search, 1000);
   const [page, setPage] = useState(1);
+  const [showModal, setShowModal] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { hasPermission } = useHasPermission();
 
-  // Get slug from URL params
   const slug = searchParams.get("slug") ?? "";
 
-  // Call query, include slug
-  
-  const { data, isLoading, isError } = useViewhrUpdatesQuery({
-    page: page,
-    limit: 10,
-    search:debouncedsearch,
-    slug,
-    sortBy: "createdAt",
-    order: "desc",
-  });
-  const totalPages = data ? data.data.paggination.totalPages : 0;
-  const { hasPermission } = useHasPermission();
-  // When user types in search, remove slug and tab from URL
+  /* ✅ Lazy query */
+  const [getHrUpdates, { data, isLoading, isError }] =
+    useLazyViewhrUpdatesQuery();
+
+  /* ✅ Trigger API when deps change */
+  useEffect(() => {
+    if (isActive) {
+      getHrUpdates({
+        page,
+        limit: 10,
+        search: debouncedSearch,
+        slug,
+        sortBy: "createdAt",
+        order: "desc",
+      });
+    }
+  }, [page, debouncedSearch, slug, getHrUpdates, isActive]);
+
+  const totalPages = data?.data?.paggination?.totalPages ?? 0;
+
+  /* ✅ Search handler */
   const handleSearchChange = (value: string) => {
     setSearch(value);
+    setPage(1);
 
     const params = new URLSearchParams(searchParams.toString());
     if (value) {
-      params.delete("slug"); // remove slug
-      params.delete("tab"); // remove tab
+      params.delete("slug");
+      params.delete("tab");
     }
     setSearchParams(params);
   };
+
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return;
     setPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
   return (
     <div className="d-flex flex-column gap-24">
-      <div className="d-flex flex-row justify-content-between align-items-center">
-        <h2 className="text-md sm:text-lg">HR updates</h2>
+      {/* Header */}
+      <div className="d-flex justify-content-between align-items-center">
+        <h2 className="text-md sm:text-lg">HR Updates</h2>
+
         {hasPermission({ action: "create_hr_update" }) && (
           <button
-            className="btn btn-street-primary text-sm d-flex  flex-row align-items-center justify-content-center radius-12 "
-            style={{ minWidth: "43px", minHeight: "40px" }}
+            className="btn btn-street-primary text-sm radius-12"
             onClick={() => setShowModal(true)}
           >
             Add New Update
@@ -61,27 +74,33 @@ const HrUpdatesTab = () => {
         )}
       </div>
 
-      {/* Search box */}
-      <div className="px-20 py-16 program-input bg-base radius-12 d-flex flex-row align-items-center gap-8">
+      {/* Search */}
+      <div className="px-20 py-16 program-input bg-base radius-12 d-flex align-items-center gap-8">
         <Icon icon="proicons:search" className="text-xl opacity-50" />
         <input
-          className="bg-transparent border-0 text-sm text-street-base d-flex flex-grow-1 fw-semibold"
+          className="bg-transparent border-0 text-sm flex-grow-1 fw-semibold"
           placeholder="Search Documents"
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
         />
       </div>
 
-      {<ActionsHrUpdates show={showModal} onHide={() => setShowModal(false)} />}
+      <ActionsHrUpdates show={showModal} onHide={() => setShowModal(false)} />
 
+      {/* States */}
       {isLoading && <p>Loading...</p>}
       {isError && <p>Something went wrong</p>}
-      {data?.data.hrupdates?.length
-        ? data.data.hrupdates.map((update) => (
-            <HRUpdateCard key={update._id} update={update} />
-          ))
-        : !isLoading && <p>No HR updates found.</p>}
 
+      {!isLoading && data?.data?.hrupdates?.length === 0 && (
+        <p>No HR updates found.</p>
+      )}
+
+      {/* List */}
+      {data?.data?.hrupdates?.map((update) => (
+        <HRUpdateCard key={update._id} update={update} />
+      ))}
+
+      {/* Pagination */}
       {totalPages > 1 && (
         <StreetPaggination
           page={page}

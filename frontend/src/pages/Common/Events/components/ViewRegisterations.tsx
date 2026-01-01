@@ -1,7 +1,7 @@
 import React from "react";
 import Sheet from "../../../../components/child/Sheet";
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { useGetEventRegistrationsQuery } from "../../../../services/EventApi";
+import { useLazyGetEventRegistrationsQuery } from "../../../../services/EventApi";
 import Badge from "../../../../components/child/Badge";
 import * as XLSX from "xlsx"; // 👈 install this if not installed: npm install xlsx
 
@@ -73,7 +73,9 @@ const RegistrationCard = ({ user, index }: RegistrationCardProps) => {
 };
 
 const ViewRegistrations: React.FC<ViewRegistrationsProps> = ({ eventId }) => {
-  const { data, isLoading, isError } = useGetEventRegistrationsQuery(eventId);
+  const [getEventRegistrations, { data, isLoading, isError }] =
+    useLazyGetEventRegistrationsQuery();
+
   const event = data?.data;
 
   // 🔰 Function to export Excel
@@ -191,9 +193,14 @@ const ViewRegistrations: React.FC<ViewRegistrationsProps> = ({ eventId }) => {
         <button
           className="btn btn-info-600 radius-12 text-xs d-flex align-items-center justify-content-center gap-2"
           title="View Registrations"
+          onClick={() => {
+            if (eventId && !data) {
+              getEventRegistrations(eventId);
+            }
+          }}
         >
           <Icon icon="mdi:account-group-outline" className="text-xl" />
-          <span className="d-none d-sm-inline-block ">View</span>
+          <span className="d-none d-sm-inline-block">View</span>
         </button>
       }
     >
