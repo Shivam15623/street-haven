@@ -12,7 +12,7 @@ import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import { uploadOnCloudinary } from "../utills/cloudinary.js";
-
+import path from "path";
 export const createClientIncident = asyncHandler(async (req, res) => {
   const {
     date,
@@ -209,8 +209,31 @@ export const createPaymentRequisition = asyncHandler(async (req, res) => {
   if (!req.file) {
     throw new ApiError(400, "Invoice attachment is required");
   }
+  const typeMap = {
+    image: [".jpg", ".jpeg", ".png", ".gif", ".webp"],
+    video: [".mp4", ".mov", ".avi", ".mkv"],
+    audio: [".mp3", ".wav", ".ogg"],
+    pdf: [".pdf"],
+    doc: [".doc", ".docx"],
+    ppt: [".ppt", ".pptx"],
+    excel: [".xls", ".xlsx"],
+    zip: [".zip", ".rar"],
+  };
 
+  const detectFileType = (ext) => {
+    return (
+      Object.keys(typeMap).find((key) => typeMap[key].includes(ext)) || "other"
+    );
+  };
+
+  const ext = path.extname(req.file.originalname).toLowerCase();
+  const fileType = detectFileType(ext);
+
+  /* ======================
+     UPLOAD TO CLOUDINARY
+  ====================== */
   const uploadedInvoice = await uploadOnCloudinary(req.file.path);
+
   if (!uploadedInvoice?.secure_url) {
     throw new ApiError(500, "Invoice upload failed");
   }
@@ -244,7 +267,11 @@ export const createPaymentRequisition = asyncHandler(async (req, res) => {
     approvedDate,
     payeeName,
     totalAmount,
-    invoiceAttachment: uploadedInvoice.secure_url,
+    invoiceAttachment: {
+      fileName: req.file.originalname,
+      fileType, // pdf, image, etc
+      fileUrl: uploadedInvoice.secure_url,
+    },
   };
 
   const cPayment = await PaymentRequisition.create(payload);
@@ -692,13 +719,36 @@ export const editPaymentRequisition = asyncHandler(async (req, res) => {
 
   /* ---------------- Invoice upload (optional) ---------------- */
   if (req.file) {
+    const typeMap = {
+      image: [".jpg", ".jpeg", ".png", ".gif", ".webp"],
+      video: [".mp4", ".mov", ".avi", ".mkv"],
+      audio: [".mp3", ".wav", ".ogg"],
+      pdf: [".pdf"],
+      doc: [".doc", ".docx"],
+      ppt: [".ppt", ".pptx"],
+      excel: [".xls", ".xlsx"],
+      zip: [".zip", ".rar"],
+    };
+
+    const detectFileType = (ext) => {
+      return (
+        Object.keys(typeMap).find((key) => typeMap[key].includes(ext)) ||
+        "other"
+      );
+    };
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    const fileType = detectFileType(ext);
     const uploadedInvoice = await uploadOnCloudinary(req.file.path);
 
     if (!uploadedInvoice?.secure_url) {
       throw new ApiError(500, "Invoice upload failed");
     }
 
-    payment.invoiceAttachment = uploadedInvoice.secure_url;
+    payment.invoiceAttachment = {
+      fileName: req.file.originalname,
+      fileType,
+      fileUrl: uploadedInvoice.secure_url,
+    };
   }
 
   /* ---------------- Payment details update ---------------- */
@@ -1143,7 +1193,7 @@ export const generateFilledEmployeeIncidentPdf = asyncHandler(
       doctorName: doc.doctorName || "N-A",
       doctorPhone: doc.doctorPhone || "N-A",
 
-      doctorVisitDate: new Date(doc.doctorVisitDate).toDateString()||"N-A",
+      doctorVisitDate: new Date(doc.doctorVisitDate).toDateString() || "N-A",
       doctorVisitTime: doc.doctorVisitTime || "N-A",
 
       previousInjury: {
