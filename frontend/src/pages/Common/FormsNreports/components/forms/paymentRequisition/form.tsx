@@ -14,7 +14,8 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import { useEffect } from "react";
 
 import { handleDownload } from "../../../../../../utills/handleDownload";
-import PdfField from "../../../../../../components/child/PdfField";
+
+import FileField from "../../../../../../components/child/FileField";
 interface PurchaseDetail {
   date: Date | null;
   nature: string;
@@ -113,19 +114,12 @@ const getFormSchema = (isEdit: boolean) =>
     invoices: isEdit
       ? Yup.mixed<File>()
           .nullable()
-          .test("fileType", "Only PDF files are allowed", (value) => {
-            if (!value) return true; // ✅ allow null in edit
-            return value instanceof File && value.type === "application/pdf";
-          })
           .test("fileSize", "File size must be less than 16MB", (value) => {
             if (!value) return true;
             return value.size <= 16 * 1024 * 1024;
           })
       : Yup.mixed<File>()
           .required("Invoice is required")
-          .test("fileType", "Only PDF files are allowed", (value) => {
-            return value instanceof File && value.type === "application/pdf";
-          })
           .test("fileSize", "File size must be less than 16MB", (value) => {
             if (!value) return true;
             return value.size <= 16 * 1024 * 1024;
@@ -539,11 +533,11 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
             <Card className="shadow-sm border-0">
               <Card.Body className="d-flex flex-column gap-16 p-20">
                 {" "}
-                <PdfField
+                <FileField
                   name={"invoices"}
                   fieldLabel="Invoice"
                   isEdit={isEdit}
-                  existingPdf={
+                  existingFile={
                     isEdit && FileUrl
                       ? { fileName: "Invoice", fileUrl: FileUrl }
                       : undefined

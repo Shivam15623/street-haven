@@ -77,7 +77,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
         {files.map((file, index) => (
           <div
             key={index}
-            className="d-flex align-items-center gap-2 border rounded p-2 bg-neutral-100 position-relative"
+            className="d-flex flex-row align-items-center gap-2 border rounded p-2 bg-neutral-100 position-relative"
           >
             {file.type.startsWith("image/") ? (
               <img
@@ -98,7 +98,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
             {/* Remove button */}
             <button
               type="button"
-              className="btn btn-sm btn-outline-danger position-absolute top-0 end-0"
+              className="btn  icon-street-delete  d-flex align-items-center justify-content-center  "
               style={{ width: 20, height: 20, padding: 0 }}
               onClick={(e) => {
                 e.stopPropagation();
