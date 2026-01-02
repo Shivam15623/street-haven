@@ -14,7 +14,7 @@ interface IncidentReportModalProps {
   incident: IncidentReport | null;
 }
 
-const formatDate = (date: string | Date) => dayjs(date).format("DD MMM YYYY");
+const formatDate = (date: string | Date) => dayjs(date).format("DD MMMM YYYY");
 
 const formatDateTime = (date: string | Date) =>
   dayjs(date).format("DD MMM YYYY, h:mm A");

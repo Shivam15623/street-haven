@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { EmployeeColumn } from "./components/EmployeeColumn";
 import { useAllEmployeesQuery } from "../../../services/EmployeeApi";
 import DataTable from "../../../components/child/DataTable";
+import { TableLoader } from "../../../components/child/TableLoader";
 
 const Employees = () => {
   const { hasPermission } = useHasPermission();
@@ -47,7 +48,7 @@ const Employees = () => {
     setLimit(value);
     setPage(1);
   };
-  if (isLoading) return <p>Loading...</p>;
+
   return (
     <div className="d-flex flex-column gap-18">
       <div className="card">
@@ -65,26 +66,30 @@ const Employees = () => {
           </div>
         </div>
       </div>
-      <div className="card">
-        <div className="card-body p-16 p-sm-20 radius-12 p-md-24">
-          <DataTable
-            columns={columns}
-            onLimitChange={handleLimitChange}
-            data={employees}
-            total={data?.data?.paggination?.total ?? 0}
-            page={page}
-            limit={limit}
-            sortBy={sortBy}
-            order={order}
-            onPageChange={setPage}
-            onSortChange={(col, dir) => {
-              setSortBy(col);
-              setOrder(dir);
-            }}
-            onSearchChange={(val) => setSearch(val)}
-          />
+      {isLoading ? (
+        <TableLoader columns={6} rows={10} />
+      ) : (
+        <div className="card">
+          <div className="card-body p-16 p-sm-20 radius-12 p-md-24">
+            <DataTable
+              columns={columns}
+              onLimitChange={handleLimitChange}
+              data={employees}
+              total={data?.data?.paggination?.total ?? 0}
+              page={page}
+              limit={limit}
+              sortBy={sortBy}
+              order={order}
+              onPageChange={setPage}
+              onSortChange={(col, dir) => {
+                setSortBy(col);
+                setOrder(dir);
+              }}
+              onSearchChange={(val) => setSearch(val)}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

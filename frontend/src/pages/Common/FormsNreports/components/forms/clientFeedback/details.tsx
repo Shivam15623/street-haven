@@ -41,10 +41,10 @@ const getContactIcon = (methods?: string[]) => {
   return "mdi:help-circle-outline";
 };
 
-const formatDate = (date: string | Date) => dayjs(date).format("DD MMM YYYY");
+const formatDate = (date: string | Date) => dayjs(date).format("DD MMMM YYYY");
 
 const formatDateTime = (date: string | Date) =>
-  dayjs(date).format("DD MMM YYYY, h:mm A");
+  dayjs(date).format("DD MMMM YYYY, hh:mm A");
 
 const ClientFeedback = ({ detail }: { detail: clientFeedbackData }) => {
   const [showModal, setShowModal] = useState(false);

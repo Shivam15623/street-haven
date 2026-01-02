@@ -10,7 +10,7 @@ import { useLazyGetStaffFeedbackPdfQuery } from "../../../../../../services/Form
 
 dayjs.extend(localizedFormat);
 
-const formatDate = (date: string | Date) => dayjs(date).format("DD MMM YYYY");
+const formatDate = (date: string | Date) => dayjs(date).format("DD MMMM YYYY");
 
 const StaffFeedbackDetail = ({ detail }: { detail: StaffFeedbackData }) => {
   const [showModal, setShowModal] = useState(false);

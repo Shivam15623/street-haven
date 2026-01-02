@@ -14,6 +14,7 @@ import EditStaffFeedback from "./edit";
 import DeleteConfirmModal from "../delete";
 import { useDebounce } from "../../../../../../hooks/useDebounce";
 import type { AgentTabProp } from "../../../../AgencyInformation/component/CollectiveAgreementTab";
+import dayjs from "dayjs";
 
 interface Column {
   header: string;
@@ -65,20 +66,11 @@ const StaffFeedBackSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
   const columns: Column[] = [
     {
       header: "Date",
-      accessor: (row) =>
-        new Date(row.date).toLocaleDateString("en-IN", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        }),
+      accessor: (row) => dayjs(row.date).format("DD MMM YYYY"),
     },
     {
       header: "Time",
-      accessor: (row) =>
-        new Date(row.date).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+      accessor: (row) => dayjs(row.date).format("hh:mm A"),
     },
     { header: "Location", accessor: (row) => row.location || "N/A" },
     { header: "Category", accessor: (row) => row.category },

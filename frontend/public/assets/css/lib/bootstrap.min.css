@@ -80,6 +80,8 @@
     rgba(255, 255, 255, 0.15),
     rgba(255, 255, 255, 0)
   );
+  --placeholder-bg: rgba(0, 0, 0, 0.1);
+  --placeholder-opacity: 0.6;
   --bs-body-font-family: var(--bs-font-sans-serif);
   --bs-body-font-size: 1rem;
   --bs-body-font-weight: 400;
@@ -184,6 +186,8 @@
   --bs-form-valid-border-color: #75b798;
   --bs-form-invalid-color: #ea868f;
   --bs-form-invalid-border-color: #ea868f;
+    --placeholder-bg: rgba(255, 255, 255, 0.15);
+  --placeholder-opacity: 0.4;
 }
 *,
 ::after,
@@ -6679,8 +6683,8 @@ fieldset:disabled .btn {
     calc(var(--bs-offcanvas-padding-x) * 0.5);
   margin: calc(-0.5 * var(--bs-offcanvas-padding-y))
     calc(-0.5 * var(--bs-offcanvas-padding-x))
-    calc(-0.5 * var(--bs-offcanvas-padding-y)) auto; 
-    color: white;
+    calc(-0.5 * var(--bs-offcanvas-padding-y)) auto;
+  color: white;
 }
 .offcanvas-title {
   margin-bottom: 0;

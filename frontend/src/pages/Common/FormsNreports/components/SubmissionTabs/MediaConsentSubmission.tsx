@@ -3,7 +3,6 @@ import { Icon } from "@iconify/react";
 import SimpleTable from "../../../../../components/child/SimpleTable";
 
 import {
-
   useLazyGetAllMediaConsentQuery,
   useLazyGetMediaConsentPdfQuery,
   type MediaConsent,
@@ -11,6 +10,7 @@ import {
 import EditMediaConsent from "../modals/EditMediaConsent";
 import { useDebounce } from "../../../../../hooks/useDebounce";
 import type { AgentTabProp } from "../../../AgencyInformation/component/CollectiveAgreementTab";
+import dayjs from "dayjs";
 
 // ------------------------------
 // Columns
@@ -74,15 +74,11 @@ const MediaConsentSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
     },
     {
       header: "Consent Date",
-      accessor: (row) =>
-        row.date ? new Date(row.date).toLocaleDateString("en-IN") : "N/A",
+      accessor: (row) => dayjs(row.date).format("DD MMM YYYY"),
     },
     {
       header: "Created",
-      accessor: (row) =>
-        row.createdAt
-          ? new Date(row.createdAt).toLocaleDateString("en-IN")
-          : "N/A",
+      accessor: (row) => dayjs(row.createdAt).format("DD MMM YYYY"),
     },
     {
       header: "Actions",

@@ -12,6 +12,7 @@ import EmployeeIncidentReportDetails from "./details";
 import DeleteConfirmModal from "../delete";
 import { useDebounce } from "../../../../../../hooks/useDebounce";
 import type { AgentTabProp } from "../../../../AgencyInformation/component/CollectiveAgreementTab";
+import dayjs from "dayjs";
 
 interface Column {
   header: string;
@@ -83,10 +84,7 @@ const EmployeeIncidentReportSubmission: React.FC<AgentTabProp> = ({
     },
     {
       header: "Injury Date",
-      accessor: (row) =>
-        row.injuryDate
-          ? new Date(row.injuryDate).toLocaleDateString("en-IN")
-          : "N/A",
+      accessor: (row) => dayjs(row.injuryDate).format("DD MMM YYYY"),
     },
     {
       header: "Location",
