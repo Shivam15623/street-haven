@@ -12,6 +12,7 @@ import { createNotification } from "../helper/CreateNotoification.js";
 import path from "path";
 import { PERMISSIONS } from "../auth/permissions.js";
 import { ROLE_PERMISSIONS } from "../auth/rolePermissions.js";
+import { getAssignedAgentByCategory } from "../helper/getAssignedUser.js";
 export const createTicket = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -30,7 +31,7 @@ export const createTicket = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Photo upload failed");
       }
     }
-
+    const assignedTo = await getAssignedAgentByCategory(category, session);
     /* ======================
        CREATE TICKET PAYLOAD
     ====================== */
@@ -40,6 +41,7 @@ export const createTicket = asyncHandler(async (req, res) => {
       createdBy: userId,
       priority,
       category,
+      assignedTo: assignedTo,
       location,
       status: "Open",
       statusHistory: [
@@ -56,6 +58,15 @@ export const createTicket = asyncHandler(async (req, res) => {
         fileName: uploadedFile.original_filename || "photo",
         fileUrl: uploadedFile.secure_url,
       };
+    }
+    if (assignedTo) {
+      payload.assignmentHistory = [
+        {
+          assignedTo,
+          assignedBy: userId, // system/user creating ticket
+          assignedAt: new Date(),
+        },
+      ];
     }
 
     /* ======================
