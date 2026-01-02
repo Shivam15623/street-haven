@@ -1,3 +1,4 @@
+import type { FileType } from "../interfaces/fileinterface";
 import type { ApiGeneralResponse, ApiResponse } from "../interfaces/Response";
 import { api } from "../redux/ApiSlice";
 export interface MediaConsent {
@@ -278,7 +279,11 @@ export interface PaymentRequisition {
 
   totalAmount: number;
 
-  invoiceAttachment: string;
+  invoiceAttachment: {
+    fileName: string;
+    fileUrl: string;
+    fileType: FileType;
+  };
 
   createdAt?: Date;
   updatedAt?: Date;

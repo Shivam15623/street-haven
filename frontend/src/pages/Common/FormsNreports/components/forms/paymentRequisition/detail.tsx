@@ -157,7 +157,7 @@ const PaymentRequisitionDetail = ({
                     onClick={() => setOpenFile(true)}
                     className="text-sm text-street-primary hover-text-primary cursor-pointer"
                   >
-                    invoice
+                    {data.invoiceAttachment.fileName}
                   </span>
                 </div>
               </div>
@@ -219,9 +219,9 @@ const PaymentRequisitionDetail = ({
             files={[
               {
                 _id: "1",
-                fileName: "invoice",
-                fileUrl: data.invoiceAttachment,
-                fileType: "pdf",
+                fileName: data.invoiceAttachment.fileName,
+                fileUrl: data.invoiceAttachment.fileUrl,
+                fileType: data.invoiceAttachment.fileType,
               },
             ]}
             open={openFile}

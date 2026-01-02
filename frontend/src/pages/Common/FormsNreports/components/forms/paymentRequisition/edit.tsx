@@ -148,7 +148,7 @@ const EditPaymentRequistion: React.FC<EditPaymentRequistionProp> = ({
             footer={false}
             id="edit-Payment-Requistion-form"
             isEdit={true}
-            FileUrl={detail.invoiceAttachment}
+            invoice={detail.invoiceAttachment}
             initialvalues={{
               payeeName: detail.payeeName,
               totalAmount: detail.totalAmount,
