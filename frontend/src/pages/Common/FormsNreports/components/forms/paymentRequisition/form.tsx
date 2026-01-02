@@ -38,7 +38,11 @@ export interface FormValues {
 interface FormProp {
   footer: boolean;
   isEdit: boolean;
-  FileUrl?: string;
+  invoice?: {
+    fileName: string;
+    fileType: string;
+    fileUrl: string;
+  };
   isLoading: boolean;
   initialvalues: FormValues;
   id?: string;
@@ -148,7 +152,7 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
   isLoading,
   id,
   isEdit,
-  FileUrl,
+  invoice,
 }) => {
   return (
     <Formik
@@ -538,8 +542,8 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                   fieldLabel="Invoice"
                   isEdit={isEdit}
                   existingFile={
-                    isEdit && FileUrl
-                      ? { fileName: "Invoice", fileUrl: FileUrl }
+                    isEdit && invoice
+                      ? { fileName: invoice.fileName, fileUrl: invoice.fileUrl }
                       : undefined
                   }
                 />

@@ -39,7 +39,25 @@ const PurchaseDetailSchema = new mongoose.Schema(
   },
   { _id: false }
 );
-
+const AttachmentSchema = new mongoose.Schema(
+  {
+    fileName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    fileType: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    fileUrl: {
+      type: String,
+      required: true,
+    },
+  },
+  { _id: false }
+);
 const PaymentRequisitionSchema = new mongoose.Schema(
   {
     paymentDetails: {
@@ -85,9 +103,8 @@ const PaymentRequisitionSchema = new mongoose.Schema(
       required: true,
       min: 1,
     },
-
     invoiceAttachment: {
-      type: String,
+      type: AttachmentSchema,
       required: true,
     },
   },
