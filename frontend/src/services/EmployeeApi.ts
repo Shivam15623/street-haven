@@ -221,5 +221,5 @@ export const {
   useResetTotpMutation,
   useEmployeeSuperFormQuery,
   useLazyEmployeeSuperFormQuery,
-  useFetchEmployeeByIdQuery,
+  useLazyFetchEmployeeByIdQuery,
 } = EmployeeApi;

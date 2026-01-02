@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ModalWrapper from "../../../../../../components/child/ModalWrapper";
 import {
   useEditPaymentRequistionMutation,
-  useGetPaymentRequisitionByIdQuery,
+  useLazyGetPaymentRequisitionByIdQuery,
   type PaymentRequisition,
 } from "../../../../../../services/FormApi";
 import { Icon } from "@iconify/react/dist/iconify.js";
@@ -18,11 +18,15 @@ const EditPaymentRequistion: React.FC<EditPaymentRequistionProp> = ({
   data,
 }) => {
   const [showModal, setShowModal] = useState(false);
-  const {
-    data: response,
-    isLoading: isfetching,
-    isFetching: isReFetching,
-  } = useGetPaymentRequisitionByIdQuery({ id: data._id }, { skip: !showModal });
+  const [
+    getPayment,
+    { data: response, isLoading: isfetching, isFetching: isReFetching },
+  ] = useLazyGetPaymentRequisitionByIdQuery();
+  useEffect(() => {
+    if (showModal) {
+      getPayment({ id: data._id });
+    }
+  }, [showModal, getPayment, data._id]);
   const loading = isfetching || isReFetching;
   const detail = response?.data;
   const [editpayrequest, { isLoading }] = useEditPaymentRequistionMutation();

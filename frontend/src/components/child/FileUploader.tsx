@@ -70,16 +70,14 @@ const FileUploader: React.FC<FileUploaderProps> = ({
   const renderPreview = () => {
     if (!showPreview || !field.value) return null;
 
-    const files = multiple
-      ? (field.value as File[])
-      : [field.value as File];
+    const files = multiple ? (field.value as File[]) : [field.value as File];
 
     return (
       <div className="d-flex flex-wrap gap-2 mt-2">
         {files.map((file, index) => (
           <div
             key={index}
-            className="d-flex align-items-center gap-2 border rounded p-2 bg-neutral-100"
+            className="d-flex align-items-center gap-2 border rounded p-2 bg-neutral-100 position-relative"
           >
             {file.type.startsWith("image/") ? (
               <img
@@ -92,9 +90,30 @@ const FileUploader: React.FC<FileUploaderProps> = ({
             ) : (
               <i className="bi bi-file-earmark fs-5 text-primary"></i>
             )}
+
             <span className="text-sm text-truncate" style={{ maxWidth: 120 }}>
               {file.name}
             </span>
+
+            {/* Remove button */}
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-danger position-absolute top-0 end-0"
+              style={{ width: 20, height: 20, padding: 0 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (multiple) {
+                  const newFiles = (field.value as File[]).filter(
+                    (_, i) => i !== index
+                  );
+                  setFieldValue(name, newFiles);
+                } else {
+                  setFieldValue(name, null);
+                }
+              }}
+            >
+              &times;
+            </button>
           </div>
         ))}
       </div>
@@ -111,9 +130,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
 
       <label
         className={`upload-file h-80-px w-100 border input-form-light radius-8 overflow-hidden border-dashed d-flex align-items-center flex-column justify-content-center gap-1 cursor-pointer ${
-          isDragging
-            ? "bg-neutral-200 border-primary"
-            : "bg-hover-neutral-200"
+          isDragging ? "bg-neutral-200 border-primary" : "bg-hover-neutral-200"
         }`}
         onDragOver={(e) => {
           e.preventDefault();
@@ -141,8 +158,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
           <p className="fw-normal text-sm img-upload-text">Drop file here</p>
         ) : (
           <p className="fw-normal text-sm img-upload-text">
-            Drag & drop or{" "}
-            <span className="text-street-primary">browse</span>
+            Drag & drop or <span className="text-street-primary">browse</span>
           </p>
         )}
       </label>

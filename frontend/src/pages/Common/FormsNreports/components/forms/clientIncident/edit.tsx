@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ModalWrapper from "../../../../../../components/child/ModalWrapper";
 
 import {
   useEditClientIncidentMutation,
-  useGetClientIncidentByIdQuery,
+
+  useLazyGetClientIncidentByIdQuery,
   type clientIncidentReport,
   type editclientIncident,
 } from "../../../../../../services/FormApi";
@@ -24,12 +25,14 @@ const EditClientIncident: React.FC<EditClientIncidentProp> = ({ data }) => {
     useEditClientIncidentMutation();
 
   /** GET incident */
-  const { data: incidentdata, isLoading: isFetching } =
-    useGetClientIncidentByIdQuery(
-      { id: data._id! },
-      { skip: !showModal } // 🔥 fetch only when modal opens
-    );
 
+  const [getclientIncident, { data: incidentdata, isLoading: isFetching }] =
+    useLazyGetClientIncidentByIdQuery();
+  useEffect(() => {
+    if (showModal) {
+      getclientIncident({ id: data._id! });
+    }
+  }, [showModal, data._id, getclientIncident]);
   const incident = incidentdata?.data;
   const handleSubmit = async (
     values: FormValues,

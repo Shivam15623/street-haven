@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Icon } from "@iconify/react/dist/iconify.js";
 import dayjs from "dayjs";
 import { Col, Container, Row } from "react-bootstrap";
 import {
-  useGetPaymentRequisitionByIdQuery,
+  useLazyGetPaymentRequisitionByIdQuery,
   type PaymentRequisition,
 } from "../../../../../../services/FormApi";
 import ModalWrapper from "../../../../../../components/child/ModalWrapper";
@@ -18,14 +18,16 @@ const PaymentRequisitionDetail = ({
   detail: PaymentRequisition;
 }) => {
   const [showModal, setShowModal] = useState(false);
-  const {
-    data: response,
-    isLoading: isfetching,
-    isFetching: isReFetching,
-  } = useGetPaymentRequisitionByIdQuery(
-    { id: detail._id },
-    { skip: !showModal }
-  );
+
+  const [
+    getPayment,
+    { data: response, isLoading: isfetching, isFetching: isReFetching },
+  ] = useLazyGetPaymentRequisitionByIdQuery();
+  useEffect(() => {
+    if (showModal) {
+      getPayment({ id: detail._id });
+    }
+  }, [showModal, getPayment, detail._id]);
   const loading = isfetching || isReFetching;
   const data = response?.data;
   const [openFile, setOpenFile] = useState(false);

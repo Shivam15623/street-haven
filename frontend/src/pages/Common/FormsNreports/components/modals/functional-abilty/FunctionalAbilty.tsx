@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ModalWrapper from "../../../../../../components/child/ModalWrapper";
 import { FormField, StatusField } from "./FormField";
 import { FormSection } from "./FormSection";
@@ -6,7 +6,8 @@ import { AbilitiesGrid } from "./AbiltiesGrid";
 import { RestrictionsGrid } from "./RestrictionGrid";
 import {
   CANADA_PROVINCES,
-  useGetFafByIdQuery,
+
+  useLazyGetFafByIdQuery,
   type FunctionalAbility,
 } from "../../../../../../services/FormApi";
 import { Icon } from "@iconify/react/dist/iconify.js";
@@ -22,11 +23,16 @@ export function FunctionalAbilityDetail({
   details,
 }: FunctionalAbilityDetailProps) {
   const [showModal, setShowModal] = useState(false);
-  const {
-    data: response,
-    isLoading: isFetching,
-    isFetching: isRefetching,
-  } = useGetFafByIdQuery({ id: details._id! }, { skip: !showModal });
+
+  const [
+    getFaf,
+    { data: response, isLoading: isFetching, isFetching: isRefetching },
+  ] = useLazyGetFafByIdQuery();
+  useEffect(() => {
+    if (showModal) {
+      getFaf({ id: details._id! });
+    }
+  }, [showModal, getFaf, details._id]);
   const fAbility = response?.data;
   const loading = isFetching || isRefetching;
   console.log(fAbility);

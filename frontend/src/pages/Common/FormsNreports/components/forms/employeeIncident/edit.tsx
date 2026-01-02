@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import ModalWrapper from "../../../../../../components/child/ModalWrapper";
 import { Icon } from "@iconify/react/dist/iconify.js";
 
 import {
   useEditEmployeeIncidentMutation,
-  useGetEmployeeIncidentByIdQuery,
+
+  useLazyGetEmployeeIncidentByIdQuery,
   type editemployeeIncidentReportCred,
 } from "../../../../../../services/FormApi";
 
@@ -19,12 +20,15 @@ interface EditEmployeeIncidentProp {
 const EditEmployeeIncident: React.FC<EditEmployeeIncidentProp> = ({ data }) => {
   const [showModal, setShowModal] = useState(false);
 
-  const {
-    data: response,
-    isLoading: isFetching,
-    isFetching: isRefetching,
-  } = useGetEmployeeIncidentByIdQuery({ id: data._id }, { skip: !showModal });
-
+  const [
+    getEmployeeincident,
+    { data: response, isLoading: isFetching, isFetching: isRefetching },
+  ] = useLazyGetEmployeeIncidentByIdQuery();
+  useEffect(() => {
+    if (showModal) {
+      getEmployeeincident({ id: data._id! });
+    }
+  }, [showModal, getEmployeeincident, data._id]);
   const [updateIncident, { isLoading }] = useEditEmployeeIncidentMutation();
 
   const handleSubmit = async (

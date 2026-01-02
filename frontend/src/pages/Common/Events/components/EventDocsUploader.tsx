@@ -199,7 +199,7 @@ const EventDocsUploader: React.FC<EventDocsUploaderProps> = ({
               }`}
               style={{ width: 56, height: 56, transition: "0.3s" }}
             >
-              <i className="bi bi-upload fs-4"></i>
+              <Icon icon={"bi-upload"} className=" text-2xl" />
             </div>
 
             <p className="fw-semibold text-street-dark mb-0">
