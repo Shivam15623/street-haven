@@ -15,6 +15,7 @@ import DeleteConfirmModal from "../delete";
 import { useDebounce } from "../../../../../../hooks/useDebounce";
 import type { AgentTabProp } from "../../../../AgencyInformation/component/CollectiveAgreementTab";
 import dayjs from "dayjs";
+import TablePlaceholderLoader from "../../../../../../components/child/SimpleTablePlaceHolder";
 
 interface Column {
   header: string;
@@ -98,7 +99,21 @@ const StaffFeedBackSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
       ),
     },
   ];
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="d-flex flex-column gap-24">
+        {/* Search placeholder */}
+        <div className="px-20 py-16 bg-base radius-12 placeholder-glow">
+          <span
+            className="placeholder col-6 rounded"
+            style={{ height: "16px" }}
+          />
+        </div>
+
+        <TablePlaceholderLoader columns={6} rows={5} />
+      </div>
+    );
+  }
 
   const submissions: StaffFeedbackData[] =
     feedBackSubmissions?.data?.allfeedbackSubmissions ?? [];

@@ -3,6 +3,7 @@ import StreetPaggination from "../../../../components/child/StreetPaggination";
 import { useLazyFetchEventsupcomingQuery } from "../../../../services/EventApi";
 import EventCard from "./EventCard";
 import type { AgentTabProp } from "../../AgencyInformation/component/CollectiveAgreementTab";
+import EventCardSkeleton from "./EventCardSkeleton";
 
 const UpcomingEvents: React.FC<AgentTabProp> = ({ isActive }) => {
   const [page, setPage] = useState(1);
@@ -31,7 +32,11 @@ const UpcomingEvents: React.FC<AgentTabProp> = ({ isActive }) => {
   return (
     <div className="d-flex flex-column gap-16">
       {isFetching && (
-        <div className="text-center text-sm text-street-base">Loading...</div>
+        <div className="d-flex flex-column gap-16">
+          {Array.from({ length: 3 }).map((_, idx) => (
+            <EventCardSkeleton key={idx} />
+          ))}
+        </div>
       )}
 
       {/* Error */}

@@ -45,7 +45,8 @@ const RecentActivity = () => {
             Array.from({ length: 5 }).map((_, idx) => (
               <div
                 key={idx}
-                className="d-flex align-items-center justify-content-between p-2 p-sm-3 border rounded"
+                className="d-flex flex-row align-items-center justify-content-between gap-3 radius-8 p-12 border "
+                style={{ borderColor: "#AAAAAA" }}
               >
                 <div className="flex-grow-1">
                   <div className="placeholder-glow w-100">
