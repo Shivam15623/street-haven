@@ -12,6 +12,7 @@ import PaymentRequisitionDetail from "./detail";
 import DeleteConfirmModal from "../delete";
 import { useDebounce } from "../../../../../../hooks/useDebounce";
 import type { AgentTabProp } from "../../../../AgencyInformation/component/CollectiveAgreementTab";
+import dayjs from "dayjs";
 
 interface Column {
   header: string;
@@ -72,12 +73,7 @@ const PaymentRequistionSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
   const columns: Column[] = [
     {
       header: "Requested Date",
-      accessor: (row) =>
-        new Date(row.requestedDate).toLocaleDateString("en-IN", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        }),
+      accessor: (row) => dayjs(row.requestedDate).format("DD MMM YYYY"),
     },
     {
       header: "Requested By",

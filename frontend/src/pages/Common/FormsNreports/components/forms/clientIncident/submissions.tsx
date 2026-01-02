@@ -12,6 +12,8 @@ import ClientIncidentReportDetail from "./detail";
 import DeleteConfirmModal from "../delete";
 import { useDebounce } from "../../../../../../hooks/useDebounce";
 import type { AgentTabProp } from "../../../../AgencyInformation/component/CollectiveAgreementTab";
+import dayjs from "dayjs";
+import { formatTime12Hour } from "../../../../../../utills/utills";
 
 interface Column {
   header: string;
@@ -60,16 +62,11 @@ const ClientIncidentReportSubmission: React.FC<AgentTabProp> = ({
   const columns: Column[] = [
     {
       header: "Incident Date",
-      accessor: (row) =>
-        new Date(row.incidentDate).toLocaleDateString("en-IN", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        }),
+      accessor: (row) => dayjs(row.incidentDate).format("DD MMM YYYY"),
     },
     {
       header: "Incident Time",
-      accessor: (row) => row.incidentTime || "N/A",
+      accessor: (row) => formatTime12Hour(row.incidentTime) || "N/A",
     },
     {
       header: "Incident Type",

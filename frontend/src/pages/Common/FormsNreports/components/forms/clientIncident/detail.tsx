@@ -5,7 +5,6 @@ import { useEffect, useState, type JSX } from "react";
 
 import type { BadgeVariant } from "../../../../../../components/child/Badge";
 import {
-
   useLazyGetClientIncidentByIdQuery,
   useLazyGetClientIncidentPdfQuery,
   type clientIncidentReport,
@@ -13,6 +12,7 @@ import {
 import ModalWrapper from "../../../../../../components/child/ModalWrapper";
 import Badge from "../../../../../../components/child/Badge";
 import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
+import { formatTime12Hour } from "../../../../../../utills/utills";
 
 interface ClientIncidentModalProps {
   incident: clientIncidentReport;
@@ -50,7 +50,7 @@ const ClientIncidentReportDetail = ({ incident }: ClientIncidentModalProps) => {
 
   const detail = response?.data;
   const loading = isLoading || isFetching;
-
+  console.log("yes d",detail?.incidentTime, formatTime12Hour(detail?.incidentTime));
   const getIncidentTypeBadge = (type: string): JSX.Element => {
     const severityMap: Record<string, BadgeVariant> = {
       Disaster: "danger",
@@ -126,14 +126,14 @@ const ClientIncidentReportDetail = ({ incident }: ClientIncidentModalProps) => {
                 <InfoCard
                   icon="lucide:calendar"
                   label="Date"
-                  value={format(new Date(detail.incidentDate), "MMM d, yyyy")}
+                  value={format(new Date(detail.incidentDate), "MMMM dd yyyy")}
                 />
               </Col>
               <Col md={4}>
                 <InfoCard
                   icon="lucide:clock"
                   label="Time"
-                  value={detail.incidentTime}
+                  value={formatTime12Hour(detail.incidentTime)}
                 />
               </Col>
               <Col md={4}>
