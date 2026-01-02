@@ -13,7 +13,8 @@ import DeleteConfirmModal from "../forms/delete";
 import { useDebounce } from "../../../../../hooks/useDebounce";
 import type { AgentTabProp } from "../../../AgencyInformation/component/CollectiveAgreementTab";
 import dayjs from "dayjs";
-import { TableLoader } from "../../../../../components/child/TableLoader";
+
+import TablePlaceholderLoader from "../../../../../components/child/SimpleTablePlaceHolder";
 
 // ------------------------------
 // Columns
@@ -132,13 +133,21 @@ const FunctionalAbilitiesSubmission: React.FC<AgentTabProp> = ({
       ),
     },
   ];
-  if (isLoading)
+ if (isLoading) {
     return (
       <div className="d-flex flex-column gap-24">
-        <TableLoader columns={6} rows={10} />
+        {/* Search placeholder */}
+        <div className="px-20 py-16 bg-base radius-12 placeholder-glow">
+          <span
+            className="placeholder col-6 rounded"
+            style={{ height: "16px" }}
+          />
+        </div>
+
+        <TablePlaceholderLoader columns={6} rows={5} />
       </div>
     );
-
+  }
   const submissions: FunctionalAbility[] = abilityData?.data?.data ?? [];
   const total: number = abilityData?.data?.paggination?.total || 0;
 

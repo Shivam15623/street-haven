@@ -3,6 +3,7 @@ import { useLazyFetchEventsPastQuery } from "../../../../services/EventApi";
 import EventCard from "./EventCard";
 import StreetPaggination from "../../../../components/child/StreetPaggination";
 import type { AgentTabProp } from "../../AgencyInformation/component/CollectiveAgreementTab";
+import EventCardSkeleton from "./EventCardSkeleton";
 
 const PastEvents: React.FC<AgentTabProp> = ({ isActive }) => {
   const [page, setPage] = useState(1);
@@ -33,7 +34,11 @@ const PastEvents: React.FC<AgentTabProp> = ({ isActive }) => {
     <div className="d-flex flex-column gap-16">
       {/* Loader */}
       {isFetching && (
-        <div className="text-center text-sm text-street-base">Loading...</div>
+        <div className="d-flex flex-column gap-16">
+          {Array.from({ length: 3 }).map((_, idx) => (
+            <EventCardSkeleton key={idx} />
+          ))}
+        </div>
       )}
 
       {/* Error */}
