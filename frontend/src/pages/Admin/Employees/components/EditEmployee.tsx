@@ -66,6 +66,7 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [editEmployee, { isLoading }] = useEditEmployeeMutation();
+  
   const { data: employeeData, isLoading: isEmployeeLoading } =
     useAllEmployeesQuery(
       { forDropdown: true },

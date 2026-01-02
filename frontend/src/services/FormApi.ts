@@ -782,7 +782,6 @@ export const {
   useLazyGetAllMediaConsentQuery,
   useLazyGetAllPaymentRequisitionsQuery,
 
-
   useEditClientFeedBackMutation,
   useEditClientIncidentMutation,
   useEditEmployeeIncidentMutation,
@@ -798,6 +797,11 @@ export const {
   useGetEmployeeIncidentByIdQuery,
   useGetFafByIdQuery,
   useGetPaymentRequisitionByIdQuery,
+  useLazyGetClientFeedbackByIdQuery,
+  useLazyGetClientIncidentByIdQuery,
+  useLazyGetEmployeeIncidentByIdQuery,
+  useLazyGetFafByIdQuery,
+  useLazyGetPaymentRequisitionByIdQuery,
   useLazyGetClientFeedbackPdfQuery,
   useLazyGetClientIncidentPdfQuery,
   useLazyGetEmployeeIncidentPdfQuery,

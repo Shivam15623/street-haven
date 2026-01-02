@@ -1,11 +1,12 @@
 import { Icon } from "@iconify/react";
 import { format } from "date-fns";
 import { Row, Col, Container } from "react-bootstrap";
-import { useState, type JSX } from "react";
+import { useEffect, useState, type JSX } from "react";
 
 import type { BadgeVariant } from "../../../../../../components/child/Badge";
 import {
-  useGetClientIncidentByIdQuery,
+
+  useLazyGetClientIncidentByIdQuery,
   useLazyGetClientIncidentPdfQuery,
   type clientIncidentReport,
 } from "../../../../../../services/FormApi";
@@ -20,14 +21,13 @@ interface ClientIncidentModalProps {
 const ClientIncidentReportDetail = ({ incident }: ClientIncidentModalProps) => {
   const [showModal, setShowModal] = useState(false);
 
-  const {
-    data: response,
-    isLoading,
-    isFetching,
-  } = useGetClientIncidentByIdQuery(
-    { id: incident._id! },
-    { skip: !showModal }
-  );
+  const [getclientIncident, { data: response, isLoading, isFetching }] =
+    useLazyGetClientIncidentByIdQuery();
+  useEffect(() => {
+    if (showModal) {
+      getclientIncident({ id: incident._id! });
+    }
+  }, [showModal, incident._id, getclientIncident]);
 
   const [getClientincidentPdf, { isFetching: pdfloading }] =
     useLazyGetClientIncidentPdfQuery();
