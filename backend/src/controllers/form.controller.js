@@ -811,6 +811,18 @@ export const editMediaConsent = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "Media consent updated successfully", consent));
 });
 
+export const deleteMediaConsent = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const mediaConsent = await MediaConsent.findByIdAndDelete(id);
+  if (!mediaConsent) {
+    throw new ApiError(404, "Media Consent not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Media Consent deleted successfully"));
+});
 export const getClientIncidentById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
