@@ -44,16 +44,16 @@ const ProfileSettings: React.FC = () => {
   const handleupdate = async (values: ProfileValues) => {
     try {
       const formdata = new FormData();
-      if (values.firstName) formdata.append("firstname", values.firstName);
-      if (values.lastName) formdata.append("lastname", values.lastName);
+      // if (values.firstName) formdata.append("firstname", values.firstName);
+      // if (values.lastName) formdata.append("lastname", values.lastName);
       if (values.workPhone) formdata.append("phoneNo", values.workPhone);
 
       const res = await updateUser(formdata).unwrap();
       if (res.success) {
         showSuccess(res.message);
         const payLoad = {
-          firstName: res.data.firstname,
-          lastName: res.data.lastname,
+          // firstName: res.data.firstname,
+          // lastName: res.data.lastname,
           phoneNo: res.data.phoneNo,
         };
         dispatch(UpdateUserDetails(payLoad));
@@ -96,6 +96,7 @@ const ProfileSettings: React.FC = () => {
                     name="firstName"
                     value={values.firstName}
                     onChange={handleChange}
+                    disabled={true}
                     isInvalid={touched.firstName && !!errors.firstName}
                   />
                   <Form.Control.Feedback type="invalid">
@@ -113,6 +114,7 @@ const ProfileSettings: React.FC = () => {
                     size="sm"
                     name="lastName"
                     value={values.lastName}
+                    disabled={true}
                     onChange={handleChange}
                     isInvalid={touched.lastName && !!errors.lastName}
                   />

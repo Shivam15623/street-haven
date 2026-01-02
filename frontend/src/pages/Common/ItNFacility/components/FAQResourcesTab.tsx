@@ -16,6 +16,8 @@ import { Col, Row } from "react-bootstrap";
 import useHasPermission from "../../../../hooks/Auth";
 import type { AgentTabProp } from "../../AgencyInformation/component/CollectiveAgreementTab";
 import { useEffect } from "react";
+import FAQCardLoader from "./FAqComponents/FAQCardLoader";
+import EmergencyContactLoader from "./FAqComponents/EmergencyContactLoader";
 
 interface FAQItem {
   _id: string;
@@ -30,8 +32,9 @@ interface FAQCard {
 }
 
 const FAQResourcesTab: React.FC<AgentTabProp> = ({ isActive }) => {
-  const [getCategories, { data }] = useLazyAllCategoriesQuery();
-  const [getContacts, { data: contacts }] = useLazyViewEmergencyContactsQuery();
+  const [getCategories, { data, isLoading }] = useLazyAllCategoriesQuery();
+  const [getContacts, { data: contacts, isLoading: contactsLoading }] =
+    useLazyViewEmergencyContactsQuery();
   useEffect(() => {
     if (isActive) {
       getCategories();
@@ -39,6 +42,16 @@ const FAQResourcesTab: React.FC<AgentTabProp> = ({ isActive }) => {
     }
   }, [isActive, getCategories, getContacts]);
   const { hasPermission } = useHasPermission();
+  if (isLoading || contactsLoading) {
+    return (
+      <div className="d-flex flex-column gap-4 mb-5">
+        <Row className="g-3">
+          <FAQCardLoader />
+        </Row>
+        <EmergencyContactLoader />
+      </div>
+    );
+  }
 
   return (
     <div className="d-flex flex-column gap-4 mb-5">
