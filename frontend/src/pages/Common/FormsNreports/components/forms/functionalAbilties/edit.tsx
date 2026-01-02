@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ModalWrapper from "../../../../../../components/child/ModalWrapper";
 import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
 
@@ -15,7 +15,8 @@ import { Form } from "react-bootstrap";
 
 import {
   useEditFAFMutation,
-  useGetFafByIdQuery,
+
+  useLazyGetFafByIdQuery,
   type FunctionalAbility,
 } from "../../../../../../services/FormApi";
 import type { FunctionalAbilityFormValues } from "../FunctionalAbiltiesForm";
@@ -264,11 +265,15 @@ const SectionRenderer = ({ section, formik }: SectionRendererProps) => {
 const EditFAbilties = ({ data }: { data: FunctionalAbility }) => {
   const [showModal, setShowModal] = useState(false);
   const [editfaf, { isLoading }] = useEditFAFMutation();
-  const {
-    data: response,
-    isLoading: isFetching,
-    isFetching: isRefetching,
-  } = useGetFafByIdQuery({ id: data._id! }, { skip: !showModal });
+  const [
+    getFaf,
+    { data: response, isLoading: isFetching, isFetching: isRefetching },
+  ] = useLazyGetFafByIdQuery();
+  useEffect(() => {
+    if (showModal) {
+      getFaf({ id: data._id! });
+    }
+  }, [showModal, getFaf, data._id]);
   const fAbility = response?.data;
   const [activeSection, setActiveSection] = useState("claim-worker");
   const loading = isFetching || isRefetching;

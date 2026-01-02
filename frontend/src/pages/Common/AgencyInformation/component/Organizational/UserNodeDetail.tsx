@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
-import { useFetchEmployeeByIdQuery } from "../../../../../services/EmployeeApi";
+import { useLazyFetchEmployeeByIdQuery } from "../../../../../services/EmployeeApi";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
@@ -65,14 +65,19 @@ const InfoRow = ({ label, value }: { label: string; value?: string }) => {
 };
 
 const UserNodeDetail: React.FC<UserNodeProps> = ({ id, show, handleclose }) => {
-  const { data, isLoading } = useFetchEmployeeByIdQuery({
-    id,
-    orgChart: true,
-  });
+  const [fetchUserDetail, { data, isLoading }] =
+    useLazyFetchEmployeeByIdQuery();
 
+  useEffect(() => {
+    if (show) {
+      fetchUserDetail({
+        id,
+        orgChart: true,
+      });
+    }
+  }, [show, fetchUserDetail, id]);
   const employee = data?.data?.employee;
   const supervisor = data?.data?.supervisor;
-  const subordinates = data?.data?.subordinates;
 
   if (isLoading || !employee) {
     return (
@@ -135,65 +140,7 @@ const UserNodeDetail: React.FC<UserNodeProps> = ({ id, show, handleclose }) => {
               : "None"
           }
         />
-        <InfoRow
-          label="Hire Date"
-          value={
-            employee.hireDate
-              ? dayjs(employee.hireDate).format("DD/MM/YYYY")
-              : "-"
-          }
-        />
-        <InfoRow
-          label="Time Period"
-          value={employee.hireDate ? dayjs(employee.hireDate).fromNow() : "-"}
-        />
       </div>
-      {subordinates && subordinates.length > 0 && (
-        <div className="mt-24">
-          <p
-            style={{
-              fontSize: "14px",
-              color: "var(--street-text-base)",
-              opacity: 0.7,
-              textTransform: "uppercase",
-              fontWeight: 600,
-              marginBottom: "12px",
-            }}
-          >
-            Subordinates ({subordinates.length})
-          </p>
-
-          <div className="d-flex flex-column gap-12">
-            {subordinates.map((sub) => (
-              <div
-                key={sub._id}
-                className="d-flex align-items-center gap-12 p-12 rounded-12"
-                style={{
-                  border: "1px solid var(--street-border-base-50)",
-                }}
-              >
-                {/* Avatar */}
-                <div
-                  className="rounded-circle bg-street-primary-10 text-street-primary fw-semibold d-flex align-items-center justify-content-center"
-                  style={{ width: 40, height: 40 }}
-                >
-                  {getInitials(`${sub.firstname} ${sub.lastname}`)}
-                </div>
-
-                {/* Info */}
-                <div className="d-flex flex-column">
-                  <span className="fw-semibold text-street-dark">
-                    {sub.firstname} {sub.lastname}
-                  </span>
-                  <span className="text-sm text-street-text-base opacity-75">
-                    {sub.title}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </ModalWrapper>
   );
 };

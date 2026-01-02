@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import { Container } from "react-bootstrap";
 import { Icon } from "@iconify/react";
 import {
-  useGetEmployeeIncidentByIdQuery,
+  useLazyGetEmployeeIncidentByIdQuery,
   useLazyGetEmployeeIncidentPdfQuery,
   type EmployeeIncidentReportPopulated,
 } from "../../../../../../services/FormApi";
@@ -53,14 +53,13 @@ const EmployeeIncidentReportDetails = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
 
-  const {
-    data: response,
-    isLoading,
-    isFetching,
-  } = useGetEmployeeIncidentByIdQuery(
-    { id: detail._id! },
-    { skip: !showModal }
-  );
+  const [getEmployeeincident, { data: response, isLoading, isFetching }] =
+    useLazyGetEmployeeIncidentByIdQuery();
+  useEffect(() => {
+    if (showModal) {
+      getEmployeeincident({ id: detail._id! });
+    }
+  }, [showModal, getEmployeeincident, detail._id]);
   const [getEmployeeIncidentPdf, { isFetching: pdfloading }] =
     useLazyGetEmployeeIncidentPdfQuery();
   const handleDownload = async () => {

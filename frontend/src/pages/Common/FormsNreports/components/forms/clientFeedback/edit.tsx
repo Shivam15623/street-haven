@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ModalWrapper from "../../../../../../components/child/ModalWrapper";
 import { Icon } from "@iconify/react";
 import {
   useEditClientFeedBackMutation,
-  useGetClientFeedbackByIdQuery,
+  useLazyGetClientFeedbackByIdQuery,
   type clientFeedbackData,
   type editclientFeedbackCredentials,
 } from "../../../../../../services/FormApi";
@@ -23,11 +23,15 @@ const EditClientFeedback = ({ data }: EditClientFeedbackProps) => {
     useEditClientFeedBackMutation();
 
   /** FETCH */
-  const {
-    data: feedbackResponse,
-    isLoading: isFetching,
-    isFetching: isRefetching,
-  } = useGetClientFeedbackByIdQuery({ id: data._id }, { skip: !showModal });
+  const [
+    getfeedbackData,
+    { data: feedbackResponse, isLoading: isFetching, isFetching: isRefetching },
+  ] = useLazyGetClientFeedbackByIdQuery();
+  useEffect(() => {
+    if (showModal) {
+      getfeedbackData({ id: data._id });
+    }
+  }, [showModal, data._id, getfeedbackData]);
 
   const feedback = feedbackResponse?.data;
   const loading = isFetching || isRefetching || isUpdating;
@@ -138,7 +142,7 @@ const EditClientFeedback = ({ data }: EditClientFeedbackProps) => {
               description: feedback.complaintDescription,
               impact: feedback.impact,
               desiredOutcome: feedback.desiredOutcome,
-              preferredContactMethod: feedback.preferredContactMethod??[],
+              preferredContactMethod: feedback.preferredContactMethod ?? [],
             }}
           />
         )}

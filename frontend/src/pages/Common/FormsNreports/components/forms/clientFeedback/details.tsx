@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge, Col, Container, Row } from "react-bootstrap";
 import { Icon } from "@iconify/react";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import dayjs from "dayjs";
 
 import {
-  useGetClientFeedbackByIdQuery,
+
+  useLazyGetClientFeedbackByIdQuery,
   useLazyGetClientFeedbackPdfQuery,
   type clientFeedbackData,
 } from "../../../../../../services/FormApi";
@@ -48,10 +49,13 @@ const formatDateTime = (date: string | Date) =>
 const ClientFeedback = ({ detail }: { detail: clientFeedbackData }) => {
   const [showModal, setShowModal] = useState(false);
 
-  const { data, isLoading, isFetching } = useGetClientFeedbackByIdQuery(
-    { id: detail._id },
-    { skip: !showModal }
-  );
+  const [getfeedbackData, { data, isLoading, isFetching }] =
+    useLazyGetClientFeedbackByIdQuery();
+  useEffect(() => {
+    if (showModal) {
+      getfeedbackData({ id: detail._id });
+    }
+  }, [showModal, getfeedbackData, detail._id]);
 
   const [getClientFeddbackPdf, { isFetching: pdfloading }] =
     useLazyGetClientFeedbackPdfQuery();
@@ -111,7 +115,6 @@ const ClientFeedback = ({ detail }: { detail: clientFeedbackData }) => {
         footer={
           <button
             className="d-flex gap-2 align-items-center btn-street-lg justify-content-center btn btn-street-outline-primary radius-12 p-0"
-       
             onClick={handleDownload}
           >
             {" "}
