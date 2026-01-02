@@ -15,6 +15,7 @@ import {
   fetchTicketsSchema,
 } from "../validations/ticket.js";
 import { idParamSchema } from "../validations/common.js";
+import { upsertCategoryAssignment } from "../controllers/ticketCategoryAssignment.controller.js";
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
 
@@ -39,5 +40,6 @@ router.route("/:ticketId/comments").get(FetchComments);
 router
   .route("/:ticketId/comments")
   .post(upload.array("attachments", 7), validateAddComment, AddComment);
+router.route("/category-assignment").post(upsertCategoryAssignment);
 
 export default router;
