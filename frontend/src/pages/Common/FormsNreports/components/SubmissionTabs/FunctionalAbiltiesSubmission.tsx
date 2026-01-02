@@ -12,6 +12,8 @@ import EditFAbilties from "../forms/functionalAbilties/edit";
 import DeleteConfirmModal from "../forms/delete";
 import { useDebounce } from "../../../../../hooks/useDebounce";
 import type { AgentTabProp } from "../../../AgencyInformation/component/CollectiveAgreementTab";
+import dayjs from "dayjs";
+import { TableLoader } from "../../../../../components/child/TableLoader";
 
 // ------------------------------
 // Columns
@@ -98,10 +100,7 @@ const FunctionalAbilitiesSubmission: React.FC<AgentTabProp> = ({
     },
     {
       header: "Accident Date",
-      accessor: (row) =>
-        row.dateOfAccident
-          ? new Date(row.dateOfAccident).toLocaleDateString("en-IN")
-          : "N/A",
+      accessor: (row) => dayjs(row.dateOfAccident).format("DD MMM YYYY"),
     },
     {
       header: "Return Status",
@@ -133,7 +132,12 @@ const FunctionalAbilitiesSubmission: React.FC<AgentTabProp> = ({
       ),
     },
   ];
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading)
+    return (
+      <div className="d-flex flex-column gap-24">
+        <TableLoader columns={6} rows={10} />
+      </div>
+    );
 
   const submissions: FunctionalAbility[] = abilityData?.data?.data ?? [];
   const total: number = abilityData?.data?.paggination?.total || 0;

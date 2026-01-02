@@ -101,7 +101,7 @@ const PaymentRequisitionDetail = ({
                     <p className="text-sm text-street-base d-flex align-items-center gap-1 mt-1">
                       <Icon icon="lucide:calendar" fontSize={14} />
                       <span>
-                        {dayjs(data.requestedDate).format("MMMM D Y")}
+                        {dayjs(data.requestedDate).format("DD MMMM YYYY")}
                       </span>
                     </p>
                   </div>
@@ -126,7 +126,9 @@ const PaymentRequisitionDetail = ({
 
                     <p className="text-sm text-street-base d-flex align-items-center gap-1 mt-1">
                       <Icon icon="lucide:calendar" fontSize={14} />
-                      <span>{dayjs(data.approvedDate).format("MMMM D Y")}</span>
+                      <span>
+                        {dayjs(data.approvedDate).format("DD MMMM YYYY")}
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -177,7 +179,7 @@ const PaymentRequisitionDetail = ({
                     </div>
                     <div className="mt-2 text-sm text-street-base">
                       {" "}
-                      {dayjs(p.purchaseDate).format("MMM DD YYYY")}
+                      {dayjs(p.purchaseDate).format("DD MMMM YYYY")}
                     </div>
                     <div className="mt-3  text-sm text-street-base">
                       {" "}

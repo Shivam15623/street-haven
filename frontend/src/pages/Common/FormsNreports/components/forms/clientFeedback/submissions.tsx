@@ -13,6 +13,7 @@ import ClientFeedback from "./details";
 import DeleteConfirmModal from "../delete";
 import { useDebounce } from "../../../../../../hooks/useDebounce";
 import type { AgentTabProp } from "../../../../AgencyInformation/component/CollectiveAgreementTab";
+import dayjs from "dayjs";
 
 interface Column {
   header: string;
@@ -60,12 +61,7 @@ const ClientFeedbackSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
   const columns: Column[] = [
     {
       header: "Visit Date",
-      accessor: (row) =>
-        new Date(row.visitDate).toLocaleDateString("en-IN", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        }),
+      accessor: (row) => dayjs(row.visitDate).format("DD MMM YYYY"),
     },
     {
       header: "Visit Location",

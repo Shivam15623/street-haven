@@ -12,6 +12,7 @@ import {
 import ModalWrapper from "../../../../../../components/child/ModalWrapper";
 import Badge from "../../../../../../components/child/Badge";
 import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
+import { formatTime12Hour } from "../../../../../../utills/utills";
 
 dayjs.extend(localizedFormat);
 
@@ -192,7 +193,7 @@ const EmployeeIncidentReportDetails = ({
                     </div>
 
                     <p className="fw-semibold text-street-dark text-md">
-                      {dayjs(incident.injuryDate).format("MMM DD YYYY")}
+                      {dayjs(incident.injuryDate).format("DD MMMM YYYY")}
                     </p>
                   </div>
                 </div>
@@ -213,7 +214,7 @@ const EmployeeIncidentReportDetails = ({
                     </div>
 
                     <p className="fw-semibold text-street-dark text-md">
-                      {incident.injuryTime}
+                      {formatTime12Hour(incident.injuryTime)}
                     </p>
                   </div>
                 </div>
@@ -354,7 +355,7 @@ const EmployeeIncidentReportDetails = ({
                           className="text-street-base"
                         />
 
-                        <span className="text-sm">+1 (416) 555-1234</span>
+                        <span className="text-sm">{incident.doctorPhone}</span>
                       </div>
                       <div className="d-flex align-items-center gap-2 text-sm text-street-base">
                         <Icon
@@ -365,7 +366,7 @@ const EmployeeIncidentReportDetails = ({
 
                         <span>
                           {dayjs(incident.doctorVisitDate).format(
-                            "MMM DD YYYY"
+                            "MMMM DD YYYY"
                           )}{" "}
                           at {incident.doctorVisitTime}
                         </span>
@@ -393,7 +394,7 @@ const EmployeeIncidentReportDetails = ({
                         <span className="fw-medium text-street-dark">
                           {incident.previousInjuryDate
                             ? dayjs(incident.previousInjuryDate).format(
-                                "MMM DD YYYY"
+                                "MMMM DD YYYY"
                               )
                             : "N/A"}
                         </span>

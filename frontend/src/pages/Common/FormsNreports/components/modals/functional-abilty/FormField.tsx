@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react";
+import dayjs from "dayjs";
 
 interface FormFieldProps {
   label: string;
@@ -25,11 +26,7 @@ export function FormField({
     switch (type) {
       case "date":
         try {
-          return new Date(value as string).toLocaleDateString("en-CA", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          });
+          return dayjs(value as string).format("DD MMMM YYYY");
         } catch {
           return String(value);
         }
