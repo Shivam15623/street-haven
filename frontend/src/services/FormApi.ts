@@ -2,7 +2,7 @@ import type { FileType } from "../interfaces/fileinterface";
 import type { ApiGeneralResponse, ApiResponse } from "../interfaces/Response";
 import { api } from "../redux/ApiSlice";
 export interface MediaConsent {
-  _id?: string;
+  _id: string;
   date: Date;
   name: string;
   printedname: string;
@@ -532,7 +532,17 @@ const FormApi = api.injectEndpoints({
       }),
       invalidatesTags: ["media-consent"],
     }),
-
+    editMediaConsent: builder.mutation<
+      ApiGeneralResponse,
+      { id: string; creds: { date: Date; name: string; printedname: string } }
+    >({
+      query: ({ id, creds }) => ({
+        url: `/form/mediaConsent/${id}`,
+        body: creds,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["media-consent"],
+    }),
     // ---------- Queries (GET) ----------
     getAllClientFeedback: builder.query<
       ApiResponse<{
@@ -789,7 +799,7 @@ export const {
   useLazyGetAllFAFQuery,
   useLazyGetAllMediaConsentQuery,
   useLazyGetAllPaymentRequisitionsQuery,
-
+  useEditMediaConsentMutation,
   useEditClientFeedBackMutation,
   useEditClientIncidentMutation,
   useEditEmployeeIncidentMutation,
