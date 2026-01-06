@@ -41,14 +41,14 @@ const MediaConsentSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
     }
   }, [isActive, getMediacon, filter.page, filter.limit, debouncedSearch]);
   const [getMediaConsentPdf] = useLazyGetMediaConsentPdfQuery();
-  const handleDownload = async (id: string) => {
+  const handleDownload = async (id: string,name:string) => {
     try {
       const blob = await getMediaConsentPdf(id).unwrap();
 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "employee-incident-report.pdf";
+      a.download = `${name}_media-consent.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -125,7 +125,7 @@ const MediaConsentSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
             </button>
             <button
               className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
-              onClick={() => handleDeleteClick(row._id!)}
+              onClick={() => handleDeleteClick(row._id!,row.printedname)}
             >
               <Icon icon="mdi:delete" className="text-xl" />
             </button>
