@@ -1,6 +1,7 @@
 import puppeteer from "puppeteer";
 
 export const generatePdf = async (html) => {
+  console.log("Puppeteer executable:", puppeteer.executablePath());
   const browser = await puppeteer.launch({
     headless: "new",
     args: [
