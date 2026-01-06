@@ -2,7 +2,11 @@ import puppeteer from "puppeteer";
 
 export const generatePdf = async (html) => {
   console.log("Puppeteer executable:", puppeteer.executablePath());
+  const executablePath = puppeteer.executablePath();
+
+  console.log("Using Chromium at:", executablePath);
   const browser = await puppeteer.launch({
+    executablePath,
     headless: "new",
     args: [
       "--no-sandbox",
