@@ -43,7 +43,7 @@ export function FunctionalAbilityDetail({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "incident-report.pdf";
+      a.download = `${fAbility?.claimNo}_functional-ability.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();

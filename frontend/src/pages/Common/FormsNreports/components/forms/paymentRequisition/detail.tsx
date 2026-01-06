@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import { Col, Container, Row } from "react-bootstrap";
 import {
   useLazyGetPaymentRequisitionByIdQuery,
+  useLazyGetPaymentRequisitionPdfQuery,
   type PaymentRequisition,
 } from "../../../../../../services/FormApi";
 import ModalWrapper from "../../../../../../components/child/ModalWrapper";
@@ -18,7 +19,8 @@ const PaymentRequisitionDetail = ({
   detail: PaymentRequisition;
 }) => {
   const [showModal, setShowModal] = useState(false);
-
+  const [getPaymentRequistionPdf, { isFetching: PdfLoading }] =
+    useLazyGetPaymentRequisitionPdfQuery();
   const [
     getPayment,
     { data: response, isLoading: isfetching, isFetching: isReFetching },
@@ -30,6 +32,22 @@ const PaymentRequisitionDetail = ({
   }, [showModal, getPayment, detail._id]);
   const loading = isfetching || isReFetching;
   const data = response?.data;
+  const handleDownload = async () => {
+    try {
+      const blob = await getPaymentRequistionPdf(detail._id).unwrap();
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${data?.payeeName}_payment_requistion.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to download PDF", err);
+    }
+  };
   const [openFile, setOpenFile] = useState(false);
   return (
     <>
@@ -57,6 +75,15 @@ const PaymentRequisitionDetail = ({
             size="lg"
             message={"Loading Data..."}
           />
+        }
+        footer={
+          <button
+            className="d-flex gap-2 align-items-center btn-street-lg justify-content-center btn btn-street-outline-primary radius-12 p-0"
+            onClick={handleDownload}
+            disabled={PdfLoading}
+          >
+            {PdfLoading ? "fetching" : "download"}
+          </button>
         }
       >
         {data && !loading && (

@@ -10,7 +10,12 @@ import {
   type MediaConsentFormValues,
 } from "../forms/MediaConsentForm";
 import { Icon } from "@iconify/react/dist/iconify.js";
-import type { MediaConsent } from "../../../../../services/FormApi";
+import {
+  useEditMediaConsentMutation,
+  type MediaConsent,
+} from "../../../../../services/FormApi";
+import { showSuccess, showWarning } from "../../../../../utills/toastutills";
+import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
 
 const mediaSections = [
   {
@@ -78,7 +83,34 @@ interface EditMediaConsentProps {
   data: MediaConsent;
 }
 const EditMediaConsent: React.FC<EditMediaConsentProps> = ({ data }) => {
+  const [editMediaConsent, { isLoading }] = useEditMediaConsentMutation();
+
   const [showModal, setShowModal] = useState(false);
+
+  const handleSubmitForm = async (values: MediaConsentFormValues) => {
+    try {
+      if (!values.date) {
+        showWarning("Date Is Required");
+        return;
+      }
+      const res = await editMediaConsent({
+        id: data._id,
+        creds: {
+          name: values.name,
+          printedname: values.printedName,
+          date: values.date,
+        },
+      }).unwrap();
+      if (res.success) {
+        showSuccess("Media Consent Edited Successfully");
+      }
+
+      setShowModal(false);
+    } catch (error) {
+      console.error("Update failed", error);
+    }
+  };
+
   return (
     <>
       <button
@@ -88,135 +120,152 @@ const EditMediaConsent: React.FC<EditMediaConsentProps> = ({ data }) => {
       >
         <Icon icon="tabler:edit" className="text-xl" />
       </button>
+
       <ModalWrapper
         show={showModal}
         onHide={() => setShowModal(false)}
         size="lg"
-        title="Employee Incident Report"
+        title="Edit Media Consent"
         headerClassName="text-xl p-0 pb-20 text-street-dark"
         className="p-20 p-sm-24 p-md-32"
         bodyClassName="p-0"
+        ModalLoader={
+          <FormSubmissionLoader
+            isLoading={isLoading}
+            variant="spinner"
+            size="md"
+            message={"Editing Media Consent"}
+          />
+        }
+        footer={
+          <button
+            className="btn btn-street-primary btn-street-lg"
+            type="submit"
+            form="edit-media-consent"
+            disabled={isLoading}
+          >
+            {isLoading ? "Updating..." : "Update"}
+          </button>
+        }
       >
-        
-            {" "}
-            <Formik<MediaConsentFormValues>
-              initialValues={{
-                name: data.name,
-                printedName: data.printedname,
-                date: new Date(data.date),
-              }}
-              validationSchema={MediaConsentSchema}
-              onSubmit={() => {}}
-            >
-              {({ values, errors, touched, setFieldValue, handleSubmit }) => (
-                <Form
-                  className="d-flex flex-column gap-24"
-                  onSubmit={handleSubmit}
-                >
-                  {/* Header Card */}
+        <Formik<MediaConsentFormValues>
+          initialValues={{
+            name: data.name ?? "",
+            printedName: data.printedname ?? "",
+            date: data.date ? new Date(data.date) : new Date(),
+          }}
+          validationSchema={MediaConsentSchema}
+          onSubmit={handleSubmitForm}
+          enableReinitialize
+        >
+          {({
+            values,
+            errors,
+            touched,
+            setFieldValue,
+            handleSubmit,
+            setFieldTouched,
+          }) => (
+            <Form className="d-flex flex-column gap-24" id="edit-media-consent" onSubmit={handleSubmit}>
+              {/* Form Card */}
+              <div className="card">
+                <div className="card-body d-flex flex-column gap-20 px-24 py-16">
+                  <div className="d-flex align-items-center gap-8 text-street-dark text-sm fw-semibold">
+                    <span>I</span>
 
-                  {/* Form Card */}
-                  <div className="card">
-                    <div className="card-body d-flex flex-column gap-20 px-24 py-16">
-                      <div className="d-flex align-items-center gap-8 text-street-dark text-sm fw-semibold">
-                        <span>I</span>
-
-                        <div className="d-flex flex-column">
-                          <input
-                            className="form-control h-40-px"
-                            style={{ maxWidth: "588px" }}
-                            value={values.name}
-                            onChange={(e) =>
-                              setFieldValue("name", e.target.value)
-                            }
-                          />
-                          {errors.name && touched.name && (
-                            <small className="text-danger">{errors.name}</small>
-                          )}
-                        </div>
-
-                        <span>
-                          , understand that I may be asked to participate in
-                          various media-related activities including but not
-                          limited to
-                        </span>
-                      </div>
-
-                      <ul
-                        className="text-street-dark text-sm ms-3"
-                        style={{ listStyleType: "disc" }}
-                      >
-                        {mediaSections.map((section, i) => (
-                          <BulletSection key={i} {...section} />
-                        ))}
-                      </ul>
-
-                      <SimpleListBlock
-                        heading="I understand that:"
-                        items={understandItems}
+                    <div className="d-flex flex-column">
+                      <input
+                        className="form-control h-40-px"
+                        style={{ maxWidth: "588px" }}
+                        value={values.name}
+                        onChange={(e) => setFieldValue("name", e.target.value)}
                       />
-
-                      <SimpleListBlock
-                        heading="This consent:"
-                        items={consentItems}
-                      />
+                      {errors.name && touched.name && (
+                        <small className="text-danger">{errors.name}</small>
+                      )}
                     </div>
+
+                    <span>
+                      , understand that I may be asked to participate in various
+                      media-related activities including but not limited to
+                    </span>
                   </div>
 
-                  {/* Footer */}
-                  <div className="card">
-                    <div className="card-body d-flex flex-column gap-20 px-24 py-16">
-                      <h4 className="mb-0 text-xl text-street-dark fw-semibold">
-                        STAFF ACKNOWLEDGMENT
-                      </h4>
+                  <ul
+                    className="text-street-dark text-sm ms-3"
+                    style={{ listStyleType: "disc" }}
+                  >
+                    {mediaSections.map((section, i) => (
+                      <BulletSection key={i} {...section} />
+                    ))}
+                  </ul>
 
-                      <SimpleListBlock
-                        heading="By signing below, I acknowledge that:"
-                        items={acknowledegItems}
+                  <SimpleListBlock
+                    heading="I understand that:"
+                    items={understandItems}
+                  />
+
+                  <SimpleListBlock
+                    heading="This consent:"
+                    items={consentItems}
+                  />
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="card">
+                <div className="card-body d-flex flex-column gap-20 px-24 py-16">
+                  <h4 className="mb-0 text-xl text-street-dark fw-semibold">
+                    STAFF ACKNOWLEDGMENT
+                  </h4>
+
+                  <SimpleListBlock
+                    heading="By signing below, I acknowledge that:"
+                    items={acknowledegItems}
+                  />
+
+                  <div className="d-flex w-full flex-row gap-20">
+                    <div className="d-flex flex-column gap-8">
+                      <label className="text-xs text-street-dark">Date</label>
+
+                      <CustomDatePicker
+                        value={values.date}
+                        onChange={(date) => {
+                          setFieldValue("date", date, true);
+                          setFieldTouched("date", true, false);
+                        }}
                       />
 
-                      <div className="d-flex w-full flex-row gap-20">
-                        <div className="d-flex flex-column gap-8">
-                          <label className="text-xs text-street-dark">
-                            Date
-                          </label>
+                      {errors.date && touched.date && (
+                        <small className="text-danger">{errors.date}</small>
+                      )}
+                    </div>
 
-                          <CustomDatePicker
-                            value={values.date}
-                            onChange={(date) => setFieldValue("date", date)}
-                          />
+                    <div className="d-flex flex-column gap-8">
+                      <label className="text-xs text-street-dark">
+                        Printed Name
+                      </label>
 
-                          {errors.date && touched.date && (
-                            <small className="text-danger">{errors.date}</small>
-                          )}
-                        </div>
+                      <input
+                        className="form-control h-40-px"
+                        value={values.printedName}
+                        onChange={(e) =>
+                          setFieldValue("printedName", e.target.value)
+                        }
+                      />
 
-                        <div className="d-flex flex-column gap-8">
-                          <label className="text-xs text-street-dark">
-                            Printed Name
-                          </label>
-
-                          <input
-                            className="form-control h-40-px"
-                            value={values.printedName}
-                            onChange={(e) =>
-                              setFieldValue("printedName", e.target.value)
-                            }
-                          />
-
-                          {errors.printedName && touched.printedName && (
-                            <small className="text-danger">
-                              {errors.printedName}
-                            </small>
-                          )}
-                        </div>
-                      </div>
+                      {errors.printedName && touched.printedName && (
+                        <small className="text-danger">
+                          {errors.printedName}
+                        </small>
+                      )}
                     </div>
                   </div>
-                </Form>
-              )}
-            </Formik>
- 
+                </div>
+              </div>
+            </Form>
+          )}
+        </Formik>
       </ModalWrapper>
     </>
   );
