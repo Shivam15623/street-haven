@@ -119,13 +119,13 @@ const MediaConsentSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
             <button
               className="d-flex gap-2 align-items-center justify-content-center btn btn-street-outline-primary radius-12 p-0"
               style={{ width: "43px", height: "40px" }}
-              onClick={() => handleDownload(row._id!)}
+              onClick={() => handleDownload(row._id!,row.printedname)}
             >
               <Icon icon={"mdi:download"} width={18} />
             </button>
             <button
               className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
-              onClick={() => handleDeleteClick(row._id!,row.printedname)}
+              onClick={() => handleDeleteClick(row._id!)}
             >
               <Icon icon="mdi:delete" className="text-xl" />
             </button>
