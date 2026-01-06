@@ -201,7 +201,7 @@ export const editTicket = asyncHandler(async (req, res) => {
     if (
       assignedId &&
       assignedId !== ticket.assignedTo?.toString() &&
-      permissions.has(categoryPermission)
+      (permissions.has(categoryPermission) || isAssigned)
     ) {
       updatedFields.assignedTo = assignedId;
       assigneeChanged = true;

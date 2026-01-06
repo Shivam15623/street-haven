@@ -767,6 +767,12 @@ const FormApi = api.injectEndpoints({
         method: "GET",
       }),
     }),
+    getFaFPdf: builder.query<Blob, string>({
+      query: (id) => ({
+        url: `/form/getFaf/pdfForm/${id}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -810,6 +816,7 @@ export const {
   useLazyGetIncidentReportPdfQuery,
   useLazyGetMediaConsentPdfQuery,
   useLazyGetPaymentRequisitionPdfQuery,
+  useLazyGetFaFPdfQuery,
   useLazyGetStaffFeedbackPdfQuery,
   useDeleteMediaConsentMutation,
 } = FormApi;

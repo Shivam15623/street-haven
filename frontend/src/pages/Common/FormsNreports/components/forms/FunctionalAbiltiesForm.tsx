@@ -387,7 +387,7 @@ const FunctionalAbiltiesForm = () => {
                     </p>
                   </div>
                   <div
-                    className="d-flex flex-row align-items-center"
+                    className="d-flex flex-column flex-xl-row align-items-center"
                     style={{ gap: 15 }}
                   >
                     <div className="d-flex flex-row align-items-center gap-18">
@@ -420,7 +420,7 @@ const FunctionalAbiltiesForm = () => {
                         claim No: <span className="text-danger">*</span>
                       </Form.Label>
                       <Form.Control
-                        style={{ height: "40px" }}
+                        style={{ height: "40px",minWidth:"200px" }}
                         name="claimNo"
                         value={values.claimNo}
                         onChange={handleChange}

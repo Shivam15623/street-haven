@@ -21,6 +21,7 @@ import {
   generateFilledclientFeedbackPdf,
   generateFilledClientIncident,
   generateFilledEmployeeIncidentPdf,
+  generateFilledFAF,
   generateFilledIncidentReport,
   generateFilledMediaConsent,
   generatefilledPaymentPdf,
@@ -124,4 +125,5 @@ router.route("/mediaConsent/pdfForm/:id").get(generateFilledMediaConsent);
 router
   .route("/employeeIncident/pdfForm/:id")
   .get(generateFilledEmployeeIncidentPdf);
+router.route("/getFaf/pdfForm/:id").get(generateFilledFAF);
 export default router;

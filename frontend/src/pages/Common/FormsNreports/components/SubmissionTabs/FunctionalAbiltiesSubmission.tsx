@@ -149,6 +149,7 @@ const FunctionalAbilitiesSubmission: React.FC<AgentTabProp> = ({
     );
   }
   const submissions: FunctionalAbility[] = abilityData?.data?.data ?? [];
+  console.log("Submissions",submissions)
   const total: number = abilityData?.data?.paggination?.total || 0;
 
   return (
