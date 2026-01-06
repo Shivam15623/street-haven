@@ -6,8 +6,8 @@ import { AbilitiesGrid } from "./AbiltiesGrid";
 import { RestrictionsGrid } from "./RestrictionGrid";
 import {
   CANADA_PROVINCES,
-
   useLazyGetFafByIdQuery,
+  useLazyGetFaFPdfQuery,
   type FunctionalAbility,
 } from "../../../../../../services/FormApi";
 import { Icon } from "@iconify/react/dist/iconify.js";
@@ -23,7 +23,7 @@ export function FunctionalAbilityDetail({
   details,
 }: FunctionalAbilityDetailProps) {
   const [showModal, setShowModal] = useState(false);
-
+  const [getFAFPdf, { isFetching: PdfLoading }] = useLazyGetFaFPdfQuery();
   const [
     getFaf,
     { data: response, isLoading: isFetching, isFetching: isRefetching },
@@ -36,6 +36,22 @@ export function FunctionalAbilityDetail({
   const fAbility = response?.data;
   const loading = isFetching || isRefetching;
   console.log(fAbility);
+  const handleDownload = async () => {
+    try {
+      const blob = await getFAFPdf(details._id).unwrap();
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "incident-report.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to download PDF", err);
+    }
+  };
 
   return (
     <>
@@ -63,6 +79,15 @@ export function FunctionalAbilityDetail({
             size="lg"
             message={"Loading Data..."}
           />
+        }
+        footer={
+          <button
+            className="d-flex gap-2 align-items-center btn-street-lg justify-content-center btn btn-street-outline-primary radius-12 p-0"
+            onClick={handleDownload}
+            disabled={PdfLoading}
+          >
+            {PdfLoading ? "fetching" : "download"}
+          </button>
         }
       >
         {/* Scrollable Modal Body */}

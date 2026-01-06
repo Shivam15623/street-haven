@@ -522,6 +522,15 @@ const FormApi = api.injectEndpoints({
         method: "POST",
         body: credentials,
       }),
+      invalidatesTags: ["media-consent"],
+    }),
+    deleteMediaConsent: builder.mutation<ApiGeneralResponse, string>({
+      query: (id) => ({
+        url: `/form/mediaConsent/${id}`,
+
+        method: "DELETE",
+      }),
+      invalidatesTags: ["media-consent"],
     }),
 
     // ---------- Queries (GET) ----------
@@ -623,6 +632,7 @@ const FormApi = api.injectEndpoints({
     >({
       query: ({ page = 1, limit = 10, search = "" }) =>
         `/form/mediaConsent?page=${page}&limit=${limit}&search=${search}`,
+      providesTags: ["media-consent"],
       keepUnusedDataFor: 300,
     }),
     deleteFaf: builder.mutation<ApiGeneralResponse, { id: string }>({
@@ -757,19 +767,12 @@ const FormApi = api.injectEndpoints({
         method: "GET",
       }),
     }),
-
-    // deleteFaf: builder.mutation<ApiGeneralResponse, { id: string }>({
-    //   query: ({ id }) => ({
-    //     url: `/form/functionalAbilties/${id}`,
-    //     method: "DELETE",
-    //   }),
-    // }),
-    // deleteFaf: builder.mutation<ApiGeneralResponse, { id: string }>({
-    //   query: ({ id }) => ({
-    //     url: `/form/functionalAbilties/${id}`,
-    //     method: "DELETE",
-    //   }),
-    // }),
+    getFaFPdf: builder.query<Blob, string>({
+      query: (id) => ({
+        url: `/form/getFaf/pdfForm/${id}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -813,5 +816,7 @@ export const {
   useLazyGetIncidentReportPdfQuery,
   useLazyGetMediaConsentPdfQuery,
   useLazyGetPaymentRequisitionPdfQuery,
+  useLazyGetFaFPdfQuery,
   useLazyGetStaffFeedbackPdfQuery,
+  useDeleteMediaConsentMutation,
 } = FormApi;

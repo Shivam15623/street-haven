@@ -3,6 +3,7 @@ import { Icon } from "@iconify/react";
 import SimpleTable from "../../../../../components/child/SimpleTable";
 
 import {
+  useDeleteMediaConsentMutation,
   useLazyGetAllMediaConsentQuery,
   useLazyGetMediaConsentPdfQuery,
   type MediaConsent,
@@ -12,18 +13,13 @@ import { useDebounce } from "../../../../../hooks/useDebounce";
 import type { AgentTabProp } from "../../../AgencyInformation/component/CollectiveAgreementTab";
 import dayjs from "dayjs";
 import TablePlaceholderLoader from "../../../../../components/child/SimpleTablePlaceHolder";
+import DeleteConfirmModal from "../forms/delete";
 
-// ------------------------------
-// Columns
-// ------------------------------
 interface Column {
   header: string;
   accessor: (row: MediaConsent) => React.ReactNode;
 }
 
-// ------------------------------
-// Component
-// ------------------------------
 const MediaConsentSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
   const [filter, setFilter] = useState({
     page: 1,
@@ -31,6 +27,8 @@ const MediaConsentSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
     search: "",
   });
   const debouncedSearch = useDebounce(filter.search, 1000);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [getMediacon, { data: consentData, isLoading }] =
     useLazyGetAllMediaConsentQuery();
   useEffect(() => {
@@ -57,6 +55,23 @@ const MediaConsentSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error("Failed to download PDF", err);
+    }
+  };
+  const [deleteMedia, { isLoading: Deleting }] =
+    useDeleteMediaConsentMutation();
+  const handleDeleteClick = (id: string) => {
+    setSelectedId(id);
+    setShowDeleteModal(true);
+  };
+  const handleConfirmDelete = async () => {
+    if (!selectedId) return;
+
+    try {
+      await deleteMedia(selectedId).unwrap();
+      setShowDeleteModal(false);
+      setSelectedId(null);
+    } catch (error) {
+      console.error("Delete failed", error);
     }
   };
 
@@ -108,6 +123,12 @@ const MediaConsentSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
             >
               <Icon icon={"mdi:download"} width={18} />
             </button>
+            <button
+              className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
+              onClick={() => handleDeleteClick(row._id!)}
+            >
+              <Icon icon="mdi:delete" className="text-xl" />
+            </button>
           </div>
         );
       },
@@ -132,7 +153,13 @@ const MediaConsentSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
           }
         />
       </div>
-
+      <DeleteConfirmModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete Media Consent"
+        isLoading={Deleting}
+        onConfirm={handleConfirmDelete}
+      />
       {/* Table */}
       {submissions.length > 0 ? (
         <SimpleTable

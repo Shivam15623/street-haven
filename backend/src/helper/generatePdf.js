@@ -1,14 +1,12 @@
 import puppeteer from "puppeteer";
-const CHROME_PATH = process.env.PUPPETEER_EXECUTABLE_PATH;
+
 export const generatePdf = async (html) => {
   const browser = await puppeteer.launch({
     headless: "new",
-    executablePath: CHROME_PATH,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
       "--disable-dev-shm-usage",
-      "--single-process",
     ],
   });
 
@@ -21,8 +19,6 @@ export const generatePdf = async (html) => {
     preferCSSPageSize: true,
   });
 
-  await page.close();
   await browser.close();
-
   return pdfBuffer;
 };

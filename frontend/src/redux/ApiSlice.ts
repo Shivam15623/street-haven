@@ -103,6 +103,7 @@ export const api = createApi({
     "employee-incident",
     "payment-requistion",
     "functional-abilty",
+    "media-consent"
   ],
   endpoints: () => ({}),
 });

@@ -55,7 +55,6 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
     useAllEmployeesQuery({ forDropdown: true }, { skip: !showModal });
   const [editTicket, { isLoading }] = useEditTicketMutation();
   const hasEditStatus = hasPermission({ action: categorybased }) || isAssigned;
-  const hasEditAssign = hasPermission({ action: categorybased });
 
   const initialValues: TicketValues = {
     requestTitle: ticket.req_title,
@@ -247,7 +246,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       name="assignedId"
                       value={values.assignedId}
                       onChange={handleChange}
-                      disabled={!hasEditAssign}
+                      disabled={!hasEditStatus}
                       isInvalid={touched.assignedId && !!errors.assignedId}
                     >
                       <option value="">Select Assignee</option>
