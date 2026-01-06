@@ -1,0 +1,1001 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Functional Ability Form</title>
+    <style>
+      @page { size: letter; margin: 0; } html, body { margin: 0; padding: 0; }
+      input{
+        font-size: 10px;
+      }
+      .wsib-form-container { max-width: 8.5in; margin: 0 auto; background:
+      white; font-family: Arial, sans-serif; font-size: 9pt; line-height: 1.15;
+      } .wsib-page { padding: 0.25in 0.25in; background: white;
+      page-break-after: always;}  .form-row, .billing-section,
+      .section-d-row, .abilities-grid, .restrictions-grid, .additional-comments
+      { break-inside: avoid; page-break-inside: avoid; } .wsib-header { display:
+      flex; align-items: flex-start; padding-bottom: 6px; border-bottom: 2px
+      solid #000; margin-bottom: 6px; gap: 12px; } .wsib-logo { width: 80px;
+      height: 33px; } .header-address { font-size: 7pt; line-height: 1.2; }
+      .header-fax { font-size: 7pt; line-height: 1.2; } .print-instruction {
+      font-weight: bold; margin-top: 3px; } .faf-logo { font-size: 60px;
+      margin-left: 6px; white-space: nowrap; font-weight: 900; letter-spacing:
+      -4px; line-height: 0.9; } .form-title { text-align: right; align-items:
+      end; justify-content: end; display: flex; flex-direction: column; flex: 1;
+      } .title-main { font-size: 13pt; font-weight: bold; margin-bottom: 1px; }
+      .title-sub { font-size: 9pt; font-weight: bold; } .claim-box { margin-top:
+      6px; border: 2px solid #000; padding: 3px 5px; display: flex; align-items:
+      center; width: 80%; gap: 8px; } .claim-box label { font-weight: bold;
+      white-space: nowrap; } .claim-box input { border: none; border-bottom: 1px
+      solid #000; outline: none; flex: 1; width: 50px; padding: 2px; }
+      .section-header { background: #000; color: white; padding: 3px 8px;
+      font-weight: bold; margin: 6px 0 4px 0; font-size: 9pt; } .small-header {
+      background: #000; color: white; position: relative; } .sub-note {
+      font-size: 7pt; font-style: italic; font-weight: normal; margin-top: 2px;
+      } .form-row { display: flex; border: 1px solid #000; min-height: 24px; }
+      .form-field { flex: 1; border-right: 1px solid #000; padding: 2px 4px;
+      display: flex; flex-direction: column; } .form-field:last-child {
+      border-right: none; } .form-field label { font-size: 7pt; font-weight:
+      normal; margin-bottom: 1px; line-height: 1.1; } .form-field
+      input[type="text"] { border: none; outline: none; flex: 1; padding: 1px;
+      font-size: 9pt; } .form-field.large { flex: 3; } .form-field.medium {
+      flex: 2; } .form-field.small { flex: 1.5; } .form-field.tiny { flex: 0.5;
+      } .form-field.full { border-right: none; } .split-row { min-height: 85px;
+      } .employer-section { flex: 2; border-right: 1px solid #000; padding: 4px;
+      display: flex; flex-direction: column; gap: 2px; } .dates-section { flex:
+      1; display: flex; flex-direction: column; } .dates-section .form-field {
+      border-right: none; border-bottom: 1px solid #000; min-height: 36px; }
+      .dates-section .form-field:last-child { border-bottom: none; } .nested {
+      border: none; margin: 0; } .nested .form-field { padding: 0 4px; }
+      .checkbox-group { display: flex; flex-wrap: wrap; gap: 12px; }
+      .checkbox-group.inline { flex-direction: row; align-items: center; }
+      .checkbox-group label { display: flex; align-items: center; gap: 4px;
+      font-size: 8pt; font-weight: normal; } .checkbox-group
+      input[type="checkbox"] { width: 12px; height: 12px; } .date-inputs {
+      display: flex; gap: 4px; align-items: center; } .date-input { width: 28px;
+      border: none; border-bottom: 1px solid #000; text-align: center; padding:
+      1px; font-size: 8pt; } .date-input-year { width: 40px; border: none;
+      border-bottom: 1px solid #000; text-align: center; padding: 1px;
+      font-size: 8pt; } .signature-text { border: 1px solid #000; border-top:
+      none; padding: 6px; font-size: 8pt; line-height: 1.3; } .warning-box {
+      background: #000; color: white; padding: 6px; text-align: center;
+      font-weight: bold; margin: 6px 0; font-size: 8pt; } .otherLine { border:
+      none; border-bottom: 1px solid #000 !important; outline: none; flex: 1;
+      padding: 1px; width: 120px !important; } .billing-section { border: 2px
+      solid #000; padding: 6px; margin: 6px 0; } .billing-row { display: flex;
+      gap: 7.5px; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px
+      solid #000; } .billing-left { flex: 2; } .billing-right { flex: 1;
+      display: flex; flex-direction: column; gap: 6px; }
+     .billing-note {
+      font-size: 7pt; margin-top: 3px; line-height: 1.3; } .bold { font-weight:
+      bold; } .faf-badge { font-size: 20pt; font-weight: 900; padding: 0 8px;
+      border-left: 2px solid #000; border-right: 2px solid #000; } .hst-fields {
+      flex: 1; } .hst-label { text-align: center; font-weight: bold;
+      margin-bottom: 6px; font-size: 7pt; } .hst-inputs { display: flex; gap:
+      8px; } .hst-field { flex: 1; } .hst-field label { font-size: 6pt; display:
+      block; margin-bottom: 2px; } .hst-field input { width: 100%; border: 1px
+      solid #000; padding: 2px; } .amount-input { display: flex; align-items:
+      center; gap: 4px; border: 1px solid #000; padding: 2px 4px; } .dollar {
+      font-weight: bold; } .amount-input input { border: none; flex: 1; outline:
+      none; } .declaration { border: 1px solid #000; padding: 6px; margin: 6px
+      0; font-size: 8pt; font-weight: bold; line-height: 1.3; } .page-number {
+      position: absolute; bottom: 8px; right: 15px; font-size: 7pt; color: #666;
+      } .section-d-row { display: flex; border: 1px solid #000; margin-bottom:
+      6px; } .date-assessment { border-right: 1px solid #000; padding: 6px;
+      min-width: 100px; } .date-assessment label { font-size: 7pt; font-weight:
+      bold; display: block; margin-bottom: 6px; } .patient-status { flex: 1;
+      padding: 6px; } .patient-status > label { font-weight: bold; display:
+      block; margin-bottom: 6px; font-size: 8pt; } .status-options { display:
+      flex; gap: 8px; } .status-option { display: flex; align-items: flex-start;
+      gap: 6px; flex: 1; font-size: 8pt; font-weight: normal; cursor: pointer; }
+      .status-option input[type="checkbox"] { margin-top: 2px; width: 12px;
+      height: 12px; flex-shrink: 0; } .arrow { font-size: 10pt; line-height: 1;
+      margin-top: 1px; } .arrow-right { font-size: 14pt; font-weight: bold;
+      margin: 0 8px; } .abilities-note { font-size: 8pt; font-weight: bold;
+      margin: 6px 0 3px 0; } .restrictions-note { font-size: 8pt; font-weight:
+      bold; margin: 6px 0 3px 0; } .abilities-grid { display: grid;
+      grid-template-columns: repeat(4, 1fr); border: 1px solid #000;
+      border-bottom: none; margin-bottom: 0; } .ability-column { border-right:
+      1px solid #000; border-bottom: 1px solid #000; padding: 5px; display:
+      flex; flex-direction: column; gap: 2px; } .ability-column:last-child {
+      border-right: none; } .column-header { font-weight: bold; font-size: 8pt;
+      margin-bottom: 3px; } .ability-column label { display: flex; align-items:
+      flex-start; gap: 4px; font-size: 7pt; font-weight: normal; line-height:
+      1.2; } .otherCheckAbilty { display: flex; align-items: flex-start; gap:
+      4px; font-size: 7pt; font-weight: normal; line-height: 1.2; }
+      .ability-column input[type="checkbox"] { width: 10px; height: 10px;
+      margin-top: 1px; flex-shrink: 0; } .travel-row { display: flex; gap: 6px;
+      } .travel-col { flex: 1; display: flex; flex-direction: column; gap: 2px;
+      } .sub-header { font-weight: bold; font-size: 7pt; margin-bottom: 2px; }
+      .restrictions-grid { display: grid; grid-template-columns: repeat(5, 1fr);
+      border: 1px solid #000; border-bottom: none; border-top: none;
+      margin-bottom: 0; } .restrictions-grid.second-row { grid-template-columns:
+      repeat(4, 1fr); } .restriction-column { border-right: 1px solid #000;
+      border-bottom: 1px solid #000; padding: 5px; display: flex;
+      flex-direction: column; gap: 2px; } .restriction-column:last-child {
+      border-right: none; } .restriction-column label { display: flex;
+      align-items: flex-start; gap: 4px; font-size: 7pt; font-weight: normal;
+      line-height: 1.2; } .restriction-column input[type="checkbox"] { width:
+      10px; height: 10px; margin-top: 1px; flex-shrink: 0; } .hand-use {
+      grid-column: span 1; } .hand-options { display: flex; gap: 6px;
+      margin-top: 3px; } .hand-side { flex: 1; display: flex; flex-direction:
+      column; gap: 2px; } .hand-side span { font-weight: bold; font-size: 7pt; }
+      .additional-comments { border: 1px solid #000; padding: 5px; margin-top:
+      0; } .additional-comments label { font-size: 8pt; display: block;
+      margin-bottom: 3px; } .additional-comments textarea { width: 99%; border:
+      1px solid #000; padding: 3px; font-family: Arial, sans-serif; font-size:
+      8pt; resize: vertical; min-height: 40px; } .bottom-section { border: 1px
+      solid #000; margin-top: 6px; } .duration-section { flex: 2; padding: 5px;
+      border-right: 1px solid #000; } .duration-section label { font-size: 8pt;
+      display: block; margin-bottom: 5px; } .discussed-section { flex: 1;
+      padding: 5px; display: flex; flex-direction: column; justify-content:
+      center; } .discussed-section label { font-size: 8pt; display: block;
+      margin-bottom: 5px; } .work-hours-section { flex: 2; padding: 5px;
+      border-right: 1px solid #000; } .work-hours-section label { font-size:
+      8pt; display: block; margin-bottom: 5px; } .start-date-section { flex: 1;
+      padding: 5px; display: flex; flex-direction: column; justify-content:
+      center; } .start-date-section label { font-size: 8pt; display: block;
+      margin-bottom: 5px; } .next-appointment { border: 1px solid #000; padding:
+      6px; display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+      .next-appointment label { flex: 1; font-size: 8pt; } .form-provided {
+      border: 2px solid #000; padding: 8px; display: flex; align-items: center;
+      gap: 12px; margin: 6px 0; } .form-provided label { font-weight: bold;
+      font-size: 9pt; } .and-or { font-weight: bold; font-size: 9pt; } @media
+      print { body { margin: 0; padding: 0; } .section-header, .small-header,
+      .warning-box { background: #000 !important; color: #fff !important; /* 🔑
+      THIS IS THE KEY */ -webkit-print-color-adjust: exact; print-color-adjust:
+      exact; } .wsib-form-container { max-width: 100%; } .wsib-page { border:
+      none; margin: 0; padding: 0.25in 0.25in; page-break-after: always; } .page-2 { margin-top: 0; } input, textarea { overflow: hidden;
+      border-bottom: 1px solid #000 !important; } @page { size: letter; margin:
+      0; } } @media screen { .wsib-page { box-shadow: 0 2px 8px rgba(0, 0, 0,
+      0.1); } }
+    </style>
+  </head>
+  <body>
+    <div class="wsib-form-container">
+      <div class="wsib-page page-1">
+        <div class="wsib-header">
+          <img class="wsib-logo" src="{{WsibLogo}}" alt="WSIB Logo" />
+          <div class="header-address">
+            <div>Mail to:</div>
+            <div>200 Front Street West</div>
+            <div>Toronto ON M5V 3J1</div>
+            <div class="print-instruction">Please PRINT in black ink</div>
+          </div>
+          <div class="header-fax">
+            <div>or Fax to:</div>
+            <div>416 344-4684</div>
+            <div>OR 1-888-313-7373</div>
+          </div>
+          <div class="faf-logo">FAF</div>
+          <div class="form-title">
+            <div class="title-main">Functional Abilities Form</div>
+            <div class="title-sub">for Planning Early</div>
+            <div class="title-sub">and Safe Return to Work</div>
+            <div class="claim-box">
+              <label>Claim No.</label>
+              <input type="text" value="{{claimNo}}" />
+            </div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          A. Section A to be completed by the employer and/or worker.
+        </div>
+
+        <div class="form-row">
+
+          <div class="form-field large">
+            <label>Worker's Last Name</label>
+            <input type="text" value="{{worker.lastName}}" />
+          </div>
+          <div class="form-field medium">
+            <label>First Name</label>
+            <input type="text" value="{{worker.firstName}}" />
+          </div>
+          <div class="form-field small">
+            <label>Telephone</label>
+            <input type="text" value="{{worker.telephone}}" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div
+            class="form-field large"
+         
+          >
+            <label>Address (no., street, apt.)</label>
+             <textarea rows="{3}" style="outline: none; border:none" value="{{worker.address}}">{{worker.address}}</textarea>
+         
+          </div>
+          <div class="form-field medium" >
+            <label>City/Town</label>
+            <input type="text" value="{{worker.cityTown}}" />
+          </div>
+          <div class="form-field tiny" >
+            <label>Province</label>
+            <input type="text" value="{{worker.province}}" />
+          </div>
+          <div class="form-field tiny" >
+            <label>Postal Code</label>
+            <input type="text" value="{{worker.postalCode}}" />
+          </div>
+        </div>
+
+        <div class="form-row split-row">
+   
+
+          <div class="employer-section">
+            <div class="form-field full" style="border: 1px solid #000">
+              <label>Employer's Name</label>
+              <input type="text" value="{{employer.fullName}}" />
+            </div>
+            <div class="form-field full" style="border: 1px solid #000">
+              <label>Full Address (No., Street, Apt.)</label>
+               <textarea rows="{7}" style="outline: none; border:none" value="{{employer.address}}">{{employer.address}}</textarea>
+             
+            </div>
+            <div class="form-row nested" style="border: 1px solid #000">
+              <div class="form-field medium">
+                <label>City/Town</label>
+                <input type="text" value="{{employer.cityTown}}" />
+              </div>
+              <div class="form-field tiny">
+                <label>Prov.</label>
+                <input type="text" value="{{employer.province}}" />
+              </div>
+              <div class="form-field small">
+                <label>Postal Code</label>
+                <input type="text" value="{{employer.postalCode}}" />
+              </div>
+            </div>
+          </div>
+          <div class="dates-section">
+            <div class="form-field small">
+              <label>Date of Birth</label>
+              <input type="text" value="{{formatDate worker.dateOfBirth}}" />
+            </div>
+            <div class="form-field small">
+              <label>Date of Accident / Awareness of Illness</label>
+              <input type="text" value="{{formatDate dateOfAccident}}"/>
+            </div>
+            <div class="form-field small">
+              <label>Employer Telephone</label>
+              <input type="text" value="{{employer.telephone}}" />
+            </div>
+            <div class="form-field small">
+              <label>Employer Fax No.</label>
+              <input type="text" value="{{employerFaxNo}}" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field large">
+            <label>1. Type of job at time of accident (where available, please
+              attach description of job activities)</label>
+            <input type="text" value="{{typeOfJobAtAccident}}" />
+          </div>
+          <div class="form-field medium">
+            <label>Area(s) of injury(ies)/Illness(es)</label>
+            <input type="text" value="{{areasOfInjury}}" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field large">
+            <label>2. Have the worker and the employer discussed Return To Work</label>
+            <div class="checkbox-group inline">
+            <label><input type="checkbox"
+  {{#if discussedRTW}}checked{{/if}} /> yes</label>
+                <label><input type="checkbox"
+  {{#unless discussedRTW}}checked{{/unless}} />no</label>
+            </div>
+          </div>
+          <div class="form-field medium">
+            <label>If no, will be discussed on</label>
+            <div class="date-inputs">
+              <input type="text" placeholder="dd" class="date-input"  value="{{nodateOfDiscusswill.dd}}" />
+              <input type="text" placeholder="mm" class="date-input" value="{{nodateOfDiscusswill.mm}}"/>
+              <input type="text" placeholder="yyyy" class="date-input-year" value="{{nodateOfDiscusswill.yyyy}}"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field large">
+            <label>3. Employer contact name</label>
+            <input type="text" value="{{employerContactName}}"/>
+          </div>
+          <div class="form-field medium">
+            <label>Position</label>
+            <input type="text" value="{{position}}" />
+          </div>
+        </div>
+
+        <div class="section-header">B. Worker's Signature</div>
+
+        <div class="signature-text">
+          By signing below, I am authorizing any health professional who treats
+          me to provide me, my employer and the Workplace Safety and Insurance
+          Board (WSIB) with information about my functional abilities on the
+          WSIB's "Functional Abilities for Planning Early and Safe Return to
+          Work" form.
+        </div>
+
+        <div class="form-row">
+          <div class="form-field large">
+            <label>Signature</label>
+            <input type="text" />
+          </div>
+          <div class="form-field tiny">
+            <label>Date</label>
+            <div class="date-inputs">
+              <input type="text" placeholder="dd" class="date-input" />
+              <input type="text" placeholder="mm" class="date-input" />
+              <input type="text" placeholder="yyyy" class="date-input-year" />
+            </div>
+          </div>
+        </div>
+
+        <div class="section-header small-header">
+          C. Health Professional's Billing Information
+          <div class="sub-note">
+            For billing purposes fax or mail pages 2 and 3 to the WSIB.
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label>Health Professional's Designation</label>
+          <div class="checkbox-group inline">
+            <label><input type="checkbox" {{#if (eq designationOfHealthPro "Chiropractor")}}checked{{/if}} /> Chiropractor</label>
+            <label><input type="checkbox" {{#if (eq designationOfHealthPro "Physician")}}checked{{/if}} /> Physician</label>
+            <label><input type="checkbox" {{#if (eq designationOfHealthPro "Physiotherapist")}}checked{{/if}} /> Physiotherapist</label>
+            <label><input type="checkbox" {{#if (eq designationOfHealthPro "Registered Nurse (Extended Class)")}}checked{{/if}} />
+              Registered Nurse (Extended Class)</label>
+            <div style="display: flex; flex-direction: row">
+              <label><input type="checkbox" {{#if  (notIn designationOfHealthPro values=(array "Chiropractor" "Physician" "Physiotherapist" "Registered Nurse (Extended Class)"))}}checked{{/if}} /> Other </label>
+              <input type="text" class="otherLine" {{#if  (notIn designationOfHealthPro values=(array "Chiropractor" "Physician" "Physiotherapist" "Registered Nurse (Extended Class)"))}}value="{{designationOfHealthPro}}"{{/if}} />
+            </div>
+          </div>
+        </div>
+
+        <div class="warning-box">
+          PROVIDER BILLING INFORMATION IN THE BOLDED AREA OF SECTION C SHOULD
+          NOT BE PROVIDED TO THE WORKER OR EMPLOYER.
+        </div>
+
+        <div class="billing-section">
+          <div class="billing-row">
+            <div class="billing-left">
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  border: 1px solid #000;
+                "
+              >
+                <div
+                  class="form-field small"
+                  style="flex-direction: row; gap: 8px"
+                >
+                  <label class="bold">Are you registered<br />with the WSIB?</label>
+                  <div
+                    class="checkbox-group inline"
+                    style="display: flex; flex-direction: column; gap: 8px"
+                  >
+                     <label><input type="checkbox"
+  {{#if iswsibRegistered}}checked{{/if}} /> yes</label>
+                <label><input type="checkbox"
+  {{#unless iswsibRegistered}}checked{{/unless}} />no</label>
+                  </div>
+                  <div class="billing-note">
+                    <div style="margin-bottom: 10px">
+                      Please enter the
+                      <strong>WSIB Provider ID.</strong>
+                      in the box provided
+                    </div>
+                    <div>
+                      Please call
+                      <strong>1 - 800-569-7919</strong>
+                      to register
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-field" style="border: 1px solid #000">
+                <label>Health Professional's Name (please print)</label>
+                <input type="text" value="{{healthProfessionalName}}" />
+              </div>
+              <div class="form-field" style="border: 1px solid #000">
+                <label>Address (No. Street, Apt.)</label>
+                <input type="text" value="{{hproAddress}}" />
+              </div>
+              <div class="form-row" style="border: 1px solid #000">
+                <div class="form-field medium">
+                  <label>City/Town</label>
+                  <input type="text" value="{{hprocityTown}}" />
+                </div>
+                <div class="form-field tiny">
+                  <label>Province</label>
+                  <input type="text" value="{{hproProvince}}"/>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-field small">
+                  <label>Postal Code</label>
+                  <input type="text" value="{{hproPostalCode}}" />
+                </div>
+                <div class="form-field small">
+                  <label>Fax</label>
+                  <input type="text" value="{{hproFax}}" />
+                </div>
+              </div>
+            </div>
+            <div style="border: 1px solid #000"></div>
+            <div class="billing-right">
+              <div class="form-field" style="border: 1px solid #000">
+                <label>WSIB Provider ID.</label>
+                <input type="text" value="{{wsibId}}" />
+              </div>
+              <div class="form-field" style="border: 1px solid #000">
+                <label>Your Invoice Number</label>
+                <input type="text" value="{{invoiceNo}}" />
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: row;
+                  border: 1px solid #000;
+                "
+              >
+                <div class="form-field">
+                  <label>Service Code</label>
+                  <input type="text" value="{{srvCode}}" />
+                </div>
+                <div class="faf-badge">FAF</div>
+              </div>
+              <div class="hst-fields" style="border: 1px solid #000">
+                <div class="hst-label">
+                  ▼ Complete these fields if
+                  <strong>HST</strong>
+                  is applicable to this form ▼
+                </div>
+                <div class="hst-inputs">
+                  <div class="hst-field">
+                    <label>HST Registration Number</label>
+                    <input type="text" value="{{hstRegNo}}" />
+                  </div>
+                  <div class="hst-field">
+                    <label style="margin-bottom: 10px">Service Code</label>
+                    <input type="text" value={{hstSrvcCode}} />
+                  </div>
+                  <div class="hst-field">
+                    <label style="margin-bottom: 10px">HST Amount Billed</label>
+                    <div class="amount-input" style="padding: 0px">
+                      <span class="dollar">$</span>
+                      <input type="text" value="{{hstAmount}}" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="declaration">
+            I hereby declare that the information being submitted in Sections C,
+            D, E and F of this form is true and complete. It is an offense to
+            knowingly make a false or misleading statement or representation to
+            the WSIB.
+          </div>
+
+          <div class="form-row">
+            <div class="form-field large">
+              <label>Health Professional's Signature</label>
+              <input type="text"  />
+            </div>
+            <div class="form-field small">
+              <label>Telephone</label>
+              <input type="text"  />
+            </div>
+            <div class="form-field medium">
+              <label>Date</label>
+              <div class="date-inputs">
+                <input type="text" placeholder="dd" class="date-input" />
+                <input type="text" placeholder="mm" class="date-input" />
+                <input type="text" placeholder="yyyy" class="date-input-year" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="page-number">2647A2 (07/06) page 1 of 2</div>
+      </div>
+
+      <div class="wsib-page page-2">
+        <div class="wsib-header">
+          <img class="wsib-logo" src="{{WsibLogo}}" alt="WSIB Logo" />
+          <div class="header-address">
+            <div>Mail to:</div>
+            <div>200 Front Street West</div>
+            <div>Toronto ON M5V 3J1</div>
+            <div class="print-instruction">Please PRINT in black ink</div>
+          </div>
+          <div class="header-fax">
+            <div>or Fax to:</div>
+            <div>416 344-4684</div>
+            <div>OR 1-888-313-7373</div>
+          </div>
+          <div class="faf-logo">FAF</div>
+          <div class="form-title">
+            <div class="title-main">Functional Abilities Form</div>
+            <div class="title-sub">for Planning Early</div>
+            <div class="title-sub">and Safe Return to Work</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+        <div class="form-field large">
+            <label>Worker's Last Name</label>
+            <input type="text" value="{{worker.lastName}}" />
+          </div>
+          <div class="form-field medium">
+            <label>First Name</label>
+            <input type="text" value="{{worker.firstName}}" />
+          </div>
+          <div class="form-field small">
+            <label>Claim No.</label>
+          <input type="text" value="{{claimNo}}" />
+          </div>
+        </div>
+
+        <div class="section-header">
+          D. The following information should be completed by the Health
+          Professional to identify the patient's overall abilities and
+          restrictions.
+        </div>
+
+        <div class="section-d-row">
+          <div class="date-assessment">
+            <label>1. Date of<br />Assessment</label>
+            <div class="date-inputs">
+              <input type="text" placeholder="dd" class="date-input" value="{{assessmentDate.dd}}" />
+              <input type="text" placeholder="mm" class="date-input" value="{{assessmentDate.mm}}"/>
+              <input type="text" placeholder="yyyy" class="date-input-year" value="{{assessmentDate.yyyy}}"/>
+            </div>
+          </div>
+          <div class="patient-status">
+            <label>2. Please check one:</label>
+            <div class="status-options">
+              <label class="status-option">
+               <input type="checkbox" {{#if (eq returnToWorkStatus "noRestrictions")}}checked{{/if}} />
+                <span class="arrow">▶</span>
+                <span>Patient is capable of returning to work with
+                  <strong>no restrictions.</strong></span>
+              </label>
+              <label class="status-option">
+             <input type="checkbox" {{#if (eq returnToWorkStatus "withRestrictions")}}checked{{/if}} />
+                <span>Patient is capable of returning to work
+                  <strong>with restrictions.</strong><br />Complete sections
+                  <strong>E and F.</strong></span>
+              </label>
+              <label class="status-option">
+              <input type="checkbox" {{#if (eq returnToWorkStatus "unable")}}checked{{/if}} />
+                <span>Patient is physically unable to return to work at this
+                  time.<br />Complete section
+                  <strong>F.</strong></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-header">E. Abilities and/or Restrictions</div>
+
+        <div class="abilities-note">
+          1. Please indicate
+          <strong>Abilities</strong>
+          that apply. Include additional details in section 3
+        </div>
+
+        <div class="abilities-grid">
+          <div class="ability-column">
+            <label class="column-header">Walking:</label>
+            <label><input type="checkbox" {{#if (eq abilities.walking "fullAbilities")}}checked{{/if}} />Full abilities</label>
+            <label><input type="checkbox" {{#if (eq abilities.walking "upto100")}}checked{{/if}} /> Up to 100 metres</label>
+            <label><input type="checkbox" {{#if (eq abilities.walking "100to200")}}checked{{/if}} /> 100 - 200 metres</label>
+            <div class="otherCheckAbilty">
+              <input type="checkbox"
+    {{#if (or
+      (eq abilities.walking "other")
+      (notIn abilities.walking values=(array "fullAbilities" "upto100" "100to200"))
+    )}}checked{{/if}} />
+  Other
+  <input
+    type="text"
+    class="otherLine"
+    value="{{#if (notIn abilities.walking values=(array "fullAbilities" "upto100" "100to200"))}}{{abilities.walking}}{{/if}}"
+  />
+            </div>
+          </div>
+          <div class="ability-column">
+            <label class="column-header">Standing:</label>
+            <label><input type="checkbox" {{#if (eq abilities.standing "fullAbilities")}}checked{{/if}} /> Full abilities</label>
+            <label><input type="checkbox" {{#if (eq abilities.standing "upto15")}}checked{{/if}} />  Up to 15 minutes</label>
+            <label><input type="checkbox" {{#if (eq abilities.standing "15to30")}}checked{{/if}} /> 15 - 30 minutes</label>
+            <div class="otherCheckAbilty">
+                <input type="checkbox"
+                    {{#if (or
+                    (eq abilities.standing "other")
+                    (notIn abilities.standing values=(array "fullAbilities" "upto15" "15to30"))
+                    )}}checked{{/if}} />
+                Other
+                <input
+                    type="text"
+                    class="otherLine"
+                    value="{{#if (notIn abilities.standing values=(array "fullAbilities" "upto15" "15to30"))}}{{abilities.standing}}{{/if}}"
+                />
+            </div>
+          </div>
+          <div class="ability-column">
+            <label class="column-header">Sitting:</label>
+            <label><input type="checkbox" {{#if (eq abilities.sitting "fullAbilities")}}checked{{/if}} /> Full abilities</label>
+            <label><input type="checkbox" {{#if (eq abilities.sitting "upto30")}}checked{{/if}} /> Up to 30 minutes</label>
+            <label><input type="checkbox" {{#if (eq abilities.sitting "30to60")}}checked{{/if}} /> 30 minutes - 1 hour</label>
+            <div class="otherCheckAbilty">
+                <input type="checkbox"
+    {{#if (or
+      (eq abilities.sitting "other")
+      (notIn abilities.sitting values=(array "fullAbilities" "upto30" "30to60"))
+    )}}checked{{/if}} />
+  Other
+  <input
+    type="text"
+    class="otherLine"
+    value="{{#if (notIn abilities.sitting values=(array "fullAbilities" "upto30" "30to60"))}}{{abilities.sitting}}{{/if}}"
+  />
+            </div>
+          </div>
+          <div class="ability-column">
+            <label class="column-header">Lifting from floor to waist:</label>
+            <label><input type="checkbox" {{#if (eq abilities.liftingFloorToWaist "fullAbilities")}}checked{{/if}} /> Full abilities</label>
+            <label><input type="checkbox" {{#if (eq abilities.liftingFloorToWaist "upto5kg")}}checked{{/if}} /> Up to 5 kilograms</label>
+            <label><input type="checkbox" {{#if (eq abilities.liftingFloorToWaist "5to10kg")}}checked{{/if}} /> 5 - 10 kilograms</label>
+            <div class="otherCheckAbilty">
+              <input type="checkbox"
+    {{#if (or
+      (eq abilities.liftingFloorToWaist "other")
+      (notIn abilities.liftingFloorToWaist values=(array "fullAbilities" "upto5kg" "5to10kg"))
+    )}}checked{{/if}} />
+  Other
+  <input
+    type="text"
+    class="otherLine"
+    value="{{#if (notIn abilities.liftingFloorToWaist values=(array "fullAbilities" "upto5kg" "5to10kg"))}}{{abilities.liftingFloorToWaist}}{{/if}}"
+  />
+            </div>
+          </div>
+        </div>
+
+        <div class="abilities-grid">
+          <div class="ability-column">
+            <label class="column-header">Lifting from waist to shoulder:</label>
+            <label><input type="checkbox" {{#if (eq abilities.liftingWaistToShoulder "fullAbilities")}}checked{{/if}} /> Full abilities</label>
+            <label><input type="checkbox" {{#if (eq abilities.liftingWaistToShoulder "upto5kg")}}checked{{/if}} /> Up to 5 kilograms</label>
+            <label><input type="checkbox" {{#if (eq abilities.liftingWaistToShoulder "5to10kg")}}checked{{/if}} /> 5 - 10 kilograms</label>
+            <div class="otherCheckAbilty">
+                 <input type="checkbox"
+    {{#if (or
+      (eq abilities.liftingWaistToShoulder "other")
+      (notIn abilities.liftingWaistToShoulder values=(array "fullAbilities" "upto5kg" "5to10kg"))
+    )}}checked{{/if}} />
+  Other
+  <input
+    type="text"
+    class="otherLine"
+    value="{{#if (notIn abilities.liftingWaistToShoulder values=(array "fullAbilities" "upto5kg" "5to10kg"))}}{{abilities.liftingWaistToShoulder}}{{/if}}"
+  />
+            </div>
+          </div>
+          <div class="ability-column">
+            <label class="column-header">Stair climbing:</label>
+            <label><input type="checkbox" {{#if (eq abilities.stairClimbing "fullAbilities")}}checked{{/if}} /> Full abilities</label>
+            <label><input type="checkbox" {{#if (eq abilities.stairClimbing "upto5steps")}}checked{{/if}} /> Up to 5 steps</label>
+            <label><input type="checkbox" {{#if (eq abilities.stairClimbing "5to10steps")}}checked{{/if}} /> 5 - 10 steps</label>
+            <div class="otherCheckAbilty">
+              <input type="checkbox"
+    {{#if (or
+      (eq abilities.stairClimbing "other")
+      (notIn abilities.stairClimbing values=(array "fullAbilities" "upto5steps" "5to10steps"))
+    )}}checked{{/if}} />
+  Other
+  <input
+    type="text"
+    class="otherLine"
+    value="{{#if (notIn abilities.stairClimbing values=(array "fullAbilities" "upto5steps" "5to10steps"))}}{{abilities.stairClimbing}}{{/if}}"
+  />
+            </div>
+          </div>
+          <div class="ability-column">
+            <label class="column-header">Ladder climbing:</label>
+            <label><input type="checkbox" {{#if (eq abilities.ladderClimbing "fullAbilities")}}checked{{/if}} /> Full abilities</label>
+            <label><input type="checkbox" {{#if (eq abilities.ladderClimbing "1to3steps")}}checked{{/if}} /> 1 - 3 steps</label>
+            <label><input type="checkbox" {{#if (eq abilities.ladderClimbing "4to6steps")}}checked{{/if}} /> 4 - 6 steps</label>
+            <div class="otherCheckAbilty">
+              <input type="checkbox"
+    {{#if (or
+      (eq abilities.ladderClimbing "other")
+      (notIn abilities.ladderClimbing values=(array "fullAbilities" "1to3steps" "4to6steps"))
+    )}}checked{{/if}} />
+  Other
+  <input
+    type="text"
+    class="otherLine"
+    value="{{#if (notIn abilities.ladderClimbing values=(array "fullAbilities" "1to3steps" "4to6steps"))}}{{abilities.ladderClimbing}}{{/if}}"
+  />
+            </div>
+          </div>
+          <div class="ability-column">
+            <label class="column-header">Travel to work:</label>
+            <div class="travel-row">
+              <div class="travel-col">
+                <label class="sub-header">Ability to<br />public transit</label>
+                <label><input type="checkbox"
+  {{#if abilities.travelToWork.publicTransit}}checked{{/if}} /> yes</label>
+                <label><input type="checkbox"
+  {{#unless abilities.travelToWork.publicTransit}}checked{{/unless}} />no</label>
+              </div>
+              <div class="travel-col">
+                <label class="sub-header">Ability to<br />drive a car</label>
+                <label><input type="checkbox"
+  {{#if abilities.travelToWork.car}}checked{{/if}} /> yes</label>
+                <label><input type="checkbox"
+  {{#unless abilities.travelToWork.car}}checked{{/unless}} />no</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="restrictions-note">
+          2. Please indicate
+          <strong>Restrictions</strong>
+          that apply. Include additional details in section 3
+        </div>
+
+        <div class="restrictions-grid" style="border-top: 1px solid #000">
+          <div class="restriction-column">
+            <label>
+  <input type="checkbox" {{#if restrictions.bendingTwisting}}checked{{/if}} />
+  Bending/twisting<br />repetitive motion of<br />(please specify)
+</label>
+
+<input
+  type="text"
+  class="otherLine"
+  style="max-height: 14px; margin-left: 10px"
+  value="{{restrictions.bendingTwisting}}"
+/>
+
+          </div>
+          <div class="restriction-column">
+            <label>
+  <input type="checkbox" {{#if restrictions.workAboveShoulder}}checked{{/if}} />
+  Work at or above<br />shoulder activity:
+</label>
+
+<input
+  type="text"
+  class="otherLine"
+  style="max-height: 14px; margin-left: 10px"
+  value="{{restrictions.workAboveShoulder}}"
+/>
+
+          </div>
+          <div class="restriction-column">
+           <label>
+  <input type="checkbox" {{#if restrictions.chemicalExposure}}checked{{/if}} />
+  Chemical<br />exposure to:
+</label>
+
+<input
+  type="text"
+  class="otherLine"
+  style="max-height: 14px; margin-left: 10px"
+  value="{{restrictions.chemicalExposure}}"
+/>
+
+          </div>
+          <div class="restriction-column">
+            <label>
+  <input type="checkbox" {{#if restrictions.environmentalExposure}}checked{{/if}} />
+  Environmental<br />exposure to: (e.g. heat,<br />cold, noise or scents)
+</label>
+
+<input
+  type="text"
+  class="otherLine"
+  style="max-height: 14px; margin-left: 10px"
+  value="{{restrictions.environmentalExposure}}"
+/>
+
+          </div>
+          <div class="restriction-column hand-use">
+            <label><input type="checkbox" {{#if restrictions.limitedHandUse}}checked{{/if}} /> Limited use of hand(s):</label>
+            <div class="hand-options">
+              <div class="hand-side">
+                <span>Left</span>
+                <label>
+  <input type="checkbox"
+    {{#if restrictions.limitedUseOfHands.left.gripping}}checked{{/if}} />
+  Gripping
+</label>
+
+<label>
+  <input type="checkbox"
+    {{#if restrictions.limitedUseOfHands.left.pinching}}checked{{/if}} />
+  Pinching
+</label>
+
+<label>
+  <input type="checkbox"
+    {{#if restrictions.limitedUseOfHands.left.other}}checked{{/if}} />
+  Other (please specify)
+</label>
+              </div>
+              <div class="hand-side">
+                <span>Right</span>
+                <label>  <input type="checkbox"
+    {{#if restrictions.limitedUseOfHands.right.gripping}}checked{{/if}} /></label>
+                <label>  <input type="checkbox"
+    {{#if restrictions.limitedUseOfHands.right.pinching}}checked{{/if}} /></label>
+                <label> <input type="checkbox"
+    {{#if restrictions.limitedUseOfHands.right.other}}checked{{/if}} /></label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="restrictions-grid second-row">
+          <div class="restriction-column">
+            <label><input type="checkbox" {{#if restrictions.limitedHandPushPull}}checket{{/if}} />
+              Limited pushing/pulling with:</label>
+           <label>
+  <input type="checkbox"
+    {{#if restrictions.limitedPushingPulling.leftArm}}checked{{/if}} />
+  Left arm
+</label>
+
+<label>
+  <input type="checkbox"
+    {{#if restrictions.limitedPushingPulling.rightArm}}checked{{/if}} />
+  Right arm
+</label>
+
+<div class="otherCheckAbilty">
+  <input type="checkbox"
+    {{#if restrictions.limitedPushingPulling.other}}checked{{/if}} />
+  Other
+</div>
+          </div>
+          <div class="restriction-column">
+           <label>
+  <input type="checkbox"
+    {{#if restrictions.operatingMotorizedEquipment}}checked{{/if}} />
+  Operating motorized equipment:
+</label>
+
+<input
+  type="text"
+  class="otherLine"
+  value="{{restrictions.operatingMotorizedEquipment}}"
+/>
+          </div>
+          <div class="restriction-column">
+           <label>
+  <input type="checkbox"
+    {{#if restrictions.medicationSideEffects}}checked{{/if}} />
+  Potential side effects from medications
+</label>
+
+<input
+  type="text"
+  class="otherLine"
+  value="{{restrictions.medicationSideEffects}}"
+/>
+          </div>
+          <div class="restriction-column">
+            <label><input type="checkbox" {{#if restrictions.exposureVibrate}}checket{{/if}} /> Exposure to vibration:</label>
+           <label>
+  <input type="checkbox"
+    {{#if restrictions.exposureToVibration.wholeBody}}checked{{/if}} />
+  Whole body
+</label>
+
+<label>
+  <input type="checkbox"
+    {{#if restrictions.exposureToVibration.handArm}}checked{{/if}} />
+  Hand/Arm
+</label>
+          </div>
+        </div>
+
+        <div class="additional-comments">
+          <label>3. Additional Comments on
+            <strong>Abilities and/or Restrictions.</strong></label>
+          <textarea rows="{3}"></textarea>
+        </div>
+
+        <div class="form-row bottom-section">
+          <div class="duration-section">
+            <label>4. From the date of this assessment, the above will apply for
+              approximately:</label>
+            <div class="checkbox-group inline">
+              <label><input type="checkbox" {{#if (eq assessmentDuration "1-2 days")}}checked{{/if}} /> 1 - 2 days</label>
+              <label><input type="checkbox" {{#if (eq assessmentDuration "3-7 days")}}checked{{/if}} /> 3 - 7 days</label>
+              <label><input type="checkbox" {{#if (eq assessmentDuration "8-14 days")}}checked{{/if}} /> 8 - 14 days</label>
+              <label><input type="checkbox" {{#if (eq assessmentDuration "14+ days")}}checked{{/if}} /> 14 + days</label>
+            </div>
+          </div>
+          <div class="discussed-section">
+            <label>5. Have you discussed return to work<br />with your patient?</label>
+            <div class="checkbox-group inline">
+             <label><input type="checkbox"
+  {{#if isDiscussRTWtoPatient}}checked{{/if}} /> yes</label>
+                <label><input type="checkbox"
+  {{#unless isDiscussRTWtoPatient}}checked{{/unless}} />no</label>
+              </div>
+            </div>
+          </div>
+
+              <div class="form-row">
+          <div class="work-hours-section">
+            <label>6. Recommendations for<br />work hours and start date:</label>
+            <div class="checkbox-group inline">
+                
+              <label><input type="checkbox" {{#if (eq recomendedHours "regular")}}checked{{/if}} /> Regular full-time hours</label>
+              <label><input type="checkbox" {{#if (eq recomendedHours "modified")}}checked{{/if}} /> Modified hours</label>
+              <label><input type="checkbox" {{#if (eq recomendedHours "graduated")}}checked{{/if}} /> Graduated hours</label>
+            </div>
+          </div>
+          <div class="start-date-section">
+            <label>Start Date</label>
+            <div class="date-inputs">
+              <input type="text" placeholder="dd" class="date-input" value="{{startDate.dd}}" />
+              <input type="text" placeholder="mm" class="date-input" value="{{startDate.mm}}" />
+              <input type="text" placeholder="yyyy" class="date-input-year" value="{{startDate.yyyy}}" />
+            </div>
+          </div>
+        </div>
+
+        <div class="section-header">F. Date of Next Appointment</div>
+
+        <div class="next-appointment">
+          <label>Recommended date of next appointment to review
+            <strong>Abilities and/or Restrictions.</strong></label>
+          <span class="arrow-right">▶</span>
+          <div class="date-inputs">
+            <input type="text" placeholder="dd" class="date-input" value="{{nextAppointment.dd}}" />
+            <input type="text" placeholder="mm" class="date-input" value="{{nextAppointment.mm}}" />
+            <input type="text" placeholder="yyyy" class="date-input-year" value="{{nextAppointment.yyyy}}" />
+          </div>
+        </div>
+
+        <div class="form-provided">
+          <label>I have provided this completed Functional Abilities Form to:</label>
+          <div class="checkbox-group inline">
+            <label><input type="checkbox"
+  {{#if providedTo.worker}}checked{{/if}} /> Worker</label>
+            <span class="and-or">and/or</span>
+            <label><input type="checkbox"
+  {{#if providedTo.employer}}checked{{/if}} /> Employer</label>
+          </div>
+        </div>
+
+        <div class="page-number">2647A3 (07/06) page 2 of 2</div>
+        </div>
+
+    
+      </div>
+    </div>
+  </body>
+</html>

@@ -514,21 +514,15 @@ export const GetAllFunctionalAbilities = asyncHandler(async (req, res) => {
   } = req.query;
 
   const query = {};
+  console.log(search);
   if (search) {
     query.$or = [
-      {
-        $expr: {
-          $regexMatch: {
-            input: { $concat: ["$worker.firstName", " ", "$worker.lastName"] },
-            regex: search,
-            options: "i",
-          },
-        },
-      },
+      { "worker.firstName": { $regex: search, $options: "i" } },
+
       { "worker.telephone": { $regex: search, $options: "i" } },
       { returnToWorkStatus: { $regex: search, $options: "i" } },
       { claimNo: { $regex: search, $options: "i" } },
-      {},
+   
     ];
   }
 
@@ -539,7 +533,7 @@ export const GetAllFunctionalAbilities = asyncHandler(async (req, res) => {
     .limit(Number(limit));
 
   const totalCount = await FunctionalAbility.countDocuments(query);
-
+  console.log(totalCount);
   res.status(200).json(
     new ApiResponse(200, "Functional Abilities fetched successfully", {
       data,
@@ -811,6 +805,18 @@ export const editMediaConsent = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "Media consent updated successfully", consent));
 });
 
+export const deleteMediaConsent = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const mediaConsent = await MediaConsent.findByIdAndDelete(id);
+  if (!mediaConsent) {
+    throw new ApiError(404, "Media Consent not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Media Consent deleted successfully"));
+});
 export const getClientIncidentById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
@@ -1138,6 +1144,126 @@ export const generateFilledMediaConsent = asyncHandler(async (req, res) => {
   res.set({
     "Content-Type": "application/pdf",
     "Content-Disposition": "attachment; filename=media-consent.pdf",
+  });
+
+  res.send(pdf);
+});
+const CANADA_PROVINCES = [
+  { label: "Alberta", value: "AB" },
+  { label: "British Columbia", value: "BC" },
+  { label: "Manitoba", value: "MB" },
+  { label: "New Brunswick", value: "NB" },
+  { label: "Newfoundland and Labrador", value: "NL" },
+  { label: "Nova Scotia", value: "NS" },
+  { label: "Ontario", value: "ON" },
+  { label: "Prince Edward Island", value: "PE" },
+  { label: "Quebec", value: "QC" },
+  { label: "Saskatchewan", value: "SK" },
+  { label: "Northwest Territories", value: "NT" },
+  { label: "Nunavut", value: "NU" },
+  { label: "Yukon", value: "YT" },
+];
+const getProvinceLabel = (value) => {
+  const province = CANADA_PROVINCES.find((p) => p.value === value);
+  return province ? province.label : "";
+};
+const splitDate = (date) => {
+  if (!date) return { dd: "", mm: "", yyyy: "" };
+
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return { dd: "", mm: "", yyyy: "" };
+
+  return {
+    dd: String(d.getDate()).padStart(2, "0"),
+    mm: String(d.getMonth() + 1).padStart(2, "0"),
+    yyyy: String(d.getFullYear()),
+  };
+};
+export const generateFilledFAF = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const dataFromDB = await FunctionalAbility.findById(id);
+
+  const payload = {
+    claimNo: dataFromDB.claimNo,
+
+    worker: {
+      ...dataFromDB.worker,
+      province: getProvinceLabel(dataFromDB.worker?.province),
+    },
+
+    nodateOfDiscusswill: splitDate(dataFromDB.nodateOfDiscusswill),
+    assessmentDate: splitDate(dataFromDB.assesmentDate),
+    startDate: splitDate(dataFromDB.startDate),
+    nextAppointment: splitDate(dataFromDB.nextAppointmentDate),
+
+    dateOfAccident: dataFromDB.dateOfAccident,
+    employer: {
+      ...dataFromDB.employer,
+      province: getProvinceLabel(dataFromDB.employer?.province),
+    },
+    employerFaxNo: dataFromDB.employerFaxNo,
+    employerContactName: dataFromDB.employerFaxNo,
+    position: dataFromDB.position,
+
+    typeOfJobAtAccident: dataFromDB.typeOfJobAtAccident,
+    areasOfInjury: dataFromDB.areasOfInjury,
+
+    /* Section A */
+    discussedRTW: dataFromDB.discussedRTW,
+
+    /* Section C */
+    iswsibRegistered: dataFromDB.iswsibRegistered,
+    healthProfessionalName: dataFromDB.healthProfessionalName,
+    hproAddress: dataFromDB.hproAddress,
+    hprocityTown: dataFromDB.hprocityTown,
+    hproPostalCode: dataFromDB.hproPostalCode,
+    designationOfHealthPro: dataFromDB.designationOfHealthPro,
+    hproProvince: getProvinceLabel(dataFromDB.hproProvince),
+    hproFax: dataFromDB.hproFax,
+    wsibId: dataFromDB.wsibId,
+    invoiceNo: dataFromDB.invoiceNo,
+    srvCode: dataFromDB.srvCode,
+
+    hstRegNo: dataFromDB.hstRegNo,
+    hstSrvcCode: dataFromDB.hstSrvcCode,
+    hstAmount: dataFromDB.hstAmount,
+
+    /* Section D */
+    returnToWorkStatus: dataFromDB.returnToWorkStatus,
+    // "noRestrictions" | "withRestrictions" | "unable"
+
+    /* Section E – Abilities */
+    abilities: {
+      ...dataFromDB.abilities,
+    },
+    restrictions: {
+      ...dataFromDB.restrictions,
+      limitedHandUse: !!dataFromDB.restrictions?.limitedUseOfHands,
+      limitedHandPushPull: !!dataFromDB.restrictions?.limitedPushingPulling,
+      exposureVibrate: !!dataFromDB.restrictions?.exposureToVibration,
+    },
+
+    /* Section F */
+    assessmentDuration: dataFromDB.assessmentDuration,
+    // "1-2 days" | "3-7 days" | "8-14 days" | "14+ days"
+
+    isDiscussRTWtoPatient: dataFromDB.isDiscussRTWtoPatient,
+
+    recomendedHours: dataFromDB.recomendedHours,
+    // "regular" | "modified" | "graduated"
+
+    providedTo: {
+      worker: true,
+      employer: false,
+    },
+  };
+
+  const html = buildHtmlFromTemplate("functional-ability", payload);
+
+  const pdf = await generatePdf(html);
+  res.set({
+    "Content-Type": "application/pdf",
+    "Content-Disposition": "attachment; filename=functional-ability.pdf",
   });
 
   res.send(pdf);

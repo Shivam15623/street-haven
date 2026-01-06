@@ -10,6 +10,7 @@ import {
   deleteClientIncident,
   deleteEmployeeIncident,
   deleteFAF,
+  deleteMediaConsent,
   deletePaymentRequisition,
   editClientFeedback,
   editClientIncident,
@@ -20,6 +21,7 @@ import {
   generateFilledclientFeedbackPdf,
   generateFilledClientIncident,
   generateFilledEmployeeIncidentPdf,
+  generateFilledFAF,
   generateFilledIncidentReport,
   generateFilledMediaConsent,
   generatefilledPaymentPdf,
@@ -89,6 +91,7 @@ router
 router
   .route("/mediaConsent/:id")
   // .get(getMediaConsentById)
+  .delete(deleteMediaConsent)
   .patch(editMediaConsent);
 
 router
@@ -119,5 +122,8 @@ router
   .get(generateFilledclientFeedbackPdf);
 router.route("/incidentReport/pdfForm/:id").get(generateFilledIncidentReport);
 router.route("/mediaConsent/pdfForm/:id").get(generateFilledMediaConsent);
-router.route("/employeeIncident/pdfForm/:id").get(generateFilledEmployeeIncidentPdf)
+router
+  .route("/employeeIncident/pdfForm/:id")
+  .get(generateFilledEmployeeIncidentPdf);
+router.route("/getFaf/pdfForm/:id").get(generateFilledFAF);
 export default router;
