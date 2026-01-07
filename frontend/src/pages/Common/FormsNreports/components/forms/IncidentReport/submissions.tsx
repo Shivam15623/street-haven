@@ -16,6 +16,7 @@ import { useDebounce } from "../../../../../../hooks/useDebounce";
 import type { AgentTabProp } from "../../../../AgencyInformation/component/Agreement/CollectiveAgreementTab";
 import dayjs from "dayjs";
 import TablePlaceholderLoader from "../../../../../../components/child/SimpleTablePlaceHolder";
+import useHasPermission from "../../../../../../hooks/Auth";
 
 interface Column {
   header: string;
@@ -32,6 +33,7 @@ const IncidentReportSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const debouncedSearch = useDebounce(filter.search, 1000);
+  const { hasPermission } = useHasPermission();
   const [deleteIncidentReport, { isLoading: deleting }] =
     useDeleteIncidentReportMutation();
   const handleDeleteClick = (id: string) => {
@@ -85,14 +87,18 @@ const IncidentReportSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
       header: "Actions",
       accessor: (row) => (
         <div className="d-flex gap-2">
-          <EditIncidentReport data={row} />
+          {hasPermission({ action: "edit_form" }) && (
+            <EditIncidentReport data={row} />
+          )}
           <IncidentReportModal incident={row} />
-          <button
-            className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
-            onClick={() => handleDeleteClick(row._id)}
-          >
-            <Icon icon="mdi:delete" className="text-xl" />
-          </button>
+          {hasPermission({ action: "delete_form" }) && (
+            <button
+              className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
+              onClick={() => handleDeleteClick(row._id)}
+            >
+              <Icon icon="mdi:delete" className="text-xl" />
+            </button>
+          )}
         </div>
       ),
     },
@@ -128,13 +134,15 @@ const IncidentReportSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
           }
         />
       </div>
-      <DeleteConfirmModal
-        show={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title="Delete Incident Report"
-        isLoading={deleting}
-        onConfirm={handleConfirmDelete}
-      />
+      {hasPermission({ action: "delete_form" }) && (
+        <DeleteConfirmModal
+          show={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          title="Delete Incident Report"
+          isLoading={deleting}
+          onConfirm={handleConfirmDelete}
+        />
+      )}
       {/* Data Table */}
       <SimpleTable
         columns={columns}
