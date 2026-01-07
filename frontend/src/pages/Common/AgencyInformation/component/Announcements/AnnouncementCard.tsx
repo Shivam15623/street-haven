@@ -1,15 +1,16 @@
-import { useState } from "react";
-
+import React, { useState } from "react";
+import type { AnnouncementData } from "../../../../../services/AnnouncementApi";
 import { Icon } from "@iconify/react/dist/iconify.js";
-import type { hrUpdateData } from "../../../../interfaces/hrUpdatesInterface";
+import ViewFileModal from "../../../../../components/child/VIewFileModal";
 
-import ActionsHrUpdates from "./ActionsHrUpdates";
-import DeleteHrUpdate from "./deleteHrUpdates";
-import "react-quill/dist/quill.snow.css";
-import ViewFileModal from "../../../../components/child/VIewFileModal";
-import useHasPermission from "../../../../hooks/Auth";
-const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
-  const { title, _id, createdAt, description, createdBy } = update;
+import ActionsAnnouncement from "./ActionsAnnouncement";
+import DeleteAnnouncement from "./DeleteAnnouncement";
+import useHasPermission from "../../../../../hooks/Auth";
+interface AnnouncementProps {
+  announcement: AnnouncementData;
+}
+const AnnouncementCard: React.FC<AnnouncementProps> = ({ announcement }) => {
+  const { title, _id, createdAt, message, createdBy } = announcement;
   const { hasPermission } = useHasPermission();
   const [showDelete, setShowDelete] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -28,19 +29,19 @@ const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
             <p className="text-md text-street-dark fw-semibold">{title}</p>
             <div
               className="prose flex-grow-1"
-              dangerouslySetInnerHTML={{ __html: description }}
+              dangerouslySetInnerHTML={{ __html: message }}
             />
             <div className="d-flex flex-row gap-24 align-items-center text-street-base">
               <p className="d-flex flex-row align-items-center text-xs gap-8">
                 <Icon
-                  icon="uit:calender"
+                  icon="uis:calender"
                   className="text-xs text-street-primary"
                 />
                 <span>{formattedDate}</span>
               </p>
               <p className="d-flex flex-row align-items-center text-xs gap-8">
                 <Icon
-                  icon="octicon:people-24"
+                  icon="fa6-solid:user-group"
                   className="text-xs text-street-primary"
                 />
                 <span>
@@ -49,17 +50,23 @@ const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
               </p>
             </div>
           </div>
-          {hasPermission({ action: "edit_hr_update" }) && (
-            <ActionsHrUpdates
+          {hasPermission({ action: "edit_announcement" }) && (
+            <ActionsAnnouncement
               show={showModal}
-              update={update}
+              update={announcement}
               onHide={() => setShowModal(false)}
             />
           )}
 
           <div className="d-flex flex-row gap-8 align-items-start">
-            <ViewFileModal attachment={update.attachment} title={title} />
-            {hasPermission({ action: "edit_hr_update" }) && (
+            {announcement.attachment && (
+              <ViewFileModal
+                attachment={announcement.attachment}
+                title={title}
+              />
+            )}
+
+            {hasPermission({ action: "edit_announcement" }) && (
               <button
                 className="btn btn-street-neutral d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
                 style={{ width: "43px", height: "40px" }}
@@ -69,7 +76,7 @@ const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
                 <Icon icon="mdi:pencil" className="text-sm sm:text-xl" />
               </button>
             )}
-            {hasPermission({action:"delete_hr_update"})&&
+            {hasPermission({ action: "delete_announcement" }) && (
               <>
                 <button
                   onClick={() => setShowDelete(true)}
@@ -79,13 +86,13 @@ const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
                   <Icon icon="lucide:trash-2" className="text-sm sm:text-xl" />
                 </button>
 
-                <DeleteHrUpdate
+                <DeleteAnnouncement
                   id={_id}
                   show={showDelete}
                   onHide={() => setShowDelete(false)}
                 />
               </>
-            }
+            )}
           </div>
         </div>
       </div>
@@ -93,4 +100,4 @@ const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
   );
 };
 
-export default HRUpdateCard;
+export default AnnouncementCard;

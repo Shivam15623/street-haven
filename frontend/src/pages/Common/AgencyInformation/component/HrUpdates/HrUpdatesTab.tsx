@@ -2,12 +2,13 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import HRUpdateCard from "./HRUpdateCard";
-import { useLazyViewhrUpdatesQuery } from "../../../../services/hrUpdatesApi";
+import { useLazyViewhrUpdatesQuery } from "../../../../../services/hrUpdatesApi";
 import ActionsHrUpdates from "./ActionsHrUpdates";
-import StreetPaggination from "../../../../components/child/StreetPaggination";
-import useHasPermission from "../../../../hooks/Auth";
-import { useDebounce } from "../../../../hooks/useDebounce";
-import type { AgentTabProp } from "./CollectiveAgreementTab";
+import StreetPaggination from "../../../../../components/child/StreetPaggination";
+import useHasPermission from "../../../../../hooks/Auth";
+import { useDebounce } from "../../../../../hooks/useDebounce";
+import type { AgentTabProp } from "../Agreement/CollectiveAgreementTab";
+import HRUpdateCardSkeleton from "./HrUpdaresCardSkelaton";
 
 const HrUpdatesTab: React.FC<AgentTabProp> = ({ isActive }) => {
   const [search, setSearch] = useState("");
@@ -88,7 +89,10 @@ const HrUpdatesTab: React.FC<AgentTabProp> = ({ isActive }) => {
       <ActionsHrUpdates show={showModal} onHide={() => setShowModal(false)} />
 
       {/* States */}
-      {isLoading && <p>Loading...</p>}
+      {isLoading &&
+        Array.from({ length: 5 }).map((_p, idx) => (
+          <HRUpdateCardSkeleton key={idx} />
+        ))}
       {isError && <p>Something went wrong</p>}
 
       {!isLoading && data?.data?.hrupdates?.length === 0 && (

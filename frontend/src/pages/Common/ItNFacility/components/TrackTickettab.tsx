@@ -6,7 +6,7 @@ import { useLazyFetchTicketsQuery } from "../../../../services/ticketApi";
 import { useSearchParams } from "react-router-dom";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import StreetPaggination from "../../../../components/child/StreetPaggination";
-import type { AgentTabProp } from "../../AgencyInformation/component/CollectiveAgreementTab";
+import type { AgentTabProp } from "../../AgencyInformation/component/Agreement/CollectiveAgreementTab";
 
 const TrackTickettab: React.FC<AgentTabProp> = ({ isActive }) => {
   const [searchParams] = useSearchParams();

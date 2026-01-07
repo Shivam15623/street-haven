@@ -17,7 +17,7 @@ const EmployeeDashboard = () => {
     page: 1,
     priority: "All",
     status: "Open",
-    limit: 10,
+    limit: 100,
     order: "desc",
     search: "",
   });

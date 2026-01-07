@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import StreetPaggination from "../../../../components/child/StreetPaggination";
 import { useLazyFetchEventsupcomingQuery } from "../../../../services/EventApi";
 import EventCard from "./EventCard";
-import type { AgentTabProp } from "../../AgencyInformation/component/CollectiveAgreementTab";
+import type { AgentTabProp } from "../../AgencyInformation/component/Agreement/CollectiveAgreementTab";
 import EventCardSkeleton from "./EventCardSkeleton";
 
 const UpcomingEvents: React.FC<AgentTabProp> = ({ isActive }) => {

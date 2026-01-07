@@ -1,16 +1,16 @@
-import React, { useState } from "react";
-import type { AnnouncementData } from "../../../../services/AnnouncementApi";
-import { Icon } from "@iconify/react/dist/iconify.js";
-import ViewFileModal from "../../../../components/child/VIewFileModal";
+import { useState } from "react";
 
-import ActionsAnnouncement from "./ActionsAnnouncement";
-import DeleteAnnouncement from "./DeleteAnnouncement";
-import useHasPermission from "../../../../hooks/Auth";
-interface AnnouncementProps {
-  announcement: AnnouncementData;
-}
-const AnnouncementCard: React.FC<AnnouncementProps> = ({ announcement }) => {
-  const { title, _id, createdAt, message, createdBy } = announcement;
+import { Icon } from "@iconify/react/dist/iconify.js";
+import type { hrUpdateData } from "../../../../../interfaces/hrUpdatesInterface";
+
+import ActionsHrUpdates from "./ActionsHrUpdates";
+
+import "react-quill/dist/quill.snow.css";
+import ViewFileModal from "../../../../../components/child/VIewFileModal";
+import useHasPermission from "../../../../../hooks/Auth";
+import DeleteHrUpdate from "./deleteHrUpdates";
+const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
+  const { title, _id, createdAt, description, createdBy } = update;
   const { hasPermission } = useHasPermission();
   const [showDelete, setShowDelete] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -29,19 +29,19 @@ const AnnouncementCard: React.FC<AnnouncementProps> = ({ announcement }) => {
             <p className="text-md text-street-dark fw-semibold">{title}</p>
             <div
               className="prose flex-grow-1"
-              dangerouslySetInnerHTML={{ __html: message }}
+              dangerouslySetInnerHTML={{ __html: description }}
             />
             <div className="d-flex flex-row gap-24 align-items-center text-street-base">
               <p className="d-flex flex-row align-items-center text-xs gap-8">
                 <Icon
-                  icon="uis:calender"
+                  icon="uit:calender"
                   className="text-xs text-street-primary"
                 />
                 <span>{formattedDate}</span>
               </p>
               <p className="d-flex flex-row align-items-center text-xs gap-8">
                 <Icon
-                  icon="fa6-solid:user-group"
+                  icon="octicon:people-24"
                   className="text-xs text-street-primary"
                 />
                 <span>
@@ -50,23 +50,17 @@ const AnnouncementCard: React.FC<AnnouncementProps> = ({ announcement }) => {
               </p>
             </div>
           </div>
-          {hasPermission({ action: "edit_announcement" }) && (
-            <ActionsAnnouncement
+          {hasPermission({ action: "edit_hr_update" }) && (
+            <ActionsHrUpdates
               show={showModal}
-              update={announcement}
+              update={update}
               onHide={() => setShowModal(false)}
             />
           )}
 
           <div className="d-flex flex-row gap-8 align-items-start">
-            {announcement.attachment && (
-              <ViewFileModal
-                attachment={announcement.attachment}
-                title={title}
-              />
-            )}
-
-            {hasPermission({ action: "edit_announcement" }) && (
+            <ViewFileModal attachment={update.attachment} title={title} />
+            {hasPermission({ action: "edit_hr_update" }) && (
               <button
                 className="btn btn-street-neutral d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
                 style={{ width: "43px", height: "40px" }}
@@ -76,7 +70,7 @@ const AnnouncementCard: React.FC<AnnouncementProps> = ({ announcement }) => {
                 <Icon icon="mdi:pencil" className="text-sm sm:text-xl" />
               </button>
             )}
-            {hasPermission({ action: "delete_announcement" }) && (
+            {hasPermission({ action: "delete_hr_update" }) && (
               <>
                 <button
                   onClick={() => setShowDelete(true)}
@@ -86,7 +80,7 @@ const AnnouncementCard: React.FC<AnnouncementProps> = ({ announcement }) => {
                   <Icon icon="lucide:trash-2" className="text-sm sm:text-xl" />
                 </button>
 
-                <DeleteAnnouncement
+                <DeleteHrUpdate
                   id={_id}
                   show={showDelete}
                   onHide={() => setShowDelete(false)}
@@ -100,4 +94,4 @@ const AnnouncementCard: React.FC<AnnouncementProps> = ({ announcement }) => {
   );
 };
 
-export default AnnouncementCard;
+export default HRUpdateCard;

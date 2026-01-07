@@ -1,16 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 
-import {
-
-  useLazyFetchMeetingMinutesQuery,
-} from "../../../../services/meetingminutesApi";
+import { useLazyFetchMeetingMinutesQuery } from "../../../../../services/meetingminutesApi";
 import ActionstownhallMinutes from "./ActionstownhallMinutes";
 import TownhallMinuteCard from "./TownhallMinuteCard";
 import { useSearchParams } from "react-router-dom";
 
-import StreetPaggination from "../../../../components/child/StreetPaggination";
-import useHasPermission from "../../../../hooks/Auth";
-import type { AgentTabProp } from "./CollectiveAgreementTab";
+import StreetPaggination from "../../../../../components/child/StreetPaggination";
+import useHasPermission from "../../../../../hooks/Auth";
+import type { AgentTabProp } from "../Agreement/CollectiveAgreementTab";
+import MeetingMinutesCardSkeleton from "./EventMinutesCardSkeleton";
 
 const TownhallMinutesTab: React.FC<AgentTabProp> = ({ isActive }) => {
   const [page, setPage] = useState(1);
@@ -65,7 +63,10 @@ const TownhallMinutesTab: React.FC<AgentTabProp> = ({ isActive }) => {
       }
 
       {/* Loading */}
-      {isLoading && <p>Loading meeting minutes...</p>}
+      {isLoading &&
+        Array.from({ length: 6 }).map((_p, idx) => (
+          <MeetingMinutesCardSkeleton key={idx} />
+        ))}
 
       {/* Error */}
       {isError && (

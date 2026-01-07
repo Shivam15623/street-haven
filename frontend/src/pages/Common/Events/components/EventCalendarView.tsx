@@ -9,7 +9,7 @@ import { useLazyFetchEventsCalendarQuery } from "../../../../services/EventApi";
 import type { EventUpcomingData } from "../../../../interfaces/EventInterfaces";
 import EventDetailsModal from "./EventDetailsModal";
 import type { EventClickArg } from "@fullcalendar/core";
-import type { AgentTabProp } from "../../AgencyInformation/component/CollectiveAgreementTab";
+import type { AgentTabProp } from "../../AgencyInformation/component/Agreement/CollectiveAgreementTab";
 const EventCalendarView: React.FC<AgentTabProp> = ({ isActive }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<EventUpcomingData | null>(

@@ -11,7 +11,7 @@ import { FunctionalAbilityDetail } from "../modals/functional-abilty/FunctionalA
 import EditFAbilties from "../forms/functionalAbilties/edit";
 import DeleteConfirmModal from "../forms/delete";
 import { useDebounce } from "../../../../../hooks/useDebounce";
-import type { AgentTabProp } from "../../../AgencyInformation/component/CollectiveAgreementTab";
+import type { AgentTabProp } from "../../../AgencyInformation/component/Agreement/CollectiveAgreementTab";
 import dayjs from "dayjs";
 
 import TablePlaceholderLoader from "../../../../../components/child/SimpleTablePlaceHolder";
@@ -133,7 +133,7 @@ const FunctionalAbilitiesSubmission: React.FC<AgentTabProp> = ({
       ),
     },
   ];
- if (isLoading) {
+  if (isLoading) {
     return (
       <div className="d-flex flex-column gap-24">
         {/* Search placeholder */}
@@ -149,7 +149,7 @@ const FunctionalAbilitiesSubmission: React.FC<AgentTabProp> = ({
     );
   }
   const submissions: FunctionalAbility[] = abilityData?.data?.data ?? [];
-  console.log("Submissions",submissions)
+  console.log("Submissions", submissions);
   const total: number = abilityData?.data?.paggination?.total || 0;
 
   return (
