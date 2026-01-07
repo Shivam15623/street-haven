@@ -84,12 +84,6 @@ export const createClientFeedback = asyncHandler(async (req, res) => {
     preferredContactMethod,
   } = req.body;
 
-  // ---------------------------
-  // 1️⃣ Basic validation
-  // ---------------------------
-  if (!date || !location || !type || !impact || !outcome || !description) {
-    throw new ApiError(400, "Missing required fields");
-  }
 
   // ---------------------------
   // 2️⃣ Create Feedback Document
