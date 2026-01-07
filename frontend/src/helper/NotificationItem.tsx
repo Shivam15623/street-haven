@@ -4,6 +4,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { Dropdown } from "react-bootstrap";
 import { useInView } from "../hooks/useInView";
 import { type notificationData } from "../services/notificationApi";
+import { useNavigate } from "react-router-dom";
 
 dayjs.extend(relativeTime);
 
@@ -12,19 +13,29 @@ interface NotificationItemProps {
   onSeen: (id: string) => void;
 }
 
-const NotificationItem: React.FC<NotificationItemProps> = ({ item,onSeen }) => {
+const NotificationItem: React.FC<NotificationItemProps> = ({
+  item,
+  onSeen,
+}) => {
   const { ref, isInView } = useInView({ threshold: 0.5 });
- 
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isInView && !item.readAt) {
       onSeen(item._id);
     }
   }, [isInView, item._id, item.readAt, onSeen]);
+  const handleClick = () => {
+    // Navigate to deep link
+    if (item.link) {
+      navigate(item.link);
+    }
+  };
 
   return (
     <>
       <Dropdown.Item
+        onClick={handleClick}
         className={`p-10 p-sm-16 ${
           item.readAt ? "opacity-75" : ""
         } d-flex flex-row align-items-start gap-8 gap-sm-12`}

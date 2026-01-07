@@ -105,10 +105,10 @@ export const createTicket = asyncHandler(async (req, res) => {
           severity: "info",
           title: "New Ticket Created",
           message: `A new ticket "${reqTitle}" was created by ${req.user.firstname} ${req.user.lastname}.`,
-          link: `/it_facility?tab=track_tickets&status=Open`,
+          link: `/it_facility?tab=track_tickets&status=Open&item=${ticket.slug}`,
           createdBy: userId,
           meta: {
-            ticketId: ticket._id,
+            ticketId: ticket.slug,
             priority,
             category,
           },
@@ -351,9 +351,9 @@ export const editTicket = asyncHandler(async (req, res) => {
           severity: "info",
           title: "Ticket Updated",
           message: `Ticket "${ticket.req_title}" ${messageParts.join(", ")}.`,
-          link: `/it_facility?tab=track_tickets&ticketId=${ticketId}`,
+          link: `/it_facility?tab=track_tickets&status=${ticket.status}&item=${ticket.slug}`,
           createdBy: userId,
-          meta: { ticketId, statusChanged, assigneeChanged },
+          meta: { ticketId: ticket.slug, statusChanged, assigneeChanged },
         },
         session
       );

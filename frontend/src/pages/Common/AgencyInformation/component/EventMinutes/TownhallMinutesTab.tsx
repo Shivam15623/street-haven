@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLazyFetchMeetingMinutesQuery } from "../../../../../services/meetingminutesApi";
 import ActionstownhallMinutes from "./ActionstownhallMinutes";
 import TownhallMinuteCard from "./TownhallMinuteCard";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import StreetPaggination from "../../../../../components/child/StreetPaggination";
 import useHasPermission from "../../../../../hooks/Auth";
@@ -13,10 +13,10 @@ import MeetingMinutesCardSkeleton from "./EventMinutesCardSkeleton";
 const TownhallMinutesTab: React.FC<AgentTabProp> = ({ isActive }) => {
   const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
-
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const slugParam = useMemo(
-    () => searchParams.get("slug") ?? "",
+    () => searchParams.get("item") ?? "",
     [searchParams]
   );
   const [getEventMinutes, { data, isLoading, isError, error }] =
@@ -26,7 +26,6 @@ const TownhallMinutesTab: React.FC<AgentTabProp> = ({ isActive }) => {
       getEventMinutes({
         page: page,
         limit: 10,
-        slug: slugParam,
         sortBy: "meetingDate",
         order: "desc",
       });
@@ -39,6 +38,24 @@ const TownhallMinutesTab: React.FC<AgentTabProp> = ({ isActive }) => {
     setPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+  useEffect(() => {
+    if (!slugParam || !data?.data.meetingMinutes) return;
+
+    const el = document.getElementById(slugParam);
+    if (!el) return;
+
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    // Clean URL after a short delay
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams(location.search);
+      params.delete("item");
+
+      navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [slugParam, data, navigate]);
 
   return (
     <div className="d-flex flex-column gap-24">

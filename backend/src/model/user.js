@@ -10,7 +10,6 @@ export const ROLES = {
   MANAGER: "manager",
   EMPLOYEE: "employee",
   HR: "hr",
-  DIRECTOR: "director",
 };
 const UserSchema = new mongoose.Schema(
   {

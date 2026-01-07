@@ -24,6 +24,7 @@ export interface hrUpdateData {
     size: number; // Cloudinary gives bytes
 
   };
+  slug:string;
   createdAt: string;
   updatedAt: string;
 }

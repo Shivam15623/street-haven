@@ -67,15 +67,19 @@ export const createAnnouncement = asyncHandler(async (req, res) => {
     const notification = await createNotification(
       {
         action: "created",
-        severity:"info",
+        severity: "info",
         category: "announcement",
         title: "New Announcement",
         message: `The new Announcement "${title}" has been created by ${firstname} ${lastname}.`,
-        link: `/agency_info/${announcement._id}`,
+        link: `/agency_info?tab=announcements&item=${announcement.slug}`,
         isGlobal: true, // ✅ no per-user mappings
         createdBy: userId,
         expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        meta: { announcementId: announcement._id },
+        meta: {
+          announcementId: announcement.slug,
+          page: "agency_info",
+          tab: "announcements",
+        },
       },
       session
     );

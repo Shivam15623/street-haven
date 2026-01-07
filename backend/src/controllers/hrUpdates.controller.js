@@ -9,6 +9,8 @@ import {
   deleteFromCloudinary,
   uploadOnCloudinary,
 } from "../utills/cloudinary.js";
+import { createNotification } from "../helper/CreateNotoification.js";
+import { io } from "../index.js";
 
 export const createhrUpdate = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
@@ -24,9 +26,6 @@ export const createhrUpdate = asyncHandler(async (req, res) => {
   session.startTransaction();
 
   try {
- 
-
-
     // Upload file to Cloudinary
     const uploadedFile = await uploadOnCloudinary(attachmentPath);
     if (!uploadedFile?.secure_url) {
@@ -37,7 +36,6 @@ export const createhrUpdate = asyncHandler(async (req, res) => {
       fileName: uploadedFile.original_filename || "manual",
       fileUrl: uploadedFile.secure_url,
       size: uploadedFile.bytes,
-
     };
 
     // Create HR Update
@@ -53,8 +51,25 @@ export const createhrUpdate = asyncHandler(async (req, res) => {
       { session }
     );
     const hrUpdateDoc = hrUpdate[0];
+  
+    const notification = await createNotification(
+      {
+        action: "created",
+        category: "hr_updates",
+        severity: "info",
+        title: "New HR Update",
+        message: `"${title}" has been added by ${firstname} ${lastname}.`,
+        link: `/agency_info?tab=hr_updates&item=${hrUpdateDoc.slug}`,
+        isGlobal: true, // ✅ no per-user mappings
+        createdBy: userId,
+        expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        meta: { updateId: hrUpdateDoc.slug },
+      },
+      session
+    );
 
-    // Add Activity Log
+    io.emit("newNotification", notification);
+
     await addActivityLog(
       {
         actionType: "HR_UPDATE_CREATED",

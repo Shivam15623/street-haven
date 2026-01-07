@@ -22,7 +22,7 @@ const HRUpdateCard = ({ update }: { update: hrUpdateData }) => {
   });
 
   return (
-    <div className="card">
+    <div className="card" id={update.slug}>
       <div className="card-body p-16 p-sm-20 p-md-24 d-flex flex-column gap-14 radius-12">
         <div className="d-flex flex-row justify-content-between">
           <div className="d-flex flex-column flex-grow-1 gap-10">
