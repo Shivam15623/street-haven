@@ -47,7 +47,7 @@ const CollectiveAgreementCard = ({
   return (
     <>
       {" "}
-      <div className="card">
+      <div className="card" id={agreement.slug}>
         <div className="card-body p-16 p-sm-20 p-md-24 d-flex flex-column gap-20 radius-12">
           <div className="d-flex flex-row justify-content-between align-items-center">
             <div className="d-flex flex-row gap-12 gap-sm-20 align-items-center">

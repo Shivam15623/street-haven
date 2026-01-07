@@ -57,11 +57,11 @@ export const createEvent = asyncHandler(async (req, res) => {
         severity: "info",
         title: "New Event Created",
         message: `The event "${title}" has been created by ${firstname} ${lastname}.`,
-        link: `/events/${event._id}`,
+        link: `/events?tab=upcoming_events&item=${event.slug}`,
         isGlobal: true, // ✅ no per-user mappings
         createdBy: userId,
         expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        meta: { eventId: event._id },
+        meta: { eventId: event.slug },
       },
       session
     );
@@ -333,11 +333,11 @@ export const EventSignUp = asyncHandler(async (req, res) => {
         severity: "info",
         title: "Event Registration Successful",
         message: `You have successfully registered for "${event.title}".`,
-        link: `/events/${event._id}`,
+        link: `/events?tab=upcoming_events&item=${event.slug}`,
         createdBy: userId,
         expireAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
         meta: {
-          eventId: event._id,
+          eventId: event.slug,
           eventTitle: event.title,
           action: "signup",
           performedBy: userId,
@@ -396,11 +396,11 @@ export const EventSignOut = asyncHandler(async (req, res) => {
         severity: "info",
         title: "Event Registration Cancelled",
         message: `You have cancelled your registration for "${event.title}".`,
-        link: `/events/${event._id}`,
+        link: `/events?tab=upcoming_events&item=${event.slug}`,
         createdBy: userId,
         expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         meta: {
-          eventId: event._id,
+          eventId: event.slug,
           eventTitle: event.title,
           action: "signout",
           performedBy: userId,

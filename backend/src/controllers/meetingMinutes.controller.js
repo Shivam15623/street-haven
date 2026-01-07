@@ -1,9 +1,12 @@
+import mongoose from "mongoose";
+import { createNotification } from "../helper/CreateNotoification.js";
 import MeetingMinutes from "../model/meetingminutes.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import { uploadOnCloudinary } from "../utills/cloudinary.js";
 import path from "path";
+import { io } from "../index.js";
 
 /** -----------------------------------------
  *  Common File-Type Detection Utility
@@ -47,33 +50,70 @@ export const uploadAttachment = async (filePath) => {
  *  Add Meeting Minutes
  * ----------------------------------------- */
 export const addMeetingMinutes = asyncHandler(async (req, res) => {
-  const { _id: userId } = req.user;
-  const { title, attendees, keyTopicsDiscussed, meetingDate, keyHighlights } =
-    req.body;
+  const session = await mongoose.startSession();
+  try {
+    const { _id: userId } = req.user;
+    const { title, attendees, keyTopicsDiscussed, meetingDate, keyHighlights } =
+      req.body;
 
-  if (!req?.file?.path) {
-    throw new ApiError(400, "Attachment file is missing");
+    if (!req?.file?.path) {
+      throw new ApiError(400, "Attachment file is missing");
+    }
+
+    const attachmentData = await uploadAttachment(req.file.path);
+    session.startTransaction();
+    const meetingMinutes = await MeetingMinutes.create(
+      [
+        {
+          title,
+          attendees,
+          createdBy: userId,
+          keyTopicsDiscussed,
+          meetingDate,
+          keyHighlights,
+          attachment: attachmentData,
+        },
+      ],
+      { session }
+    );
+
+    if (!meetingMinutes) {
+      throw new ApiError(500, "Server error while creating meeting minutes");
+    }
+
+    const savedMinute = meetingMinutes[0];
+    const notification = await createNotification(
+      {
+        action: "created",
+        category: "event_minute",
+        severity: "info",
+        title: "Event Minutes Available",
+        message: `Minutes for "${title}" are now available. Click to view.`,
+        link: `/agency_info?tab=event_minutes&item=${savedMinute.slug}`,
+        isGlobal: true, // ✅ no per-user mappings
+        createdBy: userId,
+        expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        meta: {
+          minuteId: savedMinute.slug,
+          page: "agency_info",
+          tab: "event_minutes",
+        },
+      },
+      session
+    );
+
+    io.emit("newNotification", notification);
+    await session.commitTransaction();
+    session.endSession();
+    return res
+      .status(201)
+      .json(new ApiResponse(201, "Meeting minutes created successfully"));
+  } catch (error) {
+    // Rollback
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
   }
-
-  const attachmentData = await uploadAttachment(req.file.path);
-
-  const meetingMinutes = await MeetingMinutes.create({
-    title,
-    attendees,
-    createdBy: userId,
-    keyTopicsDiscussed,
-    meetingDate,
-    keyHighlights,
-    attachment: attachmentData,
-  });
-
-  if (!meetingMinutes) {
-    throw new ApiError(500, "Server error while creating meeting minutes");
-  }
-
-  return res
-    .status(201)
-    .json(new ApiResponse(201, "Meeting minutes created successfully"));
 });
 
 /** -----------------------------------------

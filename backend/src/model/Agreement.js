@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { customAlphabet } from "nanoid";
+import slugify from "slugify";
 
 const attachmentSchema = new mongoose.Schema({
   fileName: { type: String, required: true }, // original file name
@@ -10,6 +12,11 @@ const attachmentSchema = new mongoose.Schema({
 const CollectiveAgreementSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
+    slug: {
+      type: String,
+      unique: true, // ensures unique in DB
+      index: true,
+    },
     attachment: attachmentSchema,
     effectiveStartDate: {
       type: String,
@@ -19,11 +26,31 @@ const CollectiveAgreementSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "CreatedBy (User) is required"],
+    },
   },
   {
     timestamps: true,
   }
 );
+
+const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 5);
+CollectiveAgreementSchema.pre("save", function (next) {
+  if (!this.slug || this.isNew) {
+    // Use slugify to convert title to URL-friendly string
+    const baseSlug = slugify(this.title, {
+      lower: true,
+      strict: true,
+      trim: true,
+    });
+    // Append Nano ID to ensure uniqueness
+    this.slug = `${baseSlug}-${nanoid()}`;
+  }
+  next();
+});
 const CollectiveAgreement = mongoose.model(
   "CollectiveAgreement",
   CollectiveAgreementSchema

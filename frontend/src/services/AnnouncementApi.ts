@@ -5,6 +5,7 @@ export interface AnnouncementData {
   _id: string;
   isActive: boolean;
   title: string;
+  slug:string;
   message: string;
   attachment?: {
     fileName: string;

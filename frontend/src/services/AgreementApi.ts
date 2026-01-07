@@ -5,6 +5,7 @@ import { uploadWithProgress } from "../utills/uploadWithProgress";
 export interface AgreementData {
   _id: string;
   title: string;
+  slug:string;
   attachment: {
     fileName: string;
     fileUrl: string;

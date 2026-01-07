@@ -4,14 +4,32 @@ import CollectiveAgreementTab from "./component/Agreement/CollectiveAgreementTab
 import TownhallMinutesTab from "./component/EventMinutes/TownhallMinutesTab";
 import "@assets/css/PageCss/orgchart.css";
 import HrUpdatesTab from "./component/HrUpdates/HrUpdatesTab";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import AnnouncementTab from "./component/Announcements/AnnouncementTab";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import OrganizationalChartTab from "./component/Organizational/OrganizationalChartTab";
 const AgencyInfo = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const tabParam = searchParams.get("tab") ?? "collective_agreement";
+
   const [active, setActive] = useState<string>(tabParam);
+  useEffect(() => {
+    if (active !== tabParam) {
+      setActive(tabParam);
+    }
+  }, [tabParam]);
+  const handletabClick = (key: string) => {
+    if (key === active) {
+      return;
+    }
+    setActive(key);
+    const params = new URLSearchParams(location.search);
+    params.delete("tab");
+
+    navigate(`${location.pathname}`, { replace: true });
+  };
+
   return (
     <div className="d-flex flex-column gap-4">
       {" "}
@@ -26,7 +44,7 @@ const AgencyInfo = () => {
       </div>
       <StreetTab
         activeKey={active}
-        onTabChange={(key) => setActive(key)}
+        onTabChange={handletabClick}
         tabs={[
           {
             key: "collective_agreement",

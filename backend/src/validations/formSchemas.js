@@ -20,6 +20,12 @@ function isSameOrBeforeToday(val) {
 const stripIfNot = (condition, schema) =>
   condition ? schema : Joi.forbidden();
 
+export const MediaConsentFormSchema = Joi.object({
+  date: Joi.date().max("now").required(),
+  name: Joi.string().required(),
+  printedname: Joi.string().required(),
+});
+
 export const functionalAbilitiesSchema = Joi.object({
   claimNo: Joi.string().required(),
 
@@ -34,7 +40,7 @@ export const functionalAbilitiesSchema = Joi.object({
     dateOfBirth: Joi.date().required(),
   }),
 
-  dateOfAccident: Joi.date().required(),
+  dateOfAccident: Joi.date().max("now").required(),
   employerFaxNo: Joi.string().required(),
 
   employer: Joi.object({
@@ -58,7 +64,7 @@ export const functionalAbilitiesSchema = Joi.object({
     otherwise: Joi.forbidden(),
   }),
 
-  employerContactName: Joi.string().optional(),
+  employerContactName: Joi.string().required(),
   position: Joi.string().required(),
   designationOfHealthPro: Joi.string().required(),
   otherDesignation: Joi.when("designationOfHealthPro", {
@@ -69,20 +75,20 @@ export const functionalAbilitiesSchema = Joi.object({
     otherwise: Joi.forbidden(),
   }),
 
-  iswsibRegistered: Joi.boolean().optional(),
+  iswsibRegistered: Joi.boolean().required(),
   wsibId: Joi.string().optional(),
-  invoiceNo: Joi.string().optional(),
-  srvCode: Joi.string().optional(),
+  invoiceNo: Joi.string().required(),
+  srvCode: Joi.string().required(),
   hstRegNo: Joi.string().optional(),
   hstSrvcCode: Joi.string().optional(),
   hstAmount: Joi.number().optional(),
 
-  healthProfessionalName: Joi.string().optional(),
-  hproAddress: Joi.string().optional(),
-  hprocityTown: Joi.string().optional(),
-  hproProvince: Joi.string().optional(),
-  hproPostalCode: Joi.string().optional(),
-  hproFax: Joi.string().optional(),
+  healthProfessionalName: Joi.string().required(),
+  hproAddress: Joi.string().required(),
+  hprocityTown: Joi.string().required(),
+  hproProvince: Joi.string().required(),
+  hproPostalCode: Joi.string().required(),
+  hproFax: Joi.string().required(),
 
   assesmentDate: Joi.date().required(),
 
@@ -189,13 +195,10 @@ export const functionalAbilitiesSchema = Joi.object({
   }),
   startDate: Joi.when("returnToWorkStatus", {
     is: "withRestrictions",
-    then: Joi.date()
-      .min("now")
-      .required()
-      .messages({
-        "any.required": "start date is required",
-        "any.min": "start date cant bne in past",
-      }),
+    then: Joi.date().min("now").required().messages({
+      "any.required": "start date is required",
+      "any.min": "start date cant bne in past",
+    }),
     otherwise: Joi.forbidden(),
   }),
 });
@@ -213,7 +216,6 @@ export const staffFeedbackSchema = Joi.object({
   description: Joi.string().max(500).required(),
   witnesses: Joi.array().items(Joi.string().required()).min(1),
   actionsTaken: Joi.string().max(500).required(),
-  reporterName: Joi.string().required(),
 });
 
 //incident report
@@ -224,7 +226,6 @@ export const incidentReportSchema = Joi.object({
   description: Joi.string().max(500).required(),
   witnesses: Joi.array().items(Joi.string().required()).min(1),
   actionsTaken: Joi.string().max(500).required(),
-  reporterName: Joi.string().required(),
 });
 
 //////////////////////////////////////////////////////Employee Incident Report
@@ -242,7 +243,7 @@ export const employeeIncidentReportSchema = Joi.object({
   activityAtTime: Joi.string().required(),
   description: Joi.string().required(),
   preventionSuggestion: Joi.string().required(),
-  injuredBodyPartOrRisk: Joi.string().required(),
+  injuredBodyPartOrRisk: Joi.string().optional(),
   sawDoctor: Joi.boolean().required(),
   doctorName: Joi.when("sawDoctor", {
     is: true,
@@ -276,6 +277,114 @@ export const employeeIncidentReportSchema = Joi.object({
   }),
 });
 
+export const ClientFeedbackFormSchema = Joi.object({
+  date: Joi.date().max("now").required(),
+  location: Joi.string().required(),
+  clientAddress: Joi.string().allow(null).optional(),
+  type: Joi.string()
+    .valid("Service Issue", "Product Issue", "Staff Behaviour", "Other")
+    .required(),
+  clientEmail: Joi.string().email().optional(),
+  clientPhone: Joi.string()
+    .pattern(
+      /^(?:\+1\s?)?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/
+    )
+    .optional(),
+  clientName: Joi.string().optional(),
+  otherComplaint: Joi.when("type", {
+    is: "Other",
+    then: Joi.string().required(),
+    otherwise: Joi.forbidden(),
+  }),
+  impact: Joi.string().required(),
+  outcome: Joi.string().required(),
+  description: Joi.string().required(),
+  preferredContactMethod: Joi.array()
+    .items(Joi.string().valid("Phone", "Email"))
+    .min(1)
+    .required(),
+});
+
+export const clientIncidentFormSchema = Joi.object({
+  date: Joi.date().max("now").required(),
+
+  time: Joi.string()
+    .pattern(/^([01]\d|2[0-3]):([0-5]\d)$/)
+    .required(),
+  place: Joi.string().required(),
+  type: Joi.string()
+    .valid(
+      "Disaster",
+      "Drugs",
+      "Property Destruction",
+      "Theft",
+      "Medical / Injury / Health Emergency",
+      "Intruders",
+      "Police Action",
+      "Actual Physical / Sexual Violence",
+      "Threat of Physical / Sexual Violence",
+      "Bomb Threat",
+      "Other"
+    )
+    .required(),
+  affectedClient: Joi.string().required(),
+  staffName: Joi.string().required(),
+  staffEmail: Joi.string().email().required(),
+  witnessName: Joi.string().optional(),
+  otherincidentType: Joi.when("type", {
+    is: "Other",
+    then: Joi.string().required(),
+    otherwise: Joi.forbidden(),
+  }),
+  description: Joi.string().required(),
+  action: Joi.string().required(),
+  debrief: Joi.string().required(),
+  reportingStaffName: Joi.string().required(),
+  reportedTo: Joi.string().required(),
+  reportingDate: Joi.date().max("now").required(),
+  followUp: Joi.string().required(),
+  reportedToDate: Joi.date().max("now").required(),
+})
+  .custom((value, helpers) => {
+    const { date, time } = value;
+
+    // Combine date + time
+    const combinedDateTime = new Date(date);
+    const [hours, minutes] = time.split(":").map(Number);
+
+    combinedDateTime.setHours(hours, minutes, 0, 0);
+
+    // Compare with current date-time
+    if (combinedDateTime > new Date()) {
+      return helpers.error("any.invalid");
+    }
+
+    return value;
+  })
+  .messages({
+    "any.invalid": "Date and time cannot be in the future",
+  });
+
+export const paymentRequistionSchema = Joi.object({
+  paymentDetails: Joi.array()
+    .items(
+      Joi.object({
+        purchaseDate: Joi.date().max("now").required(),
+        purchaseNature: Joi.string().required(),
+        program: Joi.string().required(),
+        expenseCode: Joi.string().required(),
+        netAmount: Joi.number().positive().required(),
+        hst: Joi.number().positive().required(),
+      })
+    )
+    .min(1)
+    .required(),
+  requestedBy: Joi.string().required(),
+  approvedBy: Joi.string().required(),
+  requestedDate: Joi.date().max("now").required(),
+  approvedDate: Joi.date().max("now").required(),
+  payeeName: Joi.string().required(),
+});
 // import * as yup from "yup";
 
 // export const ClientFeedbackFormSchema = yup.object({

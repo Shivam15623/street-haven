@@ -13,6 +13,7 @@ export interface MeetingMinutesResponseData {
 export interface MeetingMinutesData {
   _id: string;
   title: string;
+  slug:string;
   attendees: number;
   meetingDate: string;
   keyTopicsDiscussed: string[];

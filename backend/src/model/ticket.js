@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { customAlphabet } from "nanoid";
+import slugify from "slugify";
 const photoSchema = new mongoose.Schema({
   fileName: { type: String, required: true }, // original file name
   fileUrl: { type: String, required: true }, // where the file is stored (S3, Cloudinary, local, etc.)
@@ -9,6 +11,11 @@ const TicketSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+    },
+    slug: {
+      type: String,
+      unique: true,
+      index: true,
     },
     description: {
       type: String,
@@ -83,5 +90,19 @@ const TicketSchema = new mongoose.Schema(
   },
   { timestamps: true } // adds createdAt & updatedAt automatically
 );
+const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 5);
+TicketSchema.pre("save", function (next) {
+  if (!this.slug || this.isNew) {
+    // Use slugify to convert title to URL-friendly string
+    const baseSlug = slugify(this.title, {
+      lower: true,
+      strict: true,
+      trim: true,
+    });
+    // Append Nano ID to ensure uniqueness
+    this.slug = `${baseSlug}-${nanoid()}`;
+  }
+  next();
+});
 const Ticket = mongoose.model("Ticket", TicketSchema);
 export default Ticket;
