@@ -1,12 +1,13 @@
 import { useState } from "react";
-import type { AgreementData } from "../../../../services/AgreementApi";
+import type { AgreementData } from "../../../../../services/AgreementApi";
 import ActionsAgreement from "./ActionsAgreement";
 
 import { Icon } from "@iconify/react/dist/iconify.js";
-import useHasPermission from "../../../../hooks/Auth";
-import DeleteAgreement from "./DeleteAgreement";
+import useHasPermission from "../../../../../hooks/Auth";
+
 import dayjs from "dayjs";
-import ViewFileModal from "../../../../components/child/VIewFileModal";
+import ViewFileModal from "../../../../../components/child/VIewFileModal";
+import DeleteAgreement from "./DeleteAgreement";
 const formatFileSize = (bytes: number): string => {
   if (!bytes) return "0 KB";
   const kb = bytes / 1024;

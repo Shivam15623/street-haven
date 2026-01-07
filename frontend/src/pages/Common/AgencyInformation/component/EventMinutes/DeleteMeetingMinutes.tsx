@@ -1,10 +1,13 @@
 import React, { useState } from "react";
-import ModalWrapper from "../../../../components/child/ModalWrapper";
+
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { showSuccess } from "../../../../utills/toastutills";
+
 
 import dayjs from "dayjs";
-import { useDeletemeetingMinutesMutation } from "../../../../services/meetingminutesApi";
+import { useDeletemeetingMinutesMutation } from "../../../../../services/meetingminutesApi";
+import { showSuccess } from "../../../../../utills/toastutills";
+import ModalWrapper from "../../../../../components/child/ModalWrapper";
+
 
 type DeleteMeetingProps = {
   id: string;

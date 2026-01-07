@@ -10,7 +10,7 @@ import {
 } from "../../../../../services/FormApi";
 import EditMediaConsent from "../modals/EditMediaConsent";
 import { useDebounce } from "../../../../../hooks/useDebounce";
-import type { AgentTabProp } from "../../../AgencyInformation/component/CollectiveAgreementTab";
+import type { AgentTabProp } from "../../../AgencyInformation/component/Agreement/CollectiveAgreementTab";
 import dayjs from "dayjs";
 import TablePlaceholderLoader from "../../../../../components/child/SimpleTablePlaceHolder";
 import DeleteConfirmModal from "../forms/delete";
@@ -41,7 +41,7 @@ const MediaConsentSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
     }
   }, [isActive, getMediacon, filter.page, filter.limit, debouncedSearch]);
   const [getMediaConsentPdf] = useLazyGetMediaConsentPdfQuery();
-  const handleDownload = async (id: string,name:string) => {
+  const handleDownload = async (id: string, name: string) => {
     try {
       const blob = await getMediaConsentPdf(id).unwrap();
 
@@ -119,7 +119,7 @@ const MediaConsentSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
             <button
               className="d-flex gap-2 align-items-center justify-content-center btn btn-street-outline-primary radius-12 p-0"
               style={{ width: "43px", height: "40px" }}
-              onClick={() => handleDownload(row._id!,row.printedname)}
+              onClick={() => handleDownload(row._id!, row.printedname)}
             >
               <Icon icon={"mdi:download"} width={18} />
             </button>

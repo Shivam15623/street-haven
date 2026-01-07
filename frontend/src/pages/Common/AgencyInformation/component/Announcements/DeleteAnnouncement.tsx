@@ -1,8 +1,7 @@
 import React from "react";
-import ModalWrapper from "../../../../components/child/ModalWrapper";
-import { showSuccess } from "../../../../utills/toastutills";
-import { useDeleteAnnouncementMutation } from "../../../../services/AnnouncementApi";
-
+import ModalWrapper from "../../../../../components/child/ModalWrapper";
+import { showSuccess } from "../../../../../utills/toastutills";
+import { useDeleteAnnouncementMutation } from "../../../../../services/AnnouncementApi";
 
 type DeleteAnnouncementProps = {
   id: string;
@@ -61,7 +60,8 @@ const DeleteAnnouncement: React.FC<DeleteAnnouncementProps> = ({
       }
     >
       <p className="text-street-dark text-sm">
-        Are you sure you want to delete this announcement? This action cannot be undone.
+        Are you sure you want to delete this announcement? This action cannot be
+        undone.
       </p>
     </ModalWrapper>
   );

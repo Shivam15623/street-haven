@@ -14,7 +14,7 @@ import EmergencyContact from "./FAqComponents/ActionContact";
 import DeleteEmergencyContact from "./FAqComponents/DeletePhone";
 import { Col, Row } from "react-bootstrap";
 import useHasPermission from "../../../../hooks/Auth";
-import type { AgentTabProp } from "../../AgencyInformation/component/CollectiveAgreementTab";
+import type { AgentTabProp } from "../../AgencyInformation/component/Agreement/CollectiveAgreementTab";
 import { useEffect } from "react";
 import FAQCardLoader from "./FAqComponents/FAQCardLoader";
 import EmergencyContactLoader from "./FAqComponents/EmergencyContactLoader";

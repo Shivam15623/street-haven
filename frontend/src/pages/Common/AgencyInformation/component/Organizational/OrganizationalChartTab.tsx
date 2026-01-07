@@ -1,6 +1,7 @@
+import MobileTree from "./MobileTree";
+import TreeGraph from "./OrganizationalChart";
 
-import MobileTree from "./Organizational/MobileTree";
-import TreeGraph from "./Organizational/OrganizationalChart";
+
 
 
 

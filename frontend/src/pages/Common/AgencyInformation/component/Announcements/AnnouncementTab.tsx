@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react";
 import ActionsAnnouncement from "./ActionsAnnouncement";
 
-import {
-  useLazyViewAnnouncementsQuery,
-
-} from "../../../../services/AnnouncementApi";
+import { useLazyViewAnnouncementsQuery } from "../../../../../services/AnnouncementApi";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import AnnouncementCard from "./AnnouncementCard";
-import StreetPaggination from "../../../../components/child/StreetPaggination";
-import useHasPermission from "../../../../hooks/Auth";
-import { useDebounce } from "../../../../hooks/useDebounce";
-import type { AgentTabProp } from "./CollectiveAgreementTab";
+import StreetPaggination from "../../../../../components/child/StreetPaggination";
+import useHasPermission from "../../../../../hooks/Auth";
+import { useDebounce } from "../../../../../hooks/useDebounce";
+import type { AgentTabProp } from "../Agreement/CollectiveAgreementTab";
+import HRUpdateCardSkeleton from "../HrUpdates/HrUpdaresCardSkelaton";
 
 const AnnouncementTab: React.FC<AgentTabProp> = ({ isActive }) => {
   const [open, setOpen] = useState(false);
@@ -69,7 +67,7 @@ const AnnouncementTab: React.FC<AgentTabProp> = ({ isActive }) => {
 
       <ActionsAnnouncement show={open} onHide={() => setOpen(false)} />
 
-      {isLoading && <p>Loading...</p>}
+      {isLoading && Array.from({length:5}).map((_p,idx)=><HRUpdateCardSkeleton key={idx} />)}
       {isError && <p>Something went wrong</p>}
       {data?.data.announcements?.length ? (
         data?.data.announcements.map((announcement) => (

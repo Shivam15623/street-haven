@@ -12,7 +12,7 @@ import EditClientFeedback from "./edit";
 import ClientFeedback from "./details";
 import DeleteConfirmModal from "../delete";
 import { useDebounce } from "../../../../../../hooks/useDebounce";
-import type { AgentTabProp } from "../../../../AgencyInformation/component/CollectiveAgreementTab";
+import type { AgentTabProp } from "../../../../AgencyInformation/component/Agreement/CollectiveAgreementTab";
 import dayjs from "dayjs";
 import TablePlaceholderLoader from "../../../../../../components/child/SimpleTablePlaceHolder";
 
