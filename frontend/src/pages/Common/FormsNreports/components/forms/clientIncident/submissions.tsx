@@ -11,7 +11,7 @@ import EditClientIncident from "./edit";
 import ClientIncidentReportDetail from "./detail";
 import DeleteConfirmModal from "../delete";
 import { useDebounce } from "../../../../../../hooks/useDebounce";
-import type { AgentTabProp } from "../../../../AgencyInformation/component/CollectiveAgreementTab";
+import type { AgentTabProp } from "../../../../AgencyInformation/component/Agreement/CollectiveAgreementTab";
 import dayjs from "dayjs";
 import { formatTime12Hour } from "../../../../../../utills/utills";
 import TablePlaceholderLoader from "../../../../../../components/child/SimpleTablePlaceHolder";

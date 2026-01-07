@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { useLazyFetchAgreementsQuery } from "../../../../services/AgreementApi";
+import { useLazyFetchAgreementsQuery } from "../../../../../services/AgreementApi";
 import CollectiveAgreementCard from "./CollectiveAgreementCard";
 import ActionsAgreement from "./ActionsAgreement";
-import useHasPermission from "../../../../hooks/Auth";
+import useHasPermission from "../../../../../hooks/Auth";
+import CollectiveAgreementCardSkeleton from "./AgreementCardSkeleton";
 export interface AgentTabProp {
   isActive: boolean;
 }
@@ -16,7 +17,6 @@ const CollectiveAgreementTab: React.FC<AgentTabProp> = ({ isActive }) => {
       getAgreements();
     }
   }, [isActive, getAgreements]);
-  if (isLoading) return <div>Loading...</div>;
 
   if (isError) return <div>Failed to load agreements.</div>;
 
@@ -38,7 +38,10 @@ const CollectiveAgreementTab: React.FC<AgentTabProp> = ({ isActive }) => {
           </button>
         )}
       </div>
-
+      {isLoading &&
+        Array.from({ length: 5 }).map((_p, idx) => (
+          <CollectiveAgreementCardSkeleton key={idx} />
+        ))}
       {agreements.length === 0 ? (
         <div>No Agreements found.</div>
       ) : (

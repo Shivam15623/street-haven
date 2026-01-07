@@ -1,12 +1,13 @@
 import StreetTab from "../../../components/StreetTab";
-import CollectiveAgreementTab from "./component/CollectiveAgreementTab";
-import OrganizationalChartTab from "./component/OrganizationalChartTab";
-import TownhallMinutesTab from "./component/TownhallMinutesTab";
+import CollectiveAgreementTab from "./component/Agreement/CollectiveAgreementTab";
+
+import TownhallMinutesTab from "./component/EventMinutes/TownhallMinutesTab";
 import "@assets/css/PageCss/orgchart.css";
-import HrUpdatesTab from "./component/HrUpdatesTab";
+import HrUpdatesTab from "./component/HrUpdates/HrUpdatesTab";
 import { useSearchParams } from "react-router-dom";
-import AnnouncementTab from "./component/AnnouncementTab";
+import AnnouncementTab from "./component/Announcements/AnnouncementTab";
 import { useState } from "react";
+import OrganizationalChartTab from "./component/Organizational/OrganizationalChartTab";
 const AgencyInfo = () => {
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get("tab") ?? "collective_agreement";

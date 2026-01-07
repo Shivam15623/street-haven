@@ -9,6 +9,7 @@ import { useSearchParams } from "react-router-dom";
 import { useDebounce } from "../../../hooks/useDebounce";
 import StreetPaggination from "../../../components/child/StreetPaggination";
 import useHasPermission from "../../../hooks/Auth";
+import DocumentCardSkeleton from "./components/DocumentCardSkelaton";
 
 const ProgramManuals = () => {
   const [search, setSearch] = useState("");
@@ -42,7 +43,7 @@ const ProgramManuals = () => {
   });
 
   const totalPages = data
-    ? Math.ceil(data.data.paggination.totalPages / pageSize)
+    ? Math.ceil(data.data.paggination.totalPages)
     : 0;
 
   const handlePageChange = (newPage: number) => {
@@ -107,7 +108,10 @@ const ProgramManuals = () => {
 
       {/* Display manuals */}
       <Row className="gy-4">
-        {isLoading && <p>Loading...</p>}
+        {isLoading &&
+          Array.from({ length: 8 }).map((_, idx) => (
+            <DocumentCardSkeleton key={idx} />
+          ))}
         {!isLoading && data?.data.manuals.length === 0 && (
           <p>No manuals found.</p>
         )}

@@ -1,42 +1,40 @@
 import React from "react";
-import ModalWrapper from "../../../../components/child/ModalWrapper";
-import { showSuccess } from "../../../../utills/toastutills";
-import {
-  useDeletehrupdatesMutation,
-} from "../../../../services/hrUpdatesApi";
+import { useDeleteAgreementMutation } from "../../../../../services/AgreementApi";
+import { showSuccess } from "../../../../../utills/toastutills";
+import ModalWrapper from "../../../../../components/child/ModalWrapper";
 
-type DeleteHrUpdateProps = {
+type DeleteAgreementProps = {
   id: string;
   show: boolean;
   onHide: () => void;
   onSuccess?: () => void;
 };
 
-const DeleteHrUpdate: React.FC<DeleteHrUpdateProps> = ({
+const DeleteAgreement: React.FC<DeleteAgreementProps> = ({
   id,
   show,
   onHide,
   onSuccess,
 }) => {
-  const [deleteUpdate, { isLoading }] = useDeletehrupdatesMutation();
+  const [deleteAgreement, { isLoading }] = useDeleteAgreementMutation();
 
   const handleDelete = async () => {
     try {
-      const res = await deleteUpdate(id).unwrap();
+      const res = await deleteAgreement({ id }).unwrap();
       if (res.success) {
         showSuccess(res.message);
         onSuccess?.();
         onHide();
       }
     } catch (error) {
-      console.error("Failed to delete HR update:", error);
+      console.error("Failed to delete agreement:", error);
     }
   };
 
   return (
     <ModalWrapper
       show={show}
-      title="Delete HR Update"
+      title="Delete Agreement"
       size="lg"
       headerClassName="text-xl p-0 pb-20 text-street-dark"
       className="p-20 p-sm-24 p-md-32 gap-16"
@@ -62,10 +60,11 @@ const DeleteHrUpdate: React.FC<DeleteHrUpdateProps> = ({
       }
     >
       <p className="text-street-dark text-sm">
-        Are you sure you want to delete this HR update? This action cannot be undone.
+        Are you sure you want to delete this agreement? This action cannot be
+        undone.
       </p>
     </ModalWrapper>
   );
 };
 
-export default DeleteHrUpdate;
+export default DeleteAgreement;

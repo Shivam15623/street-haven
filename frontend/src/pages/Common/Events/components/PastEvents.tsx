@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLazyFetchEventsPastQuery } from "../../../../services/EventApi";
 import EventCard from "./EventCard";
 import StreetPaggination from "../../../../components/child/StreetPaggination";
-import type { AgentTabProp } from "../../AgencyInformation/component/CollectiveAgreementTab";
+import type { AgentTabProp } from "../../AgencyInformation/component/Agreement/CollectiveAgreementTab";
 import EventCardSkeleton from "./EventCardSkeleton";
 
 const PastEvents: React.FC<AgentTabProp> = ({ isActive }) => {

@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { Icon } from "@iconify/react";
 
-import Badge from "../../../../components/child/Badge";
-import type { MeetingMinutesData } from "../../../../interfaces/meetingMinutes";
+import Badge from "../../../../../components/child/Badge";
+import type { MeetingMinutesData } from "../../../../../interfaces/meetingMinutes";
 
 import ActionstownhallMinutes from "./ActionstownhallMinutes";
+
+import ViewFileModal from "../../../../../components/child/VIewFileModal";
+import useHasPermission from "../../../../../hooks/Auth";
 import DeleteMeetingMinutes from "./DeleteMeetingMinutes";
-import ViewFileModal from "../../../../components/child/VIewFileModal";
-import useHasPermission from "../../../../hooks/Auth";
 
 export type TownhallMinuteCardProps = {
   meeting: MeetingMinutesData;
