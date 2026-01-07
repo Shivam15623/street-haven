@@ -1,18 +1,17 @@
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
+
+const isProduction = process.env.NODE_ENV === "production";
 
 export const generatePdf = async (html) => {
-  console.log("Puppeteer executable:", puppeteer.executablePath());
-  const executablePath = puppeteer.executablePath();
-
-  console.log("Using Chromium at:", executablePath);
+  console.log("Chromium path:", await chromium.executablePath());
+  console.log("Chromium args:", chromium.args);
   const browser = await puppeteer.launch({
-    executablePath,
-    headless: "new",
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-    ],
+    args: isProduction
+      ? [...chromium.args, "--disable-gpu", "--disable-software-rasterizer"]
+      : [],
+    executablePath: isProduction ? await chromium.executablePath() : undefined, // local Chrome
+    headless: true,
   });
 
   const page = await browser.newPage();
@@ -21,7 +20,6 @@ export const generatePdf = async (html) => {
   const pdfBuffer = await page.pdf({
     format: "A4",
     printBackground: true,
-    preferCSSPageSize: true,
   });
 
   await browser.close();
