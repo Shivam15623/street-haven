@@ -3,7 +3,15 @@ import { PERMISSIONS } from "./permissions.js";
 export const ROLE_PERMISSIONS = {
   super_admin: Object.values(PERMISSIONS),
 
-  admin: Object.values(PERMISSIONS),
+  admin: Object.values(PERMISSIONS).filter((p) => {
+    return [
+      PERMISSIONS.EDIT_EMPLOYEE,
+      PERMISSIONS.DELETE_EMPLOYEE,
+      PERMISSIONS.CREATE_EMPLOYEE,
+      PERMISSIONS.EDIT_FORM,
+      PERMISSIONS.DELETE_FORM,
+    ].includes(p as any);
+  }),
 
   manager: [
     // 🔹 Announcements
