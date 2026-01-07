@@ -14,7 +14,8 @@ import ItNFacility from "../../assets/icons/sidebaricons/Facility.svg?react";
 import ProgramIcon from "../../assets/icons/sidebaricons/Program.svg?react";
 import SearchContent from "../../helper/SearchContent.tsx";
 import EmployeesIcon from "../../assets/icons/sidebaricons/Employees.svg?react";
-
+import { PERMISSIONS } from "../../utills/auth/permissions.ts";
+import useHasPermission from "../../hooks/Auth.ts";
 
 const menuItems = [
   {
@@ -57,7 +58,7 @@ const menuItems = [
     label: "Employees",
     path: "/employees",
     icon: EmployeesIcon,
-    public: true,
+    permission: PERMISSIONS.VIEW_EMPLOYEES,
   },
 ];
 
@@ -65,10 +66,17 @@ const RootLayout = () => {
   const [mobileMenu, setMobileMenu] = useState(false);
   const location = useLocation(); // Hook to get the current route
   const [mobileMode, setMobileMode] = useState(false);
-
+  const { hasPermission } = useHasPermission();
   const filteredMenu = menuItems.filter((m) => {
     if (m.public) return true; // public items visible to all
- 
+    if (m.permission) {
+      if (hasPermission({ action: m.permission })) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+
     return false; // hide if neither public nor allowed roles
   });
 

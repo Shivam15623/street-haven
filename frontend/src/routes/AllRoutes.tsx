@@ -18,7 +18,7 @@ import {
 } from "../Lazy Components";
 import { Navigate, type RouteObject } from "react-router-dom";
 import RouteGuard from "../Routeguard";
-
+import { ROLES } from "../interfaces/AuthInterfaces";
 
 const withSuspense = (Component: React.ReactElement) => (
   <Suspense fallback={<LazyLoader />}>{Component}</Suspense>
@@ -47,7 +47,7 @@ export const AllRoutes: RouteObject[] = [
     element: withSuspense(
       <RouteGuard isPublic={true}>
         <LazyResetPassword />
-      </RouteGuard>    
+      </RouteGuard>
     ),
   },
   {
@@ -136,7 +136,10 @@ export const AllRoutes: RouteObject[] = [
       {
         path: "employees",
         element: withSuspense(
-          <RouteGuard isPublic={false}>
+          <RouteGuard
+            isPublic={false}
+            requireRole={[ROLES.ADMIN, ROLES.SUPER_ADMIN]}
+          >
             <LazyEmployees />
           </RouteGuard>
         ),

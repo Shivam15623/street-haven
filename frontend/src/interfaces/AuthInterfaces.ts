@@ -40,7 +40,7 @@ export const ROLES = {
   MANAGER: "manager",
   EMPLOYEE: "employee",
   HR: "hr",
-  DIRECTOR: "director",
+
 } as const;
 export type Role = (typeof ROLES)[keyof typeof ROLES];
 

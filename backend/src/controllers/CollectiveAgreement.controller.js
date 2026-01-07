@@ -2,12 +2,12 @@ import CollectiveAgreement from "../model/Agreement.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
-import {
-  deleteFromCloudinary,
-} from "../utills/cloudinary.js";
+import { deleteFromCloudinary } from "../utills/cloudinary.js";
 import mongoose from "mongoose";
 import { addActivityLog } from "../helper/addActivityLogs.js";
 import { uploadAttachment } from "./meetingMinutes.controller.js";
+import { io } from "../index.js";
+import { createNotification } from "../helper/CreateNotoification.js";
 
 export const createCollectiveAgreement = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
@@ -36,6 +36,28 @@ export const createCollectiveAgreement = asyncHandler(async (req, res) => {
     );
 
     const savedAgreement = newAgreement[0];
+
+    const notification = await createNotification(
+      {
+        action: "created",
+        category: "collective_agreement",
+        severity: "info",
+        title: "New Collective Agreement Published",
+        message: `A new collective agreement "${title}" has been published by ${firstname} ${lastname}.`,
+        link: `/agency_info?tab=collective_agreement&item=${savedAgreement.slug}`,
+        isGlobal: true, // ✅ no per-user mappings
+        createdBy: userId,
+        expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        meta: {
+          agreementId: savedAgreement.slug,
+          page: "agency_info",
+          tab: "collective_agreement",
+        },
+      },
+      session
+    );
+
+    io.emit("newNotification", notification);
 
     // 🔥 Activity Log (inside same session)
     await addActivityLog(

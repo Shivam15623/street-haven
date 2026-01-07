@@ -52,7 +52,7 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
   };
 
   return (
-    <div className="card">
+    <div className="card " id={meeting.slug}>
       <div className="card-body p-16 p-sm-20 p-md-24 d-flex flex-column gap-13 radius-12">
         {/* Header */}
         <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-12">

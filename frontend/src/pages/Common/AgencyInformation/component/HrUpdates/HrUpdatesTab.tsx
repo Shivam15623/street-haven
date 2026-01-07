@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import HRUpdateCard from "./HRUpdateCard";
 import { useLazyViewhrUpdatesQuery } from "../../../../../services/hrUpdatesApi";
 import ActionsHrUpdates from "./ActionsHrUpdates";
@@ -17,8 +17,9 @@ const HrUpdatesTab: React.FC<AgentTabProp> = ({ isActive }) => {
   const [showModal, setShowModal] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const { hasPermission } = useHasPermission();
-
+  const navigate = useNavigate();
   const slug = searchParams.get("slug") ?? "";
+  const itemParams=searchParams.get("item")??null
 
   /* ✅ Lazy query */
   const [getHrUpdates, { data, isLoading, isError }] =
@@ -48,6 +49,7 @@ const HrUpdatesTab: React.FC<AgentTabProp> = ({ isActive }) => {
     const params = new URLSearchParams(searchParams.toString());
     if (value) {
       params.delete("slug");
+      params.delete("item");
       params.delete("tab");
     }
     setSearchParams(params);
@@ -58,7 +60,24 @@ const HrUpdatesTab: React.FC<AgentTabProp> = ({ isActive }) => {
     setPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+  useEffect(() => {
+    if (!itemParams || !data) return;
 
+    const el = document.getElementById(itemParams);
+    if (!el) return;
+
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    // Clean URL after a short delay
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams(location.search);
+      params.delete("item");
+
+      navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [itemParams, data, navigate]);
   return (
     <div className="d-flex flex-column gap-24">
       {/* Header */}
