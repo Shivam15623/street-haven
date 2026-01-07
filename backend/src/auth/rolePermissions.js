@@ -4,12 +4,12 @@ export const ROLE_PERMISSIONS = {
   super_admin: Object.values(PERMISSIONS),
 
   admin: Object.values(PERMISSIONS).filter((p) => {
-    return [
+    return ![
       PERMISSIONS.EDIT_EMPLOYEE,
       PERMISSIONS.DELETE_EMPLOYEE,
       PERMISSIONS.CREATE_EMPLOYEE,
       PERMISSIONS.EDIT_FORM,
-      PERMISSIONS.DELETE_FORM
+      PERMISSIONS.DELETE_FORM,
     ].includes(p);
   }),
 
