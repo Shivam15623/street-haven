@@ -15,6 +15,7 @@ import type { AgentTabProp } from "../../../../AgencyInformation/component/Agree
 import dayjs from "dayjs";
 import { formatTime12Hour } from "../../../../../../utills/utills";
 import TablePlaceholderLoader from "../../../../../../components/child/SimpleTablePlaceHolder";
+import useHasPermission from "../../../../../../hooks/Auth";
 
 interface Column {
   header: string;
@@ -32,6 +33,7 @@ const ClientIncidentReportSubmission: React.FC<AgentTabProp> = ({
     useDeleteClientIncidentMutation();
   const [getClientIncident, { data: incidentData, isLoading }] =
     useLazyGetAllClientIncidentsQuery();
+  const { hasPermission } = useHasPermission();
   useEffect(() => {
     if (isActive) {
       getClientIncident({
@@ -81,14 +83,19 @@ const ClientIncidentReportSubmission: React.FC<AgentTabProp> = ({
       header: "Actions",
       accessor: (row) => (
         <div className="d-flex gap-2">
-          <EditClientIncident data={row} />
+          {hasPermission({ action: "edit_form" }) && (
+            <EditClientIncident data={row} />
+          )}
+
           <ClientIncidentReportDetail incident={row} />
-          <button
-            className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
-            onClick={() => handleDeleteClick(row._id)}
-          >
-            <Icon icon="mdi:delete" className="text-xl" />
-          </button>
+          {hasPermission({ action: "delete_form" }) && (
+            <button
+              className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
+              onClick={() => handleDeleteClick(row._id)}
+            >
+              <Icon icon="mdi:delete" className="text-xl" />
+            </button>
+          )}
         </div>
       ),
     },
@@ -128,13 +135,14 @@ const ClientIncidentReportSubmission: React.FC<AgentTabProp> = ({
         />
       </div>
       {/* 🗑️ Delete Modal */}
+         {hasPermission({ action: "edit_form" }) && (
       <DeleteConfirmModal
         show={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         title="Delete Employee Incident Report"
         isLoading={deleting}
         onConfirm={handleConfirmDelete}
-      />
+      />)}
 
       {/* Table */}
       {submissions.length > 0 ? (

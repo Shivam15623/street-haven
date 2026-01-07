@@ -14,6 +14,7 @@ import type { AgentTabProp } from "../../../AgencyInformation/component/Agreemen
 import dayjs from "dayjs";
 import TablePlaceholderLoader from "../../../../../components/child/SimpleTablePlaceHolder";
 import DeleteConfirmModal from "../forms/delete";
+import useHasPermission from "../../../../../hooks/Auth";
 
 interface Column {
   header: string;
@@ -29,6 +30,7 @@ const MediaConsentSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
   const debouncedSearch = useDebounce(filter.search, 1000);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const { hasPermission } = useHasPermission();
   const [getMediacon, { data: consentData, isLoading }] =
     useLazyGetAllMediaConsentQuery();
   useEffect(() => {
@@ -115,7 +117,9 @@ const MediaConsentSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
       accessor: (row) => {
         return (
           <div className="d-flex gap-2">
-            <EditMediaConsent data={row} />
+            {hasPermission({ action: "edit_form" }) && (
+              <EditMediaConsent data={row} />
+            )}
             <button
               className="d-flex gap-2 align-items-center justify-content-center btn btn-street-outline-primary radius-12 p-0"
               style={{ width: "43px", height: "40px" }}
@@ -123,12 +127,14 @@ const MediaConsentSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
             >
               <Icon icon={"mdi:download"} width={18} />
             </button>
-            <button
-              className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
-              onClick={() => handleDeleteClick(row._id!)}
-            >
-              <Icon icon="mdi:delete" className="text-xl" />
-            </button>
+            {hasPermission({ action: "delete_form" }) && (
+              <button
+                className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
+                onClick={() => handleDeleteClick(row._id!)}
+              >
+                <Icon icon="mdi:delete" className="text-xl" />
+              </button>
+            )}
           </div>
         );
       },
@@ -153,13 +159,15 @@ const MediaConsentSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
           }
         />
       </div>
-      <DeleteConfirmModal
-        show={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title="Delete Media Consent"
-        isLoading={Deleting}
-        onConfirm={handleConfirmDelete}
-      />
+      {hasPermission({ action: "delete_form" }) && (
+        <DeleteConfirmModal
+          show={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          title="Delete Media Consent"
+          isLoading={Deleting}
+          onConfirm={handleConfirmDelete}
+        />
+      )}
       {/* Table */}
       {submissions.length > 0 ? (
         <SimpleTable

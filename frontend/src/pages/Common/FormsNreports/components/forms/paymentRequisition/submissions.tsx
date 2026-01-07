@@ -14,6 +14,7 @@ import { useDebounce } from "../../../../../../hooks/useDebounce";
 import type { AgentTabProp } from "../../../../AgencyInformation/component/Agreement/CollectiveAgreementTab";
 import dayjs from "dayjs";
 import TablePlaceholderLoader from "../../../../../../components/child/SimpleTablePlaceHolder";
+import useHasPermission from "../../../../../../hooks/Auth";
 
 interface Column {
   header: string;
@@ -50,7 +51,7 @@ const PaymentRequistionSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
   ]);
   const [deletePaymentReqistion, { isLoading: deleting }] =
     useDeletePaymentRequistionMutation();
-
+  const { hasPermission } = useHasPermission();
   const submissions: PaymentRequisition[] = data?.data?.data ?? [];
   const total: number = data?.data?.paggination?.total || 0;
 
@@ -96,14 +97,18 @@ const PaymentRequistionSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
       header: "Action",
       accessor: (row) => (
         <div className="d-flex gap-2">
-          <EditPaymentRequistion data={row} />
+          {hasPermission({ action: "edit_form" }) && (
+            <EditPaymentRequistion data={row} />
+          )}
           <PaymentRequisitionDetail detail={row} />
-          <button
-            className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
-            onClick={() => handleDeleteClick(row._id)}
-          >
-            <Icon icon="mdi:delete" className="text-xl" />
-          </button>
+          {hasPermission({ action: "delete_form" }) && (
+            <button
+              className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
+              onClick={() => handleDeleteClick(row._id)}
+            >
+              <Icon icon="mdi:delete" className="text-xl" />
+            </button>
+          )}
         </div>
       ),
     },
@@ -145,13 +150,15 @@ const PaymentRequistionSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
       </div>
 
       {/* 🗑️ Delete Modal */}
-      <DeleteConfirmModal
-        show={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title="Delete Payment Requisition"
-        isLoading={deleting}
-        onConfirm={handleConfirmDelete}
-      />
+      {hasPermission({ action: "delete_form" }) && (
+        <DeleteConfirmModal
+          show={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          title="Delete Payment Requisition"
+          isLoading={deleting}
+          onConfirm={handleConfirmDelete}
+        />
+      )}
 
       {/* 📋 Table */}
       {submissions.length > 0 ? (
