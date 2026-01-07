@@ -16,6 +16,7 @@ import { useDebounce } from "../../../../../../hooks/useDebounce";
 import type { AgentTabProp } from "../../../../AgencyInformation/component/Agreement/CollectiveAgreementTab";
 import dayjs from "dayjs";
 import TablePlaceholderLoader from "../../../../../../components/child/SimpleTablePlaceHolder";
+import useHasPermission from "../../../../../../hooks/Auth";
 
 interface Column {
   header: string;
@@ -35,12 +36,14 @@ const StaffFeedBackSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const debouncedSearch = useDebounce(filter.search, 1000);
+
   const [deleteStaffFeedback, { isLoading: deleting }] =
     useDeleteStaffReportMutation();
   const handleDeleteClick = (id: string) => {
     setSelectedId(id);
     setShowDeleteModal(true);
   };
+  const { hasPermission } = useHasPermission();
 
   const handleConfirmDelete = async () => {
     if (!selectedId) return;
@@ -87,14 +90,19 @@ const StaffFeedBackSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
       header: "Actions",
       accessor: (row) => (
         <div className="d-flex gap-2">
-          <EditStaffFeedback data={row} />
+          {hasPermission({ action: "edit_form" }) && (
+            <EditStaffFeedback data={row} />
+          )}
+
           <StaffFeedbackDetail detail={row} />
-          <button
-            className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
-            onClick={() => handleDeleteClick(row._id)}
-          >
-            <Icon icon="mdi:delete" className="text-xl" />
-          </button>
+          {hasPermission({ action: "delete_form" }) && (
+            <button
+              className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
+              onClick={() => handleDeleteClick(row._id)}
+            >
+              <Icon icon="mdi:delete" className="text-xl" />
+            </button>
+          )}
         </div>
       ),
     },
@@ -132,14 +140,16 @@ const StaffFeedBackSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
             setFilter((prev) => ({ ...prev, search: e.target.value, page: 1 }))
           }
         />
-      </div>
-      <DeleteConfirmModal
-        show={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title="Delete Staff Feedback Report"
-        isLoading={deleting}
-        onConfirm={handleConfirmDelete}
-      />
+      </div>{" "}
+      {hasPermission({ action: "delete_form" }) && (
+        <DeleteConfirmModal
+          show={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          title="Delete Staff Feedback Report"
+          isLoading={deleting}
+          onConfirm={handleConfirmDelete}
+        />
+      )}
       {/* Table */}
       {submissions.length > 0 ? (
         <SimpleTable

@@ -219,7 +219,6 @@ const travelWorkField: Array<{ label: string; key: "publicTransit" | "car" }> =
   ];
 const FunctionalAbiltiesForm = () => {
   const [createFaf, { isLoading }] = useCreateFAfMutation();
-
   const handleSubmit = async (values: FunctionalAbilityFormValues) => {
     try {
       const payload: any = { ...values };

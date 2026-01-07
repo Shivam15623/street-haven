@@ -15,6 +15,7 @@ import { useDebounce } from "../../../../../../hooks/useDebounce";
 import type { AgentTabProp } from "../../../../AgencyInformation/component/Agreement/CollectiveAgreementTab";
 import dayjs from "dayjs";
 import TablePlaceholderLoader from "../../../../../../components/child/SimpleTablePlaceHolder";
+import useHasPermission from "../../../../../../hooks/Auth";
 
 interface Column {
   header: string;
@@ -32,7 +33,7 @@ const ClientFeedbackSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
     useDeleteClientFeedbackMutation();
   const [getClientfeedback, { data: feedbackData, isLoading }] =
     useLazyGetAllClientFeedbackQuery();
-
+  const { hasPermission } = useHasPermission();
   useEffect(() => {
     if (isActive) {
       getClientfeedback({
@@ -91,14 +92,19 @@ const ClientFeedbackSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
       header: "Actions",
       accessor: (row) => (
         <div className="d-flex gap-2">
-          <EditClientFeedback data={row} />
+          {hasPermission({ action: "edit_form" }) && (
+            <EditClientFeedback data={row} />
+          )}
+
           <ClientFeedback detail={row} />
-          <button
-            className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
-            onClick={() => handleDeleteClick(row._id)}
-          >
-            <Icon icon="mdi:delete" className="text-xl" />
-          </button>
+          {hasPermission({ action: "delete_form" }) && (
+            <button
+              className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
+              onClick={() => handleDeleteClick(row._id)}
+            >
+              <Icon icon="mdi:delete" className="text-xl" />
+            </button>
+          )}
         </div>
       ),
     },
@@ -138,13 +144,15 @@ const ClientFeedbackSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
         />
       </div>
       {/* 🗑️ Delete Modal */}
-      <DeleteConfirmModal
-        show={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title="Delete Client Feedback"
-        isLoading={deleting}
-        onConfirm={handleConfirmDelete}
-      />
+      {hasPermission({ action: "delete_form" }) && (
+        <DeleteConfirmModal
+          show={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          title="Delete Client Feedback"
+          isLoading={deleting}
+          onConfirm={handleConfirmDelete}
+        />
+      )}
 
       {/* Table */}
       {submissions.length > 0 ? (

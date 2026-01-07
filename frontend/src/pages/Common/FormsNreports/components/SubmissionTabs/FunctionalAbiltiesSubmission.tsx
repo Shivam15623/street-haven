@@ -15,6 +15,7 @@ import type { AgentTabProp } from "../../../AgencyInformation/component/Agreemen
 import dayjs from "dayjs";
 
 import TablePlaceholderLoader from "../../../../../components/child/SimpleTablePlaceHolder";
+import useHasPermission from "../../../../../hooks/Auth";
 
 // ------------------------------
 // Columns
@@ -56,6 +57,7 @@ const FunctionalAbilitiesSubmission: React.FC<AgentTabProp> = ({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const debouncedSearch = useDebounce(filter.search, 1000);
+  const { hasPermission } = useHasPermission();
   const [getFaf, { data: abilityData, isLoading }] = useLazyGetAllFAFQuery();
   useEffect(() => {
     if (isActive) {
@@ -121,14 +123,18 @@ const FunctionalAbilitiesSubmission: React.FC<AgentTabProp> = ({
       header: "Actions",
       accessor: (row) => (
         <div className="d-flex gap-2">
-          <EditFAbilties data={row} />
+          {hasPermission({ action: "edit_form" }) && (
+            <EditFAbilties data={row} />
+          )}
           <FunctionalAbilityDetail details={row} />
-          <button
-            className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
-            onClick={() => handleDeleteClick(row._id!)}
-          >
-            <Icon icon="mdi:delete" className="text-xl" />
-          </button>
+          {hasPermission({ action: "delete_form" }) && (
+            <button
+              className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 text-md"
+              onClick={() => handleDeleteClick(row._id!)}
+            >
+              <Icon icon="mdi:delete" className="text-xl" />
+            </button>
+          )}
         </div>
       ),
     },
@@ -172,13 +178,15 @@ const FunctionalAbilitiesSubmission: React.FC<AgentTabProp> = ({
       </div>
 
       {/* 🗑️ Delete Modal */}
-      <DeleteConfirmModal
-        show={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title="Delete Functional Abilty"
-        isLoading={Deleting}
-        onConfirm={handleConfirmDelete}
-      />
+      {hasPermission({ action: "delete_form" }) && (
+        <DeleteConfirmModal
+          show={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          title="Delete Functional Abilty"
+          isLoading={Deleting}
+          onConfirm={handleConfirmDelete}
+        />
+      )}
       {/* Table */}
       {submissions.length > 0 ? (
         <SimpleTable
