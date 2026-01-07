@@ -39,7 +39,7 @@ import {
   getPaymentRequisitionById,
 } from "../controllers/form.controller.js";
 import { upload } from "../middleware/multer.js";
-
+import passport from "passport";
 import { validateRequest } from "../middleware/validate.js";
 import {
   ClientFeedbackFormSchema,
@@ -54,7 +54,7 @@ import { PERMISSIONS } from "../auth/permissions.js";
 import { authorizePermissions } from "../middleware/AuthRole.js";
 
 const router = Router();
-
+router.use(passport.authenticate("jwt", { session: false }));
 router
   .route("/clientIncident")
   .post(
@@ -151,7 +151,8 @@ router
   )
   .patch(
     validateRequest(idParamSchema, "params"),
-    validateRequest(clientIncidentFormSchema, "body"),authorizePermissions({ action: PERMISSIONS.EDIT_FORM }),
+    validateRequest(clientIncidentFormSchema, "body"),
+    authorizePermissions({ action: PERMISSIONS.EDIT_FORM }),
     editClientIncident
   );
 
@@ -169,7 +170,8 @@ router
   )
   .patch(
     validateRequest(idParamSchema, "params"),
-    validateRequest(ClientFeedbackFormSchema, "body"),authorizePermissions({ action: PERMISSIONS.EDIT_FORM }),
+    validateRequest(ClientFeedbackFormSchema, "body"),
+    authorizePermissions({ action: PERMISSIONS.EDIT_FORM }),
     editClientFeedback
   );
 
@@ -182,7 +184,8 @@ router
   )
   .patch(
     validateRequest(idParamSchema, "params"),
-    validateRequest(MediaConsentFormSchema, "body"),authorizePermissions({ action: PERMISSIONS.EDIT_FORM }),
+    validateRequest(MediaConsentFormSchema, "body"),
+    authorizePermissions({ action: PERMISSIONS.EDIT_FORM }),
     editMediaConsent
   );
 
@@ -201,7 +204,8 @@ router
   .patch(
     validateRequest(idParamSchema, "params"),
     upload.single("invoiceAttachment"),
-    validateRequest(paymentRequistionSchema, "body"),authorizePermissions({ action: PERMISSIONS.EDIT_FORM }),
+    validateRequest(paymentRequistionSchema, "body"),
+    authorizePermissions({ action: PERMISSIONS.EDIT_FORM }),
     editPaymentRequisition
   );
 router
@@ -218,7 +222,8 @@ router
   )
   .patch(
     validateRequest(idParamSchema, "params"),
-    validateRequest(employeeIncidentReportSchema, "body"),authorizePermissions({ action: PERMISSIONS.EDIT_FORM }),
+    validateRequest(employeeIncidentReportSchema, "body"),
+    authorizePermissions({ action: PERMISSIONS.EDIT_FORM }),
     editEmployeeIncident
   );
 router
@@ -234,7 +239,8 @@ router
   )
   .patch(
     validateRequest(idParamSchema, "params"),
-    validateRequest(functionalAbilitiesSchema, "body"),authorizePermissions({ action: PERMISSIONS.EDIT_FORM }),
+    validateRequest(functionalAbilitiesSchema, "body"),
+    authorizePermissions({ action: PERMISSIONS.EDIT_FORM }),
     editFAF
   );
 router
