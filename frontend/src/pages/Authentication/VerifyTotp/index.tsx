@@ -7,6 +7,7 @@ import { useVerifyTotpMutation } from "../../../services/AuthApi";
 import { showError, showSuccess } from "../../../utills/toastutills";
 import { setLoggedIn } from "../../../redux/AuthSlice";
 import { useDispatch } from "react-redux";
+import { getErrorMessage } from "../../../utills/utills";
 
 const totpSchema = Yup.object({
   totp: Yup.string()
@@ -55,8 +56,8 @@ const VerifyTotp: React.FC = () => {
         );
         showSuccess("Logged in successfully");
       }
-    } catch (error: any) {
-      showError(error.data?.message || "Invalid TOTP");
+    } catch (error) {
+      showError(getErrorMessage(error));
     }
   };
 

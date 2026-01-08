@@ -5,6 +5,7 @@ import {
 import { showError, showSuccess } from "../../../../../../utills/toastutills";
 import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
 import ClientIncidentForm, { type FormValues } from "./form";
+import { getErrorMessage } from "../../../../../../utills/utills";
 
 const ClientIncidentFormTab = () => {
   const [createIncident, { isLoading }] = useCreateClientincidentMutation();
@@ -44,8 +45,7 @@ const ClientIncidentFormTab = () => {
         resetForm();
       }
     } catch (error: unknown) {
-      const err = error as { message?: string };
-      showError(err.message ?? "Something went wrong");
+      showError(getErrorMessage(error));
     }
   };
 

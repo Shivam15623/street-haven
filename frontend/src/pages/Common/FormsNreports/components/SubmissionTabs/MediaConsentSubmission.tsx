@@ -15,6 +15,8 @@ import dayjs from "dayjs";
 import TablePlaceholderLoader from "../../../../../components/child/SimpleTablePlaceHolder";
 import DeleteConfirmModal from "../forms/delete";
 import useHasPermission from "../../../../../hooks/Auth";
+import { getErrorMessage } from "../../../../../utills/utills";
+import { showError } from "../../../../../utills/toastutills";
 
 interface Column {
   header: string;
@@ -73,7 +75,7 @@ const MediaConsentSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
       setShowDeleteModal(false);
       setSelectedId(null);
     } catch (error) {
-      console.error("Delete failed", error);
+      showError(getErrorMessage(error));
     }
   };
 

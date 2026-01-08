@@ -10,7 +10,6 @@ export const createHrUpdateSchema = Joi.object({
   description: Joi.string().trim().min(10).required().messages({
     "string.empty": "Description is required",
     "string.min": "Description must be at least 10 characters long",
-
   }),
 });
 export const updateHrUpdateSchema = Joi.object({

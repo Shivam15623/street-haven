@@ -7,6 +7,8 @@ import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import { useCreateCategoryMutation } from "../../../../../services/FAQapi";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
+import { showError } from "../../../../../utills/toastutills";
+import { getErrorMessage } from "../../../../../utills/utills";
 
 interface QuestCredentials {
   question: string;
@@ -45,7 +47,7 @@ const AddCategory: React.FC = () => {
       setShowModal(false);
       console.log("FAQ Category created successfully");
     } catch (error) {
-      console.log(error || "Something went wrong");
+      showError(getErrorMessage(error));
     }
   };
 

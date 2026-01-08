@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import { useDeleteQuestionMutation } from "../../../../../services/FAQapi";
+import { showError, showSuccess } from "../../../../../utills/toastutills";
+import { getErrorMessage } from "../../../../../utills/utills";
 
 interface DeleteQuestionProps {
   cid: string;
@@ -20,11 +22,13 @@ const DeleteQuestion: React.FC<DeleteQuestionProps> = ({
 
   const handleDelete = async () => {
     try {
-      await deleteQuestion({ cid, qid }).unwrap();
-      setShowModal(false);
-      console.log("Question deleted successfully");
+      const res = await deleteQuestion({ cid, qid }).unwrap();
+      if (res.success) {
+        setShowModal(false);
+        showSuccess("Question deleted successfully");
+      }
     } catch (error) {
-      console.log(error || "Something went wrong");
+      showError(getErrorMessage(error));
     }
   };
 

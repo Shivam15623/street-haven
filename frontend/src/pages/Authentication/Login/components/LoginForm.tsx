@@ -6,6 +6,7 @@ import { Form, Button, Row, Col, Spinner } from "react-bootstrap";
 import { useLoginMutation } from "../../../../services/AuthApi";
 import { showError, showSuccess } from "../../../../utills/toastutills";
 import PasswordInput from "../../../../components/Authentication/PasswordInput";
+import { getErrorMessage } from "../../../../utills/utills";
 interface LoginValues {
   email: string;
   password: string;
@@ -44,8 +45,8 @@ const LoginForm: React.FC = () => {
 
         showSuccess(response.message);
       }
-    } catch (error: any) {
-      showError(error.data.message);
+    } catch (error) {
+      showError(getErrorMessage(error));
     }
   };
   return (

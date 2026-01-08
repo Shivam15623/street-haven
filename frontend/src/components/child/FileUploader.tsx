@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { Form as BootstrapForm } from "react-bootstrap";
 import { useField, useFormikContext } from "formik";
+import { showWarning } from "../../utills/toastutills";
 
 interface FileUploaderProps {
   name: string;
@@ -36,7 +37,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
 
     // Validate file count
     if (fileArray.length > maxFiles) {
-      alert(`You can upload only up to ${maxFiles} files.`);
+      showWarning(`You can upload only up to ${maxFiles} files.`);
       return;
     }
 
@@ -46,7 +47,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     );
 
     if (validFiles.length !== fileArray.length) {
-      alert(`Each file must be under ${maxSizeMB} MB.`);
+      showWarning(`Each file must be under ${maxSizeMB} MB.`);
     }
 
     setFieldValue(name, multiple ? validFiles : validFiles[0]);

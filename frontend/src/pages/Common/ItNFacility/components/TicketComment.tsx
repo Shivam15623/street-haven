@@ -6,7 +6,6 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import {
   useAddCommentMutation,
   useLazyViewCommentsQuery,
-
   type commentData,
 } from "../../../../services/ticketApi";
 import { useSelector } from "react-redux";
@@ -17,6 +16,8 @@ import QuillEditor from "../../../../components/child/QuillEditor";
 import FileViewer from "../../../../components/FileViewer/FileViewer";
 import type { FileItem, FileType } from "../../../../interfaces/fileinterface";
 import { FileIconWithBackground } from "../../../../components/child/FileIcon";
+import { getErrorMessage } from "../../../../utills/utills";
+import { showError } from "../../../../utills/toastutills";
 
 dayjs.extend(relativeTime);
 
@@ -420,7 +421,7 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
         setAttachments([]);
       }
     } catch (error) {
-      console.error("Failed to send comment:", error);
+      showError(getErrorMessage(error));
     }
   };
 

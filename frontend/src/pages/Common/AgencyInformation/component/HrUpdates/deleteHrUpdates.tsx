@@ -1,8 +1,8 @@
 import React from "react";
 import { useDeletehrupdatesMutation } from "../../../../../services/hrUpdatesApi";
-import { showSuccess } from "../../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../../utills/toastutills";
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
-
+import { getErrorMessage } from "../../../../../utills/utills";
 
 type DeleteHrUpdateProps = {
   id: string;
@@ -28,7 +28,7 @@ const DeleteHrUpdate: React.FC<DeleteHrUpdateProps> = ({
         onHide();
       }
     } catch (error) {
-      console.error("Failed to delete HR update:", error);
+      showError(getErrorMessage(error));
     }
   };
 
@@ -61,7 +61,8 @@ const DeleteHrUpdate: React.FC<DeleteHrUpdateProps> = ({
       }
     >
       <p className="text-street-dark text-sm">
-        Are you sure you want to delete this HR update? This action cannot be undone.
+        Are you sure you want to delete this HR update? This action cannot be
+        undone.
       </p>
     </ModalWrapper>
   );

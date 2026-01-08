@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { useDeleteManualsMutation } from "../../../../services/ProgramManualApi";
-import { showSuccess } from "../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../utills/toastutills";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import type { FileType } from "../../../../interfaces/fileinterface";
+import { getErrorMessage } from "../../../../utills/utills";
 
 type DeleteMannualsProps = {
   id: string;
@@ -35,7 +36,7 @@ const DeleteMannuals: React.FC<DeleteMannualsProps> = ({
         setShowModal(false);
       }
     } catch (error) {
-      console.error("Failed to delete Program Manual:", error);
+      showError(getErrorMessage(error));
     }
   };
 

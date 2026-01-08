@@ -4,7 +4,6 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 
 import {
   useEditEmployeeIncidentMutation,
-
   useLazyGetEmployeeIncidentByIdQuery,
   type editemployeeIncidentReportCred,
 } from "../../../../../../services/FormApi";
@@ -12,6 +11,7 @@ import {
 import EmployeeIncidentForm, { type FormValues } from "./form";
 import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
 import { showError, showSuccess } from "../../../../../../utills/toastutills";
+import { getErrorMessage } from "../../../../../../utills/utills";
 
 interface EditEmployeeIncidentProp {
   data: { _id: string }; // only need ID now
@@ -77,8 +77,8 @@ const EditEmployeeIncident: React.FC<EditEmployeeIncidentProp> = ({ data }) => {
         resetForm();
         setShowModal(false);
       }
-    } catch (error: any) {
-      showError(error?.message || "Update failed");
+    } catch (error) {
+      showError(getErrorMessage(error));
     }
   };
 

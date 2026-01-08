@@ -4,7 +4,7 @@ import MeetingMinutes from "../model/meetingminutes.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
-import { uploadOnCloudinary } from "../utills/cloudinary.js";
+import { deleteFromCloudinary, uploadOnCloudinary } from "../utills/cloudinary.js";
 import path from "path";
 import { io } from "../index.js";
 
@@ -206,12 +206,12 @@ export const editMeetingMinutes = asyncHandler(async (req, res) => {
       severity: "warning",
       title: "Event Minutes Updated",
       message: `The meeting minutes for "${title}" have been updated with new attachment. Please review the latest version.`,
-      link: `/agency_info?tab=event_minutes&item=${savedMinute.slug}`,
+      link: `/agency_info?tab=event_minutes&item=${updatedMeetingMinutes.slug}`,
       isGlobal: true, // ✅ no per-user mappings
-      createdBy: userId,
+      createdBy: req.user._id,
       expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       meta: {
-        minuteId: savedMinute.slug,
+        minuteId: updatedMeetingMinutes.slug,
         page: "agency_info",
         tab: "event_minutes",
       },
@@ -220,13 +220,7 @@ export const editMeetingMinutes = asyncHandler(async (req, res) => {
   }
   return res
     .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        "Meeting minutes updated successfully",
-        updatedMeetingMinutes
-      )
-    );
+    .json(new ApiResponse(200, "Meeting minutes updated successfully"));
 });
 
 export const deleteMeetingMinutes = asyncHandler(async (req, res) => {

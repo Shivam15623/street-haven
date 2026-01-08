@@ -1,5 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useMarkNotificationsAsReadMutation } from "../services/notificationApi";
+import { getErrorMessage } from "../utills/utills";
+import { showError } from "../utills/toastutills";
 
 export const useDebouncedBulkMarkRead = (delay = 1000) => {
   const [markRead] = useMarkNotificationsAsReadMutation();
@@ -19,7 +21,7 @@ export const useDebouncedBulkMarkRead = (delay = 1000) => {
           try {
             await markRead(ids).unwrap();
           } catch (err) {
-            console.error("Failed to mark notifications as read:", err);
+            showError(getErrorMessage(err));
           }
         }
       }, delay);

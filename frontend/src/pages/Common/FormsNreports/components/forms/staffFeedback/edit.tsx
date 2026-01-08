@@ -5,7 +5,8 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import { useEditStaffReportMutation } from "../../../../../../services/StaffFeedbackApi";
 import StaffFeedbackForm, { type FormValues } from "./form";
 import type { StaffFeedbackData } from "../../../../../../interfaces/incidentReport";
-import { showSuccess } from "../../../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../../../utills/toastutills";
+import { getErrorMessage } from "../../../../../../utills/utills";
 
 const EditStaffFeedback = ({ data }: { data: StaffFeedbackData }) => {
   const [showModal, setShowModal] = useState(false);
@@ -47,7 +48,7 @@ const EditStaffFeedback = ({ data }: { data: StaffFeedbackData }) => {
         resetForm();
       }
     } catch (err) {
-      console.error(err);
+      showError(getErrorMessage(err));
     }
   };
 
@@ -91,15 +92,13 @@ const EditStaffFeedback = ({ data }: { data: StaffFeedbackData }) => {
           </>
         }
       >
-     
-            <StaffFeedbackForm
-              footer={false}
-              isLoading={isLoading}
-              handleSubmit={handleSubmit}
-              initialvalues={initialValues}
-              id="edit-staff-report-form"
-            />
-       
+        <StaffFeedbackForm
+          footer={false}
+          isLoading={isLoading}
+          handleSubmit={handleSubmit}
+          initialvalues={initialValues}
+          id="edit-staff-report-form"
+        />
       </ModalWrapper>
     </>
   );

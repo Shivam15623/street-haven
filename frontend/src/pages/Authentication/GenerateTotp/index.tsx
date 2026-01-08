@@ -8,10 +8,8 @@ import {
   useVerifyTotpMutation,
 } from "../../../services/AuthApi";
 import { showError, showSuccess } from "../../../utills/toastutills";
+import { getErrorMessage } from "../../../utills/utills";
 
-interface ApiError {
-  data?: { message?: string };
-}
 
 const totpSetupSchema = Yup.object({
   totp: Yup.string()
@@ -42,8 +40,7 @@ const GenerateTotp: React.FC = () => {
         setQrCode(response.data.qrCode);
         setSetupToken(response.data.setupToken);
       } catch (err) {
-        const error = err as ApiError;
-        showError(error.data?.message || "Failed to generate TOTP");
+        showError(getErrorMessage(err));
         navigate("/login");
       }
     };
@@ -70,8 +67,7 @@ const GenerateTotp: React.FC = () => {
       showSuccess("TOTP setup completed!");
       navigate("/login");
     } catch (err) {
-      const error = err as ApiError;
-      showError(error.data?.message || "Invalid TOTP code");
+      showError(getErrorMessage(err));
     }
   };
 
