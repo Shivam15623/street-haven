@@ -3,7 +3,8 @@ import * as Yup from "yup";
 import { Form, Col, Row } from "react-bootstrap";
 import PasswordInput from "../../../../components/Authentication/PasswordInput";
 import { useChangePasswordMutation } from "../../../../services/UserApi";
-import { showSuccess } from "../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../utills/toastutills";
+import { getErrorMessage } from "../../../../utills/utills";
 
 const ChangePasswordSchema = Yup.object({
   currentPassword: Yup.string().required("Current password is required"),
@@ -31,7 +32,8 @@ const ChangePassword = () => {
         resetForm(); // ✅ Reset form after success
       }
     } catch (error) {
-      console.error("Failed to change password:", error);
+      showError(getErrorMessage(error));
+
       // Optionally show error toast here
     }
   };
@@ -54,14 +56,7 @@ const ChangePassword = () => {
             handleChangePassword(values, resetForm)
           }
         >
-          {({
-            handleSubmit,
-            handleChange,
-            values,
-            errors,
-            touched,
-           
-          }) => (
+          {({ handleSubmit, handleChange, values, errors, touched }) => (
             <Form noValidate onSubmit={handleSubmit}>
               {/* Current Password */}
               <Form.Group

@@ -7,8 +7,9 @@ import {
   useAddEmergencyContactMutation,
   useEditEmergencyContactMutation,
 } from "../../../../../services/FAQapi";
-import { showSuccess } from "../../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../../utills/toastutills";
 import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
+import { getErrorMessage } from "../../../../../utills/utills";
 
 interface EmergencyFormValues {
   label: string;
@@ -28,8 +29,9 @@ const EmergencyContact: React.FC<EmergencyContactModalProps> = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
 
-  const [addContact,{isLoading}] = useAddEmergencyContactMutation();
-  const [editContact,{isLoading:isEditing}] = useEditEmergencyContactMutation();
+  const [addContact, { isLoading }] = useAddEmergencyContactMutation();
+  const [editContact, { isLoading: isEditing }] =
+    useEditEmergencyContactMutation();
 
   const isEdit = !!initialData;
 
@@ -58,7 +60,7 @@ const EmergencyContact: React.FC<EmergencyContactModalProps> = ({
       }
       setShowModal(false);
     } catch (err) {
-      console.log(err || "Something went wrong");
+      showError(getErrorMessage(err));
     }
   };
 

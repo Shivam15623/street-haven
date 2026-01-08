@@ -7,6 +7,7 @@ import { Formik } from "formik";
 import * as Yup from "yup";
 import { useForgotPasswordMutation } from "../../../services/AuthApi";
 import { showError, showSuccess } from "../../../utills/toastutills";
+import { getErrorMessage } from "../../../utills/utills";
 interface ForgotValues {
   email: string;
 }
@@ -26,7 +27,7 @@ const ForgotPassword = () => {
         setTimeout(() => navigate("/login"), 800);
       }
     } catch (err: any) {
-      showError(err.data.message);
+      showError(getErrorMessage(err));
     }
   };
   return (

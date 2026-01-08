@@ -3,10 +3,11 @@ import { useState } from "react";
 import ModalWrapper from "../../../../../../components/child/ModalWrapper";
 import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
 import { useEditIncidentReportMutation } from "../../../../../../services/IncidentReportApi";
-import { showSuccess } from "../../../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../../../utills/toastutills";
 import type { FormValues } from "./form";
 import IncidentReportForm from "./form";
 import type { IncidentReportData } from "../../../../../../interfaces/incidentReport";
+import { getErrorMessage } from "../../../../../../utills/utills";
 
 const EditIncidentReport = ({ data }: { data: IncidentReportData }) => {
   const [showModal, setShowModal] = useState(false);
@@ -46,7 +47,7 @@ const EditIncidentReport = ({ data }: { data: IncidentReportData }) => {
         resetForm();
       }
     } catch (error) {
-      console.error(error);
+      showError(getErrorMessage(error));
     }
   };
   return (

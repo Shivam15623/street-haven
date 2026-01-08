@@ -8,11 +8,12 @@ import ModalWrapper from "../../../../components/child/ModalWrapper";
 import * as Yup from "yup";
 import { Form as BootstrapForm } from "react-bootstrap";
 import Badge from "../../../../components/child/Badge";
-import { showSuccess } from "../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../utills/toastutills";
 import type { Document } from "./DocumentCard";
 import QuillEditor from "../../../../components/child/QuillEditor";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 import FileField from "../../../../components/child/FileField";
+import { getErrorMessage } from "../../../../utills/utills";
 
 // 🔹 Schema generator (avoids duplication)
 const programManualSchema = () =>
@@ -105,7 +106,7 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
         onHide();
       }
     } catch (error) {
-      console.error(error);
+      showError(getErrorMessage(error));
     }
   };
 

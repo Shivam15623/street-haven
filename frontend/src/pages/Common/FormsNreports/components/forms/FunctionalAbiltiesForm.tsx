@@ -8,7 +8,7 @@ import {
   CANADA_PROVINCES,
   useCreateFAfMutation,
 } from "../../../../../services/FormApi";
-import { showSuccess } from "../../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../../utills/toastutills";
 
 import AbilitiesRestrictions from "../AbilitiesRestrictions";
 import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
@@ -17,6 +17,7 @@ import {
   extractRestrictions,
 } from "../../../../../utills/functionalAbiltyHelpers";
 import { functionalAbilityFormSchema } from "../../validations";
+import { getErrorMessage } from "../../../../../utills/utills";
 export interface FunctionalAbilityFormValues {
   claimNo: string;
 
@@ -263,7 +264,7 @@ const FunctionalAbiltiesForm = () => {
 
       if (res.success) showSuccess(res.message);
     } catch (error) {
-      console.log(error);
+      showError(getErrorMessage(error));
     }
   };
 
@@ -419,7 +420,7 @@ const FunctionalAbiltiesForm = () => {
                         claim No: <span className="text-danger">*</span>
                       </Form.Label>
                       <Form.Control
-                        style={{ height: "40px",minWidth:"200px" }}
+                        style={{ height: "40px", minWidth: "200px" }}
                         name="claimNo"
                         value={values.claimNo}
                         onChange={handleChange}

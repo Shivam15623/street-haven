@@ -5,8 +5,9 @@ import { Form as BootstrapForm } from "react-bootstrap";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import { useEditQuestionMutation } from "../../../../../services/FAQapi";
-import { showSuccess } from "../../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../../utills/toastutills";
 import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
+import { getErrorMessage } from "../../../../../utills/utills";
 
 interface EditQuestionProps {
   cid: string;
@@ -39,7 +40,8 @@ const EditQuestion: React.FC<EditQuestionProps> = ({
       }
       setShowModal(false);
     } catch (error) {
-      console.log(error || "Something went wrong");
+      showError(getErrorMessage(error));
+   
     }
   };
 

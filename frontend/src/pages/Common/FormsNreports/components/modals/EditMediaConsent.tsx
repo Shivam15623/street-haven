@@ -14,8 +14,13 @@ import {
   useEditMediaConsentMutation,
   type MediaConsent,
 } from "../../../../../services/FormApi";
-import { showSuccess, showWarning } from "../../../../../utills/toastutills";
+import {
+  showError,
+  showSuccess,
+  showWarning,
+} from "../../../../../utills/toastutills";
 import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
+import { getErrorMessage } from "../../../../../utills/utills";
 
 const mediaSections = [
   {
@@ -107,7 +112,7 @@ const EditMediaConsent: React.FC<EditMediaConsentProps> = ({ data }) => {
 
       setShowModal(false);
     } catch (error) {
-      console.error("Update failed", error);
+      showError(getErrorMessage(error));
     }
   };
 
@@ -166,7 +171,11 @@ const EditMediaConsent: React.FC<EditMediaConsentProps> = ({ data }) => {
             handleSubmit,
             setFieldTouched,
           }) => (
-            <Form className="d-flex flex-column gap-24" id="edit-media-consent" onSubmit={handleSubmit}>
+            <Form
+              className="d-flex flex-column gap-24"
+              id="edit-media-consent"
+              onSubmit={handleSubmit}
+            >
               {/* Form Card */}
               <div className="card">
                 <div className="card-body d-flex flex-column gap-20 px-24 py-16">

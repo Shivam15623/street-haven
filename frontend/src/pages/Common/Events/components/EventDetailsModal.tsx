@@ -9,7 +9,7 @@ import {
   useSignUpForEventMutation,
 } from "../../../../services/EventApi";
 import { Col, Form, Row, Spinner } from "react-bootstrap";
-import { showSuccess } from "../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../utills/toastutills";
 import Badge from "../../../../components/child/Badge";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Formik } from "formik";
@@ -25,6 +25,7 @@ import FileTab from "../../../../components/child/FileTab";
 import type { FileItem } from "../../../../interfaces/fileinterface";
 import FileViewer from "../../../../components/FileViewer/FileViewer";
 import EventDocsUploader from "./EventDocsUploader";
+import { getErrorMessage } from "../../../../utills/utills";
 
 interface EventDetailsModalProps {
   event: EventUpcomingData;
@@ -138,8 +139,6 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
     setViewerOpen(true);
   };
 
-
-
   const formattedTimeRange =
     startTime && endTime
       ? `${dayjs(startTime).format("hh:mm A")} -  ${dayjs(endTime).format(
@@ -196,7 +195,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
         handleClose();
       }
     } catch (err) {
-      console.log(err);
+      showError(getErrorMessage(err));
     }
   };
 
@@ -209,7 +208,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
         handleClose();
       }
     } catch (err) {
-      console.log(err);
+      showError(getErrorMessage(err));
     }
   };
 

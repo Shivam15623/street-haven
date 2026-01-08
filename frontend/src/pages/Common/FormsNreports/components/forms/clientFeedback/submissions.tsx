@@ -16,6 +16,8 @@ import type { AgentTabProp } from "../../../../AgencyInformation/component/Agree
 import dayjs from "dayjs";
 import TablePlaceholderLoader from "../../../../../../components/child/SimpleTablePlaceHolder";
 import useHasPermission from "../../../../../../hooks/Auth";
+import { showError } from "../../../../../../utills/toastutills";
+import { getErrorMessage } from "../../../../../../utills/utills";
 
 interface Column {
   header: string;
@@ -56,7 +58,7 @@ const ClientFeedbackSubmission: React.FC<AgentTabProp> = ({ isActive }) => {
       setShowDeleteModal(false);
       setSelectedId(null);
     } catch (error) {
-      console.error("Delete failed", error);
+      showError(getErrorMessage(error));
     }
   };
 

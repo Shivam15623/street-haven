@@ -9,13 +9,17 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import type { MeetingMinutesData } from "../../../../../interfaces/meetingMinutes";
-import { useCreatemeetingMinutesMutation, useEditmeetingMinutesMutation } from "../../../../../services/meetingminutesApi";
-import { showSuccess } from "../../../../../utills/toastutills";
+import {
+  useCreatemeetingMinutesMutation,
+  useEditmeetingMinutesMutation,
+} from "../../../../../services/meetingminutesApi";
+import { showError, showSuccess } from "../../../../../utills/toastutills";
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
 import CustomDatePicker from "../../../../../components/child/DatePicker";
 import Badge from "../../../../../components/child/Badge";
 import FileField from "../../../../../components/child/FileField";
+import { getAxiosErrorMessage } from "../../../../../utills/utills";
 
 dayjs.extend(utc);
 // ✅ Schema
@@ -137,7 +141,7 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
         onHide();
       }
     } catch (error) {
-      console.error("Failed to save meeting minutes:", error);
+      showError(getAxiosErrorMessage(error));
     }
   };
 

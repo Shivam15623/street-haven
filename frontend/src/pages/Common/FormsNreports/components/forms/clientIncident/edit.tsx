@@ -13,6 +13,7 @@ import type { FormValues } from "./form";
 import ClientIncidentForm from "./form";
 import { showError, showSuccess } from "../../../../../../utills/toastutills";
 import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
+import { getErrorMessage } from "../../../../../../utills/utills";
 
 interface EditClientIncidentProp {
   data: clientIncidentReport;
@@ -67,8 +68,8 @@ const EditClientIncident: React.FC<EditClientIncidentProp> = ({ data }) => {
         resetForm();
         setShowModal(false);
       }
-    } catch (error: any) {
-      showError(error?.message || "Update failed");
+    } catch (error) {
+     showError(getErrorMessage(error));
     }
   };
   return (

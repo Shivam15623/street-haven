@@ -1,7 +1,8 @@
 import React from "react";
 import { useDeleteAgreementMutation } from "../../../../../services/AgreementApi";
-import { showSuccess } from "../../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../../utills/toastutills";
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
+import { getErrorMessage } from "../../../../../utills/utills";
 
 type DeleteAgreementProps = {
   id: string;
@@ -27,7 +28,7 @@ const DeleteAgreement: React.FC<DeleteAgreementProps> = ({
         onHide();
       }
     } catch (error) {
-      console.error("Failed to delete agreement:", error);
+      showError(getErrorMessage(error));
     }
   };
 

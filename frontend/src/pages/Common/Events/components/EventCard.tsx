@@ -7,7 +7,7 @@ import {
   useSignUpForEventMutation,
 } from "../../../../services/EventApi";
 import type { EventUpcomingData } from "../../../../interfaces/EventInterfaces";
-import { showSuccess } from "../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../utills/toastutills";
 import ViewRegistrations from "./ViewRegisterations";
 import ActionsEvent from "./ActionsEvent";
 
@@ -15,6 +15,7 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import useHasPermission from "../../../../hooks/Auth";
 import EventDocsUploader from "./EventDocsUploader";
 import EventDocuments from "./EventDocuments";
+import { getErrorMessage } from "../../../../utills/utills";
 
 interface EventCardProps {
   event: EventUpcomingData;
@@ -63,7 +64,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
       const res = await registerEvent(eventId).unwrap();
       if (res.success) showSuccess(res.message);
     } catch (err) {
-      console.log(err);
+      showError(getErrorMessage(err));
     }
   };
 
@@ -73,7 +74,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
       const res = await signOutEvent(eventId).unwrap();
       if (res.success) showSuccess(res.message);
     } catch (err) {
-      console.log(err);
+      showError(getErrorMessage(err));
     }
   };
 

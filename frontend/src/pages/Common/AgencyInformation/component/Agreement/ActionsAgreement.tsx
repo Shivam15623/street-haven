@@ -12,6 +12,7 @@ import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
 import CustomDatePicker from "../../../../../components/child/DatePicker";
 import FileField from "../../../../../components/child/FileField";
+import { getAxiosErrorMessage } from "../../../../../utills/utills";
 
 // -------------------------------------------------------
 // ✅ Validation Schema
@@ -113,12 +114,12 @@ const ActionsAgreement: React.FC<ActionsAgreementProps> = ({
       if (res.success) {
         showSuccess(res.message);
         resetForm();
+        setProgress(0);
         onSuccess?.();
         onHide();
       }
     } catch (error) {
-      console.error("Error saving agreement:", error);
-      showError("An error occurred while saving the agreement.");
+      showError(getAxiosErrorMessage(error));
     }
   };
 

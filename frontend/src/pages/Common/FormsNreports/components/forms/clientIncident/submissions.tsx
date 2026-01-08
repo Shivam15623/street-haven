@@ -13,9 +13,13 @@ import DeleteConfirmModal from "../delete";
 import { useDebounce } from "../../../../../../hooks/useDebounce";
 import type { AgentTabProp } from "../../../../AgencyInformation/component/Agreement/CollectiveAgreementTab";
 import dayjs from "dayjs";
-import { formatTime12Hour } from "../../../../../../utills/utills";
+import {
+  formatTime12Hour,
+  getErrorMessage,
+} from "../../../../../../utills/utills";
 import TablePlaceholderLoader from "../../../../../../components/child/SimpleTablePlaceHolder";
 import useHasPermission from "../../../../../../hooks/Auth";
+import { showError } from "../../../../../../utills/toastutills";
 
 interface Column {
   header: string;
@@ -57,7 +61,7 @@ const ClientIncidentReportSubmission: React.FC<AgentTabProp> = ({
       setShowDeleteModal(false);
       setSelectedId(null);
     } catch (error) {
-      console.error("Delete failed", error);
+      showError(getErrorMessage(error));
     }
   };
 
@@ -135,14 +139,15 @@ const ClientIncidentReportSubmission: React.FC<AgentTabProp> = ({
         />
       </div>
       {/* 🗑️ Delete Modal */}
-         {hasPermission({ action: "edit_form" }) && (
-      <DeleteConfirmModal
-        show={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title="Delete Employee Incident Report"
-        isLoading={deleting}
-        onConfirm={handleConfirmDelete}
-      />)}
+      {hasPermission({ action: "edit_form" }) && (
+        <DeleteConfirmModal
+          show={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          title="Delete Employee Incident Report"
+          isLoading={deleting}
+          onConfirm={handleConfirmDelete}
+        />
+      )}
 
       {/* Table */}
       {submissions.length > 0 ? (

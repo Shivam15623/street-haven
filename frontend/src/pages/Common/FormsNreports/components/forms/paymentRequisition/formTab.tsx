@@ -1,9 +1,13 @@
 import { useCreatePaymentRequistionMutation } from "../../../../../../services/FormApi";
-import { showSuccess } from "../../../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../../../utills/toastutills";
 import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
 import { useSelector } from "react-redux";
 import { selectAuth } from "../../../../../../redux/AuthSlice";
 import PaymentRequisitionForm, { type FormValues } from "./form";
+import {
+
+  getErrorMessage,
+} from "../../../../../../utills/utills";
 
 const PaymentRequisition = () => {
   const { user } = useSelector(selectAuth);
@@ -90,8 +94,8 @@ const PaymentRequisition = () => {
         showSuccess(response.message);
         resetForm();
       }
-    } catch (err: any) {
-      console.error(err);
+    } catch (err) {
+      showError(getErrorMessage(err));
     }
   };
 

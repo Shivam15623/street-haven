@@ -2,8 +2,9 @@ import React, { useState } from "react";
 
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import { useDeleteCategoryMutation } from "../../../../../services/FAQapi"; // adjust path
-import { showSuccess } from "../../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../../utills/toastutills";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import { getErrorMessage } from "../../../../../utills/utills";
 
 interface DeleteCategoryProps {
   id: string;
@@ -22,7 +23,7 @@ const DeleteCategory: React.FC<DeleteCategoryProps> = ({ id, title }) => {
         showSuccess(`Category "${title}" deleted successfully`);
       }
     } catch (error) {
-      console.log(error || "Something went wrong");
+      showError(getErrorMessage(error));
     }
   };
 

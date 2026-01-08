@@ -3,14 +3,20 @@ import React from "react";
 import * as yup from "yup";
 import { Formik, Field, ErrorMessage } from "formik";
 import { Form as BootstrapForm } from "react-bootstrap";
-import { useCreatehrUpdatesMutation, useEdithrupdatesMutation } from "../../../../../services/hrUpdatesApi";
+import {
+  useCreatehrUpdatesMutation,
+  useEdithrupdatesMutation,
+} from "../../../../../services/hrUpdatesApi";
 import type { hrUpdateData } from "../../../../../interfaces/hrUpdatesInterface";
-import { showSuccess } from "../../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../../utills/toastutills";
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
 import QuillEditor from "../../../../../components/child/QuillEditor";
 import FileField from "../../../../../components/child/FileField";
+import {
+  getAxiosErrorMessage,
 
+} from "../../../../../utills/utills";
 
 // ✅ Schema
 const HrUpdatesFormSchema = () =>
@@ -113,7 +119,7 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
         onHide();
       }
     } catch (error) {
-      console.error("Failed to save HR update:", error);
+      showError(getAxiosErrorMessage(error));
     }
   };
 
