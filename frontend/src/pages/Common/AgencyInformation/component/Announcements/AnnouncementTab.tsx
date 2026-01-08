@@ -9,13 +9,13 @@ import useHasPermission from "../../../../../hooks/Auth";
 import { useDebounce } from "../../../../../hooks/useDebounce";
 import type { AgentTabProp } from "../Agreement/CollectiveAgreementTab";
 import HRUpdateCardSkeleton from "../HrUpdates/HrUpdaresCardSkelaton";
-import { useNavigate, useSearchParams } from "react-router-dom";
+
+import { useScrollToItemFromUrl } from "../../../../../hooks/useScrollToItemFromUrl";
 
 const AnnouncementTab: React.FC<AgentTabProp> = ({ isActive }) => {
   const [open, setOpen] = useState(false);
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const itemParam = searchParams.get("item") ?? null;
+
+
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const limit = 10;
@@ -41,24 +41,9 @@ const AnnouncementTab: React.FC<AgentTabProp> = ({ isActive }) => {
     setPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  useEffect(() => {
-    if (!itemParam || !data) return;
-
-    const el = document.getElementById(itemParam);
-    if (!el) return;
-
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
-
-    // Clean URL after a short delay
-    const timer = setTimeout(() => {
-      const params = new URLSearchParams(location.search);
-      params.delete("item");
-
-      navigate(`${location.pathname}?${params.toString()}`, { replace: true });
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [itemParam, data, navigate]);
+  useScrollToItemFromUrl({
+    enabled: isActive && !!data?.data?.announcements,
+  });
 
   return (
     <div className="d-flex flex-column gap-24">

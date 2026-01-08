@@ -130,7 +130,7 @@ export const editMeetingMinutes = asyncHandler(async (req, res) => {
   }
 
   const updates = {};
-
+  let attachmentChanged = false;
   if (title && title !== meetingMinutes.title) updates.title = title;
 
   if (
@@ -178,6 +178,7 @@ export const editMeetingMinutes = asyncHandler(async (req, res) => {
       meetingMinutes.attachment.fileUrl !== newAttachment.fileUrl
     ) {
       updates.attachment = newAttachment;
+      attachmentChanged = true;
     }
   }
 
@@ -198,6 +199,25 @@ export const editMeetingMinutes = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Error while updating meeting minutes");
   }
 
+  if (attachmentChanged) {
+    const notification = await createNotification({
+      action: "updated",
+      category: "event_minute",
+      severity: "warning",
+      title: "Event Minutes Updated",
+      message: `The meeting minutes for "${title}" have been updated with new attachment. Please review the latest version.`,
+      link: `/agency_info?tab=event_minutes&item=${savedMinute.slug}`,
+      isGlobal: true, // ✅ no per-user mappings
+      createdBy: userId,
+      expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      meta: {
+        minuteId: savedMinute.slug,
+        page: "agency_info",
+        tab: "event_minutes",
+      },
+    });
+    io.emit("newNotification", notification);
+  }
   return res
     .status(200)
     .json(
