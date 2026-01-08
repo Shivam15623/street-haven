@@ -1,7 +1,8 @@
 import React from "react";
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
-import { showSuccess } from "../../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../../utills/toastutills";
 import { useDeleteAnnouncementMutation } from "../../../../../services/AnnouncementApi";
+import { getErrorMessage } from "../../../../../utills/utills";
 
 type DeleteAnnouncementProps = {
   id: string;
@@ -27,7 +28,7 @@ const DeleteAnnouncement: React.FC<DeleteAnnouncementProps> = ({
         onHide();
       }
     } catch (error) {
-      console.error("Failed to delete announcement:", error);
+      showError(getErrorMessage(error));
     }
   };
 

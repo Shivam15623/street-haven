@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import { useDeleteEmergencyContactMutation } from "../../../../../services/FAQapi";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import { getErrorMessage } from "../../../../../utills/utills";
+import { showError } from "../../../../../utills/toastutills";
 
 interface DeleteEmergencyContactProps {
   id: string;
@@ -21,7 +23,7 @@ const DeleteEmergencyContact: React.FC<DeleteEmergencyContactProps> = ({
       setShowModal(false);
       console.log("Emergency contact deleted successfully");
     } catch (err) {
-      console.log(err || "Something went wrong");
+      showError(getErrorMessage(err));
     }
   };
 

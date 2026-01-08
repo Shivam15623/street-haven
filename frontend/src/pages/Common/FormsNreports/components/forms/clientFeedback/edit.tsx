@@ -10,6 +10,7 @@ import {
 import { showError, showSuccess } from "../../../../../../utills/toastutills";
 import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
 import ClientFeedBackForm, { type FormValues } from "./form";
+import { getErrorMessage } from "../../../../../../utills/utills";
 
 interface EditClientFeedbackProps {
   data: clientFeedbackData;
@@ -75,8 +76,8 @@ const EditClientFeedback = ({ data }: EditClientFeedbackProps) => {
         resetForm();
         setShowModal(false);
       }
-    } catch (err: any) {
-      showError(err?.message || "Update failed");
+    } catch (err) {
+      showError(getErrorMessage(err));
     }
   };
 

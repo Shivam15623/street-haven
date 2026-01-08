@@ -12,6 +12,8 @@ import { selectAuth } from "../redux/AuthSlice";
 import NotificationItem from "./NotificationItem";
 import NotificationView from "./NotificationView";
 import { useNotificationReadBuffer } from "../hooks/useNotificationReader";
+import { getErrorMessage } from "../utills/utills";
+import { showError } from "../utills/toastutills";
 
 const NotificationDropdown = () => {
   const { socket } = useSocket();
@@ -37,7 +39,7 @@ const NotificationDropdown = () => {
     socket.emit("joinUserRoom", { userId: user?._id });
 
     socket.on("newNotification", (notification: notificationData) => {
-      console.log(notification)
+      console.log(notification);
       setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((prev) => prev + 1);
     });
@@ -72,7 +74,7 @@ const NotificationDropdown = () => {
               )
             );
           } catch (err) {
-            console.error("Failed to mark notifications as read", err);
+            showError(getErrorMessage(err));
           }
         }
       }}

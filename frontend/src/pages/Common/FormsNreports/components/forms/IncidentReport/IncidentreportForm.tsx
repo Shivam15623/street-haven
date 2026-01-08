@@ -1,7 +1,8 @@
 import { useCreateIncidentReportMutation } from "../../../../../../services/IncidentReportApi";
-import { showSuccess } from "../../../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../../../utills/toastutills";
 import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
 import IncidentReportForm, { type FormValues } from "./form";
+import { getErrorMessage } from "../../../../../../utills/utills";
 
 const IncidentreportFormTab = () => {
   const [createIncidentReport, { isLoading }] =
@@ -26,7 +27,7 @@ const IncidentreportFormTab = () => {
         resetForm();
       }
     } catch (error) {
-      console.error(error);
+      showError(getErrorMessage(error));
     }
   };
   return (

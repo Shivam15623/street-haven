@@ -15,6 +15,7 @@ import { useDispatch } from "react-redux";
 import { UpdateUserDetails } from "../../../../redux/AuthSlice";
 import { PatternFormat } from "react-number-format";
 import { ROLES } from "../../../../interfaces/AuthInterfaces";
+import { getErrorMessage } from "../../../../utills/utills";
 
 dayjs.extend(relativeTime);
 // ✅ Validation Schema
@@ -59,7 +60,7 @@ const ProfileSettings: React.FC = () => {
         dispatch(UpdateUserDetails(payLoad));
       }
     } catch (error: any) {
-      showError(error.data.message);
+      showError(getErrorMessage(error));
     }
   };
   if (isLoading || !user?.data) {

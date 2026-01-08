@@ -6,6 +6,8 @@ import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import { useAddQuestionMutation } from "../../../../../services/FAQapi";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
+import { showError, showSuccess } from "../../../../../utills/toastutills";
+import { getErrorMessage } from "../../../../../utills/utills";
 
 interface QuestCredentials {
   question: string;
@@ -19,7 +21,7 @@ interface AddFaqsProps {
 
 const AddFaqs: React.FC<AddFaqsProps> = ({ title, id }) => {
   const [showModal, setShowModal] = useState(false);
-  const [addQuestions,{isLoading}] = useAddQuestionMutation();
+  const [addQuestions, { isLoading }] = useAddQuestionMutation();
 
   const initialValues = {
     faqs: [{ question: "", answer: "" }],
@@ -38,11 +40,13 @@ const AddFaqs: React.FC<AddFaqsProps> = ({ title, id }) => {
 
   const handleSubmit = async (values: { faqs: QuestCredentials[] }) => {
     try {
-      await addQuestions({ id, questions: values.faqs }).unwrap();
-      setShowModal(false);
-      console.log("Questions added successfully");
+      const res = await addQuestions({ id, questions: values.faqs }).unwrap();
+      if (res.success) {
+        showSuccess(res.message);
+        setShowModal(false);
+      }
     } catch (error) {
-      console.log(error || "Something went wrong");
+      showError(getErrorMessage(error));
     }
   };
 
@@ -68,7 +72,7 @@ const AddFaqs: React.FC<AddFaqsProps> = ({ title, id }) => {
         isLoading={isLoading}
         ModalLoader={
           <FormSubmissionLoader
-            isLoading={isLoading }
+            isLoading={isLoading}
             variant="spinner" // spinner | dots | pulse | progress
             message="Saving changes..."
             subMessage="Please wait"

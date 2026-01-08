@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
 import { Icon } from "@iconify/react/dist/iconify.js";
 
-import { showSuccess } from "../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../utills/toastutills";
 import { useResetTotpMutation } from "../../../../services/EmployeeApi";
+import { getErrorMessage } from "../../../../utills/utills";
 
 interface ResetTotpProps {
   employee: {
@@ -26,7 +27,7 @@ const ResetTotp: React.FC<ResetTotpProps> = ({ employee }) => {
         setShowModal(false);
       }
     } catch (error) {
-      console.error("Failed to reset TOTP:", error);
+      showError(getErrorMessage(error));
     }
   };
 
@@ -80,8 +81,8 @@ const ResetTotp: React.FC<ResetTotpProps> = ({ employee }) => {
           </p>
 
           <p className="text-danger text-sm mt-2">
-            This will invalidate the existing authenticator setup. The user
-            will be required to reconfigure 2FA on next login.
+            This will invalidate the existing authenticator setup. The user will
+            be required to reconfigure 2FA on next login.
           </p>
 
           <div className="text-street-dark text-sm d-flex flex-column gap-2 mt-3">

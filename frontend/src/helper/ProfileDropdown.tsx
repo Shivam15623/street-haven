@@ -6,6 +6,8 @@ import { useLogoutMutation } from "../services/AuthApi";
 import { selectAuth, setLoggedOut } from "../redux/AuthSlice";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { showError } from "../utills/toastutills";
+import { getErrorMessage } from "../utills/utills";
 const ProfileDropdown = () => {
   const [logout] = useLogoutMutation();
   const dispatch = useDispatch();
@@ -19,7 +21,7 @@ const ProfileDropdown = () => {
         dispatch(setLoggedOut());
       }
     } catch (err) {
-      console.log(err);
+      showError(getErrorMessage(err));
     }
   };
   return (

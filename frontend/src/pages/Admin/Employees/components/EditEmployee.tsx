@@ -7,7 +7,7 @@ import {
   useAllEmployeesQuery,
   useEditEmployeeMutation,
 } from "../../../../services/EmployeeApi";
-import { showSuccess } from "../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../utills/toastutills";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import FormImageUploader from "./FormProfileUploader";
 import { PatternFormat } from "react-number-format";
@@ -15,6 +15,7 @@ import { ROLES } from "../../../../interfaces/AuthInterfaces";
 import CustomDatePicker from "../../../../components/child/DatePicker";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 import { PERMISSIONS } from "../../../../utills/auth/permissions";
+import { getErrorMessage } from "../../../../utills/utills";
 
 // Yup validation schema
 const editEmployeeSchema = yup.object({
@@ -66,7 +67,7 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [editEmployee, { isLoading }] = useEditEmployeeMutation();
-  
+
   const { data: employeeData, isLoading: isEmployeeLoading } =
     useAllEmployeesQuery(
       { forDropdown: true },
@@ -110,7 +111,7 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
       if (res.success) showSuccess(res.message);
       setShowModal(false);
     } catch (err) {
-      console.error("Failed to save employee:", err);
+      showError(getErrorMessage(err));
     }
   };
 

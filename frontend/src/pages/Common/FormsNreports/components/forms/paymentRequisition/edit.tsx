@@ -8,8 +8,9 @@ import {
 import { Icon } from "@iconify/react/dist/iconify.js";
 
 import PaymentRequisitionForm, { type FormValues } from "./form";
-import { showSuccess } from "../../../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../../../utills/toastutills";
 import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
+import { getErrorMessage } from "../../../../../../utills/utills";
 interface EditPaymentRequistionProp {
   data: PaymentRequisition;
 }
@@ -94,8 +95,8 @@ const EditPaymentRequistion: React.FC<EditPaymentRequistionProp> = ({
         showSuccess(response.message);
         resetForm();
       }
-    } catch (err: any) {
-      console.error(err);
+    } catch (err) {
+      showError(getErrorMessage(err));
     }
   };
 

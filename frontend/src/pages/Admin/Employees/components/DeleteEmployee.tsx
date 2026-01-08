@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { useDeleteEmployeeMutation } from "../../../../services/EmployeeApi";
-import { showSuccess } from "../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../utills/toastutills";
+import { getErrorMessage } from "../../../../utills/utills";
 
 interface DeleteEmployeeProps {
   employee: {
@@ -26,7 +27,7 @@ const DeleteEmployee: React.FC<DeleteEmployeeProps> = ({ employee }) => {
         setShowModal(false);
       }
     } catch (error) {
-      console.error(error);
+      showError(getErrorMessage(error));
     }
   };
 
@@ -35,7 +36,7 @@ const DeleteEmployee: React.FC<DeleteEmployeeProps> = ({ employee }) => {
       {/* Trigger Button */}
       <button
         className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 p-0"
-          style={{ width: "43px", height: "40px" }}
+        style={{ width: "43px", height: "40px" }}
         onClick={() => setShowModal(true)}
         title="Delete Employee"
       >

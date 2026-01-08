@@ -6,6 +6,7 @@ import { showError, showSuccess } from "../../../../../../utills/toastutills";
 
 import FormSubmissionLoader from "../../../../../../components/child/FormSubmissionLoader";
 import ClientFeedBackForm, { type FormValues } from "./form";
+import { getErrorMessage } from "../../../../../../utills/utills";
 
 const ClientFeedbackFormTab = () => {
   const [createFeedback, { isLoading }] = useCreateClientFeedbackMutation();
@@ -48,8 +49,7 @@ const ClientFeedbackFormTab = () => {
         resetForm();
       }
     } catch (error: unknown) {
-      const err = error as { message?: string };
-      showError(err.message ?? "Something went wrong");
+      showError(getErrorMessage(error));
     }
   };
 

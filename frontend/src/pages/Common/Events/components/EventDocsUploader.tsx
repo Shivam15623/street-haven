@@ -2,8 +2,9 @@ import React, { useCallback, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
 import { useEventuploadDocumentMutation } from "../../../../services/EventApi";
-import { showSuccess } from "../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../utills/toastutills";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
+import { getAxiosErrorMessage } from "../../../../utills/utills";
 interface UploadedFile {
   id: string;
   name: string;
@@ -122,9 +123,10 @@ const EventDocsUploader: React.FC<EventDocsUploaderProps> = ({
         showSuccess("documents uploaded Successfully");
         setFiles([]);
         onOpenChange(false);
+        setProgrees(0);
       }
     } catch (error) {
-      console.log(error);
+      showError(getAxiosErrorMessage(error));
     }
   };
 

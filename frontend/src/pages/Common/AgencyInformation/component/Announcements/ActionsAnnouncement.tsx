@@ -3,12 +3,17 @@ import React from "react";
 import { ErrorMessage, Field, Formik } from "formik";
 import * as yup from "yup";
 import { Form as BootstrapForm } from "react-bootstrap";
-import { useCreateAnnouncementMutation, useEditAnnouncementMutation, type AnnouncementData } from "../../../../../services/AnnouncementApi";
-import { showSuccess } from "../../../../../utills/toastutills";
+import {
+  useCreateAnnouncementMutation,
+  useEditAnnouncementMutation,
+  type AnnouncementData,
+} from "../../../../../services/AnnouncementApi";
+import { showError, showSuccess } from "../../../../../utills/toastutills";
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
 import QuillEditor from "../../../../../components/child/QuillEditor";
 import FileField from "../../../../../components/child/FileField";
+import { getAxiosErrorMessage } from "../../../../../utills/utills";
 
 // ✅ Schema
 const AnnouncementsFormSchema = () =>
@@ -76,8 +81,15 @@ const ActionsAnnouncement: React.FC<ActionsAnnouncementsProps> = ({
       const formData = buildFormData(values);
 
       const res = isEdit
-        ? await editUpdate({ id: update!._id, formData: formData ,onProgress:(p)=>setProgress(p)}).unwrap()
-        : await createUpdate({data:formData,onProgress:(p:number)=>setProgress(p)}).unwrap();
+        ? await editUpdate({
+            id: update!._id,
+            formData: formData,
+            onProgress: (p) => setProgress(p),
+          }).unwrap()
+        : await createUpdate({
+            data: formData,
+            onProgress: (p: number) => setProgress(p),
+          }).unwrap();
 
       if (res.success) {
         showSuccess(res.message);
@@ -87,7 +99,7 @@ const ActionsAnnouncement: React.FC<ActionsAnnouncementsProps> = ({
         setProgress(0);
       }
     } catch (error) {
-      console.error("Failed to save HR update:", error);
+      showError(getAxiosErrorMessage(error));
     }
   };
 

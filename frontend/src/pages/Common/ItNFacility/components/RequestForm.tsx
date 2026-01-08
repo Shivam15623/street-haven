@@ -3,9 +3,12 @@ import * as Yup from "yup";
 import { Col, Form, Row } from "react-bootstrap";
 import ImageUpload from "../../../../components/child/Imageupload";
 import { useCreateTicketMutation } from "../../../../services/ticketApi";
-import { showSuccess } from "../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../utills/toastutills";
 import QuillEditor from "../../../../components/child/QuillEditor";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
+import {
+  getErrorMessage,
+} from "../../../../utills/utills";
 
 const requestSchema = Yup.object({
   reqTitle: Yup.string().required("Request Title is required"),
@@ -44,7 +47,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onCancel }) => {
         resetForm();
       }
     } catch (error) {
-      console.error(error);
+      showError(getErrorMessage(error));
     }
   };
   return (
@@ -271,7 +274,6 @@ const RequestForm: React.FC<RequestFormProps> = ({ onCancel }) => {
                       </div>
                     </div>
                   </Form>
-                 
                 </div>
               )}
             </Formik>

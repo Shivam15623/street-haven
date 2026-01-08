@@ -1,18 +1,16 @@
 import React from "react";
 
 import StaffFeedbackForm, { type FormValues } from "./form";
-import { showSuccess } from "../../../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../../../utills/toastutills";
 import { useCreateStaffFeedbackMutation } from "../../../../../../services/StaffFeedbackApi";
-
-
-
+import { getErrorMessage } from "../../../../../../utills/utills";
 
 const StaffFeedbackFormTab: React.FC = () => {
   const [createStaff, { isLoading }] = useCreateStaffFeedbackMutation();
 
   const handleSubmit = async (
     values: FormValues,
-       { resetForm }: { resetForm: () => void }
+    { resetForm }: { resetForm: () => void }
   ) => {
     try {
       // combine date and time if needed
@@ -31,7 +29,7 @@ const StaffFeedbackFormTab: React.FC = () => {
         resetForm();
       }
     } catch (err) {
-      console.error(err);
+      showError(getErrorMessage(err));
     }
   };
 
@@ -41,11 +39,11 @@ const StaffFeedbackFormTab: React.FC = () => {
         <h4 className="text-lg sm:text-xl text-street-dark fw-semibold mb-0">
           Staff Feedback Form
         </h4>
-        <StaffFeedbackForm 
-        footer={true} 
-        handleSubmit={handleSubmit} 
-        isLoading={isLoading} 
-        initialvalues={{
+        <StaffFeedbackForm
+          footer={true}
+          handleSubmit={handleSubmit}
+          isLoading={isLoading}
+          initialvalues={{
             date: new Date(),
             time: "",
             location: "",
@@ -54,8 +52,8 @@ const StaffFeedbackFormTab: React.FC = () => {
             actionsTaken: "",
             category: "Other",
             newWitness: "",
-          }} />
-
+          }}
+        />
       </div>
     </div>
   );

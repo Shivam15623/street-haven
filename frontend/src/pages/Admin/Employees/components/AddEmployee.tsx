@@ -17,6 +17,7 @@ import CustomDatePicker from "../../../../components/child/DatePicker";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { PERMISSIONS } from "../../../../utills/auth/permissions";
+import { getErrorMessage } from "../../../../utills/utills";
 dayjs.extend(relativeTime);
 interface AddEmployeeValues {
   firstName: string;
@@ -98,8 +99,7 @@ const AddEmployee = () => {
         setShowModal(false);
       }
     } catch (error: unknown) {
-      if (error instanceof Error) showError(error.message);
-      else showError("Something went wrong");
+      showError(getErrorMessage(error));
     }
   };
 

@@ -4,7 +4,7 @@ import Cropper, { type Area, type Point } from "react-easy-crop";
 import { Button, Form } from "react-bootstrap";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
 import { useEditProfileMutation } from "../../../../services/UserApi";
-import { showSuccess } from "../../../../utills/toastutills";
+import { showSuccess, showWarning } from "../../../../utills/toastutills";
 import { useDispatch } from "react-redux";
 import { UpdateUserDetails } from "../../../../redux/AuthSlice";
 
@@ -26,7 +26,7 @@ const ImageUploader = () => {
     const validTypes = ["image/jpeg", "image/png", "image/webp"];
 
     if (!validTypes.includes(file.type)) {
-      alert("Please upload JPG, PNG, or WEBP images only");
+      showWarning("Please upload JPG, PNG, or WEBP images only");
       return;
     }
 

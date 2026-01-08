@@ -9,6 +9,7 @@ import AuthFormWrapper from "../../../components/Authentication/AuthFormWrapper"
 import AuthWrapper from "../../../components/Authentication/AuthWrapper";
 import { showError, showSuccess } from "../../../utills/toastutills";
 import PasswordInput from "../../../components/Authentication/PasswordInput";
+import { getErrorMessage } from "../../../utills/utills";
 
 // ✅ Validation Schema
 const resetPasswordSchema = Yup.object({
@@ -47,8 +48,8 @@ const ResetPassword: React.FC = () => {
       } else {
         showError("invaid session");
       }
-    } catch (error: any) {
-      showError(error.data.message);
+    } catch (error) {
+      showError(getErrorMessage(error));
     }
   };
 

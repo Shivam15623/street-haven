@@ -2,12 +2,11 @@ import React, { useState } from "react";
 
 import { Icon } from "@iconify/react/dist/iconify.js";
 
-
 import dayjs from "dayjs";
 import { useDeletemeetingMinutesMutation } from "../../../../../services/meetingminutesApi";
-import { showSuccess } from "../../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../../utills/toastutills";
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
-
+import { getErrorMessage } from "../../../../../utills/utills";
 
 type DeleteMeetingProps = {
   id: string;
@@ -38,7 +37,7 @@ const DeleteMeetingMinutes: React.FC<DeleteMeetingProps> = ({
         setShowModal(false);
       }
     } catch (error) {
-      console.error("Failed to delete Meeting Minutes:", error);
+      showError(getErrorMessage(error));
     }
   };
 

@@ -4,7 +4,7 @@ import {
   useCreateEventMutation,
   useEditEventMutation,
 } from "../../../../services/EventApi";
-import { showSuccess } from "../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../utills/toastutills";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import { Col, Form, Row } from "react-bootstrap";
@@ -15,6 +15,7 @@ import type { EventUpcomingData } from "../../../../interfaces/EventInterfaces";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 import dayjs from "dayjs";
+import { getErrorMessage } from "../../../../utills/utills";
 
 const EventFormSchema = Yup.object().shape({
   title: Yup.string().required("Title is required"),
@@ -110,38 +111,42 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
   };
 
   const handleEdit = async (values: EventFormValues) => {
-    if (!event?._id) return;
-    const eventDate = values.eventDate;
+    try {
+      if (!event?._id) return;
+      const eventDate = values.eventDate;
 
-    const [sh, sm] = values.startTime.split(":").map(Number);
-    const [eh, em] = values.endTime.split(":").map(Number);
+      const [sh, sm] = values.startTime.split(":").map(Number);
+      const [eh, em] = values.endTime.split(":").map(Number);
 
-    const startDateTime = new Date(
-      eventDate.getFullYear(),
-      eventDate.getMonth(),
-      eventDate.getDate(),
-      sh,
-      sm
-    );
+      const startDateTime = new Date(
+        eventDate.getFullYear(),
+        eventDate.getMonth(),
+        eventDate.getDate(),
+        sh,
+        sm
+      );
 
-    const endDateTime = new Date(
-      eventDate.getFullYear(),
-      eventDate.getMonth(),
-      eventDate.getDate(),
-      eh,
-      em
-    );
+      const endDateTime = new Date(
+        eventDate.getFullYear(),
+        eventDate.getMonth(),
+        eventDate.getDate(),
+        eh,
+        em
+      );
 
-    const payload = {
-      ...values,
-      eventDate, // keep as Date
-      startTime: startDateTime,
-      endTime: endDateTime,
-    };
-    const res = await editEvent({ cred: payload, id: event._id }).unwrap();
-    if (res.success) {
-      showSuccess(res.message);
-      setShowModal(false);
+      const payload = {
+        ...values,
+        eventDate, // keep as Date
+        startTime: startDateTime,
+        endTime: endDateTime,
+      };
+      const res = await editEvent({ cred: payload, id: event._id }).unwrap();
+      if (res.success) {
+        showSuccess(res.message);
+        setShowModal(false);
+      }
+    } catch (error) {
+      showError(getErrorMessage(error));
     }
   };
 
@@ -152,9 +157,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
     locationUrl: event?.location.location_url || "",
 
     capacity: event?.capacity || 0,
-    eventDate: event?.eventDate
-      ? new Date(event.eventDate)
-      : new Date(),
+    eventDate: event?.eventDate ? new Date(event.eventDate) : new Date(),
     startTime: event?.startTime ? dayjs(event.startTime).format("HH:mm") : "",
     endTime: event?.endTime ? dayjs(event.endTime).format("HH:mm") : "",
   };

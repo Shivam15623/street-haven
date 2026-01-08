@@ -3,7 +3,8 @@ import { FileIconWithBackground } from "./FileIcon";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import type { FileItem } from "../../interfaces/fileinterface";
 import { useEventdeleteDocumentMutation } from "../../services/EventApi";
-import { showSuccess } from "../../utills/toastutills";
+import { showError, showSuccess } from "../../utills/toastutills";
+import { getErrorMessage } from "../../utills/utills";
 
 interface FileCardProps {
   file: FileItem;
@@ -28,7 +29,7 @@ const FileCard: React.FC<FileCardProps> = ({ file, onClick, eventId }) => {
         showSuccess(res.message);
       }
     } catch (error) {
-      console.log(error);
+      showError(getErrorMessage(error));
     }
   };
 

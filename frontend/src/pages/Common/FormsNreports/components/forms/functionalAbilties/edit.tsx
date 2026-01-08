@@ -20,7 +20,7 @@ import {
   type FunctionalAbility,
 } from "../../../../../../services/FormApi";
 import type { FunctionalAbilityFormValues } from "../FunctionalAbiltiesForm";
-import { showSuccess } from "../../../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../../../utills/toastutills";
 import {
   buildInitialValues,
   extractAbilities,
@@ -35,6 +35,7 @@ import JobInjurySection from "./sections/JobInjurySection";
 import AbilitiesSection from "./sections/AbilitiesSection";
 import RestrictionsSection from "./sections/RestrictionsSection";
 import HealthProfessionalBillSection from "./sections/HealthProfessionalBillSection";
+import { getErrorMessage } from "../../../../../../utills/utills";
 
 type ReturnToWorkStatus = "noRestrictions" | "withRestrictions" | "unable";
 interface Section {
@@ -327,7 +328,8 @@ const EditFAbilties = ({ data }: { data: FunctionalAbility }) => {
         resetForm();
       }
     } catch (error) {
-      console.log(error);
+ 
+       showError(getErrorMessage(error));
     }
   };
 

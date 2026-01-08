@@ -6,7 +6,7 @@ import ModalWrapper from "../../../../components/child/ModalWrapper";
 import { Link } from "react-router-dom";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { useEditTicketMutation } from "../../../../services/ticketApi";
-import { showSuccess } from "../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../utills/toastutills";
 import type { TicketData } from "../../../../interfaces/Ticket";
 import { useAllEmployeesQuery } from "../../../../services/EmployeeApi";
 import ImageUpload from "../../../../components/child/Imageupload";
@@ -17,6 +17,7 @@ import QuillEditor from "../../../../components/child/QuillEditor";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 import useHasPermission from "../../../../hooks/Auth";
 import { PERMISSIONS } from "../../../../utills/auth/permissions";
+import { getErrorMessage } from "../../../../utills/utills";
 
 // ✅ Validation Schema
 const TicketSchema = Yup.object({
@@ -102,7 +103,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
         seteditphoto(false);
       }
     } catch (error) {
-      console.log(error);
+      showError(getErrorMessage(error));
     }
   };
 
