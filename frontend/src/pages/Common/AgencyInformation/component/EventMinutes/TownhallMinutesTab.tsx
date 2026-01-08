@@ -1,24 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useLazyFetchMeetingMinutesQuery } from "../../../../../services/meetingminutesApi";
 import ActionstownhallMinutes from "./ActionstownhallMinutes";
 import TownhallMinuteCard from "./TownhallMinuteCard";
-import { useNavigate, useSearchParams } from "react-router-dom";
+
 
 import StreetPaggination from "../../../../../components/child/StreetPaggination";
 import useHasPermission from "../../../../../hooks/Auth";
 import type { AgentTabProp } from "../Agreement/CollectiveAgreementTab";
 import MeetingMinutesCardSkeleton from "./EventMinutesCardSkeleton";
+import { useScrollToItemFromUrl } from "../../../../../hooks/useScrollToItemFromUrl";
 
 const TownhallMinutesTab: React.FC<AgentTabProp> = ({ isActive }) => {
   const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const slugParam = useMemo(
-    () => searchParams.get("item") ?? "",
-    [searchParams]
-  );
+
+
+
   const [getEventMinutes, { data, isLoading, isError, error }] =
     useLazyFetchMeetingMinutesQuery();
   useEffect(() => {
@@ -30,7 +28,7 @@ const TownhallMinutesTab: React.FC<AgentTabProp> = ({ isActive }) => {
         order: "desc",
       });
     }
-  }, [page, slugParam, getEventMinutes, isActive]);
+  }, [page, getEventMinutes, isActive]);
   const totalPages = data ? data.data.paggination.totalPages : 0;
   const { hasPermission } = useHasPermission();
   const handlePageChange = (newPage: number) => {
@@ -38,24 +36,9 @@ const TownhallMinutesTab: React.FC<AgentTabProp> = ({ isActive }) => {
     setPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  useEffect(() => {
-    if (!slugParam || !data?.data.meetingMinutes) return;
-
-    const el = document.getElementById(slugParam);
-    if (!el) return;
-
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
-
-    // Clean URL after a short delay
-    const timer = setTimeout(() => {
-      const params = new URLSearchParams(location.search);
-      params.delete("item");
-
-      navigate(`${location.pathname}?${params.toString()}`, { replace: true });
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [slugParam, data, navigate]);
+  useScrollToItemFromUrl({
+    enabled: isActive && !!data?.data?.meetingMinutes,
+  });
 
   return (
     <div className="d-flex flex-column gap-24">

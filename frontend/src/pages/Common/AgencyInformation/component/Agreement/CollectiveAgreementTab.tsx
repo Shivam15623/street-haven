@@ -4,14 +4,11 @@ import CollectiveAgreementCard from "./CollectiveAgreementCard";
 import ActionsAgreement from "./ActionsAgreement";
 import useHasPermission from "../../../../../hooks/Auth";
 import CollectiveAgreementCardSkeleton from "./AgreementCardSkeleton";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useScrollToItemFromUrl } from "../../../../../hooks/useScrollToItemFromUrl";
 export interface AgentTabProp {
   isActive: boolean;
 }
 const CollectiveAgreementTab: React.FC<AgentTabProp> = ({ isActive }) => {
-  const [searchParams] = useSearchParams();
-  const navigate=useNavigate()
-  const itemParam = searchParams.get("item") ?? null;
   const [getAgreements, { data, isLoading, isError }] =
     useLazyFetchAgreementsQuery();
   const [open, setOpen] = useState(false);
@@ -21,24 +18,9 @@ const CollectiveAgreementTab: React.FC<AgentTabProp> = ({ isActive }) => {
       getAgreements();
     }
   }, [isActive, getAgreements]);
-  useEffect(() => {
-    if (!itemParam || !data) return;
-
-    const el = document.getElementById(itemParam);
-    if (!el) return;
-
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
-
-    // Clean URL after a short delay
-    const timer = setTimeout(() => {
-      const params = new URLSearchParams(location.search);
-      params.delete("item");
-
-      navigate(`${location.pathname}?${params.toString()}`, { replace: true });
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [itemParam, data, navigate]);
+  useScrollToItemFromUrl({
+    enabled: isActive && !!data?.data,
+  });
   if (isError) return <div>Failed to load agreements.</div>;
 
   const agreements = data?.data || [];

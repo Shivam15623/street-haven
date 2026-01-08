@@ -14,7 +14,7 @@ export const createCollectiveAgreement = asyncHandler(async (req, res) => {
 
   try {
     const { title, startDate, endDate } = req.body;
-    const { firstname, lastname } = req.user;
+    const { firstname, lastname, _id: userId } = req.user;
     const attachmentpath = req?.file?.path; // Fix typo
 
     if (!attachmentpath) throw new ApiError(400, "Attachment file is missing");
@@ -30,6 +30,7 @@ export const createCollectiveAgreement = asyncHandler(async (req, res) => {
           attachment: attachmentData,
           effectiveStartDate: startDate,
           effectiveEndDate: endDate,
+          createdBy: userId,
         },
       ],
       { session }
@@ -123,37 +124,124 @@ export const editCollectiveAgreement = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { title, startDate, endDate } = req.body;
 
-  let agreement = await CollectiveAgreement.findById(id);
-  if (!agreement) {
-    throw new ApiError(404, "Agreement not found");
-  }
+  const session = await mongoose.startSession();
 
-  let updatedAttachment = agreement.attachment;
+  try {
+    session.startTransaction();
 
-  // If user uploads a new file
-  if (req.file?.path) {
-    const attachmentPath = req.file.path;
-
-    // Delete old file from Cloudinary
-
-    if (agreement.attachment?.fileUrl) {
-      await deleteFromCloudinary(agreement.attachment.fileUrl);
+    const agreement = await CollectiveAgreement.findById(id).session(session);
+    if (!agreement) {
+      throw new ApiError(404, "Agreement not found");
     }
 
-    updatedAttachment = await uploadAttachment(attachmentPath);
+    /* ======================
+       TRACK CHANGES
+    ====================== */
+    const changes = {
+      startDateChanged: false,
+      endDateChanged: false,
+      attachmentChanged: false,
+    };
+
+    if (
+      startDate &&
+      new Date(startDate).toISOString() !==
+        new Date(agreement.effectiveStartDate).toISOString()
+    ) {
+      changes.startDateChanged = true;
+      agreement.effectiveStartDate = startDate;
+    }
+
+    if (
+      endDate &&
+      new Date(endDate).toISOString() !==
+        new Date(agreement.effectiveEndDate).toISOString()
+    ) {
+      changes.endDateChanged = true;
+      agreement.effectiveEndDate = endDate;
+    }
+
+    /* ======================
+       ATTACHMENT UPDATE
+    ====================== */
+    if (req.file?.path) {
+      changes.attachmentChanged = true;
+
+      // delete old file AFTER upload succeeds
+      const uploadedAttachment = await uploadAttachment(req.file.path);
+
+      if (agreement.attachment?.fileUrl) {
+        await deleteFromCloudinary(agreement.attachment.fileUrl);
+      }
+
+      agreement.attachment = uploadedAttachment;
+    }
+
+    /* ======================
+       OTHER UPDATES
+    ====================== */
+    if (title) {
+      agreement.title = title;
+    }
+
+    await agreement.save({ session });
+
+    /* ======================
+       CREATE NOTIFICATION
+       (ONLY IF REQUIRED)
+    ====================== */
+    if (
+      changes.startDateChanged ||
+      changes.endDateChanged ||
+      changes.attachmentChanged
+    ) {
+      const updatedParts = [];
+
+      if (changes.startDateChanged || changes.endDateChanged) {
+        updatedParts.push("validity period");
+      }
+      if (changes.attachmentChanged) {
+        updatedParts.push("agreement document");
+      }
+
+      const readableParts =
+        updatedParts.length === 1
+          ? updatedParts[0]
+          : updatedParts.slice(0, -1).join(", ") +
+            " and " +
+            updatedParts.slice(-1);
+
+      const notification = await createNotification(
+        {
+          category: "collective_agreement",
+          action: "updated",
+          severity: "warning",
+          title: "Collective agreement updated",
+          message: `The ${readableParts} for "${agreement.title}" has been updated. Please review the latest version.`,
+          link: `/agency_info?tab=collective_agreement&item=${agreement.slug}`,
+          meta: {
+            agreementId: agreement.slug,
+            changes,
+          },
+          isGlobal: true, // usually agreements are global
+          createdBy: req.user?._id,
+        },
+        session
+      );
+      io.emit("newNotification", notification);
+    }
+
+    await session.commitTransaction();
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Agreement updated successfully"));
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
   }
-
-  // Update DB
-  agreement.title = title || agreement.title;
-  agreement.attachment = updatedAttachment;
-  agreement.effectiveStartDate = startDate || agreement.effectiveStartDate;
-  agreement.effectiveEndDate = endDate || agreement.effectiveEndDate;
-
-  await agreement.save();
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, "Agreement updated successfully", agreement));
 });
 
 // --------------------------------------------------------

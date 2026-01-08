@@ -8,6 +8,7 @@ import { io } from "../index.js";
 import { createNotification } from "../helper/CreateNotoification.js";
 import { addActivityLog } from "../helper/addActivityLogs.js";
 import { uploadOnCloudinary } from "../utills/cloudinary.js";
+import { isDateDifferent, isDifferent } from "../helper/utills.js";
 export const createEvent = asyncHandler(async (req, res) => {
   const {
     title,
@@ -98,44 +99,120 @@ export const createEvent = asyncHandler(async (req, res) => {
 
 export const editEvent = asyncHandler(async (req, res) => {
   const { id: eventId } = req.params;
-
   const {
     title,
     description,
     locationName,
     locationUrl,
-
     capacity,
     eventDate,
     startTime,
     endTime,
   } = req.body;
 
-  const event = await Event.findById(eventId);
-  if (!event) {
-    throw new ApiError(404, "Event does not exist");
-  }
+  const session = await mongoose.startSession();
 
-  if (title) event.title = title;
-  if (description) event.description = description;
+  try {
+    session.startTransaction();
 
-  if (capacity) event.capacity = capacity;
-  if (eventDate) event.eventDate = eventDate;
-  if (startTime) event.startTime = startTime;
-  if (endTime) event.endTime = endTime;
+    const event = await Event.findById(eventId).session(session);
+    if (!event) {
+      throw new ApiError(404, "Event does not exist");
+    }
 
-  if (locationName || locationUrl) {
-    event.location = {
-      location_name: locationName || event.location?.location_name,
-      location_url: locationUrl || event.location?.location_url,
+    /* ======================
+       TRACK CHANGES
+    ====================== */
+    const changes = {
+      dateChanged: false,
+      timeChanged: false,
+      locationChanged: false,
     };
+
+    if (eventDate && isDateDifferent(event.eventDate, eventDate)) {
+      changes.dateChanged = true;
+      event.eventDate = eventDate;
+    }
+
+    if (
+      (startTime && isDateDifferent(event.startTime, startTime)) ||
+      (endTime && isDateDifferent(event.endTime, endTime))
+    ) {
+      changes.timeChanged = true;
+      if (startTime) event.startTime = startTime;
+      if (endTime) event.endTime = endTime;
+    }
+
+    if (
+      (locationName &&
+        isDifferent(event.location?.location_name, locationName)) ||
+      (locationUrl && isDifferent(event.location?.location_url, locationUrl))
+    ) {
+      changes.locationChanged = true;
+      event.location = {
+        location_name: locationName || event.location?.location_name,
+        location_url: locationUrl || event.location?.location_url,
+      };
+    }
+
+    /* ======================
+       OTHER UPDATES
+    ====================== */
+    if (title) event.title = title;
+    if (description) event.description = description;
+    if (capacity) event.capacity = capacity;
+
+    await event.save({ session });
+
+    /* ======================
+       CREATE NOTIFICATIONS
+    ====================== */
+
+    const updatedParts = [];
+
+    if (changes.dateChanged) updatedParts.push("date");
+    if (changes.timeChanged) updatedParts.push("time");
+    if (changes.locationChanged) updatedParts.push("location");
+    if (updatedParts.length > 0) {
+      const readableParts =
+        updatedParts.length === 1
+          ? updatedParts[0]
+          : updatedParts.slice(0, -1).join(", ") +
+            " and " +
+            updatedParts.slice(-1);
+
+      const notification = await createNotification(
+        {
+          category: "event",
+          action: "updated",
+          severity: "warning",
+          title: "Event details updated",
+          message: `The ${readableParts} for "${event.title}" has been updated. Please review the latest event details.`,
+          link: `/events?tab=upcoming_events&item=${event.slug}`,
+          meta: {
+            eventId: event.slug,
+            changes,
+          },
+          isGlobal: true, // ✅ no per-user mappings
+          createdBy: userId,
+          expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          meta: { eventId: event.slug },
+        },
+        session
+      );
+      io.emit("newNotification", notification);
+    }
+    await session.commitTransaction();
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Event updated successfully"));
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
   }
-
-  await event.save();
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, "Event updated successfully"));
 });
 
 export const GetUpcomingEvents = asyncHandler(async (req, res) => {

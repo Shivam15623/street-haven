@@ -48,7 +48,7 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
         severity: "info",
         title: "New Program Manual Added",
         message: `${firstname} added a new Program Manual: "${title}"`,
-        link: `/program-manuals/${programmanual[0].slug}`,
+        link: `/programs&manuals?slug=${programmanual[0].slug}`,
         createdBy: userId,
         isGlobal: true,
         expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
@@ -110,33 +110,40 @@ export const EditProgramManual = asyncHandler(async (req, res) => {
   }
 
   const updates = {};
+  let attachmentChanged = false;
 
-  // Only update fields that are different
   if (title && title !== programManual.title) {
     updates.title = title;
   }
+
   if (description && description !== programManual.description) {
     updates.description = description;
   }
+
   if (tags && JSON.stringify(tags) !== JSON.stringify(programManual.tags)) {
     updates.tags = tags;
   }
+
   if (type && type !== programManual.type) {
     updates.type = type;
   }
 
-  // If a new file is uploaded
+  /* ======================
+     ATTACHMENT UPDATE
+     (NOTIFY USERS)
+  ====================== */
   if (req?.file?.path) {
-    const attachmentData = await uploadAttachment(req?.file.path);
+    const attachmentData = await uploadAttachment(req.file.path);
 
-    // Only update if different (by URL or size or filename etc.)
     const currentAttachment = programManual.attachment || {};
+
     if (
       attachmentData.fileUrl !== currentAttachment.fileUrl ||
       attachmentData.fileName !== currentAttachment.fileName ||
       attachmentData.size !== currentAttachment.size
     ) {
       updates.attachment = attachmentData;
+      attachmentChanged = true;
     }
   }
 
@@ -151,15 +158,33 @@ export const EditProgramManual = asyncHandler(async (req, res) => {
     runValidators: true,
   });
 
+  /* ======================
+     NOTIFICATION
+     (ONLY FOR ATTACHMENT)
+  ====================== */
+  if (attachmentChanged) {
+    const notification = await createNotification({
+      category: "program_mannual",
+      action: "updated",
+      severity: "info",
+      title: "Program manual updated",
+      message: `The program manual "${updatedManual.title}" has been updated. Please refer to the latest version.`,
+      link: `/programs&manuals?slug=${updatedManual.slug}`,
+      isGlobal: true,
+      createdBy: req.user?._id,
+      meta: {
+        manualId: updatedManual.slug,
+        attachmentUpdated: true,
+      },
+    });
+    io.emit("newNotification", notification);
+  }
+
   return res
     .status(200)
-    .json(
-      new ApiResponse(200, updatedManual, "Program Manual updated successfully")
-    );
+    .json(new ApiResponse(200, "Program Manual updated successfully"));
 });
 
-// 📌 Delete Program Manual
-// 📌 Delete Program Manual
 export const DeleteProgramManual = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
