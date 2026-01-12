@@ -147,7 +147,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
         {!disabled && (
           <div
             id={toolbarId}
-            className="d-flex  align-items-center gap-2 border-bottom me-0 pe-0 bg-light p-2 sticky-top flex-wrap"
+            className="d-flex  align-items-center gap-2 border-bottom me-0 pe-0 bg-light p-2  flex-wrap"
             style={{
               top: 0,
               zIndex: 1,

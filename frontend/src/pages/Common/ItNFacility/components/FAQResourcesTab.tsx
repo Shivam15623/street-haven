@@ -18,6 +18,7 @@ import type { AgentTabProp } from "../../AgencyInformation/component/Agreement/C
 import { useEffect } from "react";
 import FAQCardLoader from "./FAqComponents/FAQCardLoader";
 import EmergencyContactLoader from "./FAqComponents/EmergencyContactLoader";
+import { useSocket } from "../../../../hooks/useSocket";
 
 interface FAQItem {
   _id: string;
@@ -32,6 +33,7 @@ interface FAQCard {
 }
 
 const FAQResourcesTab: React.FC<AgentTabProp> = ({ isActive }) => {
+  const { socket } = useSocket();
   const [getCategories, { data, isLoading }] = useLazyAllCategoriesQuery();
   const [getContacts, { data: contacts, isLoading: contactsLoading }] =
     useLazyViewEmergencyContactsQuery();
@@ -42,6 +44,28 @@ const FAQResourcesTab: React.FC<AgentTabProp> = ({ isActive }) => {
     }
   }, [isActive, getCategories, getContacts]);
   const { hasPermission } = useHasPermission();
+  useEffect(() => {
+    if (!socket || !isActive) return;
+
+    socket.emit("join-page-room", "faq_viewers");
+
+    const handleFaqChanged = () => {
+      getCategories();
+      getContacts();
+    };
+
+    socket.on("faq-category-changed", handleFaqChanged);
+    socket.on("faq-question-changed", handleFaqChanged);
+    socket.on("emergency-contact-changed", handleFaqChanged);
+
+    return () => {
+      socket.emit("leave-page-room", "faq_viewers");
+      socket.off("faq-category-changed", handleFaqChanged);
+      socket.off("faq-question-changed", handleFaqChanged);
+      socket.off("emergency-contact-changed", handleFaqChanged);
+    };
+  }, [socket, isActive, getCategories, getContacts]);
+
   if (isLoading || contactsLoading) {
     return (
       <div className="d-flex flex-column gap-4 mb-5">

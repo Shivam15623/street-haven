@@ -36,3 +36,9 @@ export const getErrorMessage = (err: any): string => {
   return "An error occurred while processing the request.";
 };
 
+export const getPlainTextFromHTML = (html: string): string => {
+  if (!html) return "";
+
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return doc.body.textContent?.trim() || "";
+};

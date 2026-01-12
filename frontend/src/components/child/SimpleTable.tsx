@@ -61,7 +61,7 @@ const SimpleTable = <T extends unknown>({
           </table>
           <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-3 gap-2">
             <span>
-              Page {page} of {totalPages}
+              Page {page} of {totalPages === 0 ? totalPages + 1 : totalPages}
             </span>
             <div className="d-flex gap-2">
               <button

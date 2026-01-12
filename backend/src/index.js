@@ -13,11 +13,18 @@ export const io = new Server(server, {
     credentials: true,
     origin: process.env.CLIENT_URL,
   },
-  transports: ["websocket"],
+  transports: ["websocket", "polling"],
 });
 export const activeTicketUsers = {};
 // Handle socket connections
 io.on("connection", (socket) => {
+  socket.on("join-page-room", (room) => {
+    socket.join(room);
+  });
+
+  socket.on("leave-page-room", (room) => {
+    socket.leave(room);
+  });
   // Example: join a room for ticket
   socket.on("joinRoom", ({ ticketId, userId }) => {
     socket.join(ticketId);

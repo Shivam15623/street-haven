@@ -7,7 +7,7 @@ import { useState } from "react";
 import type { IncidentReport } from "../../../../../../services/IncidentReportApi";
 import ModalWrapper from "../../../../../../components/child/ModalWrapper";
 import { useLazyGetIncidentReportPdfQuery } from "../../../../../../services/FormApi";
-
+import DOMPurify from "dompurify";
 dayjs.extend(localizedFormat);
 
 interface IncidentReportModalProps {
@@ -64,7 +64,7 @@ const IncidentReportModal = ({ incident }: IncidentReportModalProps) => {
             onClick={handleDownload}
           >
             {" "}
-            {pdfloading ? "fetching" : "download"}
+            {pdfloading ? "Downloading..." : "Download"}
           </button>
         }
       >
@@ -114,7 +114,12 @@ const IncidentReportModal = ({ incident }: IncidentReportModalProps) => {
             </h6>
             <div className=" card">
               <div className="card-body">
-                <p className="mb-0">{incident.description}</p>
+                <div
+                  className="parse Te"
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(incident.description),
+                  }}
+                />
               </div>
             </div>
           </div>

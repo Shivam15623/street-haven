@@ -13,13 +13,22 @@ import type { Document } from "./DocumentCard";
 import QuillEditor from "../../../../components/child/QuillEditor";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 import FileField from "../../../../components/child/FileField";
-import { getErrorMessage } from "../../../../utills/utills";
+import { getErrorMessage, getPlainTextFromHTML } from "../../../../utills/utills";
 
 // 🔹 Schema generator (avoids duplication)
 const programManualSchema = () =>
   Yup.object().shape({
-    title: Yup.string().required("Title is required"),
-    description: Yup.string().required("Description is required"),
+    title: Yup.string().required("Title is required").min(3, "Title must be at least 3 characters"),
+    description: Yup.string()
+      .required("Description is required")
+      .test(
+        "min-text-length",
+        "Description must be at least 10 characters",
+        (value) => {
+          const plainText = getPlainTextFromHTML(value || "");
+          return plainText.length >= 10;
+        }
+      ),
     tags: Yup.array()
       .of(Yup.string())
       .min(1, "At least one tag is required")
