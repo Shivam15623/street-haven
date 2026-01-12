@@ -5,7 +5,7 @@ import ModalWrapper from "../../../../components/child/ModalWrapper";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import type { FileType } from "../../../../interfaces/fileinterface";
 import { getErrorMessage } from "../../../../utills/utills";
-
+import DOMPurify from "dompurify";
 type DeleteMannualsProps = {
   id: string;
   title: string;
@@ -80,9 +80,19 @@ const DeleteMannuals: React.FC<DeleteMannualsProps> = ({
             Are you sure you want to delete this program manual? This action
             cannot be undone.
           </p>
-          <div className="border rounded p-2 bg-light">
+          <div
+            className="border rounded p-3 "
+            style={{
+              backgroundColor: "var(--street-bg-f4)",
+            }}
+          >
             <p className="fw-bold">{title}</p>
-            <p className="mb-1">{description}</p>
+            <div
+              className="parse Te"
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(description),
+              }}
+            />
             <p className="mb-0">
               <span className="fw-semibold">File:</span> {attachment?.fileName}{" "}
               ({(attachment?.size / 1024 / 1024).toFixed(2)} MB,{" "}

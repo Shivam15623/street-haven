@@ -115,7 +115,7 @@ const EmployeeIncidentReportDetails = ({
             onClick={handleDownload}
           >
             {" "}
-            {pdfloading ? "fetching" : "download"}
+            {pdfloading ? "Downloading..." : "Download"}
           </button>
         }
       >

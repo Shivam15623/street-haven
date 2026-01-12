@@ -22,7 +22,6 @@ const ViewFileModal = ({ attachment, title }: Props) => {
 
   const extension = attachment.fileUrl.split(".").pop()?.toLowerCase() || "";
 
-
   const handleDownload = async () => {
     const response = await fetch(attachment.fileUrl);
     const blob = await response.blob();
@@ -126,8 +125,8 @@ const ViewFileModal = ({ attachment, title }: Props) => {
   return (
     <>
       <button
-        className="btn btn-street-outline-primary d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
-        style={{ width: "43px", height: "40px" }}
+        className="btn btn-street-outline-primary d-flex justify-content-center align-items-center w-43-px px-8 py-8 px-sm-10 radius-12" 
+        style={{width:"43px",height:"40px"}}
         onClick={() => setShowModal(true)}
       >
         <Icon icon="solar:eye-bold" className="text-lg" />

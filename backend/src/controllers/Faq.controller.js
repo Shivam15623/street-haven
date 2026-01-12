@@ -1,3 +1,4 @@
+import { io } from "../index.js";
 import { EmergencyContact, FAQCategory } from "../model/FAQ.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
@@ -20,6 +21,7 @@ export const createFAQCategory = asyncHandler(async (req, res) => {
   }
 
   const category = await FAQCategory.create({ title, faqs: faqs });
+  io.to("faq_viewers").emit("faq-category-changed");
   return res
     .status(201)
     .json(new ApiResponse(201, "FAQ Category created successfully"));
@@ -46,7 +48,7 @@ export const deleteFAQCategory = asyncHandler(async (req, res) => {
   }
 
   await category.deleteOne();
-
+  io.to("faq_viewers").emit("faq-category-changed");
   return res
     .status(200)
     .json(new ApiResponse(200, {}, "FAQ Category deleted successfully"));
@@ -75,7 +77,7 @@ export const AddQuestionInFAQCategory = asyncHandler(async (req, res) => {
   });
 
   await category.save();
-
+  io.to("faq_viewers").emit("faq-category-changed");
   return res
     .status(200)
     .json(
@@ -110,7 +112,7 @@ export const updateQuestionInFAQCategory = asyncHandler(async (req, res) => {
   if (answer) faqItem.answer = answer;
 
   await category.save();
-
+  io.to("faq_viewers").emit("faq-question-changed");
   return res
     .status(200)
     .json(new ApiResponse(200, faqItem, "FAQ Question updated successfully"));
@@ -167,7 +169,7 @@ export const deleteQuestionFromFAQCategory = asyncHandler(async (req, res) => {
   // Use `pull()` on the array to remove it
   category.faqs.pull(faqItem);
   await category.save();
-
+  io.to("faq_viewers").emit("faq-question-changed");
   return res
     .status(200)
     .json(new ApiResponse(200, "FAQ Question deleted successfully"));
@@ -206,7 +208,7 @@ export const updateEmergencyContact = asyncHandler(async (req, res) => {
   );
 
   if (!contact) throw new ApiError(404, "Emergency contact not found");
-
+  io.to("faq_viewers").emit("emergency-contact-changed");
   return res
     .status(200)
     .json(
@@ -219,7 +221,7 @@ export const deleteEmergencyContact = asyncHandler(async (req, res) => {
   const contact = await EmergencyContact.findByIdAndDelete(req.params.id);
 
   if (!contact) throw new ApiError(404, "Emergency contact not found");
-
+  io.to("faq_viewers").emit("emergency-contact-changed");
   return res
     .status(200)
     .json(new ApiResponse(200, {}, "Emergency contact deleted successfully"));

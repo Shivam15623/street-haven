@@ -118,7 +118,7 @@ const ClientFeedback = ({ detail }: { detail: clientFeedbackData }) => {
             onClick={handleDownload}
           >
             {" "}
-            {pdfloading ? "fetching" : "download"}
+            {pdfloading ? "Downloading..." : "Download"}
           </button>
         }
       >

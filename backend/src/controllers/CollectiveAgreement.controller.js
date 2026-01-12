@@ -13,6 +13,7 @@ export const createCollectiveAgreement = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
 
   try {
+    session.startTransaction();
     const { title, startDate, endDate } = req.body;
     const { firstname, lastname, _id: userId } = req.user;
     const attachmentpath = req?.file?.path; // Fix typo
@@ -21,7 +22,6 @@ export const createCollectiveAgreement = asyncHandler(async (req, res) => {
 
     const attachmentData = await uploadAttachment(attachmentpath);
 
-    session.startTransaction();
     // Save in DB (inside transaction)
     const newAgreement = await CollectiveAgreement.create(
       [
@@ -94,7 +94,10 @@ export const createCollectiveAgreement = asyncHandler(async (req, res) => {
       );
   } catch (err) {
     // Rollback
-    await session.abortTransaction();
+    // ✅ SAFE ABORT
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     session.endSession();
     throw err;
   }

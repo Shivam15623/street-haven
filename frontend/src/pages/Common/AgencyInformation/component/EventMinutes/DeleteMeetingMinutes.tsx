@@ -87,7 +87,12 @@ const DeleteMeetingMinutes: React.FC<DeleteMeetingProps> = ({
           </p>
 
           {/* Meeting Info Card */}
-          <div className="border rounded p-3 bg-light">
+          <div
+            className="border rounded p-3"
+            style={{
+              backgroundColor: "var(--street-bg-f4)",
+            }}
+          >
             <p className="fw-bold mb-1">{title}</p>
             <p className="mb-1">
               <span className="fw-semibold">Date:</span>{" "}

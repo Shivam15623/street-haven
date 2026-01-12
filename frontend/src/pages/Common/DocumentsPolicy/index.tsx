@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Row } from "react-bootstrap";
 import DocumentCard from "./components/DocumentCard";
 import { Icon } from "@iconify/react/dist/iconify.js";
@@ -10,8 +10,10 @@ import { useDebounce } from "../../../hooks/useDebounce";
 import StreetPaggination from "../../../components/child/StreetPaggination";
 import useHasPermission from "../../../hooks/Auth";
 import DocumentCardSkeleton from "./components/DocumentCardSkelaton";
+import { useSocket } from "../../../hooks/useSocket";
 
 const ProgramManuals = () => {
+  const { socket } = useSocket();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 1000);
   const [page, setPage] = useState(1);
@@ -32,7 +34,7 @@ const ProgramManuals = () => {
   const { hasPermission } = useHasPermission();
 
   // Fetch manuals using RTK Query
-  const { data, isLoading } = useFetchManualsQuery({
+  const { data, isLoading, refetch } = useFetchManualsQuery({
     page,
     limit: pageSize,
     search: debouncedSearch,
@@ -42,15 +44,36 @@ const ProgramManuals = () => {
     order: "desc",
   });
 
-  const totalPages = data
-    ? Math.ceil(data.data.paggination.totalPages)
-    : 0;
+  const totalPages = data ? Math.ceil(data.data.paggination.totalPages) : 0;
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return;
     setPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.emit("join-page-room", "program_manual_viewers");
+
+    const handleManualDeleted = ({ manualId }: { manualId: string }) => {
+      const exists = data?.data.manuals.some(
+        (manual) => manual._id === manualId
+      );
+
+      // 🔥 Only refetch if it exists in current list
+      if (exists) {
+        refetch();
+      }
+    };
+
+    socket.on("program-manual-deleted", handleManualDeleted);
+
+    return () => {
+      socket.emit("leave-page-room", "program_manual_viewers");
+      socket.off("program-manual-deleted", handleManualDeleted);
+    };
+  }, [socket, data, refetch]);
 
   return (
     <div className="d-flex flex-column gap-4">

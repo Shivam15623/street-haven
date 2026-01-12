@@ -167,7 +167,12 @@ const RootLayout = () => {
   const mobileMenuControl = () => {
     setMobileMenu(!mobileMenu);
   };
-
+  useEffect(() => {
+    // Close sidebar on route change (mobile only)
+    if (window.innerWidth < 768) {
+      setMobileMenu(false);
+    }
+  }, [location.pathname]);
   return (
     <section>
       {/* sidebar */}
@@ -198,6 +203,11 @@ const RootLayout = () => {
                   <NavLink
                     to={item.path}
                     end={item.path === "/employee"}
+                    onClick={() => {
+                      if (window.innerWidth < 768) {
+                        setMobileMenu(false);
+                      }
+                    }}
                     className={(navData) =>
                       `${navData.isActive ? "active-page" : ""} `
                     }
