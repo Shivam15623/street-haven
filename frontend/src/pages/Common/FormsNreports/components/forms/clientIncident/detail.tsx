@@ -50,7 +50,11 @@ const ClientIncidentReportDetail = ({ incident }: ClientIncidentModalProps) => {
 
   const detail = response?.data;
   const loading = isLoading || isFetching;
-  console.log("yes d",detail?.incidentTime, formatTime12Hour(detail?.incidentTime));
+  console.log(
+    "yes d",
+    detail?.incidentTime,
+    formatTime12Hour(detail?.incidentTime)
+  );
   const getIncidentTypeBadge = (type: string): JSX.Element => {
     const severityMap: Record<string, BadgeVariant> = {
       Disaster: "danger",
@@ -101,7 +105,7 @@ const ClientIncidentReportDetail = ({ incident }: ClientIncidentModalProps) => {
             onClick={handleDownload}
           >
             {" "}
-            {pdfloading ? "fetching" : "download"}
+            {pdfloading ? "Downloading..." : "Download"}
           </button>
         }
       >

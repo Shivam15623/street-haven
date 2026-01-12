@@ -54,7 +54,7 @@ export function FormField({
 
   return (
     <div className={className}>
-      <dt className="fw-semibold mb-8">{label}</dt>
+      <dt className="fw-semibold mb-8 text-sm">{label}</dt>
       <dd className={highlight ? "text-street-primary fw-bold" : ""}>
         {renderValue()}
       </dd>

@@ -112,7 +112,7 @@ const ForgotPassword = () => {
           <p className="text-center">
             {" "}
             <Link
-              to={"/Signup"}
+              to={"/login"}
               className="text-primary-600  text-sm fw-normal mt-3 "
               style={{ color: "#0160A6" }}
             >

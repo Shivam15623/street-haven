@@ -122,7 +122,26 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
             isRegistered ? "btn-success" : "btn-secondary"
           }`}
         >
-          {isRegistered ? "You registered for this" : "You didn’t register"}
+          {isRegistered ? (
+            <span className="d-none d-sm-inline-block">
+              You registered for this
+            </span>
+          ) : (
+            <span className="d-none d-sm-inline-block">
+              You didn’t register
+            </span>
+          )}
+          {isRegistered ? (
+            <Icon
+              icon="mdi:calendar-remove"
+              className="d-inline-block d-sm-none text-xl"
+            />
+          ) : (
+            <Icon
+              icon="mdi:calendar-check"
+              className="d-inline-block d-sm-none text-xl"
+            />
+          )}
         </button>
       </div>
     );

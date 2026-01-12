@@ -94,7 +94,7 @@ const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 5);
 TicketSchema.pre("save", function (next) {
   if (!this.slug || this.isNew) {
     // Use slugify to convert title to URL-friendly string
-    const baseSlug = slugify(this.title, {
+    const baseSlug = slugify(this.req_title, {
       lower: true,
       strict: true,
       trim: true,

@@ -82,7 +82,7 @@ const PaymentRequisitionDetail = ({
             onClick={handleDownload}
             disabled={PdfLoading}
           >
-            {PdfLoading ? "fetching" : "download"}
+            {PdfLoading ? "Downloading..." : "Download"}
           </button>
         }
       >

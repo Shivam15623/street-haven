@@ -112,7 +112,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
             <div className="d-flex flex-row gap-8 gap-sm-12 justify-content-end">
               <ViewFileModal attachment={attachment} title={title} />
               <button
-                className="btn btn-street-primary   d-flex flex-row align-items-center justify-content-between gap-1  radius-12 text-xxs sm:text-xs"
+                className="btn btn-street-primary  d-flex align-items-center w-43-px px-8 py-8 px-sm-10 radius-12 text-xxs sm:text-xs"
                 onClick={() =>
                   handleDownload(attachment.fileUrl, attachment.fileName)
                 }

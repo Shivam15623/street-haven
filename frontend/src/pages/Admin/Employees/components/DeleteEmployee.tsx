@@ -81,7 +81,12 @@ const DeleteEmployee: React.FC<DeleteEmployeeProps> = ({ employee }) => {
           </p>
 
           <div className="text-street-dark text-sm d-flex flex-column gap-2 mt-3">
-            <div className="border rounded p-10 bg-street-card">
+            <div
+              className="border rounded p-10 "
+              style={{
+                backgroundColor: "var(--street-bg-f4)",
+              }}
+            >
               <p className="fw-bold">Role: {employee.role}</p>
               <p className="mb-1">Email: {employee.email}</p>
             </div>

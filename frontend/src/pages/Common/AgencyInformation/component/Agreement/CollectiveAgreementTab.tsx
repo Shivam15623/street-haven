@@ -5,6 +5,7 @@ import ActionsAgreement from "./ActionsAgreement";
 import useHasPermission from "../../../../../hooks/Auth";
 import CollectiveAgreementCardSkeleton from "./AgreementCardSkeleton";
 import { useScrollToItemFromUrl } from "../../../../../hooks/useScrollToItemFromUrl";
+
 export interface AgentTabProp {
   isActive: boolean;
 }
@@ -21,6 +22,7 @@ const CollectiveAgreementTab: React.FC<AgentTabProp> = ({ isActive }) => {
   useScrollToItemFromUrl({
     enabled: isActive && !!data?.data,
   });
+
   if (isError) return <div>Failed to load agreements.</div>;
 
   const agreements = data?.data || [];

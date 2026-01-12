@@ -7,6 +7,7 @@ import { asyncHandler } from "../utills/AsyncHandler.js";
 import { createNotification } from "../helper/CreateNotoification.js";
 import { addActivityLog } from "../helper/addActivityLogs.js";
 import { uploadAttachment } from "./meetingMinutes.controller.js";
+import { deleteFromCloudinary } from "../utills/cloudinary.js";
 
 export const AddProgramManual = asyncHandler(async (req, res) => {
   const { title, description, tags, type } = req.body;
@@ -193,20 +194,24 @@ export const DeleteProgramManual = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Program Manual not found");
   }
 
-  // ✅ Safely check for attachment + fileUrl
+  // ✅ Safely delete attachment from Cloudinary
   const fileUrl = programManual?.attachment?.fileUrl;
   if (fileUrl) {
     try {
       await deleteFromCloudinary(fileUrl);
     } catch (err) {
       console.error("Error deleting from Cloudinary:", err.message);
-      // ❓ Choice: abort vs continue
-      // If you want to block deletion when Cloudinary fails, uncomment below:
-      // throw new ApiError(500, "Failed to delete file from Cloudinary");
+      // Do NOT block DB delete (correct decision 👍)
     }
   }
 
+  // ✅ Delete from DB
   await ProgramManual.findByIdAndDelete(id);
+
+  // 🔥 REAL-TIME UPDATE (THIS IS THE FIX)
+  io.emit("program-manual-deleted", {
+    manualId: id,
+  });
 
   return res
     .status(200)

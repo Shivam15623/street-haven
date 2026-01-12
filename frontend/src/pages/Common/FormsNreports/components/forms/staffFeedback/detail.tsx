@@ -56,7 +56,7 @@ const StaffFeedbackDetail = ({ detail }: { detail: StaffFeedbackData }) => {
             onClick={handleDownload}
           >
             {" "}
-            {pdfloading ? "fetching" : "download"}
+            {pdfloading ? "Downloading..." : "Download"}
           </button>
         }
       >
