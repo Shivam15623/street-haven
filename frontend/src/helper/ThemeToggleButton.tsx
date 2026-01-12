@@ -41,7 +41,7 @@ const ThemeToggleButton: React.FC = () => {
       {isMobile ? (
         // 🌙 MOBILE: simple toggle button
         <button
-          className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 transition-colors"
+          className="p-2 rounded-circle btn btn-neutral-200 d-flex flex-row align-items-center justify-content-between text-sm sm:text-md transition-colors"
           onClick={() => handleThemeToggle()}
           aria-label="Toggle theme"
         >

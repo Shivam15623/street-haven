@@ -258,14 +258,12 @@ const RootLayout = () => {
               <div className="d-flex flex-wrap align-items-center gap-3">
                 {!mobileMode && (
                   <button
-                    className="d-md-none btn btn-light-50 p-1 d-flex align-items-center rounded-circle "
+                    className="d-md-none btn btn-neutral-200  p-1 d-flex align-items-center rounded-circle "
                     onClick={() => setMobileMode(true)}
                   >
                     <Icon
                       icon="mi:search"
-                      className="text-street-base"
-                      width={20}
-                      height={20}
+                      className="text-street-base text-sm"
                     />
                   </button>
                 )}

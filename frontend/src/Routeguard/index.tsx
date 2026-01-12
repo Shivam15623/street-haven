@@ -22,57 +22,47 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   const location = useLocation();
 
   const { isLoggedIn, user } = useSelector(selectAuth);
-
   const isUserReady = isLoggedIn !== undefined && user !== undefined;
 
   const hasPermission = () => {
-    if (!user) {
-      return false;
-    }
-    const result = requireRole.includes(user?.role);
-
-    return result;
+    if (!user) return false;
+    return requireRole.length === 0 || requireRole.includes(user?.role);
   };
 
-  // ─────────────────────────────
-  // Redirect Logic
-  // ─────────────────────────────
   useEffect(() => {
     if (!isUserReady) return;
 
-    if (location.pathname === "/") {
-      if (!isLoggedIn) {
-        navigate("/login", { replace: true });
-      }
-
-      return; // let nested routes load index automatically
-    }
-
-    if (isPublic) {
-      if (isLoggedIn) {
-        navigate("/", { replace: true });
-      }
-      return;
-    }
-
-    if (!isLoggedIn) {
+    if (isPublic && isLoggedIn) {
+      navigate("/", { replace: true });
+    } else if (!isPublic && !isLoggedIn) {
       navigate("/login", { replace: true });
-      return;
-    }
-
-    // ❌ If permission required and user doesn't have it
-    if (requireRole.length && !hasPermission()) {
+    } else if (!isPublic && requireRole.length && !hasPermission()) {
       navigate("/unauthorized", { replace: true });
-      return;
     }
   }, [isUserReady, isLoggedIn, user, location.pathname]);
 
+  // ⛔ Block render until ready
   if (!isUserReady) {
     return (
-      <div className="h-screen flex items-center justify-center bg-white text-gray-700">
+      <div className="h-100 flex-grow-1 w-100 d-flex align-items-center justify-content-center">
         Checking authentication...
       </div>
     );
+  }
+
+  // ⛔ Block protected content for unauthenticated users
+  if (!isPublic && !isLoggedIn) {
+    return null; // Don't render anything - redirect will happen
+  }
+
+  // ⛔ Block public routes for authenticated users
+  if (isPublic && isLoggedIn) {
+    return null;
+  }
+
+  // ⛔ Block if missing required role
+  if (!isPublic && requireRole.length && !hasPermission()) {
+    return null;
   }
 
   return <>{children}</>;

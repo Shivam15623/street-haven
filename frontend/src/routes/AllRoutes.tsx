@@ -69,7 +69,11 @@ export const AllRoutes: RouteObject[] = [
 
   {
     path: "/",
-    element: withSuspense(<LazyRootLayout />),
+    element: withSuspense(
+      <RouteGuard isPublic={false}>
+        <LazyRootLayout />
+      </RouteGuard>
+    ),
     children: [
       {
         index: true,
