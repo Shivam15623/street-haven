@@ -1009,3 +1009,160 @@
   background-color: rgba(13, 85, 136, 0.329);
   color: white;
 }
+/* Loader container */
+.loader-container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  font-family: var(--font-body);
+}
+
+/* Glow behind logo */
+.logo-glow {
+  position: absolute;
+  inset: calc(var(--loader-glow-size) * -0.35);
+  border-radius: 50%;
+
+  background: radial-gradient(
+    circle,
+    var(--street-primary-base / 0.35),
+    transparent 70%
+  );
+}
+.loader-logo {
+  width: var(--loader-logo-size);
+  height: auto;
+}
+.loader-title {
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 600;
+}
+/* Ripple circles */
+.ripple {
+  position: absolute;
+  inset: calc(var(--loader-logo-size) * -0.2);
+  border-radius: 50%;
+  pointer-events: none;
+
+  border: 2px solid var(--street-primary-base-10);
+}
+
+/* Loader dots */
+.loader-dot {
+  width: 0.5rem; /* w-2 */
+  height: 0.5rem; /* h-2 */
+  border-radius: 50%;
+
+  background: var(--street-primary-base);
+}
+
+/* Decorative line */
+.decorative-line {
+  height: 1px;
+  width: 5rem; /* w-20 */
+  margin-left: auto;
+  margin-right: auto;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--street-primary-base),
+    transparent
+  );
+}
+/* Butterfly decoration */
+.butterfly.path-1 {
+  animation: fly1 10s ease-in-out infinite;
+}
+
+.butterfly.path-2 {
+  animation: fly2 12s ease-in-out infinite;
+}
+
+.butterfly.path-3 {
+  animation: fly3 14s ease-in-out infinite;
+}
+@keyframes fly1 {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0);
+  }
+  30% {
+    transform: translate(40px, -30px) rotate(12deg);
+  }
+  60% {
+    transform: translate(80px, 10px) rotate(-8deg);
+  }
+}
+
+@keyframes fly2 {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0);
+  }
+  25% {
+    transform: translate(-30px, 20px) rotate(-10deg);
+  }
+  50% {
+    transform: translate(-60px, -10px) rotate(6deg);
+  }
+}
+
+@keyframes fly3 {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0);
+  }
+  40% {
+    transform: translate(20px, -40px) rotate(8deg);
+  }
+  70% {
+    transform: translate(-20px, 30px) rotate(-6deg);
+  }
+}
+.butterfly {
+  position: absolute;
+}
+@media (max-width: 576px) {
+  .floating-heart {
+    font-size: 1.2rem;
+  }
+}
+
+@keyframes butterflyFly {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(30px, -20px) rotate(10deg);
+  }
+  50% {
+    transform: translate(60px, 0) rotate(-5deg);
+  }
+  75% {
+    transform: translate(30px, 20px) rotate(5deg);
+  }
+}
+
+.butterfly-wing {
+  animation: wingFlap 0.3s ease-in-out infinite;
+}
+@media (max-width: 576px) {
+  .butterfly {
+    display: none;
+  }
+}
+@keyframes wingFlap {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(0.7);
+  }
+}

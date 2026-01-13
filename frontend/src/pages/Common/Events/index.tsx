@@ -9,6 +9,7 @@ import useHasPermission from "../../../hooks/Auth";
 const Events = () => {
   const [view, setView] = useState("list");
   const { hasPermission } = useHasPermission();
+
   return (
     <div className="d-flex flex-column gap-8 gap-sm-16 gap-md-24 ">
       {/* Top Info */}
