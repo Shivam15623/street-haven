@@ -66,6 +66,8 @@
 
 :root {
   --default-font: ;
+  --loader-logo-size: clamp(90px, 18vw, 140px);
+  --loader-glow-size: clamp(110px, 22vw, 180px);
   --h1: clamp(2rem, 1.2rem + 4vw, 4.5rem);
   --h2: clamp(1.75rem, 1.11rem + 3.2vw, 3.75rem);
   --h3: clamp(1.5rem, 1.02rem + 2.4vw, 3rem);
