@@ -100,18 +100,6 @@ function transformOrgNodesToFlow(orgNodes: OrgNodeData[]): {
   return { nodes, edges };
 }
 
-export const useIsMobile = (breakpoint = 640) => {
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= breakpoint);
-
-  useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth <= breakpoint);
-    window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
-  }, [breakpoint]);
-
-  return isMobile;
-};
-
 function layoutDagre(
   nodes: Node<{ node: OrgNodeData; expanded: boolean }>[],
   edges: Edge[],
@@ -119,8 +107,7 @@ function layoutDagre(
   visibleIds: Set<string>,
 
   nodeWidth: number,
-  nodeHeight: number,
-  isMobile?: boolean
+  nodeHeight: number
 ) {
   const g = new dagre.graphlib.Graph();
 

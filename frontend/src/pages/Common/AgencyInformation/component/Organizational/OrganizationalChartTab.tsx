@@ -1,4 +1,4 @@
-import MobileTree from "./MobileTree";
+
 import TreeGraph from "./OrganizationalChart";
 
 
