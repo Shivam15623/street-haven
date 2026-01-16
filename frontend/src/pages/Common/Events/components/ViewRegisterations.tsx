@@ -7,6 +7,8 @@ import * as XLSX from "xlsx"; // 👈 install this if not installed: npm install
 
 interface ViewRegistrationsProps {
   eventId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -30,49 +32,54 @@ const RegistrationCard = ({ user, index }: RegistrationCardProps) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: index * 0.05 }}
-      className="group relative card rounded-3  p-16  border-sh-base-1-2"
+      className="card rounded-3 p-16 border-sh-base-1-2"
     >
-      <div className="d-flex align-items-start justify-content-between gap-3">
-        <div className="d-flex align-items-start gap-3 min-w-0 flex-1">
+      {/* ROW */}
+      <div className="d-flex align-items-start gap-3">
+        {/* LEFT CONTENT */}
+        <div className="d-flex align-items-start gap-3 flex-grow-1 min-w-0">
           {/* Avatar */}
           <div
-            style={{ width: "40px", height: "40px" }}
-            className=" rounded-circle bg-street-primary-10 d-flex align-items-center justify-content-center flex-shrink-0"
+            className="rounded-circle bg-street-primary-10 d-flex align-items-center justify-content-center flex-shrink-0"
+            style={{ width: 40, height: 40 }}
           >
             <Icon icon="lucide:user" className="text-xl text-street-primary" />
           </div>
 
-          {/* User Info */}
-          <div className="min-w-0 d-flex flex-column gap-6-px flex-grow-1">
-            <h4 className="fw-semibold text-street-dark text-md mb-1 truncate">
+          {/* USER INFO */}
+          <div className="d-flex flex-column gap-1 min-w-0">
+            <h4 className="fw-semibold text-street-dark text-md mb-1">
               {user.firstname} {user.lastname}
             </h4>
 
-            <div className="d-flex flex-column gap-1">
-              <div className="d-flex align-items-center gap-2 text-sm text-street-base">
-                <Icon icon="lucide:mail" className="text-sm  flex-shrink-0" />
-                <span className="text-truncate">{user.email}</span>
-              </div>
+            {/* EMAIL */}
+            <div className="d-flex align-items-start gap-2 text-sm text-street-base min-w-0">
+              <Icon icon="lucide:mail" className="flex-shrink-0 mt-1" />
+              <span className="text-break">{user.email}</span>
+            </div>
 
-              <div className="d-flex align-items-center gap-2 text-sm text-street-base">
-                <Icon
-                  icon="lucide:phone"
-                  className="text-sm text-street-base flex-shrink-0"
-                />
-                <span>{user.phoneNo}</span>
-              </div>
+            {/* PHONE */}
+            <div className="d-flex align-items-center gap-2 text-sm text-street-base">
+              <Icon icon="lucide:phone" className="flex-shrink-0" />
+              <span className="text-break">{user.phoneNo}</span>
             </div>
           </div>
         </div>
 
-        {/* Status Badge */}
-        <Badge variant="success-soft">Registered</Badge>
+        {/* BADGE */}
+        <div className="d-none d-sm-block flex-shrink-0">
+          <Badge variant="success-soft">Registered</Badge>
+        </div>
       </div>
     </motion.div>
   );
 };
 
-const ViewRegistrations: React.FC<ViewRegistrationsProps> = ({ eventId }) => {
+const ViewRegistrations: React.FC<ViewRegistrationsProps> = ({
+  eventId,
+  onOpenChange,
+  open,
+}) => {
   const [getEventRegistrations, { data, isLoading, isError }] =
     useLazyGetEventRegistrationsQuery();
 
@@ -172,6 +179,11 @@ const ViewRegistrations: React.FC<ViewRegistrationsProps> = ({ eventId }) => {
   const capacityPercentage = event
     ? (event.totalRegistered / event.capacity) * 100
     : 0;
+  React.useEffect(() => {
+    if (open && eventId && !data) {
+      getEventRegistrations(eventId);
+    }
+  }, [open, eventId]);
   return (
     <Sheet
       title="Event Registrations"
@@ -189,20 +201,9 @@ const ViewRegistrations: React.FC<ViewRegistrationsProps> = ({ eventId }) => {
           </button>
         </div>
       }
-      trigger={
-        <button
-          className="btn btn-info-600 radius-12 text-xs d-flex align-items-center justify-content-center gap-2"
-          title="View Registrations"
-          onClick={() => {
-            if (eventId && !data) {
-              getEventRegistrations(eventId);
-            }
-          }}
-        >
-          <Icon icon="mdi:account-group-outline" className="text-xl" />
-          <span className="d-none d-sm-inline-block">View</span>
-        </button>
-      }
+      onOpen={() => onOpenChange(true)}
+      onClose={() => onOpenChange(false)}
+      show={open}
     >
       <div className="p-4  flex-grow-1 h-100">
         {!isLoading && !isError && event && (

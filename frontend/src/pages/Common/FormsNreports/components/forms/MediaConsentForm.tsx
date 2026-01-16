@@ -210,7 +210,7 @@ export const MediaConsentForm = () => {
           <Form className="d-flex flex-column gap-24" onSubmit={handleSubmit}>
             {/* Header Card */}
             <div className="card">
-              <div className="card-body d-flex gap-20 align-items-center">
+              <div className="card-body d-flex flex-column flex-sm-row gap-20 align-items-center">
                 <img src="/assets/images/shForm.png" width={144} height={113} />
                 <div>
                   <h4 className="text-xxl sm:text-xl text-street-dark fw-semibold mb-2">
@@ -223,13 +223,13 @@ export const MediaConsentForm = () => {
             {/* Form Card */}
             <div className="card">
               <div className="card-body d-flex flex-column gap-20 px-24 py-16">
-                <div className="d-flex align-items-center gap-8 text-street-dark text-sm fw-semibold">
+                <div className="d-flex flex-wrap align-items-center gap-8 text-street-dark text-sm fw-semibold">
                   <span>I</span>
 
                   <div className="d-flex flex-column">
                     <input
                       className="form-control h-40-px"
-                      style={{ maxWidth: "588px" }}
+                      style={{ maxWidth: "588px", minWidth: "200px" }}
                       value={values.name}
                       onChange={(e) => setFieldValue("name", e.target.value)}
                     />
@@ -238,7 +238,13 @@ export const MediaConsentForm = () => {
                     )}
                   </div>
 
-                  <span>
+                  <span
+                    style={{
+                      minWidth: 0, // 🔑 allow wrapping
+                      flexGrow: 1, // take remaining space
+                      textWrap: "wrap",
+                    }}
+                  >
                     , understand that I may be asked to participate in various
                     media-related activities including but not limited to
                   </span>

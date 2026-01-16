@@ -71,6 +71,7 @@ const EventDocuments: React.FC<Props> = ({
           {
             key: "images",
             label: "Images",
+            count: images.length,
             content: (
               <FileTab
                 files={getCurrentTabFiles("images")}
@@ -83,6 +84,7 @@ const EventDocuments: React.FC<Props> = ({
           {
             key: "docs",
             label: "Documents",
+            count: docs.length,
             content: (
               <FileTab
                 files={getCurrentTabFiles("docs")}
@@ -95,6 +97,7 @@ const EventDocuments: React.FC<Props> = ({
           {
             key: "videos",
             label: "Videos",
+            count: videos.length,
             content: (
               <FileTab
                 tab="Videos"
@@ -107,6 +110,7 @@ const EventDocuments: React.FC<Props> = ({
           {
             key: "others",
             label: "Others",
+            count: others.length,
             content: (
               <FileTab
                 tab="Other Documents"

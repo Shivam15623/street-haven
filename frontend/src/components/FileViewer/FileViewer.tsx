@@ -98,7 +98,30 @@ const FileViewer: React.FC<FileViewerProps> = ({
           <DocViewer url={currentFile.fileUrl} name={currentFile.fileName} />
         );
       default:
-        return "dff";
+        return (
+          <div className="w-100 h-100 d-flex flex-column align-items-center justify-content-center gap-3 text-center">
+            <FileIconWithBackground fileType={fileType} size={64} />
+
+            <div>
+              <h6 className="mb-1 text-street-dark text-truncate">
+                {currentFile.fileName}
+              </h6>
+              <small className="text-street-base">
+                Preview not available for this file type
+              </small>
+            </div>
+
+            <button
+              onClick={() =>
+                handleDownload(currentFile.fileUrl, currentFile.fileName)
+              }
+              className="btn btn-street-outline-primary radius-12 d-flex align-items-center gap-2"
+            >
+              <Icon icon="mdi:download" width={18} height={18} />
+              Download file
+            </button>
+          </div>
+        );
     }
   };
 

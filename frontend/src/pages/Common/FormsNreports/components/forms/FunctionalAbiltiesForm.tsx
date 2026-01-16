@@ -375,22 +375,27 @@ const FunctionalAbiltiesForm = () => {
           <Form onSubmit={handleSubmit} className="d-flex flex-column gap-24 ">
             {/* Header card */}
             <div className="card">
-              <div className="card-body d-flex flex-row align-items-center gap-20 px-24 py-16">
-                <img src="/assets/images/wsibo.svg" width={273} height={93} />
-                <div className="d-flex flex-row justify-content-between align-items-center flex-grow-1">
-                  <div className="d-flex flex-column ">
-                    <h3 className="text-lg xl:text-xxl fw-semibold text-street-dark mb-0">
+              <div className="card-body d-flex flex-column flex-sm-row  align-items-sm-center gap-20 px-16 py-10 px-sm-20 py-md-3 px-md-24 py-md-16">
+                <img
+                  src="/assets/images/wsibo.svg"
+                  width={273}
+                  height={93}
+                  className="mx-sm-0 mx-auto"
+                />
+                <div className="d-flex flex-column flex-lg-row justify-content-between  align-items-lg-center gap-sm-10 gap-16 flex-grow-1">
+                  <div className="d-flex flex-column text-center text-sm-start  ">
+                    <h3 className="text-lg xl:text-xxl fw-semibold text-street-dark mb-sm-0 mb-2">
                       Functional Abilities Form
                     </h3>
-                    <p className="text-sm xl:text-md fw-semibold text-street-dark">
+                    <p className="text-sm xl:text-md fw-semibold text-street-base">
                       for Planning Early and Safe Return to Work
                     </p>
                   </div>
                   <div
-                    className="d-flex flex-column flex-xl-row align-items-center"
+                    className="d-flex flex-column flex-xl-row align-items-xl-center"
                     style={{ gap: 15 }}
                   >
-                    <div className="d-flex flex-row align-items-center gap-18">
+                    <div className="d-flex flex-column flex-sm-row align-items-xl-center gap-18">
                       {" "}
                       <div className="d-flex flex-column" style={{ gap: 5 }}>
                         <p className="text-xs text-street-dark fw-normal">
@@ -415,13 +420,14 @@ const FunctionalAbiltiesForm = () => {
                         </p>
                       </div>
                     </div>
-                    <Form.Group className="d-flex flex-column gap-10 ">
+                    <Form.Group className="d-flex flex-column gap-10 flex-grow-1">
                       <Form.Label>
                         claim No: <span className="text-danger">*</span>
                       </Form.Label>
                       <Form.Control
                         style={{ height: "40px", minWidth: "200px" }}
-                        name="claimNo"
+                        name="claimNo" 
+                        className="flex-grow-1"
                         value={values.claimNo}
                         onChange={handleChange}
                       />
