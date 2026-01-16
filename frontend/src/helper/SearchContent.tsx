@@ -104,16 +104,21 @@ const SearchContent: React.FC<SearchProps> = ({ mobileMode, onclose }) => {
   };
 
   // --- Navigate handlers ---
-  const goToEvent = (slug: string) => navigate(`/events?slug=${slug}`);
+  const goToEvent = (slug: string) =>
+    navigate(`/events?tab=upcoming_events&item=${slug}`);
 
   const goToHR = (slug: string) =>
-    navigate(`/agency_info?tab=hr_updates&slug=${slug}`);
+    navigate(`/agency_info?tab=hr_updates&item=${slug}`);
 
   const goToMinutes = (slug: string) =>
-    navigate(`/agency_info?tab=event_minutes&slug=${slug}`);
+    navigate(`/agency_info?tab=event_minutes&item=${slug}`);
 
   const goToManual = (slug: string) =>
-    navigate(`/programs&manuals?slug=${slug}`);
+    navigate(`/programs&manuals?item=${slug}`);
+  const goToAnnouncement = (slug: string) =>
+    navigate(`/agency_info?tab=announcements&item=${slug}`);
+  const goToAgreement = (slug: string) =>
+    navigate(`/agency_info?tab=collective_agreement&item=${slug}`);
 
   return (
     <div
@@ -172,7 +177,7 @@ const SearchContent: React.FC<SearchProps> = ({ mobileMode, onclose }) => {
               />
 
               <ResultGroup
-                title="Meeting Minutes"
+                title="Event Minutes"
                 icon="ion:document-text-outline"
                 items={results.data.meetingMinutes}
                 onClick={goToMinutes}
@@ -183,6 +188,18 @@ const SearchContent: React.FC<SearchProps> = ({ mobileMode, onclose }) => {
                 icon="ion:book-outline"
                 items={results.data.programManuals}
                 onClick={goToManual}
+              />
+              <ResultGroup
+                title="Announcements"
+                icon="ion:megaphone-outline"
+                items={results.data.announcements}
+                onClick={goToAnnouncement}
+              />
+              <ResultGroup
+                title="Collective Agreements"
+                icon="ion:folder-open-outline"
+                items={results.data.collectiveAgreements}
+                onClick={goToAgreement}
               />
 
               {results.data.isEmpty && (

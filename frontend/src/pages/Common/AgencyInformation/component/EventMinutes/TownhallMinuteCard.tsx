@@ -156,8 +156,18 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
             </ul>
           </div>
         )}
-        <hr className="d-sm-none d-block" />
-        <div className="d-flex d-sm-none flex-row justify-content-end gap-8 gap-sm-12">
+        <hr className="d-md-none d-block" />
+        <div className="d-flex flex-row gap-10  d-sm-none ">
+          {hasPermission({ action: "edit_event_minute" }) && (
+            <button
+              className="btn btn-street-edit  d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
+              style={{ width: "43px", height: "40px" }}
+              onClick={() => setShowModal(true)}
+            >
+              {" "}
+              <Icon icon="mdi:pencil" className="text-xl" />
+            </button>
+          )}
           {hasPermission({ action: "delete_event_minute" }) && (
             <DeleteMeetingMinutes
               attachment={attachment}
@@ -166,27 +176,17 @@ const TownhallMinuteCard: React.FC<TownhallMinuteCardProps> = ({ meeting }) => {
               title={title}
             />
           )}
-          {hasPermission({ action: "edit_event_minute" }) && (
-            <button
-              className="btn btn-street-neutral"
-              onClick={() => setShowModal(true)}
-            >
-              {" "}
-              <Icon icon="mdi:pencil" className="text-sm sm:text-xl" />
-            </button>
-          )}
-
           {attachment && (
             <ViewFileModal attachment={attachment} title={title} />
           )}
           <button
-            className="btn btn-street-primary btn-street-lg p-8 px-sm-24 px-md-32 radius-12 text-xxs sm:text-xs"
+            className="btn btn-street-primary   d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
+            style={{ width: "43px", height: "40px" }}
             onClick={() =>
               handleDownload(attachment.fileUrl, attachment.fileName)
             }
           >
             <Icon icon="jam:download" className="text-xl" />
-            Download
           </button>
         </div>
       </div>

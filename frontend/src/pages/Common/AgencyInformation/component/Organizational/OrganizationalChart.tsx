@@ -99,6 +99,19 @@ function transformOrgNodesToFlow(orgNodes: OrgNodeData[]): {
 
   return { nodes, edges };
 }
+
+export const useIsMobile = (breakpoint = 640) => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= breakpoint);
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth <= breakpoint);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, [breakpoint]);
+
+  return isMobile;
+};
+
 function layoutDagre(
   nodes: Node<{ node: OrgNodeData; expanded: boolean }>[],
   edges: Edge[],
@@ -106,7 +119,8 @@ function layoutDagre(
   visibleIds: Set<string>,
 
   nodeWidth: number,
-  nodeHeight: number
+  nodeHeight: number,
+  isMobile?: boolean
 ) {
   const g = new dagre.graphlib.Graph();
 
@@ -173,7 +187,7 @@ const MemoCustomNode = React.memo(CustomNode);
 function Flow() {
   const containerRef = useRef<HTMLDivElement>(null);
   const width = useContainerWidth(containerRef);
-  const { data } = useGetTreeNodesQuery(undefined,{
+  const { data } = useGetTreeNodesQuery(undefined, {
     refetchOnMountOrArgChange: false,
   });
   const [selectedNode, setSelectedNode] = useState<OrgNodeData | null>(null);
@@ -318,8 +332,6 @@ function Flow() {
             zoomOnPinch={false}
             panOnScroll={false}
             zoomOnDoubleClick={false}
-            minZoom={0.5}
-            maxZoom={2}
             defaultEdgeOptions={{ zIndex: -1 }}
             elevateNodesOnSelect={false} // ✅ Add this
             edgesFocusable={false} // ✅ Add this

@@ -28,7 +28,9 @@ const ProfileDropdown = () => {
     <Dropdown className="user-dropdown" align="end">
       <Dropdown.Toggle className="rounded-circle">
         <img
-          src={user?.profilePic ?? "assets/images/userlogo.png"}
+          src={
+            user?.profilePic ? user?.profilePic : "assets/images/userlogo.png"
+          }
           alt="User"
         />
       </Dropdown.Toggle>
@@ -37,7 +39,9 @@ const ProfileDropdown = () => {
         {/* User Info */}
         <div className="user-info">
           <img
-            src={user?.profilePic ?? "assets/images/userlogo.png"}
+            src={
+              user?.profilePic ? user?.profilePic : "assets/images/userlogo.png"
+            }
             alt="User"
           />
           <div>

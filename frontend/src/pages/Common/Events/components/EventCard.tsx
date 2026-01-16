@@ -31,7 +31,6 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
     endTime,
     startTime,
     location,
-
     description,
     title,
     totalRegistered,
