@@ -39,6 +39,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
 
   // ✅ Check if event is in the past
   const isPastEvent = dayjs(eventDate).isBefore(dayjs(), "day");
+  const [registrationsOpen, setRegistrationsOpen] = useState(false);
 
   const progress = Math.min((totalRegistered / capacity) * 100, 100);
   const formattedDate = dayjs(eventDate).format("MM/DD/YYYY");
@@ -85,36 +86,28 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
       <div className="d-flex flex-row gap-2">
         {hasPermission({
           action: "view_registerations",
-        }) && <ViewRegistrations eventId={eventId} />}
+        }) && (
+          <button
+            className="btn btn-info-600 radius-12 text-xs d-none d-sm-flex align-items-center justify-content-center gap-2"
+            title="View Registrations"
+            onClick={() => setRegistrationsOpen(true)}
+          >
+            {" "}
+            <Icon icon="mdi:account-group-outline" className="text-xl" />{" "}
+            <span className="d-none d-md-inline-block">View</span>{" "}
+          </button>
+        )}
         {hasPermission({
           action: "view_registerations",
         }) && (
           <button
-            className="btn btn-street-edit d-flex flex-column align-items-center justify-content-center radius-12"
+            className="btn  btn-street-edit d-none d-sm-flex flex-column align-items-center justify-content-center radius-12"
             onClick={() => setDocOpen(true)}
           >
             <Icon icon="lucide:upload" className="text-xl" />
           </button>
         )}
-        {event.documents.length !== 0 && (
-          <button
-            className="btn btn-street-outline-primary d-flex flex-column align-items-center justify-content-center radius-12"
-            onClick={() => setOpen(true)}
-          >
-            <Icon icon="lucide:paperclip" className="text-xl" />
-          </button>
-        )}
-        {hasPermission({
-          action: "view_registerations",
-        }) && (
-          <EventDocsUploader
-            open={docopen}
-            eventId={event._id}
-            onOpenChange={setDocOpen}
-            eventName={event.title}
-          />
-        )}
-        {}{" "}
+
         <button
           disabled
           className={`btn btn-street-lg d-flex align-items-center justify-content-center radius-12  gap-2 text-xs ${
@@ -122,23 +115,23 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
           }`}
         >
           {isRegistered ? (
-            <span className="d-none d-sm-inline-block">
+            <span className="d-none d-md-inline-block">
               You registered for this
             </span>
           ) : (
-            <span className="d-none d-sm-inline-block">
+            <span className="d-none d-md-inline-block">
               You didn’t register
             </span>
           )}
           {isRegistered ? (
             <Icon
               icon="mdi:calendar-remove"
-              className="d-inline-block d-sm-none text-xl"
+              className="d-inline-block d-md-none text-xl"
             />
           ) : (
             <Icon
               icon="mdi:calendar-check"
-              className="d-inline-block d-sm-none text-xl"
+              className="d-inline-block d-md-none text-xl"
             />
           )}
         </button>
@@ -150,9 +143,31 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
       <div className="d-flex flex-row gap-2">
         {hasPermission({
           action: "view_registerations",
-        }) && <ViewRegistrations eventId={eventId} />}
+        }) && (
+          <button
+            className="btn btn-info-600 radius-12 text-xs d-none d-sm-flex align-items-center justify-content-center gap-2"
+            title="View Registrations"
+            onClick={() => setRegistrationsOpen(true)}
+          >
+            {" "}
+            <Icon icon="mdi:account-group-outline" className="text-xl" />{" "}
+            <span className="d-none d-md-inline-block">View</span>{" "}
+          </button>
+        )}
+
         {hasPermission({ action: "edit_event" }) && (
-          <ActionsEvent event={event} />
+          <ActionsEvent
+            event={event}
+            trigger={(open) => (
+              <button
+                className="btn btn-street-edit d-none d-sm-flex  flex-row align-items-center justify-content-center radius-12 p-0"
+                style={{ width: "43px", height: "40px" }}
+                onClick={open}
+              >
+                <Icon icon="mdi:pencil" className="text-xl" />
+              </button>
+            )}
+          />
         )}
         <button
           disabled={isFull || isRegistering || isUnregistering}
@@ -167,16 +182,16 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
           {isRegistered ? (
             <Icon
               icon="mdi:calendar-remove"
-              className="d-inline-block d-sm-none text-xl"
+              className="d-inline-block d-md-none text-xl"
             />
           ) : (
             <Icon
               icon="mdi:calendar-check"
-              className="d-inline-block d-sm-none text-xl"
+              className="d-inline-block d-md-none text-xl"
             />
           )}
 
-          <span className="d-none d-sm-inline-block ">
+          <span className="d-none d-md-inline-block ">
             {" "}
             {isFull
               ? "Full"
@@ -188,7 +203,10 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
       </div>
     );
   }
-
+  const gridClass =
+    isPastEvent && event.documents.length > 0
+      ? "col-6 col-md-3 d-flex flex-column gap-1"
+      : "col-6 col-md-4 d-flex flex-column gap-1";
   return (
     <AnnouncementCardWrapper
       title={title}
@@ -200,7 +218,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
       <div className="p-8 p-md-16 rounded-1 d-flex flex-column align-content-center bg-event-details gap-3">
         <div className="row g-3">
           {/* Date & Time */}
-          <div className="col-6 col-md-4 d-flex flex-column gap-1">
+          <div className={gridClass}>
             <p className="text-xxs xs:text-xs fw-normal">Date & Time</p>
             <p className="text-xs xs:text-sm fw-semibold">{formattedDate}</p>
             <p className="text-xxs xs:text-xs fw-normal">
@@ -209,7 +227,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
           </div>
 
           {/* Location */}
-          <div className="col-6 col-md-4 d-flex flex-column gap-1">
+          <div className={gridClass}>
             <p className="text-xxs xs:text-xs fw-normal">Location</p>
             <a
               href={location.location_url}
@@ -220,12 +238,25 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
             </a>
           </div>
 
-          <div className="col-6 col-md-4 d-flex flex-column gap-1">
+          <div className={gridClass}>
             <p className="text-xxs xs:text-xs fw-normal">Created By</p>
             <p className="text-xs xs:text-sm fw-semibold">
               {createdBy.firstname + " " + createdBy.lastname}
             </p>
           </div>
+          {isPastEvent && event.documents.length > 0 && (
+            <div className={gridClass}>
+              <p className="text-xxs xs:text-xs fw-normal">Documents</p>
+              <p
+                className="text-xs xs:text-sm fw-semibold link-street-primary cursor-pointer"
+                style={{ textDecoration: "none" }}
+                onClick={() => setOpen(true)}
+              >
+                <Icon icon="lucide:paperclip" className="text-sm me-2" />{" "}
+                {event.documents.length} uploaded
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -254,6 +285,74 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
         open={open}
         eventId={eventId}
       />
+      {hasPermission({
+        action: "view_registerations",
+      }) && (
+        <ViewRegistrations
+          eventId={eventId}
+          open={registrationsOpen}
+          onOpenChange={setRegistrationsOpen}
+        />
+      )}
+      {hasPermission({
+        action: "view_registerations",
+      }) && (
+        <EventDocsUploader
+          open={docopen}
+          eventId={event._id}
+          onOpenChange={setDocOpen}
+          eventName={event.title}
+        />
+      )}
+
+      <hr className="d-sm-none d-block" />
+
+      <div className="row g-3 justify-content-end">
+        {hasPermission({ action: "view_registerations" }) && (
+          <div className="col-6 d-sm-none">
+            <button
+              className="btn btn-info-600 radius-12 text-xs d-flex align-items-center justify-content-center gap-2 w-100"
+              title="View Registrations"
+              onClick={() => setRegistrationsOpen(true)}
+            >
+              <Icon icon="mdi:account-group-outline" className="text-xl" />
+              <span className="d-inline-block">View</span>
+            </button>
+          </div>
+        )}
+
+        {hasPermission({ action: "edit_event" }) && !isPastEvent && (
+          <div className="col-6 d-sm-none">
+            <ActionsEvent
+              event={event}
+              trigger={(open) => (
+                <button
+                  className="btn btn-street-edit text-xs d-flex align-items-center justify-content-center radius-12 gap-2 w-100"
+                  style={{ height: "40px" }}
+                  onClick={open}
+                >
+                  <Icon icon="mdi:pencil" className="text-xl" />
+                  <span className="d-inline-block">Edit</span>
+                </button>
+              )}
+            />
+          </div>
+        )}
+        {hasPermission({
+          action: "view_registerations",
+        }) &&
+          isPastEvent && (
+            <div className="col-6 d-sm-none">
+              <button
+                className="btn  btn-street-edit  text-xs d-flex flex-row align-items-center justify-content-center gap-2 radius-12 w-100"
+                onClick={() => setDocOpen(true)}
+              >
+                <Icon icon="lucide:upload" className="text-xl" />
+                <span className="d-inline-block">Upload Docs</span>
+              </button>
+            </div>
+          )}
+      </div>
     </AnnouncementCardWrapper>
   );
 };
