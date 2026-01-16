@@ -21,7 +21,7 @@ const DeleteEmergencyContact: React.FC<DeleteEmergencyContactProps> = ({
     try {
       await deleteContact({ id }).unwrap();
       setShowModal(false);
-      console.log("Emergency contact deleted successfully");
+
     } catch (err) {
       showError(getErrorMessage(err));
     }

@@ -273,20 +273,14 @@ const ClientFeedBackForm: React.FC<FormProp> = ({
                                   (m) => m !== method
                                 )
                               );
-                              console.log(
-                                values.preferredContactMethod,
-                                typeof values.preferredContactMethod
-                              );
+                             
                             } else {
                               // add
                               setFieldValue("preferredContactMethod", [
                                 ...values.preferredContactMethod,
                                 method,
                               ]);
-                              console.log(
-                                values.preferredContactMethod,
-                                typeof values.preferredContactMethod
-                              );
+                            
                             }
                           }}
                           className="form-check-input"

@@ -69,7 +69,7 @@ function logUserRooms() {
     }
   }
 
-  console.log("🔌 Active User Rooms:", userRooms);
+
 }
 ConnectDb()
   .then(() => {

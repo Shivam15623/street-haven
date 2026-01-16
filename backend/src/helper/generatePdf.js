@@ -4,8 +4,7 @@ import chromium from "@sparticuz/chromium";
 const isProduction = process.env.NODE_ENV === "production";
 
 export const generatePdf = async (html) => {
-  console.log("Chromium path:", await chromium.executablePath());
-  console.log("Chromium args:", chromium.args);
+
   const browser = await puppeteer.launch({
     args: isProduction
       ? [...chromium.args, "--disable-gpu", "--disable-software-rasterizer"]
