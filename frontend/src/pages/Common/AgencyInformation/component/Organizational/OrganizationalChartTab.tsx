@@ -1,4 +1,4 @@
-import MobileTree from "./MobileTree";
+
 import TreeGraph from "./OrganizationalChart";
 
 
@@ -19,10 +19,10 @@ const OrganizationalChartTab = () => {
            
           </div>
 
-          <div className="d-none  d-sm-block radius-12" style={{background:"var(--street-bg-f4)"}}>
+          <div className=" radius-12" style={{background:"var(--street-bg-f4)"}}>
             <TreeGraph />
           </div>
-          <MobileTree />
+       
         </div>
       </div>
      
