@@ -4,10 +4,12 @@ type TabItem = {
   key: string; // unique key for tab
   label: string; // tab label
   content: React.ReactNode; // tab content
+  count?: number;
 };
 
 interface StreetTabProps {
   tabs: TabItem[];
+
   defaultActiveKey?: string; // initial active key for uncontrolled mode
   activeKey?: string; // controlled active key
   onTabChange?: (key: string) => void; // callback for parent when tab changes
@@ -56,7 +58,19 @@ const StreetTab: React.FC<StreetTabProps> = ({
               aria-selected={activeKey === tab.key ? "true" : "false"}
               onClick={() => handleTabClick(tab.key)}
             >
-              {tab.label}
+              {tab.label}{" "}
+              {tab.count !== undefined && (
+                <div
+                  className={`ms-2 d-inline-block ${
+                    activeKey === tab.key
+                      ? "sh-badge-primary-soft"
+                      : "sh-badge-secondary-soft"
+                  } rounded-circle px-8 py-4-px`}
+                >
+              
+                  {tab.count}
+                </div>
+              )}
             </button>
           </li>
         ))}

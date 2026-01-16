@@ -1,4 +1,4 @@
-import React from "react";
+import React, { type JSX } from "react";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
 import {
   useCreateEventMutation,
@@ -63,7 +63,13 @@ const EventFormSchema = Yup.object().shape({
 
 type EventFormValues = Yup.InferType<typeof EventFormSchema>;
 
-const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
+const ActionsEvent = ({
+  event,
+  trigger,
+}: {
+  event?: EventUpcomingData;
+  trigger?: (open: () => void) => JSX.Element;
+}) => {
   const isEdit = Boolean(event?._id);
   const [showModal, setShowModal] = React.useState(false);
 
@@ -166,13 +172,19 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
     <>
       {/* Trigger Button */}
       {isEdit ? (
-        <button
-          className="btn btn-street-edit d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
-          style={{ width: "43px", height: "40px" }}
-          onClick={() => setShowModal(true)}
-        >
-          <Icon icon="mdi:pencil" className="text-xl" />
-        </button>
+        trigger ? (
+          trigger(() => setShowModal(true))
+        ) : (
+          <button
+            className="btn btn-street-edit d-flex  flex-row align-items-center justify-content-center radius-12 p-0"
+            style={{ width: "43px", height: "40px" }}
+            onClick={() => setShowModal(true)}
+          >
+            <Icon icon="mdi:pencil" className="text-xl" />
+          </button>
+        )
+      ) : trigger ? (
+        trigger(() => setShowModal(true))
       ) : (
         <button
           className="btn btn-street-primary btn-street-lg radius-12 d-flex  flex-row align-items-center justify-content-center text-sm"
@@ -235,7 +247,6 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
             handleBlur,
             setFieldTouched,
           }) => {
-
             return (
               <Form
                 id={isEdit ? "event-edit-form" : "event-create-form"}
@@ -244,7 +255,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
               >
                 {/* Title */}
                 <Form.Group>
-                  <Form.Label>Title</Form.Label>
+                  <Form.Label className="mb-8">Title</Form.Label>
                   <Form.Control
                     name="title"
                     value={values.title}
@@ -258,7 +269,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
 
                 {/* Description */}
                 <Form.Group>
-                  <Form.Label>Description</Form.Label>
+                  <Form.Label className="mb-8">Description</Form.Label>
                   <QuillEditor
                     content={values.description}
                     onChange={(val) => setFieldValue("description", val)}
@@ -271,7 +282,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
                 <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
                   <Col md={6}>
                     <Form.Group>
-                      <Form.Label>Location Name</Form.Label>
+                      <Form.Label className="mb-8">Location Name</Form.Label>
                       <Form.Control
                         name="locationName"
                         value={values.locationName}
@@ -287,7 +298,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
                   </Col>
                   <Col md={6}>
                     <Form.Group>
-                      <Form.Label>Location URL</Form.Label>
+                      <Form.Label className="mb-8">Location URL</Form.Label>
                       <Form.Control
                         name="locationUrl"
                         value={values.locationUrl}
@@ -304,7 +315,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
 
                 {/* Capacity */}
                 <Form.Group>
-                  <Form.Label>Capacity</Form.Label>
+                  <Form.Label className="mb-8">Capacity</Form.Label>
                   <Form.Control
                     type="number"
                     name="capacity"
@@ -319,7 +330,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
 
                 {/* Date and Time */}
                 <Form.Group>
-                  <Form.Label>Event Date</Form.Label>
+                  <Form.Label className="mb-8">Event Date</Form.Label>
                   <CustomDatePicker
                     name="eventDate"
                     value={values.eventDate ? new Date(values.eventDate) : null}
@@ -340,7 +351,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
                 <Row className="gy-3 gy-md-0 gx-0 gx-md-4">
                   <Col md={6}>
                     <Form.Group>
-                      <Form.Label>Start Time</Form.Label>
+                      <Form.Label className="mb-8">Start Time</Form.Label>
                       <TimePicker
                         className={
                           touched.startTime && errors.startTime
@@ -360,7 +371,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
                   </Col>
                   <Col md={6}>
                     <Form.Group>
-                      <Form.Label>End Time</Form.Label>
+                      <Form.Label className="mb-8">End Time</Form.Label>
                       <TimePicker
                         className={
                           touched.endTime && errors.endTime ? "is-invalid" : ""

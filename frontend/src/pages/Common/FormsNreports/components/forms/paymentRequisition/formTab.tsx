@@ -4,10 +4,7 @@ import FormSubmissionLoader from "../../../../../../components/child/FormSubmiss
 import { useSelector } from "react-redux";
 import { selectAuth } from "../../../../../../redux/AuthSlice";
 import PaymentRequisitionForm, { type FormValues } from "./form";
-import {
-
-  getErrorMessage,
-} from "../../../../../../utills/utills";
+import { getErrorMessage } from "../../../../../../utills/utills";
 
 const PaymentRequisition = () => {
   const { user } = useSelector(selectAuth);
@@ -102,13 +99,13 @@ const PaymentRequisition = () => {
   return (
     <div className="d-flex flex-column gap-24 ">
       <div className="card">
-        <div className="card-body d-flex flex-row gap-20 align-items-center">
+        <div className="card-body d-flex flex-column flex-sm-row gap-20 align-items-center">
           <img src="/assets/images/shForm.png" width={144} height={113} />
           <div className="d-flex flex-column">
-            <h4 className="text-xxl sm:text-xl text-street-dark fw-semibold mb-2">
+            <h4 className="text-lg sm:text-xl text-street-dark fw-semibold mb-8">
               Payment Requisition Form
             </h4>
-            <p className="text-md text-street-dark fw-semibold">
+            <p className="text-md text-street-base fw-semibold">
               Thank you for visiting Street Haven. We value all our clients and
               strive to meet everyone’s needs.
             </p>

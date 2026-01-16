@@ -101,7 +101,14 @@ const VideoViewer: React.FC<VideoViewerProps> = ({ url }) => {
         src={url}
         className="img-fluid rounded"
         onClick={togglePlay}
-        style={{ opacity: isLoaded ? 1 : 0 }}
+        style={{
+          opacity: isLoaded ? 1 : 0,
+          border: "none",
+          width: "90vw",
+          maxWidth: "1200px",
+          maxHeight: "80vh",
+          objectFit: "contain", // 🔑 IMPORTANT
+        }}
       />
 
       {/* Play Overlay */}
@@ -116,9 +123,15 @@ const VideoViewer: React.FC<VideoViewerProps> = ({ url }) => {
 
       {/* Controls */}
       <div
-        className={`position-absolute bottom-0 start-0 end-0 bg-light bg-opacity-75 p-2 d-flex flex-column gap-2 rounded transition ${
+        className={`position-absolute bottom-0   bg-light bg-opacity-75 p-2 d-flex flex-column gap-2 rounded transition ${
           showControls ? "opacity-100" : "opacity-0"
         }`}
+        style={{
+          bottom: "1rem",
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 10,
+        }}
       >
         <input
           type="range"
