@@ -13,8 +13,8 @@ const FormsNreports = () => {
   const { hasPermission } = useHasPermission();
   return (
     <div className="d-flex flex-column gap-4">
-      <div className="d-flex flex-row justify-content-between align-items-center">
-        <div className="d-flex flex-column gap-2">
+      <div className="d-flex flex-column flex-sm-row justify-content-between gap-4 align-items-sm-center">
+        <div className=" d-sm-flex flex-column gap-2">
           <p className="fw-semibold text-xl xs:text-xxl text-street-dark">
             Forms & Reports
           </p>
@@ -23,8 +23,8 @@ const FormsNreports = () => {
           </p>
         </div>
         {hasPermission({ action: "view_submissions" }) && (
-          <div className="d-flex sm:d-block justify-content-end">
-            <div className="form-sub-toggle w-fit d-flex flex-row p-6 gap-1 radius-12">
+          <div className="d-flex justify-content-end">
+            <div className="form-sub-toggle w-fit flex-grow-1 d-inline-flex d-sm-flex flex-row p-6 gap-1 radius-12">
               {/* Form Tab */}
               <div
                 onClick={() => setActiveTab("form")}
@@ -32,7 +32,7 @@ const FormsNreports = () => {
                   activeTab === "form"
                     ? "bg-street-primary text-white"
                     : "bg-transparent text-street-base"
-                } d-flex gap-8 align-items-center justify-content-center p-6 p-sm-8 radius-8 cursor-pointer`}
+                } d-flex gap-8 align-items-center formTab justify-content-center   px-sm-8 px-16 p-8 radius-8 cursor-pointer`}
               >
                 <Icon icon="mdi:form-select" className="text-lg" />
                 <span className="text-xs fw-semibold">Form</span>
@@ -45,7 +45,7 @@ const FormsNreports = () => {
                   activeTab === "submissions"
                     ? "bg-street-primary text-white"
                     : "bg-transparent text-street-base"
-                } d-flex gap-8 align-items-center justify-content-center p-6 p-sm-8 radius-8 cursor-pointer`}
+                } d-flex gap-8 align-items-center justify-content-center formTab   p-6 p-sm-8 radius-8 cursor-pointer`}
               >
                 <Icon icon="mdi:file-document" className="text-lg" />
                 <span className="text-xs fw-semibold">Submissions</span>
@@ -67,7 +67,7 @@ const FormsNreports = () => {
         hasPermission({ action: "view_submissions" }) && (
           <Submissions
             activeKey={activeKey}
-             isViewActive={activeTab === "submissions"}
+            isViewActive={activeTab === "submissions"}
             onTabChange={(key) => setActiveKey(key)}
           />
         )}

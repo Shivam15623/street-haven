@@ -77,7 +77,7 @@ const ProgramManuals = () => {
 
   return (
     <div className="d-flex flex-column gap-4">
-      <div className="d-flex flex-row justify-content-between align-items-center">
+      <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-4 ">
         {" "}
         <div className="d-flex flex-column gap-2">
           <p className="fw-semibold text-xl xs:text-xxl text-street-dark">
@@ -89,7 +89,7 @@ const ProgramManuals = () => {
         </div>
         {hasPermission({ action: "create_program_manual" }) && (
           <button
-            className="btn btn-street-lg btn-street-primary radius-12 text-sm d-flex align-items-center justify-content-center"
+            className="btn  flex-grow-1 flex-sm-grow-0 btn-street-primary radius-12 text-sm d-flex align-items-center justify-content-center"
             onClick={() => setShowModal(true)}
           >
             Add Manual

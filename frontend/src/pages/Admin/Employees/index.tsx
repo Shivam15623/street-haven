@@ -52,7 +52,7 @@ const Employees = () => {
   return (
     <div className="d-flex flex-column gap-18">
       <div className="card">
-        <div className="card-body p-16 p-sm-20 radius-12 p-md-24 d-flex flex-row justify-content-between align-items-center">
+        <div className="card-body p-16 p-sm-20 radius-12 p-md-24 d-flex flex-column gap-4 flex-sm-row justify-content-between align-items-sm-center">
           <div className="d-flex flex-column gap-2">
             <h3 className="text-xl mb-0 text-street-dark fw-semibold">
               Employees

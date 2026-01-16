@@ -106,7 +106,7 @@ const AddEmployee = () => {
   return (
     <>
       <button
-        className="btn btn-street-primary d-flex text-sm flex-row align-items-center justify-content-center radius-12 gap-2"
+        className="btn btn-street-primary d-flex text-sm flex-row w-100 align-items-center justify-content-center radius-12 gap-2"
         onClick={() => setShowModal(true)}
       >
         <Icon icon="mdi:plus" className="text-sm sm:text-xl" /> Add Employee

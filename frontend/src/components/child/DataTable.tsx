@@ -104,7 +104,7 @@ function DataTable<T extends object>({
       </div>
 
       {/* 🔹 Responsive Table */}
-      <div style={{ scrollbarWidth: "thin" }}>
+      <div className="table-responsive" style={{ scrollbarWidth: "thin" }}>
         <table className="table bordered-table mb-0 table-hover align-middle">
           <thead>
             <tr>
