@@ -98,7 +98,7 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
     { resetForm }: { resetForm: () => void }
   ) => {
     try {
-      console.log("help", getPlainTextLength(values.description));
+
       const formData = buildFormData(values);
 
       const res = isEdit

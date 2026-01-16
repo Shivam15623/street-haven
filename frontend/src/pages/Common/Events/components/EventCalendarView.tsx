@@ -141,7 +141,7 @@ const EventCalendarView: React.FC<AgentTabProp> = ({ isActive }) => {
           firstDay={1}
           fixedWeekCount={false}
           events={data?.data.map((event) => {
-            console.log(event.startTime, new Date(event.startTime));
+
             return {
               extendedProps: {
                 slug: event.slug, // ✅ store custom property here

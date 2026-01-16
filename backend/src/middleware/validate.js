@@ -61,7 +61,7 @@ export const validateRequest = (schema, property = "body") => {
   };
 };
 export const validateAddComment = (req, res, next) => {
-  console.log(req.body.message, req.files?.length, req.files);
+
 
   const { error } = addCommentSchema.validate({
     message: req.body.message,

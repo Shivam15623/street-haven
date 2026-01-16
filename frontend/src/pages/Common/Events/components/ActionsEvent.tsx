@@ -101,7 +101,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
       startTime: startDateTime,
       endTime: endDateTime,
     };
-    console.log("payload", payload);
+
     const res = await createEvent(payload).unwrap();
     if (res.success) {
       showSuccess(res.message);
@@ -235,8 +235,7 @@ const ActionsEvent = ({ event }: { event?: EventUpcomingData }) => {
             handleBlur,
             setFieldTouched,
           }) => {
-            console.log("Formik Errors:", errors, values.endTime);
-            console.log("Formik Touched:", touched);
+
             return (
               <Form
                 id={isEdit ? "event-edit-form" : "event-create-form"}

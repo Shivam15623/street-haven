@@ -24,7 +24,7 @@ const SimpleTable = <T extends unknown>({
   onPageChange,
 }: TableProps<T>) => {
   const totalPages = Math.ceil(total / limit);
-  console.log("Total Pages:", totalPages, page);
+
   return (
     <div className="card">
       <div className="card-body p-16 p-sm-20 radius-12 p-md-24">

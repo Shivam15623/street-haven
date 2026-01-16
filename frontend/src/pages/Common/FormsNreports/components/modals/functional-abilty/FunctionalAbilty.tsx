@@ -35,7 +35,7 @@ export function FunctionalAbilityDetail({
   }, [showModal, getFaf, details._id]);
   const fAbility = response?.data;
   const loading = isFetching || isRefetching;
-  console.log(fAbility);
+
   const handleDownload = async () => {
     try {
       const blob = await getFAFPdf(details._id).unwrap();
