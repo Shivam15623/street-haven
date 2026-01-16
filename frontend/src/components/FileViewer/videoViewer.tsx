@@ -80,7 +80,7 @@ const VideoViewer: React.FC<VideoViewerProps> = ({ url }) => {
 
   return (
     <div
-      className="position-relative flex-grow-1 d-flex align-items-center justify-content-center"
+      className="position-relative w-100 h-100 flex-grow-1 d-flex align-items-center justify-content-center"
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => isPlaying && setShowControls(false)}
     >
