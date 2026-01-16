@@ -11,6 +11,8 @@ type SearchResultResponse = ApiResponse<{
   hrUpdates: searchResultItem[];
   programManuals: searchResultItem[];
   meetingMinutes: searchResultItem[];
+  announcements: searchResultItem[];
+  collectiveAgreements: searchResultItem[];
 }>;
 export const searchApi = api.injectEndpoints({
   endpoints: (builder) => ({

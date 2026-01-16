@@ -15,11 +15,13 @@ type Props = {
     size: number;
     totalPages?: number;
   };
+  trigger?: (open: () => void) => React.ReactNode;
 };
 
-const ViewFileModal = ({ attachment, title }: Props) => {
+const ViewFileModal = ({ attachment, title, trigger }: Props) => {
   const [showModal, setShowModal] = useState(false);
-
+  const openModal = () => setShowModal(true);
+  const closeModal = () => setShowModal(false);
   const extension = attachment.fileUrl.split(".").pop()?.toLowerCase() || "";
 
   const handleDownload = async () => {
@@ -124,20 +126,24 @@ const ViewFileModal = ({ attachment, title }: Props) => {
 
   return (
     <>
-      <button
-        className="btn btn-street-outline-primary d-flex justify-content-center align-items-center w-43-px px-8 py-8 px-sm-10 radius-12" 
-        style={{width:"43px",height:"40px"}}
-        onClick={() => setShowModal(true)}
-      >
-        <Icon icon="solar:eye-bold" className="text-lg" />
-      </button>
+      {trigger ? (
+        trigger(openModal)
+      ) : (
+        <button
+          className="btn btn-street-outline-primary d-flex justify-content-center align-items-center w-43-px px-8 py-8 px-sm-10 radius-12"
+          style={{ width: "43px", height: "40px" }}
+          onClick={openModal}
+        >
+          <Icon icon="solar:eye-bold" className="text-lg" />
+        </button>
+      )}
 
       <ModalWrapper
         title={title}
         subtitle={attachment.fileName}
         size="xl"
         show={showModal}
-        onHide={() => setShowModal(false)}
+        onHide={closeModal}
         footer={
           <div className="d-flex justify-content-end">
             <button className="btn btn-street-primary" onClick={handleDownload}>
