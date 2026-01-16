@@ -13,7 +13,7 @@ const Events = () => {
   return (
     <div className="d-flex flex-column gap-8 gap-sm-16 gap-md-24 ">
       {/* Top Info */}
-      <div className="d-flex flex-row align-items-center justify-content-between  gap-2">
+      <div className="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between  gap-4">
         <div className="d-flex flex-column gap-2">
           <p className="fw-semibold text-xl xs:text-xxl text-street-dark">
             Staff Events
@@ -22,22 +22,22 @@ const Events = () => {
             View upcoming training sessions and organizational events
           </p>
         </div>
-        <div className="d-flex sm:d-block justify-content-end">
-          <div className="event-view-toggle align-items-center w-fit d-flex flex-row p-6  gap-1 radius-12">
+        <div className="d-flex sm:d-block ">
+          <div className="event-view-toggle align-items-center w-fit flex-grow-1 d-flex flex-row p-6  gap-1 radius-12">
             <div
               onClick={() => setView("calender")}
               className={`${
                 view === "calender"
                   ? "btn-street-primary text-white"
                   : "btn-street-neutral switch text-street-base"
-              } d-flex gap-8 align-items-center justify-content-center p-8  radius-8 cursor-pointer`}
+              } d-flex gap-8 align-items-center justify-content-center p-8 eventTtab  radius-8 cursor-pointer`}
               style={{ maxHeight: "35px" }}
             >
               <Icon
                 icon={"material-symbols-light:event-outline-rounded"}
                 className="text-lg"
               />{" "}
-              <span className=" text-xs d-none d-md-inline-block fw-semibold">
+              <span className=" text-xs d-inline-block fw-semibold">
                 Calendar view
               </span>
             </div>
@@ -47,11 +47,11 @@ const Events = () => {
                 view === "list"
                   ? "btn-street-primary text-white"
                   : "btn-street-neutral switch text-street-base"
-              } d-flex gap-8 align-items-center justify-content-center p-8 radius-8 cursor-pointer`}
+              } d-flex gap-8 align-items-center justify-content-center eventTtab p-8 radius-8 cursor-pointer`}
               style={{ maxHeight: "35px" }}
             >
               <Icon icon={"mynaui:list"} className="text-lg" />{" "}
-              <span className="text-xs d-none d-md-inline-block fw-semibold">
+              <span className="text-xs d-inline-block fw-semibold">
                 List view
               </span>
             </div>

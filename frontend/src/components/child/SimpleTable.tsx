@@ -59,26 +59,26 @@ const SimpleTable = <T extends unknown>({
               ))}
             </tbody>
           </table>
-          <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-3 gap-2">
-            <span>
-              Page {page} of {totalPages === 0 ? totalPages + 1 : totalPages}
-            </span>
-            <div className="d-flex gap-2">
-              <button
-                className="btn btn-sm btn-street-outline-primary d-flex text-sm flex-row align-items-center justify-content-center radius-12"
-                disabled={page === 1 || totalPages === 0}
-                onClick={() => onPageChange(page - 1)}
-              >
-                Prev
-              </button>
-              <button
-                className="btn btn-sm btn-street-outline-primary d-flex text-sm flex-row align-items-center justify-content-center radius-12"
-                disabled={page === totalPages || totalPages === 0}
-                onClick={() => onPageChange(page + 1)}
-              >
-                Next
-              </button>
-            </div>
+        </div>
+        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-3 gap-2">
+          <span>
+            Page {page} of {totalPages === 0 ? totalPages + 1 : totalPages}
+          </span>
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-sm btn-street-outline-primary d-flex text-sm flex-row align-items-center justify-content-center radius-12"
+              disabled={page === 1 || totalPages === 0}
+              onClick={() => onPageChange(page - 1)}
+            >
+              Prev
+            </button>
+            <button
+              className="btn btn-sm btn-street-outline-primary d-flex text-sm flex-row align-items-center justify-content-center radius-12"
+              disabled={page === totalPages || totalPages === 0}
+              onClick={() => onPageChange(page + 1)}
+            >
+              Next
+            </button>
           </div>
         </div>
       </div>

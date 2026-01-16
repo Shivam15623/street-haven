@@ -37,6 +37,15 @@
 [data-theme="dark"] .form-sub-toggle {
   background-color: rgba(15, 28, 42, 1);
 }
+.formTab{
+  width: fit-content;
+}
+@media (max-width: 576px) {
+  .formTab{
+    width: 50%;
+  }
+  
+}
 .report-form-card:hover .card-body {
   border: 1px solid var(--street-primary-base);
 }
