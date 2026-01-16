@@ -105,7 +105,7 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
             data: formData,
             onProgress: (p: number) => setProgress(p),
           }).unwrap();
-      console.log("Response:", res);
+
 
       if (res.success) {
         showSuccess(res.message);

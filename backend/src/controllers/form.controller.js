@@ -135,7 +135,7 @@ export const createEmployeeIncident = asyncHandler(async (req, res) => {
     previousInjury,
     previousInjuryDate,
   } = req.body;
-  console.log(req.body);
+
   const payload = {
     reportType: type,
     employee: employee,
@@ -508,7 +508,7 @@ export const GetAllFunctionalAbilities = asyncHandler(async (req, res) => {
   } = req.query;
 
   const query = {};
-  console.log(search);
+
   if (search) {
     query.$or = [
       { "worker.firstName": { $regex: search, $options: "i" } },
@@ -527,7 +527,7 @@ export const GetAllFunctionalAbilities = asyncHandler(async (req, res) => {
     .limit(Number(limit));
 
   const totalCount = await FunctionalAbility.countDocuments(query);
-  console.log(totalCount);
+
   res.status(200).json(
     new ApiResponse(200, "Functional Abilities fetched successfully", {
       data,
@@ -956,7 +956,7 @@ export const generatefilledPaymentPdf = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const dataFromDB = await PaymentRequisition.findById(id);
 
-  console.log(dataFromDB);
+
   const plainData = dataFromDB.toObject();
   const html = buildHtmlFromTemplate("payment-requistion", plainData);
 
@@ -1003,7 +1003,6 @@ export const generateFilledClientIncident = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const doc = await ClientIncident.findById(id);
 
-  console.log(doc);
 
   const payload = {
     incidentDate: new Date(doc.incidentDate).toLocaleDateString(),

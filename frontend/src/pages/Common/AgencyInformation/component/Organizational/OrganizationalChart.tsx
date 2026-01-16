@@ -7,6 +7,7 @@ import React, {
   useEffect,
 } from "react";
 import {
+  Controls,
   ReactFlow,
   ReactFlowProvider,
   type Edge,
@@ -211,7 +212,7 @@ function Flow() {
       if (root) {
         initialExpandedSet.add(rootId);
       }
-      console.log("Initial expanded set:", initialExpandedSet);
+
 
       setExpanded(initialExpandedSet);
     }
@@ -282,7 +283,7 @@ function Flow() {
     }
     const visibleIds = computeVisibleIds(apiNodes, rootId, expanded);
 
-    console.log("visibleIds", Array.from(visibleIds));
+
     const nodeWidth = 340;
     return layoutDagre(
       apiNodes,
@@ -298,12 +299,13 @@ function Flow() {
       {" "}
       <div
         ref={containerRef}
-        onWheel={(e) => e.stopPropagation()}
         style={{
           width: "100%",
           height: "80vh", // fixed height (no dancing)
           overflow: "auto", // scroll if needed
           border: "0",
+          WebkitOverflowScrolling: "touch",
+          touchAction: "pan-y pinch-zoom", // ✅ allow scroll + pinch
         }}
       >
         {/* Optional inner wrapper to reserve scroll height */}
@@ -312,18 +314,22 @@ function Flow() {
             nodes={nodes}
             edges={edges}
             nodeTypes={nodeTypes}
-            // edgeTypes={edgeTypes}
             nodesDraggable={false}
-            panOnDrag={true}
-            zoomOnScroll={true}
-            zoomOnPinch={false}
+            panOnDrag={true} // ✅ ENABLE on mobile
             panOnScroll={false}
+            minZoom={0.2} // ✅ allow zoom OUT
+            maxZoom={2}
+            zoomOnScroll={false} // ✅ disable wheel zoom
+            zoomOnPinch={true} // ✅ mobile pinch zoom
+            preventScrolling={false} // ✅ allow container scroll
             zoomOnDoubleClick={false}
             defaultEdgeOptions={{ zIndex: -1 }}
-            elevateNodesOnSelect={false} // ✅ Add this
-            edgesFocusable={false} // ✅ Add this
-            // No fitView calls anywhere
-          />
+            elevateNodesOnSelect={false}
+            edgesFocusable={false}
+          >
+            {" "}
+            <Controls showZoom showFitView />
+          </ReactFlow>
           {showModal && selectedNode && (
             <UserNodeDetail
               show={showModal}

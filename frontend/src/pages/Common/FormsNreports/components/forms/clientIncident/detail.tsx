@@ -50,11 +50,7 @@ const ClientIncidentReportDetail = ({ incident }: ClientIncidentModalProps) => {
 
   const detail = response?.data;
   const loading = isLoading || isFetching;
-  console.log(
-    "yes d",
-    detail?.incidentTime,
-    formatTime12Hour(detail?.incidentTime)
-  );
+
   const getIncidentTypeBadge = (type: string): JSX.Element => {
     const severityMap: Record<string, BadgeVariant> = {
       Disaster: "danger",

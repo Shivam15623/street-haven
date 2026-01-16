@@ -327,7 +327,7 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
       comment: commentData & { ticketId: string };
       clientId: string;
     }) => {
-      console.log("comment", { comment, clientId });
+
       if (comment.ticketId !== ticket._id) return;
 
       setComments((prev) => {

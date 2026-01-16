@@ -600,7 +600,7 @@ export const AddComment = asyncHandler(async (req, res) => {
     "userId",
     "firstname lastname email"
   );
-  console.log(populatedComment);
+
   io.to(ticketId).emit("newComment", { comment: populatedComment, clientId });
 
   res
