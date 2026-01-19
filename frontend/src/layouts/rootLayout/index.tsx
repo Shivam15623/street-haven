@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Suspense, useEffect, useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigation } from "react-router-dom";
 import "@assets/css/layout.css";
 import ThemeToggleButton from "../../helper/ThemeToggleButton.tsx";
 import SiteLogo from "@assets/images/auth/e5fcae70d4835039e473c6b00f4a901799a86cf3.png";
@@ -69,6 +69,8 @@ const RootLayout = () => {
   const location = useLocation(); // Hook to get the current route
   const [mobileMode, setMobileMode] = useState(false);
   const { hasPermission } = useHasPermission();
+  const navigation = useNavigation();
+  const isLoading = navigation.state === "loading";
   const filteredMenu = menuItems.filter((m) => {
     if (m.public) return true; // public items visible to all
     if (m.permission) {
@@ -282,9 +284,7 @@ const RootLayout = () => {
 
         {/* dashboard-main-body */}
         <div className="dashboard-main-body">
-          <Suspense fallback={<Loader />}>
-            <Outlet />
-          </Suspense>
+          {isLoading ? <Loader /> : <Outlet />}
           {/* Footer section */}
           <footer className="d-footer footer-color">
             <div className="row align-items-center justify-content-between">
