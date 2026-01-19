@@ -252,7 +252,6 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                               <Card.Body className="p-3">
                                 <div className="d-flex justify-content-between align-items-center mb-2">
                                   <strong>Item #{index + 1}</strong>
-
                                   <div className="d-flex gap-2">
                                     {values.purchaseDetails.length > 1 && (
                                       <button
@@ -267,8 +266,6 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                                         <Icon icon="mynaui:minus" />
                                       </button>
                                     )}
-
-                                 
                                   </div>
                                 </div>
 
@@ -279,12 +276,16 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                                   </label>
                                   <CustomDatePicker
                                     value={row.date}
-                                    onChange={(date) =>
+                                    onChange={(date) => {
                                       setFieldValue(
                                         `purchaseDetails[${index}].date`,
                                         date
-                                      )
-                                    }
+                                      );
+                                      setFieldTouched(
+                                        `purchaseDetails[${index}].date`,
+                                        true
+                                      );
+                                    }}
                                   />
                                   {rowTouched.date && rowErrors.date && (
                                     <div className="text-danger small">
@@ -295,7 +296,6 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
 
                                 {/* NATURE */}
                                 <div className="row gx-3 gy-0">
-                                  {" "}
                                   <div className="mb-3 col-6">
                                     <label className="form-label mb-2">
                                       Nature
@@ -305,7 +305,13 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                                       className="form-control"
                                       placeholder="Nature"
                                     />
+                                    {rowTouched.nature && rowErrors.nature && (
+                                      <div className="text-danger small">
+                                        {String(rowErrors.nature)}
+                                      </div>
+                                    )}
                                   </div>
+
                                   {/* PROGRAM */}
                                   <div className="mb-3 col-6">
                                     <label className="form-label mb-2">
@@ -316,6 +322,12 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                                       className="form-control"
                                       placeholder="Program"
                                     />
+                                    {rowTouched.program &&
+                                      rowErrors.program && (
+                                        <div className="text-danger small">
+                                          {String(rowErrors.program)}
+                                        </div>
+                                      )}
                                   </div>
                                 </div>
 
@@ -329,7 +341,14 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                                     className="form-control"
                                     placeholder="Expense Code"
                                   />
+                                  {rowTouched.expenseCode &&
+                                    rowErrors.expenseCode && (
+                                      <div className="text-danger small">
+                                        {String(rowErrors.expenseCode)}
+                                      </div>
+                                    )}
                                 </div>
+
                                 <div className="row gx-3 gy-0 mb-3">
                                   {/* NET AMOUNT */}
                                   <div className="col-6">
@@ -356,8 +375,18 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                                           `purchaseDetails[${index}].totalAmount`,
                                           amount + hst
                                         );
+                                        setFieldTouched(
+                                          `purchaseDetails[${index}].netAmount`,
+                                          true
+                                        );
                                       }}
                                     />
+                                    {rowTouched.netAmount &&
+                                      rowErrors.netAmount && (
+                                        <div className="text-danger small">
+                                          {String(rowErrors.netAmount)}
+                                        </div>
+                                      )}
                                   </div>
 
                                   {/* HST */}
@@ -386,8 +415,17 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                                           `purchaseDetails[${index}].totalAmount`,
                                           amount + hst
                                         );
+                                        setFieldTouched(
+                                          `purchaseDetails[${index}].hst`,
+                                          true
+                                        );
                                       }}
                                     />
+                                    {rowTouched.hst && rowErrors.hst && (
+                                      <div className="text-danger small">
+                                        {String(rowErrors.hst)}
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
 
@@ -405,28 +443,10 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                             </Card>
                           );
                         })}
-
-                        <button
-                          className="btn btn-street-outline-primary w-100 d-flex flex-row align-items-center gap-2 radius-8 justify-content-center"
-                          onClick={() =>
-                            push({
-                              date: null,
-                              nature: "",
-                              program: "",
-                              expenseCode: "",
-                              netAmount: 0,
-                              hst: 0,
-                              totalAmount: 0,
-                            })
-                          }
-                        >
-                          <Icon icon={"mynaui:plus"} width={18} height={18} />
-                          Add
-                        </button>
                       </div>
+
                       <table
                         className="table bordered-table mb-0 d-none d-md-block table-hover align-middle"
-                        // className="table-form"
                         style={{ minWidth: "900px" }}
                       >
                         <thead>
@@ -483,27 +503,74 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                                 <td>
                                   <Field
                                     name={`purchaseDetails[${index}].nature`}
-                                    className="form-control"
+                                    className={`form-control ${
+                                      rowTouched.nature && rowErrors.nature
+                                        ? "is-invalid"
+                                        : ""
+                                    }`}
                                     placeholder="Nature"
+                                    onBlur={() =>
+                                      setFieldTouched(
+                                        `purchaseDetails[${index}].nature`,
+                                        true
+                                      )
+                                    }
                                   />
+                                  {rowTouched.nature && rowErrors.nature && (
+                                    <div className="text-danger small">
+                                      {String(rowErrors.nature)}
+                                    </div>
+                                  )}
                                 </td>
 
                                 {/* PROGRAM */}
                                 <td>
                                   <Field
                                     name={`purchaseDetails[${index}].program`}
-                                    className="form-control"
+                                    className={`form-control ${
+                                      rowTouched.program && rowErrors.program
+                                        ? "is-invalid"
+                                        : ""
+                                    }`}
                                     placeholder="Program"
+                                    onBlur={() =>
+                                      setFieldTouched(
+                                        `purchaseDetails[${index}].program`,
+                                        true
+                                      )
+                                    }
                                   />
+                                  {rowTouched.program && rowErrors.program && (
+                                    <div className="text-danger small">
+                                      {String(rowErrors.program)}
+                                    </div>
+                                  )}
                                 </td>
 
                                 {/* EXPENSE CODE */}
                                 <td>
                                   <Field
                                     name={`purchaseDetails[${index}].expenseCode`}
-                                    className="form-control"
+                                    className={`form-control ${
+                                      rowTouched.expenseCode &&
+                                      rowErrors.expenseCode
+                                        ? "is-invalid"
+                                        : ""
+                                    }`}
                                     placeholder="Expense Code"
+                                    onBlur={() =>
+                                      setFieldTouched(
+                                        `purchaseDetails[${index}].expenseCode`,
+                                        true
+                                      )
+                                    }
                                   />
+                                  {rowTouched.expenseCode &&
+                                    rowErrors.expenseCode && (
+                                      <div className="text-danger small">
+                                        {String(rowErrors.expenseCode)}
+                                      </div>
+                                    )}
                                 </td>
 
                                 {/* NET AMOUNT */}
@@ -511,8 +578,19 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                                   <Field
                                     name={`purchaseDetails[${index}].netAmount`}
                                     type="number"
-                                    className="form-control"
+                                    className={`form-control ${
+                                      rowTouched.netAmount &&
+                                      rowErrors.netAmount
+                                        ? "is-invalid"
+                                        : ""
+                                    }`}
                                     placeholder="Net Amount"
+                                    onBlur={() =>
+                                      setFieldTouched(
+                                        `purchaseDetails[${index}].netAmount`,
+                                        true
+                                      )
+                                    }
                                     onChange={(
                                       e: React.ChangeEvent<HTMLInputElement>
                                     ) => {
@@ -520,6 +598,7 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                                       const hst = Number(
                                         values.purchaseDetails[index].hst
                                       );
+
                                       setFieldValue(
                                         `purchaseDetails[${index}].netAmount`,
                                         amount
@@ -530,6 +609,12 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                                       );
                                     }}
                                   />
+                                  {rowTouched.netAmount &&
+                                    rowErrors.netAmount && (
+                                      <div className="text-danger small">
+                                        {String(rowErrors.netAmount)}
+                                      </div>
+                                    )}
                                 </td>
 
                                 {/* HST */}
@@ -537,8 +622,18 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                                   <Field
                                     name={`purchaseDetails[${index}].hst`}
                                     type="number"
-                                    className="form-control"
+                                    className={`form-control ${
+                                      rowTouched.hst && rowErrors.hst
+                                        ? "is-invalid"
+                                        : ""
+                                    }`}
                                     placeholder="HST"
+                                    onBlur={() =>
+                                      setFieldTouched(
+                                        `purchaseDetails[${index}].hst`,
+                                        true
+                                      )
+                                    }
                                     onChange={(
                                       e: React.ChangeEvent<HTMLInputElement>
                                     ) => {
@@ -546,6 +641,7 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                                       const amount = Number(
                                         values.purchaseDetails[index].netAmount
                                       );
+
                                       setFieldValue(
                                         `purchaseDetails[${index}].hst`,
                                         hst
@@ -556,6 +652,11 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                                       );
                                     }}
                                   />
+                                  {rowTouched.hst && rowErrors.hst && (
+                                    <div className="text-danger small">
+                                      {String(rowErrors.hst)}
+                                    </div>
+                                  )}
                                 </td>
 
                                 {/* TOTAL */}
@@ -744,26 +845,29 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
             </Card>
             {footer === true && (
               <Card className="shadow-sm border-0">
-                <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleDownload(
-                        "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764756165/Payment_Requisation_Form_xihfsq.pdf",
-                        "Payment Requisition Form"
-                      )
-                    }
-                    className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-                  >
-                    Download
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-                  >
-                    {isLoading ? "Submitting..." : "Submit"}
-                  </button>
+                <Card.Body className="d-flex flex-row justify-content-end   p-20">
+                  <div className="d-flex flex-row gap-10">
+                    {" "}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleDownload(
+                          "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764756165/Payment_Requisation_Form_xihfsq.pdf",
+                          "Payment Requisition Form"
+                        )
+                      }
+                      className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                    >
+                      Download
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                    >
+                      {isLoading ? "Submitting..." : "Submit"}
+                    </button>
+                  </div>
                 </Card.Body>
               </Card>
             )}

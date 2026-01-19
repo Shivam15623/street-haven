@@ -426,7 +426,7 @@ const FunctionalAbiltiesForm = () => {
                       </Form.Label>
                       <Form.Control
                         style={{ height: "40px", minWidth: "200px" }}
-                        name="claimNo" 
+                        name="claimNo"
                         className="flex-grow-1"
                         value={values.claimNo}
                         onChange={handleChange}
@@ -1698,23 +1698,25 @@ const FunctionalAbiltiesForm = () => {
 
             <div className="card">
               <div className="card-body d-flex flex-row w-100 justify-content-end  gap-20 px-24 py-16">
-                <button
-                  className="btn btn-street-outline-primary btn-street-lg d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-                  onClick={() =>
-                    handleDownload(
-                      "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764752829/FAF_fab59p.pdf",
-                      "functional abilties Form"
-                    )
-                  }
-                >
-                  Download Form
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-                >
-                  {isLoading ? "Submitting..." : "Submit"}
-                </button>
+                <div className="d-flex flex-row gap-10">
+                  <button
+                    className="btn btn-street-outline-primary btn-street-lg d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                    onClick={() =>
+                      handleDownload(
+                        "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764752829/FAF_fab59p.pdf",
+                        "functional abilties Form"
+                      )
+                    }
+                  >
+                    Download Form
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                  >
+                    {isLoading ? "Submitting..." : "Submit"}
+                  </button>
+                </div>
               </div>
             </div>
           </Form>
