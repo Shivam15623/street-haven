@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import {
   LazyProgramManuals,
   LazyEmployeedashboard,
@@ -6,7 +5,6 @@ import {
   LazyForgotPassword,
   LazyFormReports,
   LazyHelpDesk,
-  LazyLoader,
   LazyLogin,
   LazyProfile,
   LazyAgencyInfo,
@@ -20,15 +18,13 @@ import { Navigate, type RouteObject } from "react-router-dom";
 import RouteGuard from "../Routeguard";
 import { ROLES } from "../interfaces/AuthInterfaces";
 
-const withSuspense = (Component: React.ReactElement) => (
-  <Suspense fallback={<LazyLoader />}>{Component}</Suspense>
-);
 export const AllRoutes: RouteObject[] = [
   { path: "", element: <Navigate to="/login" replace /> },
+
   {
     path: "login",
-    element: withSuspense(
-      <RouteGuard isPublic={true}>
+    element: (
+      <RouteGuard isPublic>
         <LazyLogin />
       </RouteGuard>
     ),
@@ -36,32 +32,35 @@ export const AllRoutes: RouteObject[] = [
 
   {
     path: "forgot-password",
-    element: withSuspense(
-      <RouteGuard isPublic={true}>
+    element: (
+      <RouteGuard isPublic>
         <LazyForgotPassword />
       </RouteGuard>
     ),
   },
+
   {
     path: "reset-password",
-    element: withSuspense(
-      <RouteGuard isPublic={true}>
+    element: (
+      <RouteGuard isPublic>
         <LazyResetPassword />
       </RouteGuard>
     ),
   },
+
   {
     path: "connect-Authenticator",
-    element: withSuspense(
-      <RouteGuard isPublic={true}>
+    element: (
+      <RouteGuard isPublic>
         <LazyGenereateTotp />
       </RouteGuard>
     ),
   },
+
   {
     path: "otp-verify",
-    element: withSuspense(
-      <RouteGuard isPublic={true}>
+    element: (
+      <RouteGuard isPublic>
         <LazyVerifyTotp />
       </RouteGuard>
     ),
@@ -69,7 +68,7 @@ export const AllRoutes: RouteObject[] = [
 
   {
     path: "/",
-    element: withSuspense(
+    element: (
       <RouteGuard isPublic={false}>
         <LazyRootLayout />
       </RouteGuard>
@@ -77,7 +76,7 @@ export const AllRoutes: RouteObject[] = [
     children: [
       {
         index: true,
-        element: withSuspense(
+        element: (
           <RouteGuard isPublic={false}>
             <LazyEmployeedashboard />
           </RouteGuard>
@@ -86,7 +85,7 @@ export const AllRoutes: RouteObject[] = [
 
       {
         path: "programs&manuals",
-        element: withSuspense(
+        element: (
           <RouteGuard isPublic={false}>
             <LazyProgramManuals />
           </RouteGuard>
@@ -95,7 +94,7 @@ export const AllRoutes: RouteObject[] = [
 
       {
         path: "events",
-        element: withSuspense(
+        element: (
           <RouteGuard isPublic={false}>
             <LazyEvents />
           </RouteGuard>
@@ -104,7 +103,7 @@ export const AllRoutes: RouteObject[] = [
 
       {
         path: "agency_info",
-        element: withSuspense(
+        element: (
           <RouteGuard isPublic={false}>
             <LazyAgencyInfo />
           </RouteGuard>
@@ -113,7 +112,7 @@ export const AllRoutes: RouteObject[] = [
 
       {
         path: "it_facility",
-        element: withSuspense(
+        element: (
           <RouteGuard isPublic={false}>
             <LazyHelpDesk />
           </RouteGuard>
@@ -122,7 +121,7 @@ export const AllRoutes: RouteObject[] = [
 
       {
         path: "forms",
-        element: withSuspense(
+        element: (
           <RouteGuard isPublic={false}>
             <LazyFormReports />
           </RouteGuard>
@@ -131,15 +130,16 @@ export const AllRoutes: RouteObject[] = [
 
       {
         path: "profile",
-        element: withSuspense(
+        element: (
           <RouteGuard isPublic={false}>
             <LazyProfile />
           </RouteGuard>
         ),
       },
+
       {
         path: "employees",
-        element: withSuspense(
+        element: (
           <RouteGuard
             isPublic={false}
             requireRole={[ROLES.ADMIN, ROLES.SUPER_ADMIN]}
