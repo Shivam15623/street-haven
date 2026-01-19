@@ -13,10 +13,7 @@ import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
 import QuillEditor from "../../../../../components/child/QuillEditor";
 import FileField from "../../../../../components/child/FileField";
-import {
-  getAxiosErrorMessage,
-
-} from "../../../../../utills/utills";
+import { getAxiosErrorMessage } from "../../../../../utills/utills";
 
 // ✅ Schema
 const HrUpdatesFormSchema = () =>
@@ -98,7 +95,6 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
     { resetForm }: { resetForm: () => void }
   ) => {
     try {
-
       const formData = buildFormData(values);
 
       const res = isEdit
@@ -144,7 +140,7 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
       }
       isLoading={isLoading || isEditing}
       footer={
-        <div className="d-flex gap-2 justify-content-end">
+        <div className="d-flex justify-content-end gap-3">
           <button
             type="submit"
             form="hr-updates-form"
@@ -160,7 +156,7 @@ const ActionsHrUpdates: React.FC<ActionsHrUpdatesProps> = ({
               : "Add Update"}
           </button>
           <button
-            className="btn btn-street-neutral btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+            className="btn btn-street-neutral btn-street-lg radius-12 d-none d-sm-flex align-items-center text-sm justify-content-center"
             onClick={onHide}
           >
             Cancel

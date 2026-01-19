@@ -54,7 +54,7 @@ const DeleteEmployee: React.FC<DeleteEmployeeProps> = ({ employee }) => {
         footerClassName="pt-16 pt-sm-20 px-0 pb-0"
         onHide={() => setShowModal(false)}
         footer={
-          <div className="d-flex gap-2 justify-content-end">
+          <div className="d-flex justify-content-end gap-3">
             <button
               onClick={handleDelete}
               className="btn btn-street-delete btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
@@ -63,7 +63,7 @@ const DeleteEmployee: React.FC<DeleteEmployeeProps> = ({ employee }) => {
               {isLoading ? "Deleting..." : "Delete"}
             </button>
             <button
-              className="btn btn-street-neutral btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+              className="btn btn-street-neutral btn-street-lg radius-12 d-none d-sm-flex align-items-center text-sm justify-content-center"
               onClick={() => setShowModal(false)}
             >
               Cancel

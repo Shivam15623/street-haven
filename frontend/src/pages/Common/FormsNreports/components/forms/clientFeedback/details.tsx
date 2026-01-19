@@ -5,7 +5,6 @@ import localizedFormat from "dayjs/plugin/localizedFormat";
 import dayjs from "dayjs";
 
 import {
-
   useLazyGetClientFeedbackByIdQuery,
   useLazyGetClientFeedbackPdfQuery,
   type clientFeedbackData,
@@ -113,13 +112,15 @@ const ClientFeedback = ({ detail }: { detail: clientFeedbackData }) => {
           />
         }
         footer={
-          <button
-            className="d-flex gap-2 align-items-center btn-street-lg justify-content-center btn btn-street-outline-primary radius-12 p-0"
-            onClick={handleDownload}
-          >
-            {" "}
-            {pdfloading ? "Downloading..." : "Download"}
-          </button>
+          <div className="d-flex justify-content-end">
+            <button
+              className="d-flex gap-2 align-items-center btn-street-lg justify-content-center btn btn-street-outline-primary radius-12 p-0"
+              onClick={handleDownload}
+            >
+              {" "}
+              {pdfloading ? "Downloading..." : "Download"}
+            </button>
+          </div>
         }
       >
         {/* ✅ Render only when data is ready */}

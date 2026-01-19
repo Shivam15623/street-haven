@@ -78,7 +78,7 @@ const EditIncidentReport = ({ data }: { data: IncidentReportData }) => {
           />
         }
         footer={
-          <>
+          <div className="d-flex justify-content-end ">
             <button
               className="btn btn-street-primary btn-street-lg radius-12 d-flex align-items-center justify-content-center"
               type="submit"
@@ -87,7 +87,7 @@ const EditIncidentReport = ({ data }: { data: IncidentReportData }) => {
             >
               {isLoading ? "Updating..." : "Update"}
             </button>
-          </>
+          </div>
         }
       >
         <IncidentReportForm

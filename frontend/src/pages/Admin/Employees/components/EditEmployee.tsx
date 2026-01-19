@@ -147,7 +147,7 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
           <FormSubmissionLoader isLoading={isLoading} variant="spinner" />
         }
         footer={
-          <div className="d-flex gap-2 justify-content-end">
+          <div className="d-flex justify-content-end gap-3">
             <button
               type="submit"
               form="edit-employee-form"
@@ -157,7 +157,7 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
               {isLoading ? "Saving..." : "Save Changes"}
             </button>
             <button
-              className="btn btn-street-neutral btn-street-lg radius-12 d-flex align-items-center justify-content-center"
+              className="btn btn-street-neutral btn-street-lg radius-12 d-none d-sm-flex align-items-center justify-content-center"
               onClick={() => setShowModal(false)}
             >
               Cancel

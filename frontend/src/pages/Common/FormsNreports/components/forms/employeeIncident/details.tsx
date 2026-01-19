@@ -110,20 +110,23 @@ const EmployeeIncidentReportDetails = ({
           />
         }
         footer={
-          <button
-            className="d-flex gap-2 align-items-center btn-street-lg justify-content-center btn btn-street-outline-primary radius-12 p-0"
-            onClick={handleDownload}
-          >
+          <div className="d-flex justify-content-end">
             {" "}
-            {pdfloading ? "Downloading..." : "Download"}
-          </button>
+            <button
+              className="d-flex gap-2 align-items-center btn-street-lg justify-content-center btn btn-street-outline-primary radius-12 p-0"
+              onClick={handleDownload}
+            >
+              {" "}
+              {pdfloading ? "Downloading..." : "Download"}
+            </button>
+          </div>
         }
       >
         {!loading && incident && (
           <Container className="d-flex flex-column gap-24 ">
             <div className="bg-neutral-50 border-sh-base-1-2 rounded-3 shadow-none card p-16">
               <div className="card-body p-0">
-                <div className="d-flex flex-row align-items-start justify-content-between">
+                <div className="d-flex flex-sm-row flex-column-reverse gap-3 align-items-start justify-content-between">
                   <div className="d-flex flex-row flex-nowrap gap-2">
                     <div>
                       <div className="p-12 border-sh-primary-50 bg-street-primary-10 rounded-circle">
@@ -140,8 +143,13 @@ const EmployeeIncidentReportDetails = ({
                         {incident.employee.firstname}{" "}
                         {incident.employee.lastname}
                       </p>
-                      <p className="text-sm text-street-base d-flex align-items-center gap-1 mt-1">
-                        <Icon icon="lucide:briefcase" fontSize={14} />
+                      <p className="text-sm text-street-base d-inline-flex flex-row gap-8 align-items-center mt-1">
+                        <Icon
+                          icon="lucide:briefcase"
+                          width={14}
+                          height={14}
+                          className="flex-shrink-0"
+                        />
                         {incident.jobTitle}
                       </p>
                       <p className="text-sm text-street-base mt-1">
@@ -172,7 +180,10 @@ const EmployeeIncidentReportDetails = ({
                       </div>
                     </div>
                   </div>
-                  <Badge variant="danger-soft"> {incident.reportType} </Badge>
+                  <Badge variant="danger-soft" className="ms-auto ms-sm-0">
+                    {" "}
+                    {incident.reportType}{" "}
+                  </Badge>
                 </div>
               </div>
             </div>

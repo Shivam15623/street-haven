@@ -58,16 +58,16 @@ const DeleteMannuals: React.FC<DeleteMannualsProps> = ({
         footerClassName="pt-16 px-0 pb-0"
         onHide={() => setShowModal(false)}
         footer={
-          <div className="d-flex gap-2 justify-content-end">
+          <div className="d-flex justify-content-end gap-3">
             <button
-              className="btn btn-danger btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+              className="btn btn-street-delete btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
               onClick={handleDelete}
               disabled={isLoading}
             >
               {isLoading ? "Deleting..." : "Delete"}
             </button>
             <button
-              className="btn btn-street-neutral btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+              className="btn btn-street-neutral btn-street-lg radius-12 d-none d-sm-flex align-items-center text-sm justify-content-center"
               onClick={() => setShowModal(false)}
             >
               Cancel

@@ -104,8 +104,8 @@ const EditClientIncident: React.FC<EditClientIncidentProp> = ({ data }) => {
             }
           />
         }
-        footer={
-          <>
+         footer={
+          <div className="d-flex justify-content-end ">
             <button
               className="btn btn-street-primary btn-street-lg radius-12"
               type="submit"
@@ -114,7 +114,7 @@ const EditClientIncident: React.FC<EditClientIncidentProp> = ({ data }) => {
             >
               {isUpdating ? "Updating..." : "Update"}
             </button>
-          </>
+          </div>
         }
       >
         {" "}

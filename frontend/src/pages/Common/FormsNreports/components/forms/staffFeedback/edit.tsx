@@ -80,7 +80,7 @@ const EditStaffFeedback = ({ data }: { data: StaffFeedbackData }) => {
           />
         }
         footer={
-          <>
+          <div className="d-flex justify-content-end ">
             <button
               className="btn btn-street-primary btn-street-lg radius-12 d-flex align-items-center justify-content-center"
               type="submit"
@@ -89,7 +89,7 @@ const EditStaffFeedback = ({ data }: { data: StaffFeedbackData }) => {
             >
               {isLoading ? "Updating..." : "Update"}
             </button>
-          </>
+          </div>
         }
       >
         <StaffFeedbackForm

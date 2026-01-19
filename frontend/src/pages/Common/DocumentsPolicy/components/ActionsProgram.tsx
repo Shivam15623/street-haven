@@ -13,12 +13,17 @@ import type { Document } from "./DocumentCard";
 import QuillEditor from "../../../../components/child/QuillEditor";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 import FileField from "../../../../components/child/FileField";
-import { getErrorMessage, getPlainTextFromHTML } from "../../../../utills/utills";
+import {
+  getErrorMessage,
+  getPlainTextFromHTML,
+} from "../../../../utills/utills";
 
 // 🔹 Schema generator (avoids duplication)
 const programManualSchema = () =>
   Yup.object().shape({
-    title: Yup.string().required("Title is required").min(3, "Title must be at least 3 characters"),
+    title: Yup.string()
+      .required("Title is required")
+      .min(3, "Title must be at least 3 characters"),
     description: Yup.string()
       .required("Description is required")
       .test(
@@ -106,7 +111,6 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
             onProgress: (p: number) => setProgress(p),
           }).unwrap();
 
-
       if (res.success) {
         showSuccess(res.message);
         setProgress(0);
@@ -140,7 +144,7 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
       }
       isLoading={isLoading || isEditing}
       footer={
-        <div className="d-flex gap-2 justify-content-end">
+        <div className="d-flex justify-content-end gap-3">
           <button
             type="submit"
             form="program-manual-form"
@@ -156,7 +160,7 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
               : "Add Manual"}
           </button>
           <button
-            className="btn btn-street-neutral btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+            className="btn btn-street-neutral btn-street-lg radius-12 d-none d-sm-flex align-items-center text-sm justify-content-center"
             onClick={onHide}
           >
             Cancel

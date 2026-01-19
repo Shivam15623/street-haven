@@ -131,7 +131,7 @@ const EditPaymentRequistion: React.FC<EditPaymentRequistionProp> = ({
           />
         }
         footer={
-          <>
+          <div className="d-flex justify-content-end ">
             <button
               className="btn btn-street-primary btn-street-lg radius-12 d-flex align-items-center justify-content-center"
               type="submit"
@@ -140,7 +140,7 @@ const EditPaymentRequistion: React.FC<EditPaymentRequistionProp> = ({
             >
               {isLoading ? "Updating..." : "Update"}
             </button>
-          </>
+          </div>
         }
       >
         {" "}

@@ -122,9 +122,9 @@ const ImageUploader = () => {
         title="Crop your image"
         size="lg"
         footer={
-          <>
+          <div className="d-flex justify-content-end gap-3">
             <Button
-              className="btn-street-neutral btn-street-lg"
+              className="btn-street-neutral btn-street-lg d-none d-sm-flex"
               onClick={() => setShowModal(false)}
               disabled={isLoading}
             >
@@ -137,7 +137,7 @@ const ImageUploader = () => {
             >
               {isLoading ? "Saving..." : "Save"}
             </Button>
-          </>
+          </div>
         }
       >
         {imageSrc && (

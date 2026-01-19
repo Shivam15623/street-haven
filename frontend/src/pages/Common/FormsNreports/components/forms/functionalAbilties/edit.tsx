@@ -15,7 +15,6 @@ import { Form } from "react-bootstrap";
 
 import {
   useEditFAFMutation,
-
   useLazyGetFafByIdQuery,
   type FunctionalAbility,
 } from "../../../../../../services/FormApi";
@@ -36,6 +35,7 @@ import AbilitiesSection from "./sections/AbilitiesSection";
 import RestrictionsSection from "./sections/RestrictionsSection";
 import HealthProfessionalBillSection from "./sections/HealthProfessionalBillSection";
 import { getErrorMessage } from "../../../../../../utills/utills";
+import StreetTab from "../../../../../../components/StreetTab";
 
 type ReturnToWorkStatus = "noRestrictions" | "withRestrictions" | "unable";
 interface Section {
@@ -328,8 +328,7 @@ const EditFAbilties = ({ data }: { data: FunctionalAbility }) => {
         resetForm();
       }
     } catch (error) {
- 
-       showError(getErrorMessage(error));
+      showError(getErrorMessage(error));
     }
   };
 
@@ -374,7 +373,7 @@ const EditFAbilties = ({ data }: { data: FunctionalAbility }) => {
         }
       >
         {!loading && fAbility && (
-          <div className="d-flex" style={{ minHeight: "56vh" }}>
+          <div className="d-flex flex-column" style={{ minHeight: "56vh" }}>
             <Formik
               initialValues={buildInitialValues(fAbility)}
               validationSchema={functionalAbilityFormSchema}
@@ -406,7 +405,34 @@ const EditFAbilties = ({ data }: { data: FunctionalAbility }) => {
                   >
                     {/* Sidebar */}
                     <div
-                      className="p-16 "
+                      className="d-sm-none d-block "
+                      style={{
+                        maxWidth: "100%",
+                        overflowX: "hidden",
+                      }}
+                    >
+                      <StreetTab
+                        tabs={visibleSections.map((m) => {
+                          return {
+                            content: (
+                              <div
+                                className="pt-20 px-8"
+                                style={{ background: "var(--street-bg-f2)" }}
+                              >
+                                <SectionRenderer
+                                  section={m.key}
+                                  formik={formik}
+                                />
+                              </div>
+                            ),
+                            key: m.key,
+                            label: m.label,
+                          };
+                        })}
+                      />
+                    </div>
+                    <div
+                      className="p-16 d-sm-block d-none"
                       style={{ background: "var(--street-bg-f2)" }}
                     >
                       {" "}
@@ -419,7 +445,7 @@ const EditFAbilties = ({ data }: { data: FunctionalAbility }) => {
                     </div>
 
                     {/* Content */}
-                    <div className="flex-grow-1 p-24">
+                    <div className="flex-grow-1 p-24 d-sm-block d-none">
                       <div
                         style={{
                           maxHeight: "50vh",

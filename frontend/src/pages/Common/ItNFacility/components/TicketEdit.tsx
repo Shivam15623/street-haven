@@ -138,7 +138,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
         }
         isLoading={isLoading}
         footer={
-          <>
+          <div className="d-flex justify-content-end gap-3">
             <button
               className="btn btn-street-primary btn-street-lg d-flex flex-row align-items-center justify-content-center radius-12 px-12 px-sm-16 px-md-28 text-xxs xs:text-xs sm:text-sm"
               type="submit"
@@ -147,7 +147,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
               Save
             </button>
             <button
-              className="btn btn-street-neutral btn-street-lg d-flex flex-row align-items-center justify-content-center radius-12 px-12 px-sm-16 px-md-28 text-xxs xs:text-xs sm:text-sm"
+              className="btn btn-street-neutral btn-street-lg d-none d-sm-flex flex-row align-items-center justify-content-center radius-12 px-12 px-sm-16 px-md-28 text-xxs xs:text-xs sm:text-sm"
               onClick={() => {
                 setShowModal(false);
                 seteditphoto(false);
@@ -155,7 +155,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
             >
               Cancel
             </button>
-          </>
+          </div>
         }
       >
         <Formik
