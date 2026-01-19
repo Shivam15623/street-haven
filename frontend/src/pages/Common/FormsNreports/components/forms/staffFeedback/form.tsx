@@ -335,31 +335,33 @@ const StaffFeedbackForm: React.FC<FormProp> = ({
               {/* Actions */}
               {footer && (
                 <div className="d-flex justify-content-end gap-2 mt-3">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleDownload(
-                        "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764759586/staffFeedback_hd8upo.pdf",
-                        "Staff Feedback Form"
-                      )
-                    }
-                    className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-                  >
-                    Download
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-street-primary btn-street-lg d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-                  >
-                    Submit Report
-                  </button>
+                  <div className="d-flex flex-row gap-10">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleDownload(
+                          "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764759586/staffFeedback_hd8upo.pdf",
+                          "Staff Feedback Form"
+                        )
+                      }
+                      className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                    >
+                      Download
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-street-primary btn-street-lg d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                    >
+                      Submit Report
+                    </button>
 
-                  <button
-                    className="btn btn-street-neutral btn-street-lg d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-                    onClick={handleReset}
-                  >
-                    Cancel
-                  </button>
+                    <button
+                      className="btn btn-street-neutral btn-street-lg d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                      onClick={handleReset}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               )}
             </Form>
