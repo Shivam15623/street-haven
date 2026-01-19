@@ -17,14 +17,19 @@ import {
 import { Navigate, type RouteObject } from "react-router-dom";
 import RouteGuard from "../Routeguard";
 import { ROLES } from "../interfaces/AuthInterfaces";
+import { Suspense } from "react";
+import Loader from "../components/Loader";
+const withSuspense = (Component: React.ReactElement) => (
+  <Suspense fallback={<Loader />}>{Component}</Suspense>
+);
 
 export const AllRoutes: RouteObject[] = [
   { path: "", element: <Navigate to="/login" replace /> },
 
   {
     path: "login",
-    element: (
-      <RouteGuard isPublic>
+    element: withSuspense(
+      <RouteGuard isPublic={true}>
         <LazyLogin />
       </RouteGuard>
     ),
@@ -32,8 +37,8 @@ export const AllRoutes: RouteObject[] = [
 
   {
     path: "forgot-password",
-    element: (
-      <RouteGuard isPublic>
+    element: withSuspense(
+      <RouteGuard isPublic={true}>
         <LazyForgotPassword />
       </RouteGuard>
     ),
@@ -41,8 +46,8 @@ export const AllRoutes: RouteObject[] = [
 
   {
     path: "reset-password",
-    element: (
-      <RouteGuard isPublic>
+    element: withSuspense(
+      <RouteGuard isPublic={true}>
         <LazyResetPassword />
       </RouteGuard>
     ),
@@ -50,8 +55,8 @@ export const AllRoutes: RouteObject[] = [
 
   {
     path: "connect-Authenticator",
-    element: (
-      <RouteGuard isPublic>
+    element: withSuspense(
+      <RouteGuard isPublic={true}>
         <LazyGenereateTotp />
       </RouteGuard>
     ),
@@ -59,8 +64,8 @@ export const AllRoutes: RouteObject[] = [
 
   {
     path: "otp-verify",
-    element: (
-      <RouteGuard isPublic>
+    element: withSuspense(
+      <RouteGuard isPublic={true}>
         <LazyVerifyTotp />
       </RouteGuard>
     ),
@@ -68,7 +73,7 @@ export const AllRoutes: RouteObject[] = [
 
   {
     path: "/",
-    element: (
+    element: withSuspense(
       <RouteGuard isPublic={false}>
         <LazyRootLayout />
       </RouteGuard>

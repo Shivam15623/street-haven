@@ -668,13 +668,14 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                   },
                 ]}
               />
-
-              <FileViewer
-                files={documents}
-                initialIndex={selectedIndex}
-                open={viewerOpen}
-                onOpenChange={setViewerOpen}
-              />
+              {documents.length > 0 && (
+                <FileViewer
+                  files={documents}
+                  initialIndex={selectedIndex}
+                  open={viewerOpen}
+                  onOpenChange={setViewerOpen}
+                />
+              )}
             </>
           )}
         </div>
