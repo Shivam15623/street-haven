@@ -59,7 +59,7 @@ export interface ActivityLogData {
 
 type NotificationResponse = ApiResponse<{
   notifications: notificationData[];
-  paggination: {
+  pagination: {
     total: number;
     totalPages: number;
     limit: number;

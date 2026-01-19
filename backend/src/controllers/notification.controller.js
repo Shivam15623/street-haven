@@ -138,7 +138,7 @@ export const AllNotifications = asyncHandler(async (req, res) => {
         total,
         page,
         limit,
-        pages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / limit),
       },
     })
   );

@@ -11,11 +11,13 @@ dayjs.extend(relativeTime);
 interface NotificationItemProps {
   item: notificationData;
   onSeen: (id: string) => void;
+  variant?: "dropdown" | "list";
 }
 
 const NotificationItem: React.FC<NotificationItemProps> = ({
   item,
   onSeen,
+  variant = "dropdown",
 }) => {
   const { ref, isInView } = useInView({ threshold: 0.5 });
   const navigate = useNavigate();
@@ -31,39 +33,46 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
       navigate(item.link);
     }
   };
-
-  return (
-    <>
-      <Dropdown.Item
-        onClick={handleClick}
-        className={`p-10 p-sm-16 ${
-          item.readAt ? "opacity-75" : ""
-        } d-flex flex-row align-items-start gap-8 gap-sm-12`}
-      >
-        <div
-          ref={ref}
-          className="d-flex flex-row gap-8 justify-content-between align-items-start w-100"
+  const content = (
+    <div
+      ref={ref}
+      onClick={handleClick}
+      className="d-flex flex-row gap-8 justify-content-between align-items-start w-100"
+    >
+      <div className="flex-grow-1">
+        <p className="text-sm sm:text-sm text-street-dark mb-0">{item.title}</p>
+        <p className="text-xs text-street-base mt-0 mt-sm-1">{item.message}</p>
+        <p className="text-xxs sm:text-xs text-street-base mt-0 mt-sm-1">
+          {dayjs(item.createdAt).fromNow()}
+        </p>
+      </div>
+      <div
+        className={`w-6-px h-6-px w-sm-8-px h-sm-8-px rounded-circle mt-6 flex-shrink-0 ${
+          item.readAt ? "bg-secondary" : "bg-street-primary"
+        }`}
+      ></div>
+    </div>
+  );
+  if (variant === "dropdown") {
+    return (
+      <>
+        <Dropdown.Item
+          className={`p-10 p-sm-16 ${
+            item.readAt ? "opacity-75" : ""
+          } d-flex flex-row align-items-start gap-8 gap-sm-12`}
         >
-          <div className="flex-grow-1">
-            <p className="text-sm sm:text-sm text-street-dark mb-0">
-              {item.title}
-            </p>
-            <p className="text-xs text-street-base mt-0 mt-sm-1">
-              {item.message}
-            </p>
-            <p className="text-xxs sm:text-xs text-street-base mt-0 mt-sm-1">
-              {dayjs(item.createdAt).fromNow()}
-            </p>
-          </div>
-          <div
-            className={`w-6-px h-6-px w-sm-8-px h-sm-8-px rounded-circle mt-6 flex-shrink-0 ${
-              item.readAt ? "bg-secondary" : "bg-street-primary"
-            }`}
-          ></div>
-        </div>
-      </Dropdown.Item>
-      <Dropdown.Divider />
-    </>
+          {content}
+        </Dropdown.Item>
+        <Dropdown.Divider />
+      </>
+    );
+  }
+  return (
+    <div
+      className={`p-3 border-1 border-sh-base-50 radius-12 d-flex flex-column gap-8 `}
+    >
+      {content}
+    </div>
   );
 };
 
