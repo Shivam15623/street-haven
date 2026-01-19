@@ -1,15 +1,11 @@
-import { useEffect, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { useSelector } from "react-redux";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { selectAuth } from "../redux/AuthSlice";
 
-// ─────────────────────────────
-// Props for Permission-Based Access
-// ─────────────────────────────
 interface RouteGuardProps {
   children: ReactNode;
   isPublic?: boolean;
-
   requireRole?: string[];
 }
 
@@ -18,51 +14,43 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   isPublic = false,
   requireRole = [],
 }) => {
-  const navigate = useNavigate();
   const location = useLocation();
-
   const { isLoggedIn, user } = useSelector(selectAuth);
-  const isUserReady = isLoggedIn !== undefined && user !== undefined;
 
-  const hasPermission = () => {
-    if (!user) return false;
-    return requireRole.length === 0 || requireRole.includes(user?.role);
-  };
-
-  useEffect(() => {
-    if (!isUserReady) return;
-
-    if (isPublic && isLoggedIn) {
-      navigate("/", { replace: true });
-    } else if (!isPublic && !isLoggedIn) {
-      navigate("/login", { replace: true });
-    } else if (!isPublic && requireRole.length && !hasPermission()) {
-      navigate("/unauthorized", { replace: true });
-    }
-  }, [isUserReady, isLoggedIn, user, location.pathname]);
-
-  // ⛔ Block render until ready
-  if (!isUserReady) {
-    return (
-      <div className="h-100 flex-grow-1 w-100 d-flex align-items-center justify-content-center">
-        Checking authentication...
-      </div>
-    );
+  // ⏳ Auth not ready yet → allow Suspense to work
+  if (isLoggedIn === undefined) {
+    return null; // or global splash if you want
   }
 
-  // ⛔ Block protected content for unauthenticated users
-  if (!isPublic && !isLoggedIn) {
-    return null; // Don't render anything - redirect will happen
-  }
-
-  // ⛔ Block public routes for authenticated users
+  // 🚫 Public route but user is logged in
   if (isPublic && isLoggedIn) {
-    return null;
+    return <Navigate to="/" replace />;
   }
 
-  // ⛔ Block if missing required role
-  if (!isPublic && requireRole.length && !hasPermission()) {
-    return null;
+  // 🔐 Protected route but user not logged in
+  if (!isPublic && !isLoggedIn) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+
+  if (
+    user &&
+    !isPublic &&
+    requireRole.length > 0 &&
+    !requireRole.includes(user?.role)
+  ) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+  if (!user) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+  // 🧑‍⚖️ Role-based access
+  if (
+    user &&
+    !isPublic &&
+    requireRole.length > 0 &&
+    !requireRole.includes(user?.role)
+  ) {
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return <>{children}</>;
