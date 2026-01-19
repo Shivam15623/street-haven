@@ -426,7 +426,7 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                         })}
 
                         <button
-                          className="btn btn-street-outline-primary w-100 d-flex flex-column align-items-center gap-2 justify-content-center"
+                          className="btn btn-street-outline-primary w-100 d-flex flex-row align-items-center gap-2 justify-content-center"
                           onClick={() =>
                             push({
                               date: null,
