@@ -18,7 +18,7 @@ const AdminDashboard = () => {
   });
   return (
     <div className="d-flex flex-column gap-4 ">
-      <div className="d-flex flex-row justify-content-between">
+      <div className="d-flex flex-column flex-sm-row justify-content-between gap-2">
         <div className="d-flex flex-column gap-1 gap-sm-2">
           <div className="fw-semibold text-lg xs:text-xl sm:text-xxl text-street-dark">
             Welcome Back,{user?.firstName}!
@@ -27,7 +27,7 @@ const AdminDashboard = () => {
             Here's what's happening at Street Haven today.
           </div>
         </div>
-        <div className="d-flex flex-column justify-content-sm-end justify-content-end gap-1 gap-sm-2 ">
+        <div className="d-flex flex-sm-column flex-row justify-content-sm-end justify-content-start gap-1 gap-sm-2 ">
           <div className="text-street-base text-xs xs:text-sm sm:text-md fw-normal text-end">
             Today
           </div>

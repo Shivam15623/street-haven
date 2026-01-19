@@ -124,12 +124,14 @@ const EventDocuments: React.FC<Props> = ({
       />
 
       {/* FILE VIEWER */}
-      <FileViewer
-        files={files}
-        initialIndex={selectedIndex}
-        open={viewerOpen}
-        onOpenChange={setViewerOpen}
-      />
+      {files.length > 0 && (
+        <FileViewer
+          files={files}
+          initialIndex={selectedIndex}
+          open={viewerOpen}
+          onOpenChange={setViewerOpen}
+        />
+      )}
     </ModalWrapper>
   );
 };
