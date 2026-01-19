@@ -268,26 +268,7 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                                       </button>
                                     )}
 
-                                    {index ===
-                                      values.purchaseDetails.length - 1 && (
-                                      <button
-                                        type="button"
-                                        className="btn btn-primary btn-sm"
-                                        onClick={() =>
-                                          push({
-                                            date: null,
-                                            nature: "",
-                                            program: "",
-                                            expenseCode: "",
-                                            netAmount: 0,
-                                            hst: 0,
-                                            totalAmount: 0,
-                                          })
-                                        }
-                                      >
-                                        <Icon icon="tabler:plus" />
-                                      </button>
-                                    )}
+                                 
                                   </div>
                                 </div>
 
@@ -426,7 +407,7 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                         })}
 
                         <button
-                          className="btn btn-street-outline-primary w-100 d-flex flex-row align-items-center gap-2 justify-content-center"
+                          className="btn btn-street-outline-primary w-100 d-flex flex-row align-items-center gap-2 radius-8 justify-content-center"
                           onClick={() =>
                             push({
                               date: null,
