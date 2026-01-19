@@ -629,26 +629,28 @@ const ClientIncidentForm: React.FC<FormProp> = ({
           </Card>
           {footer && (
             <Card className="shadow-sm border-0">
-              <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleDownload(
-                      "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764759062/Client_Incident_Report_Form_bactlw.pdf",
-                      "Client Incident Report Form"
-                    )
-                  }
-                  className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-                >
-                  Download
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-                >
-                  {isLoading ? "Submitting..." : "Submit"}
-                </button>
+              <Card.Body className="d-flex flex-row justify-content-end   p-20">
+                <div className="d-flex flex-row gap-10">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleDownload(
+                        "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764759062/Client_Incident_Report_Form_bactlw.pdf",
+                        "Client Incident Report Form"
+                      )
+                    }
+                    className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                  >
+                    Download
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                  >
+                    {isLoading ? "Submitting..." : "Submit"}
+                  </button>
+                </div>
               </Card.Body>
             </Card>
           )}

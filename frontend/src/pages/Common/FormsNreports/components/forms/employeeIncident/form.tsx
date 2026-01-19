@@ -816,26 +816,28 @@ const EmployeeIncidentForm: React.FC<FormProp> = ({
             </Card>
             {footer === true && (
               <Card className="shadow-sm border-0">
-                <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleDownload(
-                        "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764679476/employee_incident_report_Form_ukuygw.pdf",
-                        "Employee Incident Report Form"
-                      )
-                    }
-                    className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-                  >
-                    Download
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-                  >
-                    {isLoading ? "Submitting..." : "Submit"}
-                  </button>
+                <Card.Body className="d-flex flex-row justify-content-end   p-20">
+                  <div className="d-flex flex-row gap-10">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleDownload(
+                          "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764679476/employee_incident_report_Form_ukuygw.pdf",
+                          "Employee Incident Report Form"
+                        )
+                      }
+                      className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                    >
+                      Download
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                    >
+                      {isLoading ? "Submitting..." : "Submit"}
+                    </button>
+                  </div>
                 </Card.Body>
               </Card>
             )}

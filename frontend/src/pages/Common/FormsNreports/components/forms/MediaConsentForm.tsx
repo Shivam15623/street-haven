@@ -321,27 +321,29 @@ export const MediaConsentForm = () => {
             </div>
 
             <Card className="shadow-sm border-0">
-              <Card.Body className="d-flex flex-row justify-content-end gap-10 p-20">
-                <button
-                  className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-                  type="button"
-                  onClick={() =>
-                    handleDownload(
-                      "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764757685/Media_Consent_Form_nopwfz.pdf",
-                      "Media Consent Form"
-                    )
-                  }
-                >
-                  Download
-                </button>
+              <Card.Body className="d-flex flex-row justify-content-end   p-20">
+                <div className="d-flex flex-row gap-10">
+                  <button
+                    className="btn btn-street-lg btn-street-outline-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                    type="button"
+                    onClick={() =>
+                      handleDownload(
+                        "https://res.cloudinary.com/dskzp8jlm/image/upload/v1764757685/Media_Consent_Form_nopwfz.pdf",
+                        "Media Consent Form"
+                      )
+                    }
+                  >
+                    Download
+                  </button>
 
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
-                >
-                  {isLoading ? "Submitting..." : "Submit"}
-                </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="btn btn-street-lg btn-street-primary d-flex flex-row align-items-center radius-12 justify-content-center text-sm"
+                  >
+                    {isLoading ? "Submitting..." : "Submit"}
+                  </button>
+                </div>
               </Card.Body>
             </Card>
           </Form>
