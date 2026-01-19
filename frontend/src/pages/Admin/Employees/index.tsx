@@ -61,9 +61,12 @@ const Employees = () => {
               Manage your team members and their roles
             </p>
           </div>
-          <div className="d-flex flex-row gap-2">
-            {hasPermission({ action: "create_employee" }) && <AddEmployee />}
-          </div>
+
+          {hasPermission({ action: "create_employee" }) && (
+            <div className="d-flex flex-row gap-2">
+              <AddEmployee />{" "}
+            </div>
+          )}
         </div>
       </div>
       {isLoading ? (

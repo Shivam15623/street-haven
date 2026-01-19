@@ -16,7 +16,8 @@ import SearchContent from "../../helper/SearchContent.tsx";
 import EmployeesIcon from "../../assets/icons/sidebaricons/Employees.svg?react";
 import { PERMISSIONS } from "../../utills/auth/permissions.ts";
 import useHasPermission from "../../hooks/Auth.ts";
-import { LazyLoader } from "../../Lazy Components/index.ts";
+
+import Loader from "../../components/Loader.tsx";
 
 const menuItems = [
   {
@@ -203,7 +204,6 @@ const RootLayout = () => {
                 <li key={index}>
                   <NavLink
                     to={item.path}
-                    end={item.path === "/employee"}
                     onClick={() => {
                       if (window.innerWidth < 768) {
                         setMobileMenu(false);
@@ -282,7 +282,7 @@ const RootLayout = () => {
 
         {/* dashboard-main-body */}
         <div className="dashboard-main-body">
-          <Suspense fallback={<LazyLoader />}>
+          <Suspense fallback={<Loader />}>
             <Outlet />
           </Suspense>
           {/* Footer section */}
