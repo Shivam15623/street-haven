@@ -348,7 +348,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
                 onClick={() => setDocOpen(true)}
               >
                 <Icon icon="lucide:upload" className="text-xl" />
-                <span className="d-inline-block">Upload Docs</span>
+                <span className="d-inline-block">Upload</span>
               </button>
             </div>
           )}

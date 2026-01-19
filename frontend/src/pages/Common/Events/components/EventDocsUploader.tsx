@@ -152,10 +152,10 @@ const EventDocsUploader: React.FC<EventDocsUploaderProps> = ({
       isLoading={isLoading}
       footer={
         <>
-          <div className="d-flex justify-content-between gap-3 ">
+          <div className="d-flex flex-sm-row flex-column justify-content-between gap-3 ">
             <button
               type="button"
-              className="btn btn-street-neutral btn-street-lg radius-12 d-flex flex-row align-items-center justify-content-center text-sm"
+              className="btn btn-street-neutral btn-street-lg radius-12 d-none d-sm-flex flex-row align-items-center justify-content-center text-sm"
               onClick={handleClose}
             >
               Cancel

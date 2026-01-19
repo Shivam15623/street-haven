@@ -96,13 +96,16 @@ const ClientIncidentReportDetail = ({ incident }: ClientIncidentModalProps) => {
           />
         }
         footer={
-          <button
-            className="d-flex gap-2 align-items-center btn-street-lg justify-content-center btn btn-street-outline-primary radius-12 p-0"
-            onClick={handleDownload}
-          >
+          <div className="d-flex justify-content-end">
             {" "}
-            {pdfloading ? "Downloading..." : "Download"}
-          </button>
+            <button
+              className="d-flex gap-2 align-items-center btn-street-lg justify-content-center btn btn-street-outline-primary radius-12 p-0"
+              onClick={handleDownload}
+            >
+              {" "}
+              {pdfloading ? "Downloading..." : "Download"}
+            </button>
+          </div>
         }
       >
         {/* ✅ Render only when data is ready */}

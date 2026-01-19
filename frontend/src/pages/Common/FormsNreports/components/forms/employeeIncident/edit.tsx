@@ -146,14 +146,16 @@ const EditEmployeeIncident: React.FC<EditEmployeeIncidentProp> = ({ data }) => {
           />
         }
         footer={
-          <button
-            className="btn btn-street-primary btn-street-lg"
-            type="submit"
-            form="edit-employee-incident-form"
-            disabled={isLoading}
-          >
-            {isLoading ? "Updating..." : "Update"}
-          </button>
+          <div className="d-flex justify-content-end ">
+            <button
+              className="btn btn-street-primary btn-street-lg"
+              type="submit"
+              form="edit-employee-incident-form"
+              disabled={isLoading}
+            >
+              {isLoading ? "Updating..." : "Update"}
+            </button>
+          </div>
         }
       >
         {initialValues && (

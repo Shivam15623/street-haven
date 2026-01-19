@@ -289,23 +289,38 @@ table.dataTable td.dt-type-date {
 }
 
 .btn-street-lg {
-  width: fit-content; /* Full width on small screens */
+  flex: 1;
+  width: auto;
+  max-height: 40px;
   height: 40px; /* Keep height consistent */
 }
-
+.modal-footer div {
+  width: 100%;
+}
 /* Tablet (≥768px) */
 @media (min-width: 768px) {
   .btn-street-lg {
     width: 130px;
     height: 40px;
+    max-height: 40px;
   }
 }
-
+@media (min-width: 576px) {
+  .btn-street-lg {
+    width: 130px;
+    height: 40px;
+    max-height: 40px;
+  }
+  .modal-footer div {
+    width: fit-content;
+  }
+}
 /* Small Desktop (≥1024px) */
 @media (min-width: 1024px) {
   .btn-street-lg {
     width: 145px;
     height: 40px;
+    max-height: 40px;
   }
 }
 .epr-emoji-category-label {

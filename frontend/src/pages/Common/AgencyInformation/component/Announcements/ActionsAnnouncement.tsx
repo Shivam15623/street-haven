@@ -124,7 +124,7 @@ const ActionsAnnouncement: React.FC<ActionsAnnouncementsProps> = ({
       }
       isLoading={isLoading || isEditing}
       footer={
-        <div className="d-flex gap-2 justify-content-end">
+        <div className="d-flex justify-content-end gap-3">
           <button
             type="submit"
             form="announcement-form"
@@ -140,7 +140,7 @@ const ActionsAnnouncement: React.FC<ActionsAnnouncementsProps> = ({
               : "Add Update"}
           </button>
           <button
-            className="btn btn-street-neutral btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+            className="btn btn-street-neutral btn-street-lg radius-12 d-none d-sm-flex align-items-center text-sm justify-content-center"
             onClick={onHide}
           >
             Cancel

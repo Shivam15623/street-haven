@@ -32,7 +32,6 @@ const NotificationView = () => {
   });
   // ✅ Safe access for totalPages
   const totalPages = data?.data?.pagination?.totalPages ?? 0;
-  console.log("type", data?.data);
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return;
     setPage(newPage);
@@ -75,12 +74,14 @@ const NotificationView = () => {
         bodyClassName="p-0 d-flex flex-column gap-10 gap-sm-20"
         footerClassName="pt-10 pt-sm-20 px-0 pb-0 "
         footer={
-          <button
-            className="btn btn-street-neutral btn-street-lg radius-12 px-12 px-sm-16 px-md-28 text-sm"
-            onClick={handleClose}
-          >
-            Close
-          </button>
+          <div className="d-flex justify-content-end">
+            <button
+              className="btn btn-street-neutral btn-street-lg radius-12 px-12 px-sm-16 px-md-28 text-sm "
+              onClick={handleClose}
+            >
+              Close
+            </button>
+          </div>
         }
       >
         {/* Filter Section */}

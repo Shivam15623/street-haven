@@ -105,6 +105,16 @@ const UserNodeDetail: React.FC<UserNodeProps> = ({ id, show, handleclose }) => {
       bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
       footerClassName="pt-16 pt-sm-20 px-0 pb-0"
       size="lg"
+      footer={
+        <div className="d-flex justify-content-end gap-3">
+          <button
+            className="btn btn-street-neutral btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+            onClick={handleclose}
+          >
+            Close
+          </button>
+        </div>
+      }
     >
       <div className="text-center mb-32">
         {employee.profilePic ? (

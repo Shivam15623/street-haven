@@ -51,13 +51,16 @@ const StaffFeedbackDetail = ({ detail }: { detail: StaffFeedbackData }) => {
         bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
         footerClassName="pt-16 pt-sm-20 px-0 pb-0"
         footer={
-          <button
-            className="d-flex gap-2 align-items-center btn-street-lg justify-content-center btn btn-street-outline-primary radius-12 p-0"
-            onClick={handleDownload}
-          >
+          <div className="d-flex justify-content-end">
             {" "}
-            {pdfloading ? "Downloading..." : "Download"}
-          </button>
+            <button
+              className="d-flex gap-2 align-items-center btn-street-lg justify-content-center btn btn-street-outline-primary radius-12 p-0"
+              onClick={handleDownload}
+            >
+              {" "}
+              {pdfloading ? "Downloading..." : "Download"}
+            </button>
+          </div>
         }
       >
         <Container className="d-flex flex-column gap-24 animate-fade-in">

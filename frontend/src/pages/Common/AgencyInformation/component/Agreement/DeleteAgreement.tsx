@@ -43,9 +43,9 @@ const DeleteAgreement: React.FC<DeleteAgreementProps> = ({
       footerClassName="pt-16 px-0 pb-0"
       onHide={onHide}
       footer={
-        <div className="d-flex gap-2 justify-content-end">
+        <div className="d-flex justify-content-end gap-3">
           <button
-            className="btn btn-danger btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+            className="btn btn-street-delete btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
             onClick={handleDelete}
             disabled={isLoading}
           >
