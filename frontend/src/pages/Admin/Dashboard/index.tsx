@@ -63,7 +63,7 @@ const AdminDashboard = () => {
             SH Webmail
           </div>
         </Col>
-        <Col xs={12} sm={12} md={3}>
+        <Col xs={6} sm={6} md={3}>
           <div
             onClick={() =>
               window.open(
@@ -76,7 +76,7 @@ const AdminDashboard = () => {
             Staff Schedules
           </div>
         </Col>
-        <Col xs={12} sm={12} md={3}>
+        <Col xs={6} sm={6} md={3}>
           <div
             // onClick={() =>
             //   window.open(
