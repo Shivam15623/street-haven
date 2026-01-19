@@ -1,10 +1,17 @@
 import { useState } from "react";
 import ModalWrapper from "../components/child/ModalWrapper";
 import Badge from "../components/child/Badge";
-import { useFetchNotifyQuery } from "../services/notificationApi";
+import {
+  useFetchNotifyQuery,
+  useMarkNotificationsAsReadMutation,
+} from "../services/notificationApi";
 import relativeTime from "dayjs/plugin/relativeTime";
 import dayjs from "dayjs";
 import StreetPaggination from "../components/child/StreetPaggination";
+import { useNotificationReadBuffer } from "../hooks/useNotificationReader";
+import { showError } from "../utills/toastutills";
+import { getErrorMessage } from "../utills/utills";
+import NotificationItem from "./NotificationItem";
 
 dayjs.extend(relativeTime);
 
@@ -13,7 +20,9 @@ const NotificationView = () => {
   const [type, setType] = useState<null | "global" | "personal">(null);
   const [status, setStatus] = useState<null | "read" | "unread">(null);
   const [page, setPage] = useState(1);
-  const limit = 10;
+  const limit = 50;
+  const { add, flush } = useNotificationReadBuffer();
+  const [markRead] = useMarkNotificationsAsReadMutation();
 
   const { data, isLoading } = useFetchNotifyQuery({
     page,
@@ -22,12 +31,24 @@ const NotificationView = () => {
     type: type ?? undefined,
   });
   // ✅ Safe access for totalPages
-  const totalPages = data?.data?.paggination?.totalPages ?? 0;
-
+  const totalPages = data?.data?.pagination?.totalPages ?? 0;
+  console.log("type", data?.data);
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return;
     setPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const handleClose = async () => {
+    setShowModal(false);
+
+    const ids = flush();
+    if (ids.length === 0) return;
+
+    try {
+      await markRead(ids).unwrap();
+    } catch (err) {
+      showError(getErrorMessage(err));
+    }
   };
 
   return (
@@ -47,23 +68,23 @@ const NotificationView = () => {
       <ModalWrapper
         show={showModal}
         size="xl"
-        onHide={() => setShowModal(false)}
+        onHide={handleClose}
         title={"Notifications"}
         headerClassName="text-xl p-0 pb-20 text-street-dark"
-        className="p-20 p-sm-24 p-md-32 gap-16 gap-sm-20"
-        bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
-        footerClassName="pt-16 pt-sm-20 px-0 pb-0 "
+        className="p-16 p-sm-24 p-md-32 gap-10 gap-sm-20"
+        bodyClassName="p-0 d-flex flex-column gap-10 gap-sm-20"
+        footerClassName="pt-10 pt-sm-20 px-0 pb-0 "
         footer={
           <button
             className="btn btn-street-neutral btn-street-lg radius-12 px-12 px-sm-16 px-md-28 text-sm"
-            onClick={() => setShowModal(false)}
+            onClick={handleClose}
           >
             Close
           </button>
         }
       >
         {/* Filter Section */}
-        <div className="px-32 py-24 d-flex flex-column gap-16">
+        <div className=" px-10 px-sm-32  d-flex flex-column gap-16">
           <div className="d-flex flex-row flex-wrap align-items-center gap-24">
             {/* Type Filter */}
             <div className="d-flex flex-row gap-8 align-items-center">
@@ -159,18 +180,12 @@ const NotificationView = () => {
               data &&
               data?.data?.notifications?.length > 0 &&
               data.data.notifications.map((n) => (
-                <div
+                <NotificationItem
                   key={n._id}
-                  className={`p-3 border-1 border-sh-base-50 radius-12 d-flex flex-column gap-8 `}
-                >
-                  <p className="sm:text-lg text-md text-street-dark fw-semibold">
-                    {n.title}
-                  </p>
-                  <p className="sm:text-sm text-xs">{n.message}</p>
-                  <p className="text-xxs sm:text-xs text-street-base mt-0 mt-sm-1">
-                    {dayjs(n.createdAt).fromNow()}
-                  </p>
-                </div>
+                  item={n}
+                  onSeen={add}
+                  variant="list"
+                />
               ))}
 
             {/* 🕳 Empty State */}
