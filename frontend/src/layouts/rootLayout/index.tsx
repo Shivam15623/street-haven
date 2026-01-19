@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import "@assets/css/layout.css";
 import ThemeToggleButton from "../../helper/ThemeToggleButton.tsx";
@@ -16,6 +16,7 @@ import SearchContent from "../../helper/SearchContent.tsx";
 import EmployeesIcon from "../../assets/icons/sidebaricons/Employees.svg?react";
 import { PERMISSIONS } from "../../utills/auth/permissions.ts";
 import useHasPermission from "../../hooks/Auth.ts";
+import { LazyLoader } from "../../Lazy Components/index.ts";
 
 const menuItems = [
   {
@@ -281,7 +282,9 @@ const RootLayout = () => {
 
         {/* dashboard-main-body */}
         <div className="dashboard-main-body">
-          <Outlet />
+          <Suspense fallback={<LazyLoader />}>
+            <Outlet />
+          </Suspense>
           {/* Footer section */}
           <footer className="d-footer footer-color">
             <div className="row align-items-center justify-content-between">
