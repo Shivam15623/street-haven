@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { Suspense, useEffect, useState } from "react";
+import {  useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigation } from "react-router-dom";
 import "@assets/css/layout.css";
 import ThemeToggleButton from "../../helper/ThemeToggleButton.tsx";
