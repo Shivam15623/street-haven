@@ -29,7 +29,7 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
       footer={
         <div className="d-flex justify-content-end gap-12 ">
           <button
-            className="btn btn-street-neutral btn-street-lg d-flex text-sm justify-content-center align-items-center radius-12"
+            className="btn btn-street-neutral btn-street-lg d-sm-flex d-none text-sm justify-content-center align-items-center radius-12"
             onClick={onClose}
             disabled={isLoading}
           >
@@ -37,7 +37,7 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           </button>
 
           <button
-            className="btn btn-street-delete btn-street-lg d-flex text-sm justify-content-center align-items-center radius-12 "
+            className="btn btn-street-delete btn-street-lg d-flex  text-sm justify-content-center align-items-center radius-12 "
             onClick={onConfirm}
             disabled={isLoading}
           >

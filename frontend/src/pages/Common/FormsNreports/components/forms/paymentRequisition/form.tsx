@@ -232,26 +232,11 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                 {" "}
                 <FieldArray name="purchaseDetails">
                   {({ remove, push }) => (
-                    <table
-                      className="table bordered-table mb-0 table-hover align-middle"
-                      // className="table-form"
-                      style={{ minWidth: "900px" }}
-                    >
-                      <thead>
-                        <tr>
-                          <th>#</th>
-                          <th>Date</th>
-                          <th>Nature</th>
-                          <th>Program</th>
-                          <th>Expense Code</th>
-                          <th>Net Amount</th>
-                          <th>HST</th>
-                          <th>Total</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-
-                      <tbody>
+                    <>
+                      <div
+                        className="d-flex flex-column gap-3 d-md-none p-8"
+                        style={{ backgroundColor: "var(--street-bg-f2)" }}
+                      >
                         {values.purchaseDetails.map((row, index) => {
                           const rowErrors =
                             (
@@ -263,173 +248,400 @@ const PaymentRequisitionForm: React.FC<FormProp> = ({
                             )?.[index] || {};
 
                           return (
-                            <tr key={index}>
-                              <td>{index + 1}</td>
+                            <Card className="mb-3" key={index}>
+                              <Card.Body className="p-3">
+                                <div className="d-flex justify-content-between align-items-center mb-2">
+                                  <strong>Item #{index + 1}</strong>
 
-                              {/* DATE */}
-                              <td>
-                                <CustomDatePicker
-                                  value={row.date}
-                                  onChange={(date) => {
-                                    setFieldValue(
-                                      `purchaseDetails[${index}].date`,
-                                      date
-                                    );
-                                  }}
-                                  isInvalid={
-                                    rowTouched.date && !!rowErrors.date
-                                  }
-                                />
-                                {rowTouched.date && rowErrors.date && (
-                                  <div className="text-danger small">
-                                    {String(rowErrors.date)}
+                                  <div className="d-flex gap-2">
+                                    {values.purchaseDetails.length > 1 && (
+                                      <button
+                                        type="button"
+                                        style={{
+                                          width: "30px",
+                                          height: "30px",
+                                        }}
+                                        className="btn btn-danger btn-sm d-flex align-items-center justify-content-center rounded-circle p-0"
+                                        onClick={() => remove(index)}
+                                      >
+                                        <Icon icon="mynaui:minus" />
+                                      </button>
+                                    )}
+
+                                    {index ===
+                                      values.purchaseDetails.length - 1 && (
+                                      <button
+                                        type="button"
+                                        className="btn btn-primary btn-sm"
+                                        onClick={() =>
+                                          push({
+                                            date: null,
+                                            nature: "",
+                                            program: "",
+                                            expenseCode: "",
+                                            netAmount: 0,
+                                            hst: 0,
+                                            totalAmount: 0,
+                                          })
+                                        }
+                                      >
+                                        <Icon icon="tabler:plus" />
+                                      </button>
+                                    )}
                                   </div>
-                                )}
-                              </td>
+                                </div>
 
-                              {/* NATURE */}
-                              <td>
-                                <Field
-                                  name={`purchaseDetails[${index}].nature`}
-                                  className="form-control"
-                                  placeholder="Nature"
-                                />
-                              </td>
-
-                              {/* PROGRAM */}
-                              <td>
-                                <Field
-                                  name={`purchaseDetails[${index}].program`}
-                                  className="form-control"
-                                  placeholder="Program"
-                                />
-                              </td>
-
-                              {/* EXPENSE CODE */}
-                              <td>
-                                <Field
-                                  name={`purchaseDetails[${index}].expenseCode`}
-                                  className="form-control"
-                                  placeholder="Expense Code"
-                                />
-                              </td>
-
-                              {/* NET AMOUNT */}
-                              <td>
-                                <Field
-                                  name={`purchaseDetails[${index}].netAmount`}
-                                  type="number"
-                                  className="form-control"
-                                  placeholder="Net Amount"
-                                  onChange={(
-                                    e: React.ChangeEvent<HTMLInputElement>
-                                  ) => {
-                                    const amount = Number(e.target.value);
-                                    const hst = Number(
-                                      values.purchaseDetails[index].hst
-                                    );
-                                    setFieldValue(
-                                      `purchaseDetails[${index}].netAmount`,
-                                      amount
-                                    );
-                                    setFieldValue(
-                                      `purchaseDetails[${index}].totalAmount`,
-                                      amount + hst
-                                    );
-                                  }}
-                                />
-                              </td>
-
-                              {/* HST */}
-                              <td>
-                                <Field
-                                  name={`purchaseDetails[${index}].hst`}
-                                  type="number"
-                                  className="form-control"
-                                  placeholder="HST"
-                                  onChange={(
-                                    e: React.ChangeEvent<HTMLInputElement>
-                                  ) => {
-                                    const hst = Number(e.target.value);
-                                    const amount = Number(
-                                      values.purchaseDetails[index].netAmount
-                                    );
-                                    setFieldValue(
-                                      `purchaseDetails[${index}].hst`,
-                                      hst
-                                    );
-                                    setFieldValue(
-                                      `purchaseDetails[${index}].totalAmount`,
-                                      amount + hst
-                                    );
-                                  }}
-                                />
-                              </td>
-
-                              {/* TOTAL */}
-                              <td>
-                                <Form.Control
-                                  disabled
-                                  value={
-                                    values.purchaseDetails[index].totalAmount
-                                  }
-                                />
-                              </td>
-
-                              {/* ACTION */}
-                              <td>
-                                <div className="d-flex flex-column gap-1 align-items-end justify-content-end">
-                                  {values.purchaseDetails.length > 1 && (
-                                    <button
-                                      type="button"
-                                      className="btn btn-street-primary p-0 d-flex align-items-center justify-content-center rounded-circle"
-                                      style={{
-                                        width: "22px",
-                                        height: "22px",
-                                      }}
-                                      onClick={() => remove(index)}
-                                    >
-                                      <Icon
-                                        icon={"mynaui:minus"}
-                                        className="text-sm "
-                                      />
-                                    </button>
-                                  )}
-
-                                  {index ===
-                                    values.purchaseDetails.length - 1 && (
-                                    <button
-                                      type="button"
-                                      className="btn btn-street-primary p-0 d-flex align-items-center justify-content-center rounded-circle"
-                                      style={{
-                                        width: "22px",
-                                        height: "22px",
-                                      }}
-                                      onClick={() =>
-                                        push({
-                                          date: null,
-                                          nature: "",
-                                          program: "",
-                                          expenseCode: "",
-                                          netAmount: 0,
-                                          hst: 0,
-                                          totalAmount: 0,
-                                        })
-                                      }
-                                    >
-                                      <Icon
-                                        icon={"tabler:plus"}
-                                        className="text-sm"
-                                      />
-                                    </button>
+                                {/* DATE */}
+                                <div className="mb-3">
+                                  <label className="form-label mb-2">
+                                    Date
+                                  </label>
+                                  <CustomDatePicker
+                                    value={row.date}
+                                    onChange={(date) =>
+                                      setFieldValue(
+                                        `purchaseDetails[${index}].date`,
+                                        date
+                                      )
+                                    }
+                                  />
+                                  {rowTouched.date && rowErrors.date && (
+                                    <div className="text-danger small">
+                                      {String(rowErrors.date)}
+                                    </div>
                                   )}
                                 </div>
-                              </td>
-                            </tr>
+
+                                {/* NATURE */}
+                                <div className="row gx-3 gy-0">
+                                  {" "}
+                                  <div className="mb-3 col-6">
+                                    <label className="form-label mb-2">
+                                      Nature
+                                    </label>
+                                    <Field
+                                      name={`purchaseDetails[${index}].nature`}
+                                      className="form-control"
+                                      placeholder="Nature"
+                                    />
+                                  </div>
+                                  {/* PROGRAM */}
+                                  <div className="mb-3 col-6">
+                                    <label className="form-label mb-2">
+                                      Program
+                                    </label>
+                                    <Field
+                                      name={`purchaseDetails[${index}].program`}
+                                      className="form-control"
+                                      placeholder="Program"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* EXPENSE CODE */}
+                                <div className="mb-3">
+                                  <label className="form-label mb-2">
+                                    Expense Code
+                                  </label>
+                                  <Field
+                                    name={`purchaseDetails[${index}].expenseCode`}
+                                    className="form-control"
+                                    placeholder="Expense Code"
+                                  />
+                                </div>
+                                <div className="row gx-3 gy-0 mb-3">
+                                  {/* NET AMOUNT */}
+                                  <div className="col-6">
+                                    <label className="form-label mb-2">
+                                      Net Amount
+                                    </label>
+                                    <Field
+                                      name={`purchaseDetails[${index}].netAmount`}
+                                      type="number"
+                                      className="form-control"
+                                      placeholder="Net Amount"
+                                      onChange={(
+                                        e: React.ChangeEvent<HTMLInputElement>
+                                      ) => {
+                                        const amount = Number(e.target.value);
+                                        const hst = Number(
+                                          values.purchaseDetails[index].hst
+                                        );
+                                        setFieldValue(
+                                          `purchaseDetails[${index}].netAmount`,
+                                          amount
+                                        );
+                                        setFieldValue(
+                                          `purchaseDetails[${index}].totalAmount`,
+                                          amount + hst
+                                        );
+                                      }}
+                                    />
+                                  </div>
+
+                                  {/* HST */}
+                                  <div className="col-6">
+                                    <label className="form-label mb-2">
+                                      HST
+                                    </label>
+                                    <Field
+                                      name={`purchaseDetails[${index}].hst`}
+                                      type="number"
+                                      className="form-control"
+                                      placeholder="HST"
+                                      onChange={(
+                                        e: React.ChangeEvent<HTMLInputElement>
+                                      ) => {
+                                        const hst = Number(e.target.value);
+                                        const amount = Number(
+                                          values.purchaseDetails[index]
+                                            .netAmount
+                                        );
+                                        setFieldValue(
+                                          `purchaseDetails[${index}].hst`,
+                                          hst
+                                        );
+                                        setFieldValue(
+                                          `purchaseDetails[${index}].totalAmount`,
+                                          amount + hst
+                                        );
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* TOTAL */}
+                                <div className="mb-2">
+                                  <label className="form-label">Total</label>
+                                  <Form.Control
+                                    disabled
+                                    value={
+                                      values.purchaseDetails[index].totalAmount
+                                    }
+                                  />
+                                </div>
+                              </Card.Body>
+                            </Card>
                           );
                         })}
-                      </tbody>
-                    </table>
+
+                        <button
+                          className="btn btn-street-outline-primary w-100 d-flex flex-column align-items-center gap-2 justify-content-center"
+                          onClick={() =>
+                            push({
+                              date: null,
+                              nature: "",
+                              program: "",
+                              expenseCode: "",
+                              netAmount: 0,
+                              hst: 0,
+                              totalAmount: 0,
+                            })
+                          }
+                        >
+                          <Icon icon={"mynaui:plus"} width={18} height={18} />
+                          Add
+                        </button>
+                      </div>
+                      <table
+                        className="table bordered-table mb-0 d-none d-md-block table-hover align-middle"
+                        // className="table-form"
+                        style={{ minWidth: "900px" }}
+                      >
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Date</th>
+                            <th>Nature</th>
+                            <th>Program</th>
+                            <th>Expense Code</th>
+                            <th>Net Amount</th>
+                            <th>HST</th>
+                            <th>Total</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+
+                        <tbody>
+                          {values.purchaseDetails.map((row, index) => {
+                            const rowErrors =
+                              (
+                                errors.purchaseDetails as FormikErrors<PurchaseDetail>[]
+                              )?.[index] || {};
+                            const rowTouched =
+                              (
+                                touched.purchaseDetails as FormikTouched<PurchaseDetail>[]
+                              )?.[index] || {};
+
+                            return (
+                              <tr key={index}>
+                                <td>{index + 1}</td>
+
+                                {/* DATE */}
+                                <td>
+                                  <CustomDatePicker
+                                    value={row.date}
+                                    onChange={(date) => {
+                                      setFieldValue(
+                                        `purchaseDetails[${index}].date`,
+                                        date
+                                      );
+                                    }}
+                                    isInvalid={
+                                      rowTouched.date && !!rowErrors.date
+                                    }
+                                  />
+                                  {rowTouched.date && rowErrors.date && (
+                                    <div className="text-danger small">
+                                      {String(rowErrors.date)}
+                                    </div>
+                                  )}
+                                </td>
+
+                                {/* NATURE */}
+                                <td>
+                                  <Field
+                                    name={`purchaseDetails[${index}].nature`}
+                                    className="form-control"
+                                    placeholder="Nature"
+                                  />
+                                </td>
+
+                                {/* PROGRAM */}
+                                <td>
+                                  <Field
+                                    name={`purchaseDetails[${index}].program`}
+                                    className="form-control"
+                                    placeholder="Program"
+                                  />
+                                </td>
+
+                                {/* EXPENSE CODE */}
+                                <td>
+                                  <Field
+                                    name={`purchaseDetails[${index}].expenseCode`}
+                                    className="form-control"
+                                    placeholder="Expense Code"
+                                  />
+                                </td>
+
+                                {/* NET AMOUNT */}
+                                <td>
+                                  <Field
+                                    name={`purchaseDetails[${index}].netAmount`}
+                                    type="number"
+                                    className="form-control"
+                                    placeholder="Net Amount"
+                                    onChange={(
+                                      e: React.ChangeEvent<HTMLInputElement>
+                                    ) => {
+                                      const amount = Number(e.target.value);
+                                      const hst = Number(
+                                        values.purchaseDetails[index].hst
+                                      );
+                                      setFieldValue(
+                                        `purchaseDetails[${index}].netAmount`,
+                                        amount
+                                      );
+                                      setFieldValue(
+                                        `purchaseDetails[${index}].totalAmount`,
+                                        amount + hst
+                                      );
+                                    }}
+                                  />
+                                </td>
+
+                                {/* HST */}
+                                <td>
+                                  <Field
+                                    name={`purchaseDetails[${index}].hst`}
+                                    type="number"
+                                    className="form-control"
+                                    placeholder="HST"
+                                    onChange={(
+                                      e: React.ChangeEvent<HTMLInputElement>
+                                    ) => {
+                                      const hst = Number(e.target.value);
+                                      const amount = Number(
+                                        values.purchaseDetails[index].netAmount
+                                      );
+                                      setFieldValue(
+                                        `purchaseDetails[${index}].hst`,
+                                        hst
+                                      );
+                                      setFieldValue(
+                                        `purchaseDetails[${index}].totalAmount`,
+                                        amount + hst
+                                      );
+                                    }}
+                                  />
+                                </td>
+
+                                {/* TOTAL */}
+                                <td>
+                                  <Form.Control
+                                    disabled
+                                    value={
+                                      values.purchaseDetails[index].totalAmount
+                                    }
+                                  />
+                                </td>
+
+                                {/* ACTION */}
+                                <td>
+                                  <div className="d-flex flex-column gap-1 align-items-end justify-content-end">
+                                    {values.purchaseDetails.length > 1 && (
+                                      <button
+                                        type="button"
+                                        className="btn btn-street-primary p-0 d-flex align-items-center justify-content-center rounded-circle"
+                                        style={{
+                                          width: "22px",
+                                          height: "22px",
+                                        }}
+                                        onClick={() => remove(index)}
+                                      >
+                                        <Icon
+                                          icon={"mynaui:minus"}
+                                          className="text-sm "
+                                        />
+                                      </button>
+                                    )}
+
+                                    {index ===
+                                      values.purchaseDetails.length - 1 && (
+                                      <button
+                                        type="button"
+                                        className="btn btn-street-primary p-0 d-flex align-items-center justify-content-center rounded-circle"
+                                        style={{
+                                          width: "22px",
+                                          height: "22px",
+                                        }}
+                                        onClick={() =>
+                                          push({
+                                            date: null,
+                                            nature: "",
+                                            program: "",
+                                            expenseCode: "",
+                                            netAmount: 0,
+                                            hst: 0,
+                                            totalAmount: 0,
+                                          })
+                                        }
+                                      >
+                                        <Icon
+                                          icon={"tabler:plus"}
+                                          className="text-sm"
+                                        />
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </>
                   )}
                 </FieldArray>
                 <Row className="gy-3 gx-4">

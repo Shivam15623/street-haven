@@ -143,14 +143,16 @@ const EditMediaConsent: React.FC<EditMediaConsentProps> = ({ data }) => {
           />
         }
         footer={
-          <button
-            className="btn btn-street-primary btn-street-lg"
-            type="submit"
-            form="edit-media-consent"
-            disabled={isLoading}
-          >
-            {isLoading ? "Updating..." : "Update"}
-          </button>
+          <div className="d-flex justify-content-end ">
+            <button
+              className="btn btn-street-primary btn-street-lg"
+              type="submit"
+              form="edit-media-consent"
+              disabled={isLoading}
+            >
+              {isLoading ? "Updating..." : "Update"}
+            </button>
+          </div>
         }
       >
         <Formik<MediaConsentFormValues>

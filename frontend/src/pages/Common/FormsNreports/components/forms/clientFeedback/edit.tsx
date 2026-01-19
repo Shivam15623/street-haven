@@ -114,14 +114,17 @@ const EditClientFeedback = ({ data }: EditClientFeedbackProps) => {
           />
         }
         footer={
-          <button
-            className="btn btn-street-primary btn-street-lg radius-12"
-            type="submit"
-            form="edit-client-feedback-form"
-            disabled={isUpdating}
-          >
-            {isUpdating ? "Updating..." : "Update"}
-          </button>
+          <div className="d-flex justify-content-end ">
+            {" "}
+            <button
+              className="btn btn-street-primary btn-street-lg radius-12"
+              type="submit"
+              form="edit-client-feedback-form"
+              disabled={isUpdating}
+            >
+              {isUpdating ? "Updating..." : "Update"}
+            </button>
+          </div>
         }
       >
         {/* ✅ Render only when data is ready */}

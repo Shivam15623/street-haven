@@ -144,9 +144,9 @@ const ViewFileModal = ({ attachment, title, trigger }: Props) => {
         size="xl"
         show={showModal}
         onHide={closeModal}
-        footer={
-          <div className="d-flex justify-content-end">
-            <button className="btn btn-street-primary" onClick={handleDownload}>
+          footer={
+          <div className="d-flex justify-content-end gap-3">
+            <button className="btn btn-street-primary btn-street-lg d-flex align-items-center justify-content-center gap-2 radius-12" onClick={handleDownload}>
               <Icon icon="jam:download" className="text-xl" /> Download
             </button>
           </div>

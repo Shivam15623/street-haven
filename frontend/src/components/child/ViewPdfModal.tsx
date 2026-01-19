@@ -98,9 +98,9 @@ const ViewPdfModal = ({ attachment, title }: Props) => {
         bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
         footerClassName="pt-16 pt-sm-20 px-0 pb-0"
         footer={
-          <div className="d-flex flex-row justify-content-end">
+          <div className="d-flex justify-content-end gap-3">
             <button
-              className="btn btn-street-primary btn-street-lg p-8 px-sm-24 px-md-32 radius-12 text-xxs sm:text-xs"
+              className="btn btn-street-primary btn-street-lg d-flex align-items-center justify-content-center gap-2 radius-12"
               onClick={() =>
                 handleDownload(attachment.fileUrl, attachment.fileName)
               }

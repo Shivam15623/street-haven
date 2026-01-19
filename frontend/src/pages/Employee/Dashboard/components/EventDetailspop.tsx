@@ -86,7 +86,17 @@ const EventDetailspop: React.FC<EventDetailsPopProps> = ({
       headerClassName="text-xl font-semibold text-street-dark"
       className="p-6"
       bodyClassName="flex flex-col gap-4"
-      footerClassName="flex justify-end gap-3"
+      footerClassName="d-flex gap-3 "
+      footer={
+        <div className="d-flex justify-content-end gap-3">
+          <button
+            className="btn btn-street-neutral btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+            onClick={handleClose}
+          >
+            Close
+          </button>
+        </div>
+      }
     >
       <div className="d-flex flex-column gap-3">
         {/* Title */}

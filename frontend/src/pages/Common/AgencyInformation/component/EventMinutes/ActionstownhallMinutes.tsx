@@ -166,7 +166,7 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
       }
       isLoading={isLoading || isEditing}
       footer={
-        <div className="d-flex gap-2 justify-content-end">
+        <div className="d-flex justify-content-end gap-3">
           <button
             type="submit"
             form="minute-meeting-form"
@@ -182,7 +182,7 @@ const ActionstownhallMinutes: React.FC<ActionsMeetingsProps> = ({
               : "Add Minutes"}
           </button>
           <button
-            className="btn btn-street-neutral btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+            className="btn btn-street-neutral btn-street-lg radius-12 d-none d-sm-flex align-items-center text-sm justify-content-center"
             onClick={onHide}
           >
             Cancel

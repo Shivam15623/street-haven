@@ -56,7 +56,7 @@ const DeleteCategory: React.FC<DeleteCategoryProps> = ({ id, title }) => {
               {isLoading ? "Deleting..." : "Delete"}
             </button>
             <button
-              className="btn btn-street-neutral btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+              className="btn btn-street-neutral btn-street-lg radius-12 d-none d-sm-flex align-items-center text-sm justify-content-center"
               onClick={() => setShowModal(false)}
             >
               Cancel

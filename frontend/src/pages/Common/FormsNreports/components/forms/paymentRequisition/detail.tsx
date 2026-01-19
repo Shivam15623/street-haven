@@ -77,13 +77,16 @@ const PaymentRequisitionDetail = ({
           />
         }
         footer={
-          <button
-            className="d-flex gap-2 align-items-center btn-street-lg justify-content-center btn btn-street-outline-primary radius-12 p-0"
-            onClick={handleDownload}
-            disabled={PdfLoading}
-          >
-            {PdfLoading ? "Downloading..." : "Download"}
-          </button>
+          <div className="d-flex justify-content-end">
+            {" "}
+            <button
+              className="d-flex gap-2 align-items-center btn-street-lg justify-content-center btn btn-street-outline-primary radius-12 p-0"
+              onClick={handleDownload}
+              disabled={PdfLoading}
+            >
+              {PdfLoading ? "Downloading..." : "Download"}
+            </button>
+          </div>
         }
       >
         {data && !loading && (

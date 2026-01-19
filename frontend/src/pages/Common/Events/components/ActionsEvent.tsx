@@ -213,7 +213,7 @@ const ActionsEvent = ({
         }
         isLoading={isLoading || isEditLoading}
         footer={
-          <>
+          <div className="d-flex justify-content-end gap-3">
             <button
               className="btn btn-street-primary btn-street-lg radius-12 d-flex flex-row align-items-center justify-content-center text-sm"
               type="submit"
@@ -223,12 +223,12 @@ const ActionsEvent = ({
               {isEdit ? "Save Changes" : "Create Event"}
             </button>
             <button
-              className="btn btn-street-neutral btn-street-lg radius-12 d-flex flex-row align-items-center justify-content-center text-sm"
+              className="btn btn-street-neutral btn-street-lg radius-12 d-none d-sm-flex flex-row align-items-center justify-content-center text-sm"
               onClick={() => setShowModal(false)}
             >
               Cancel
             </button>
-          </>
+          </div>
         }
       >
         <Formik

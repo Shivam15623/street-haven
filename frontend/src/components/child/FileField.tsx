@@ -38,7 +38,7 @@ const FileField: React.FC<FileFieldProps> = ({
         <label className="fw-medium mb-2 text-street-dark form-label">
           {fieldLabel}
         </label>
-        <div className="d-flex align-items-center gap-2">
+        <div className="d-flex align-items-center gap-2 flex-wrap">
           <Icon
             icon={renderFileIcon(existingFile.fileType)}
             className="text-primary fs-5"
@@ -47,7 +47,8 @@ const FileField: React.FC<FileFieldProps> = ({
             href={existingFile.fileUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-street-primary fw-medium"
+            className="text-street-primary fw-medium text-truncate"
+            style={{ maxWidth: "70%" }}
           >
             {existingFile.fileName}
           </a>

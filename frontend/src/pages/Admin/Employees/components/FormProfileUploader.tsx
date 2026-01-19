@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import Cropper, { type Area, type Point } from "react-easy-crop";
-import { Button, Form } from "react-bootstrap";
+import { Form } from "react-bootstrap";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
 
 type Props = {
@@ -119,17 +119,20 @@ const FormImageUploader: React.FC<Props> = ({
         title="Crop your image"
         size="lg"
         footer={
-          <>
-            <Button
-              className="btn-street-neutral"
+          <div className="d-flex justify-content-end gap-3">
+            <button
+              className="btn btn-street-neutral btn-street-lg d-none d-sm-flex align-items-center justify-content-center gap-2 radius-12"
               onClick={() => setShowModal(false)}
             >
               Cancel
-            </Button>
-            <Button className="btn-street-primary" onClick={handleSave}>
+            </button>
+            <button
+              className="btn btn-street-neutral btn-street-lg d-flex align-items-center justify-content-center gap-2 radius-12"
+              onClick={handleSave}
+            >
               Save
-            </Button>
-          </>
+            </button>
+          </div>
         }
       >
         {imageSrc && (
