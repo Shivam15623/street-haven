@@ -346,7 +346,7 @@ const EditFAbilties = ({ data }: { data: FunctionalAbility }) => {
         show={showModal}
         onHide={() => setShowModal(false)}
         size="xl"
-        title="Employee Incident Report"
+        title="Employ"
         headerClassName="text-xl p-0 pb-20 text-street-dark"
         className="p-20 "
         bodyClassName="p-0 d-flex flex-column "
