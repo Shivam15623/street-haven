@@ -74,7 +74,7 @@ const EditQuestion: React.FC<EditQuestionProps> = ({
           />
         }
         footer={
-          <>
+    <div className="d-flex justify-content-end gap-3">
             <button
               type="submit"
               form="edit-question-form"
@@ -89,7 +89,7 @@ const EditQuestion: React.FC<EditQuestionProps> = ({
             >
               Cancel
             </button>
-          </>
+          </div>
         }
       >
         <Formik

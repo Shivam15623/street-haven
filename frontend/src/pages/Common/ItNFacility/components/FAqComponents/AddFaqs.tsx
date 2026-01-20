@@ -79,7 +79,7 @@ const AddFaqs: React.FC<AddFaqsProps> = ({ title, id }) => {
           />
         }
         footer={
-          <>
+          <div className="d-flex justify-content-end gap-3">
             <button
               type="submit"
               form="add-faqs-form"
@@ -93,7 +93,7 @@ const AddFaqs: React.FC<AddFaqsProps> = ({ title, id }) => {
             >
               Cancel
             </button>
-          </>
+          </div>
         }
       >
         <Formik
