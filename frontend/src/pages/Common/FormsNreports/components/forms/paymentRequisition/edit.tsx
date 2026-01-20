@@ -34,7 +34,7 @@ const EditPaymentRequistion: React.FC<EditPaymentRequistionProp> = ({
 
   const handleSubmit = async (
     values: FormValues,
-    { resetForm }: { resetForm: () => void }
+    { resetForm }: { resetForm: () => void },
   ) => {
     try {
       const formData = new FormData();
@@ -46,37 +46,37 @@ const EditPaymentRequistion: React.FC<EditPaymentRequistionProp> = ({
 
       formData.append(
         "requestedDate",
-        values.requestedDate ? values.requestedDate.toISOString() : ""
+        values.requestedDate ? values.requestedDate.toISOString() : "",
       );
 
       formData.append(
         "approvedDate",
-        values.approvedDate ? values.approvedDate.toISOString() : ""
+        values.approvedDate ? values.approvedDate.toISOString() : "",
       );
 
       // ---------- PURCHASE DETAILS ----------
       values.purchaseDetails.forEach((item, index) => {
         formData.append(
           `paymentDetails[${index}][purchaseDate]`,
-          item.date ? item.date.toISOString() : ""
+          item.date ? item.date.toISOString() : "",
         );
         formData.append(
           `paymentDetails[${index}][purchaseNature]`,
-          item.nature
+          item.nature,
         );
         formData.append(`paymentDetails[${index}][program]`, item.program);
         formData.append(
           `paymentDetails[${index}][expenseCode]`,
-          item.expenseCode
+          item.expenseCode,
         );
         formData.append(
           `paymentDetails[${index}][netAmount]`,
-          item.netAmount.toString()
+          item.netAmount.toString(),
         );
         formData.append(`paymentDetails[${index}][hst]`, item.hst.toString());
         formData.append(
           `paymentDetails[${index}][totalAmount]`,
-          item.totalAmount.toString()
+          item.totalAmount.toString(),
         );
       });
 
@@ -114,7 +114,7 @@ const EditPaymentRequistion: React.FC<EditPaymentRequistionProp> = ({
         show={showModal}
         onHide={() => setShowModal(false)}
         size="xl"
-        title="Employee Incident Report"
+        title="Edit Payment Requisition"
         headerClassName="text-xl p-0 pb-20 text-street-dark"
         className="p-20 gap-16"
         bodyClassName="p-0 d-flex flex-column gap-16"
