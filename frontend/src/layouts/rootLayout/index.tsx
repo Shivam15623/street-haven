@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import {  useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigation } from "react-router-dom";
 import "@assets/css/layout.css";
 import ThemeToggleButton from "../../helper/ThemeToggleButton.tsx";
@@ -117,7 +117,7 @@ const RootLayout = () => {
 
     // Attach click event listeners to dropdown triggers
     const dropdownTriggers = document.querySelectorAll<HTMLElement>(
-      ".sidebar-menu .dropdown > a, .sidebar-menu .dropdown > Link"
+      ".sidebar-menu .dropdown > a, .sidebar-menu .dropdown > Link",
     );
 
     dropdownTriggers.forEach((trigger) => {
@@ -128,7 +128,7 @@ const RootLayout = () => {
       const allDropdowns = document.querySelectorAll(".sidebar-menu .dropdown");
       allDropdowns.forEach((dropdown) => {
         const submenuLinks = dropdown.querySelectorAll<HTMLAnchorElement>(
-          ".sidebar-submenu li a"
+          ".sidebar-submenu li a",
         );
         submenuLinks.forEach((link) => {
           if (
@@ -284,7 +284,13 @@ const RootLayout = () => {
 
         {/* dashboard-main-body */}
         <div className="dashboard-main-body">
-          {isLoading ? <Loader /> : <Outlet />}
+          {isLoading ? (
+            <Loader />
+          ) : (
+            <Suspense fallback={<Loader />}>
+              <Outlet />
+            </Suspense>
+          )}
           {/* Footer section */}
           <footer className="d-footer footer-color">
             <div className="row align-items-center justify-content-between">

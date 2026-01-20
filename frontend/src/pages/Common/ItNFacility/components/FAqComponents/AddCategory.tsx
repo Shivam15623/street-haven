@@ -79,7 +79,7 @@ const AddCategory: React.FC = () => {
           />
         }
         footer={
-          <>
+          <div className="d-flex justify-content-end gap-3">
             <button
               type="submit"
               form="faq-category-form"
@@ -93,7 +93,7 @@ const AddCategory: React.FC = () => {
             >
               Cancel
             </button>
-          </>
+          </div>
         }
       >
         <Formik

@@ -52,7 +52,7 @@ const DeleteQuestion: React.FC<DeleteQuestionProps> = ({
         className="p-20 p-sm-24 p-md-32 gap-16 gap-sm-20"
         footerClassName="pt-16 pt-sm-20 px-0 pb-0"
         footer={
-          <>
+           <div className="d-flex justify-content-end gap-3">
             <button
               className="btn btn-street-delete btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
               onClick={handleDelete}
@@ -66,7 +66,7 @@ const DeleteQuestion: React.FC<DeleteQuestionProps> = ({
             >
               Cancel
             </button>
-          </>
+          </div>
         }
       >
         <p>

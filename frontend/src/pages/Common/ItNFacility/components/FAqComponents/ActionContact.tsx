@@ -89,13 +89,16 @@ const EmergencyContact: React.FC<EmergencyContactModalProps> = ({
           />
         }
         footer={
-          <button
-            type="submit"
-            form="emergency-form"
-            className="btn btn-street-primary btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
-          >
-            {isEdit ? "Update" : "Save"}
-          </button>
+          <div className="d-flex justify-content-end gap-3">
+            {" "}
+            <button
+              type="submit"
+              form="emergency-form"
+              className="btn btn-street-primary btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+            >
+              {isEdit ? "Update" : "Save"}
+            </button>
+          </div>
         }
       >
         <Formik

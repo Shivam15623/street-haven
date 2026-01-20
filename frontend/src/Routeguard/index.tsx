@@ -17,42 +17,33 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   const location = useLocation();
   const { isLoggedIn, user } = useSelector(selectAuth);
 
-  // ⏳ Auth not ready yet → allow Suspense to work
+  // ⏳ Auth hydration phase (redux-persist)
   if (isLoggedIn === undefined) {
-    return null; // or global splash if you want
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
-  // 🚫 Public route but user is logged in
-  if (isPublic && isLoggedIn) {
-    return <Navigate to="/" replace />;
-  }
-
-  // 🔐 Protected route but user not logged in
+  // 🔐 Protected route → not logged in
   if (!isPublic && !isLoggedIn) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  if (
-    user &&
-    !isPublic &&
-    requireRole.length > 0 &&
-    !requireRole.includes(user?.role)
-  ) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-  if (!user) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
-  }
-  // 🧑‍⚖️ Role-based access
-  if (
-    user &&
-    !isPublic &&
-    requireRole.length > 0 &&
-    !requireRole.includes(user?.role)
-  ) {
-    return <Navigate to="/unauthorized" replace />;
+  // 🚫 Public route → already logged in
+  if (isPublic && isLoggedIn) {
+    return <Navigate to="/" replace />;
   }
 
+  // 🧑‍⚖️ Role-based access (ONLY if logged in)
+  if (
+    isLoggedIn &&
+    requireRole.length > 0 &&
+    (!user || !requireRole.includes(user.role))
+  ) {
+    return <Navigate to="/unauthorized" replace />;
+  }
   return <>{children}</>;
 };
 
