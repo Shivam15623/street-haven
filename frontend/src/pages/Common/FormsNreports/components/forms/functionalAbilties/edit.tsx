@@ -105,7 +105,7 @@ const getByPath = <T extends object>(obj: T, path: string): unknown => {
 const hasSectionErrors = (
   sectionKey: string,
   errors: FormikErrors<FunctionalAbilityFormValues>,
-  touched: FormikTouched<FunctionalAbilityFormValues>
+  touched: FormikTouched<FunctionalAbilityFormValues>,
 ) => {
   const fields = SECTION_FIELD_MAP[sectionKey] ?? [];
 
@@ -133,7 +133,7 @@ export const Sidebar = ({
         const hasError = hasSectionErrors(
           section.key,
           formik.errors,
-          formik.touched
+          formik.touched,
         );
 
         return (
@@ -146,8 +146,8 @@ export const Sidebar = ({
                 hasError
                   ? "btn-danger"
                   : isActive
-                  ? "btn-street-primary"
-                  : "btn text-street-base"
+                    ? "btn-street-primary"
+                    : "btn text-street-base"
               }
             `}
           >
@@ -280,7 +280,7 @@ const EditFAbilties = ({ data }: { data: FunctionalAbility }) => {
   const loading = isFetching || isRefetching;
   const handleSubmit = async (
     values: FunctionalAbilityFormValues,
-    { resetForm }: { resetForm: () => void }
+    { resetForm }: { resetForm: () => void },
   ) => {
     try {
       const payload: any = { ...values };
@@ -361,7 +361,7 @@ const EditFAbilties = ({ data }: { data: FunctionalAbility }) => {
           />
         }
         footer={
-          <>
+          <div className="d-flex justify-content-end gap-3">
             <button
               className="btn btn-street-primary btn-street-lg radius-12 d-flex align-items-center justify-content-center"
               type="submit"
@@ -369,7 +369,7 @@ const EditFAbilties = ({ data }: { data: FunctionalAbility }) => {
             >
               Update
             </button>
-          </>
+          </div>
         }
       >
         {!loading && fAbility && (
@@ -386,12 +386,12 @@ const EditFAbilties = ({ data }: { data: FunctionalAbility }) => {
                 const visibleSections = SECTIONS.filter((section) => {
                   if (section.key === "abilities") {
                     return SECTION_VISIBILITY.abilities.includes(
-                      returnToWorkStatus
+                      returnToWorkStatus,
                     );
                   }
                   if (section.key === "restrictions") {
                     return SECTION_VISIBILITY.restrictions.includes(
-                      returnToWorkStatus
+                      returnToWorkStatus,
                     );
                   }
                   return true;
