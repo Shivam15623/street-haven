@@ -39,6 +39,15 @@ interface TicketCardProps {
   ticket: TicketData;
 }
 
+const PREDEFINED_CATEGORIES = [
+  { label: "Plumbing", value: "plumbing" },
+  { label: "Electrical", value: "electrical" },
+  { label: "HVAC", value: "hvac" },
+  { label: "Carpentry", value: "carpentry" },
+  { label: "Appliances", value: "appliances" },
+  { label: "Cleaning", value: "cleaning" },
+];
+
 const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
   const [showModal, setShowModal] = useState(false);
   const { user } = useSelector(selectAuth);
@@ -57,18 +66,27 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
   const [editTicket, { isLoading }] = useEditTicketMutation();
   const hasEditStatus = hasPermission({ action: categorybased }) || isAssigned;
 
+  // pre-select custom-category UI if the ticket's category isn't one of the predefined ones
+  const [isCustomCategory, setIsCustomCategory] = useState(
+    () => !PREDEFINED_CATEGORIES.some((c) => c.value === ticket.category),
+  );
+
   const initialValues: TicketValues = {
     requestTitle: ticket.req_title,
     requester: ticket.createdBy.firstname + " " + ticket.createdBy.lastname,
-    assignedId: ticket.assignedTo ? ticket.assignedTo._id : "Unassigned",
+    // "" (not "Unassigned") so it matches the placeholder <option value="">
+    assignedId: ticket.assignedTo ? ticket.assignedTo._id : "",
     status: ticket.status,
-    id: ticket._id,
+    // show the human-facing slug, never the raw Mongo _id
+    id: ticket.displayId ?? ticket.slug,
     description: ticket.description,
-    priority: ticket.priority,
+    priority: ticket.priority ?? "",
     category: ticket.category,
-    location: ticket.location ?? "", // default to empty string
+    location: ticket.location?.name ?? "", // default to empty string
   };
-  const statusOptions = ["Open", "In Progress", "Completed", "Under Review"];
+
+  const statusOptions = ["Open", "In Progress", "Completed", "Approoved","Rejected","Closed"];
+
   const handleEdit = async (values: TicketValues) => {
     try {
       const formData = new FormData();
@@ -80,15 +98,12 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
         formData.append("priority", values.priority);
       if (values.category && values.category !== ticket.category)
         formData.append("category", values.category);
-      if (values.location && values.location !== ticket.location)
+      // compare against the populated location's _id, not the object itself
+      if (values.location && values.location !== ticket.location?._id)
         formData.append("location", values.location);
       if (values.status && values.status !== ticket.status)
         formData.append("status", values.status);
-      if (
-        values.assignedId &&
-        values.assignedId !== ticket.assignedTo?._id &&
-        values.assignedId !== "Unassigned"
-      )
+      if (values.assignedId && values.assignedId !== ticket.assignedTo?._id)
         formData.append("assignedId", values.assignedId);
       if (values.photo) {
         formData.append("photo", values.photo);
@@ -166,6 +181,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
           {({
             handleSubmit,
             handleChange,
+            handleBlur,
             values,
             errors,
             touched,
@@ -250,7 +266,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       disabled={!hasEditStatus}
                       isInvalid={touched.assignedId && !!errors.assignedId}
                     >
-                      <option value="">Select Assignee</option>
+                      <option value="">Unassigned</option>
                       {isEmployeeLoading ? (
                         <option disabled>Loading...</option>
                       ) : (
@@ -298,7 +314,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                   </Col>
                 </Row>
 
-                {/* Ticket ID */}
+                {/* Ticket ID (human-facing slug, never the raw Mongo _id) */}
                 <Row className="mb-3">
                   <Form.Label
                     className="align-items-center d-flex"
@@ -376,35 +392,79 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                   </Col>
                 </Row>
 
-                {/* Category */}
+                {/* Category (single field — predefined list + custom-entry toggle) */}
                 <Row className="mb-3">
-                  <Form.Label
-                    className="align-items-center d-flex"
-                    column
-                    sm={2}
-                  >
-                    Category
-                  </Form.Label>
+                  <Col sm={2}>
+                    <Form.Label className="fw-medium text-street-dark">
+                      Category
+                    </Form.Label>
+                  </Col>
                   <Col sm={10}>
-                    <Form.Select
-                      name="category"
-                      size="sm"
-                      value={values.category}
-                      onChange={handleChange}
-                      disabled={!isRequester}
-                      className="text-street-base"
-                      isInvalid={touched.category && !!errors.category}
+                    <Form.Group
+                      controlId="category"
+                      className="d-flex flex-column gap-8"
                     >
-                      <option value="">Select category</option>
-                      {["IT Help Desk", "Property Maintenance"].map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </Form.Select>
-                    <Form.Control.Feedback type="invalid">
-                      {errors.category}
-                    </Form.Control.Feedback>
+                      {!isCustomCategory ? (
+                        <Form.Select
+                          name="category"
+                          size="sm"
+                          value={values.category}
+                          disabled={!isRequester}
+                          onChange={(e) => {
+                            if (e.target.value === "__custom__") {
+                              setIsCustomCategory(true);
+                              setFieldValue("category", "");
+                            } else {
+                              handleChange(e);
+                            }
+                          }}
+                          className="text-street-base"
+                          isInvalid={touched.category && !!errors.category}
+                        >
+                          <option value="">Select category</option>
+                          {PREDEFINED_CATEGORIES.map((cat) => (
+                            <option key={cat.value} value={cat.value}>
+                              {cat.label}
+                            </option>
+                          ))}
+                          <option value="__custom__">
+                            + Add custom category
+                          </option>
+                        </Form.Select>
+                      ) : (
+                        <div className="d-flex gap-8">
+                          <Form.Control
+                            type="text"
+                            size="sm"
+                            autoFocus
+                            placeholder="Enter custom category"
+                            value={values.category}
+                            disabled={!isRequester}
+                            onChange={(e) =>
+                              setFieldValue("category", e.target.value)
+                            }
+                            onBlur={handleBlur}
+                            name="category"
+                            className="py-12 px-16 text-street-base"
+                            isInvalid={touched.category && !!errors.category}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-street-neutral btn-sm"
+                            disabled={!isRequester}
+                            onClick={() => {
+                              setIsCustomCategory(false);
+                              setFieldValue("category", "");
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+                      <Form.Control.Feedback type="invalid">
+                        {errors.category}
+                      </Form.Control.Feedback>
+                    </Form.Group>
                   </Col>
                 </Row>
 

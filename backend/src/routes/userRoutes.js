@@ -12,8 +12,10 @@ import {
   editUserProfileSchema,
   resetPasswordSchemauserProfile,
 } from "../validations/userSchema.js";
+import { checkActiveUser } from "../middleware/checkActiveUsers.js";
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
+router.use(checkActiveUser);
 router
   .route("/edit/Profile")
   .patch(

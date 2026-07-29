@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import { io } from "../index.js";
 import Comment from "../model/comments.js";
-
-import Ticket from "../model/ticket.js";
+import { notifyTicketEmail } from "../helper/notifyTicketEvent.js";
+import Ticket, { TICKET_STATUS } from "../model/ticket.js";
 import User from "../model/user.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
@@ -13,13 +13,32 @@ import path from "path";
 import { PERMISSIONS } from "../auth/permissions.js";
 import { ROLE_PERMISSIONS } from "../auth/rolePermissions.js";
 import { getAssignedAgentByCategory } from "../helper/getAssignedUser.js";
+import Location from "../model/location.js";
+import { generateEmailTemplate } from "../helper/EmailsMailer/emailTemplates.js";
+import { sendEmail } from "../helper/EmailsMailer/emailSender.js";
+import { addCommentForEntity, fetchCommentsForEntity } from "./comments.controller.js";
+
 export const createTicket = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
     const userId = req.user._id;
-    const { reqTitle, description, priority, category, location } = req.body;
+    const { reqTitle, description, category, location } = req.body;
+
+    /* ======================
+       VALIDATE LOCATION EXISTS
+    ====================== */
+    const locationDoc = await Location.findById(location)
+      .populate("managers", "_id firstname lastname email")
+      .session(session);
+
+    if (!locationDoc) {
+      throw new ApiError(404, "Selected location not found");
+    }
+    if (!locationDoc.isActive) {
+      throw new ApiError(400, "Selected location is not active");
+    }
 
     /* ======================
        PHOTO UPLOAD
@@ -31,7 +50,7 @@ export const createTicket = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Photo upload failed");
       }
     }
-    const assignedTo = await getAssignedAgentByCategory(category, session);
+
     /* ======================
        CREATE TICKET PAYLOAD
     ====================== */
@@ -39,14 +58,12 @@ export const createTicket = asyncHandler(async (req, res) => {
       req_title: reqTitle,
       description,
       createdBy: userId,
-      priority,
       category,
-      assignedTo: assignedTo,
       location,
-      status: "Open",
+      status: TICKET_STATUS.OPEN,
       statusHistory: [
         {
-          status: "Open",
+          status: TICKET_STATUS.OPEN,
           changedBy: userId,
           changedAt: new Date(),
         },
@@ -59,15 +76,6 @@ export const createTicket = asyncHandler(async (req, res) => {
         fileUrl: uploadedFile.secure_url,
       };
     }
-    if (assignedTo) {
-      payload.assignmentHistory = [
-        {
-          assignedTo,
-          assignedBy: userId, // system/user creating ticket
-          assignedAt: new Date(),
-        },
-      ];
-    }
 
     /* ======================
        CREATE TICKET
@@ -76,26 +84,19 @@ export const createTicket = asyncHandler(async (req, res) => {
     if (!ticket) throw new ApiError(500, "Ticket creation failed");
 
     /* ======================
-       NOTIFY USERS WITH PERMISSION
+       NOTIFY MANAGERS FOR THIS LOCATION
     ====================== */
-    const categoryPermission =
-      category === "Property Maintenance"
-        ? PERMISSIONS.VIEW_PROPERTY_TICKETS
-        : PERMISSIONS.VIEW_IT_TICKETS;
+    const managers = locationDoc.managers; // already populated above
 
-    const admins = await User.find(
-      {
-        $or: [
-          { rolePermissions: categoryPermission },
-          { customPermissions: categoryPermission },
-        ],
-      },
-      "_id firstname lastname email",
-      { session }
-    );
-
-    if (admins.length > 0) {
-      const recipients = admins.map((u) => ({ userId: u._id }));
+    if (managers.length === 0) {
+      // Decide now: don't let this fail silently in production.
+      // Options: notify a fallback/admin queue, or flag the ticket for manual routing.
+      console.warn(
+        `Ticket ${ticket.slug} created for location "${locationDoc.name}" with no assigned managers.`,
+      );
+      // await notifyFallbackQueue(ticket); // implement if you want this safety net
+    } else {
+      const recipients = managers.map((m) => ({ userId: m._id }));
 
       const notification = await createNotification(
         {
@@ -103,24 +104,42 @@ export const createTicket = asyncHandler(async (req, res) => {
           action: "created",
           category: "ticket",
           severity: "info",
-          title: "New Ticket Created",
-          message: `A new ticket "${reqTitle}" was created by ${req.user.firstname} ${req.user.lastname}.`,
-          link: `/it_facility?tab=track_tickets&status=Open&item=${ticket.slug}`,
+          title: "New Ticket Awaiting Approval",
+          message: `A new ticket "${reqTitle}" was submitted by ${req.user.firstname} ${req.user.lastname} for ${locationDoc.name}.`,
+          link: `/it_facility?tab=track_tickets&status=pending&item=${ticket.slug}`,
           createdBy: userId,
           meta: {
             ticketId: ticket.slug,
-            priority,
             category,
+            location: locationDoc.name,
           },
         },
-        session
+        session,
       );
+      await Promise.all(
+        managers.map((manager) => {
+          const emailContent = generateEmailTemplate({
+            type: "ticket_pending_manager",
+            data: {
+              managerName: `${manager.firstname} ${manager.lastname}`,
+              ticketTitle: ticket.req_title,
+              category: ticket.category,
+              location: locationDoc.name,
+              createdBy: `${req.user.firstname} ${req.user.lastname}`,
+              link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&status=pending&item=${ticket.slug}`,
+            },
+          });
 
-      // Emit socket notifications
+          return sendEmail({
+            to: manager.email,
+            ...emailContent,
+          });
+        }),
+      );
       recipients.forEach((r) => {
         io.to(`user_${r.userId.toString()}`).emit(
           "newNotification",
-          notification
+          notification,
         );
       });
     }
@@ -137,246 +156,507 @@ export const createTicket = asyncHandler(async (req, res) => {
     throw err;
   }
 });
+const FACILITIES_MANAGER_ID = process.env.FACILITIES_MANAGER_ID;
 
-export const editTicket = asyncHandler(async (req, res) => {
+/* ======================
+   SHARED HELPER
+====================== */
+async function isManagerOfTicketLocation(userId, locationId, session) {
+  const location = await Location.findOne({
+    _id: locationId,
+    managers: userId,
+  }).session(session);
+  return !!location;
+}
+
+async function notifyAndEmit(
+  session,
+  { recipients, title, message, link, createdBy, meta },
+) {
+  if (!recipients.length) return;
+  const notification = await createNotification(
+    {
+      recipients,
+      action: "updated",
+      category: "ticket",
+      severity: "info",
+      title,
+      message,
+      link,
+      createdBy,
+      meta,
+    },
+    session,
+  );
+  recipients.forEach((r) => {
+    io.to(`user_${r.userId}`).emit("newNotification", notification);
+  });
+  return notification;
+}
+
+/* ======================
+   APPROVE
+====================== */
+export const approveTicket = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
-
   try {
-    const {
-      assignedId,
-      status,
-      description,
-      requestTitle,
-      category,
-      location,
-      priority,
-    } = req.body;
-
     const { id: ticketId } = req.params;
+    const { priority } = req.body;
     const userId = req.user._id.toString();
 
-    let statusChanged = false;
-    let assigneeChanged = false;
-    let requesterFieldsChanged = false;
+    if (!priority)
+      throw new ApiError(400, "Priority is required to approve a ticket");
 
-    /* ======================
-       PERMISSIONS
-    ====================== */
-    const rolePermissions = ROLE_PERMISSIONS[req.user.role] ?? [];
-    const customPermissions = req.user.customPermissions ?? [];
-    const permissions = new Set([...rolePermissions, ...customPermissions]);
-
-    /* ======================
-       FETCH TICKET
-    ====================== */
     const ticket = await Ticket.findById(ticketId).session(session);
     if (!ticket) throw new ApiError(404, "No such ticket found");
 
-    const isRequester = ticket.createdBy.equals(userId);
-    const isAssigned = ticket.assignedTo?.equals(userId);
-
-    const categoryPermission =
-      ticket.category === "Property Maintenance"
-        ? PERMISSIONS.VIEW_PROPERTY_TICKETS
-        : PERMISSIONS.VIEW_IT_TICKETS;
-
-    /* ======================
-       FILE UPLOAD
-    ====================== */
-    let uploadedFile;
-    if (req.file?.path) {
-      uploadedFile = await uploadOnCloudinary(req.file.path);
-      if (!uploadedFile?.secure_url) {
-        throw new ApiError(500, "Photo upload failed");
-      }
+    if (ticket.status !== TICKET_STATUS.OPEN) {
+      throw new ApiError(
+        400,
+        `Ticket is already ${ticket.status}, cannot approve`,
+      );
     }
 
-    const updatedFields = {};
-    const updateOps = {};
-
-    /* ======================
-       ASSIGNMENT
-    ====================== */
-    if (
-      assignedId &&
-      assignedId !== ticket.assignedTo?.toString() &&
-      (permissions.has(categoryPermission) || isAssigned)
-    ) {
-      updatedFields.assignedTo = assignedId;
-      assigneeChanged = true;
-
-      updateOps.$push = {
-        ...(updateOps.$push || {}),
-        assignmentHistory: {
-          assignedTo: assignedId,
-          assignedBy: userId,
-          assignedAt: new Date(),
-        },
-      };
-    }
-
-    /* ======================
-       STATUS
-    ====================== */
-    if (
-      status &&
-      status !== ticket.status &&
-      (permissions.has(categoryPermission) || isAssigned)
-    ) {
-      updatedFields.status = status;
-      statusChanged = true;
-
-      updateOps.$push = {
-        ...(updateOps.$push || {}),
-        statusHistory: {
-          status,
-          changedBy: userId,
-          changedAt: new Date(),
-        },
-      };
-
-      if (status === "Completed") {
-        updatedFields.resolvedAt = new Date();
-      }
-    }
-
-    /* ======================
-       REQUESTER FIELDS
-    ====================== */
-    if (isRequester) {
-      const hasChanges =
-        description !== ticket.description ||
-        requestTitle !== ticket.req_title ||
-        priority !== ticket.priority ||
-        category !== ticket.category ||
-        location !== ticket.location ||
-        uploadedFile;
-
-      requesterFieldsChanged = hasChanges;
-
-      if (description && description !== ticket.description)
-        updatedFields.description = description;
-
-      if (requestTitle && requestTitle !== ticket.req_title)
-        updatedFields.req_title = requestTitle;
-
-      if (category && category !== ticket.category)
-        updatedFields.category = category;
-
-      if (priority && priority !== ticket.priority)
-        updatedFields.priority = priority;
-
-      if (location && location !== ticket.location)
-        updatedFields.location = location;
-
-      if (uploadedFile && uploadedFile.secure_url !== ticket.photo?.fileUrl) {
-        updatedFields.photo = {
-          fileName: uploadedFile.original_filename || "photo",
-          fileUrl: uploadedFile.secure_url,
-        };
-      }
-    }
-
-    /* ======================
-       NO CHANGES
-    ====================== */
-    if (!Object.keys(updatedFields).length && !Object.keys(updateOps).length) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(200).json(new ApiResponse(200, "No changes were made"));
-    }
-
-    /* ======================
-       UPDATE TICKET
-    ====================== */
-    const updatedTicket = await Ticket.findByIdAndUpdate(
-      ticketId,
-      { ...updatedFields, ...updateOps },
-      { new: true, session }
-    )
-      .populate("createdBy", "firstname lastname email")
-      .populate("assignedTo", "firstname lastname email");
-
-    /* ======================
-       NOTIFICATIONS
-    ====================== */
-    const recipientsSet = new Set();
-
-    if (statusChanged) {
-      recipientsSet.add(ticket.createdBy.toString());
-      if (ticket.assignedTo) {
-        const latestAssignedBy =
-          ticket.assignmentHistory[ticket.assignmentHistory.length - 1]
-            .assignedBy;
-
-        recipientsSet.add(latestAssignedBy.toString());
-      }
-
-      if (ticket.assignedTo) recipientsSet.add(ticket.assignedTo.toString());
-    }
-
-    if (assigneeChanged) {
-      recipientsSet.add(ticket.createdBy.toString());
-      if (ticket.assignedTo) {
-        const latestAssignedBy =
-          ticket.assignmentHistory[ticket.assignmentHistory.length - 1]
-            .assignedBy;
-
-        recipientsSet.add(latestAssignedBy.toString());
-      }
-      recipientsSet.add(assignedId);
-    }
-
-    if (requesterFieldsChanged && ticket.assignedTo) {
-      recipientsSet.add(ticket.assignedTo.toString());
-    }
-
-    recipientsSet.delete(userId); // ❌ no self notifications
-
-    const recipients = [...recipientsSet].map((id) => ({ userId: id }));
-
-    if (recipients.length) {
-      const messageParts = [];
-      if (statusChanged) messageParts.push(`status changed to "${status}"`);
-      if (assigneeChanged) messageParts.push("ticket was reassigned");
-      if (requesterFieldsChanged)
-        messageParts.push("ticket details were updated");
-
-      const notification = await createNotification(
-        {
-          recipients,
-          action: "updated",
-          category: "ticket",
-          severity: "info",
-          title: "Ticket Updated",
-          message: `Ticket "${ticket.req_title}" ${messageParts.join(", ")}.`,
-          link: `/it_facility?tab=track_tickets&status=${ticket.status}&item=${ticket.slug}`,
-          createdBy: userId,
-          meta: { ticketId: ticket.slug, statusChanged, assigneeChanged },
-        },
-        session
+    const isManager = await isManagerOfTicketLocation(
+      userId,
+      ticket.location,
+      session,
+    );
+    if (!isManager)
+      throw new ApiError(
+        403,
+        "You are not a manager for this ticket's location",
       );
 
-      recipients.forEach((r) => {
-        io.to(`user_${r.userId}`).emit("newNotification", notification);
+    if (!FACILITIES_MANAGER_ID) {
+      throw new ApiError(500, "Facilities manager is not configured");
+    }
+
+    ticket.priority = priority;
+    ticket.priorityLocked = true;
+    ticket.status = TICKET_STATUS.APPROVED;
+    ticket.approvedBy = userId;
+    ticket.assignedTo = new mongoose.Types.ObjectId(FACILITIES_MANAGER_ID);
+
+    ticket.statusHistory.push({
+      status: TICKET_STATUS.APPROVED,
+      changedBy: userId,
+      changedAt: new Date(),
+    });
+    ticket.assignmentHistory.push({
+      assignedTo: FACILITIES_MANAGER_ID,
+      assignedBy: userId,
+      assignedAt: new Date(),
+    });
+
+    await ticket.save({ session });
+
+    /* ======================
+       FETCH EVERYONE WE NEED TO NOTIFY / EMAIL
+    ====================== */
+    const [creator, approver, facilitiesUser, locationDoc] = await Promise.all([
+      User.findById(ticket.createdBy).select("firstname lastname email").session(session),
+      User.findById(userId).select("firstname lastname email").session(session),
+      User.findById(FACILITIES_MANAGER_ID).select("firstname lastname email").session(session),
+      Location.findById(ticket.location).select("name").session(session),
+    ]);
+
+    const locationName = locationDoc?.name || "Unknown location";
+    const approverName = approver ? `${approver.firstname} ${approver.lastname}` : "Manager";
+
+    /* ======================
+       IN-APP NOTIFICATIONS (different message per audience)
+    ====================== */
+    // Creator: "your request was approved"
+    if (creator && creator._id.toString() !== userId) {
+      await notifyAndEmit(session, {
+        recipients: [{ userId: creator._id.toString() }],
+        title: "Ticket Approved",
+        message: `Your ticket "${ticket.req_title}" was approved and is now queued for work.`,
+        link: `/it_facility?tab=track_tickets&status=Approved&item=${ticket.slug}`,
+        createdBy: userId,
+        meta: { ticketId: ticket.slug, priority },
+      });
+    }
+
+    // Facilities user: "you have new work assigned"
+    if (facilitiesUser && facilitiesUser._id.toString() !== userId) {
+      await notifyAndEmit(session, {
+        recipients: [{ userId: facilitiesUser._id.toString() }],
+        title: "New Ticket Assigned to You",
+        message: `Ticket "${ticket.req_title}" (${priority} priority) has been assigned to you.`,
+        link: `/it_facility?tab=track_tickets&status=Approved&item=${ticket.slug}`,
+        createdBy: userId,
+        meta: { ticketId: ticket.slug, priority },
       });
     }
 
     /* ======================
-       COMMIT
+       EMAILS (different template per audience)
     ====================== */
+    if (creator && creator._id.toString() !== userId) {
+      await notifyTicketEmail({
+        userIds: [creator._id],
+        templateType: "ticket_approved",
+        dataBuilder: (user) => ({
+          recipientName: `${user.firstname} ${user.lastname}`,
+          ticketTitle: ticket.req_title,
+          category: ticket.category,
+          location: locationName,
+          approvedBy: approverName,
+          link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&status=Approved&item=${ticket.slug}`,
+        }),
+        session,
+      });
+    }
+
+    if (facilitiesUser && facilitiesUser._id.toString() !== userId) {
+      await notifyTicketEmail({
+        userIds: [facilitiesUser._id],
+        templateType: "ticket_assigned",
+        dataBuilder: (user) => ({
+          recipientName: `${user.firstname} ${user.lastname}`,
+          ticketTitle: ticket.req_title,
+          category: ticket.category,
+          location: locationName,
+          priority,
+          link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&status=Approved&item=${ticket.slug}`,
+        }),
+        session,
+      });
+    }
+
     await session.commitTransaction();
     session.endSession();
-
-    res
+    return res
       .status(200)
-      .json(new ApiResponse(200, "Ticket updated successfully", updatedTicket));
+      .json(new ApiResponse(200, "Ticket approved", ticket));
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
     throw err;
   }
+});
+
+/* ======================
+   REJECT
+====================== */
+export const rejectTicket = asyncHandler(async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { id: ticketId } = req.params;
+    const { rejectionReason } = req.body;
+    const userId = req.user._id.toString();
+
+    if (!rejectionReason?.trim())
+      throw new ApiError(400, "Rejection reason is required");
+
+    const ticket = await Ticket.findById(ticketId).session(session);
+    if (!ticket) throw new ApiError(404, "No such ticket found");
+
+    if (ticket.status !== TICKET_STATUS.OPEN) {
+      throw new ApiError(
+        400,
+        `Ticket is already ${ticket.status}, cannot reject`,
+      );
+    }
+
+    const isManager = await isManagerOfTicketLocation(
+      userId,
+      ticket.location,
+      session,
+    );
+    if (!isManager)
+      throw new ApiError(
+        403,
+        "You are not a manager for this ticket's location",
+      );
+
+    ticket.status = TICKET_STATUS.CLOSED;
+    ticket.rejectedBy = userId;
+    ticket.rejectionReason = rejectionReason.trim();
+    ticket.statusHistory.push({
+      status: TICKET_STATUS.REJECTED,
+      changedBy: userId,
+      changedAt: new Date(),
+    });
+
+    await ticket.save({ session });
+
+    const [creator, rejector, locationDoc] = await Promise.all([
+      User.findById(ticket.createdBy).select("firstname lastname email").session(session),
+      User.findById(userId).select("firstname lastname email").session(session),
+      Location.findById(ticket.location).select("name").session(session),
+    ]);
+
+    const locationName = locationDoc?.name || "Unknown location";
+    const rejectorName = rejector ? `${rejector.firstname} ${rejector.lastname}` : "Manager";
+
+    if (creator && creator._id.toString() !== userId) {
+      await notifyAndEmit(session, {
+        recipients: [{ userId: creator._id.toString() }],
+        title: "Ticket Rejected",
+        message: `Your ticket "${ticket.req_title}" was rejected: ${rejectionReason.trim()}`,
+        link: `/it_facility?tab=track_tickets&status=Closed&item=${ticket.slug}`,
+        createdBy: userId,
+        meta: { ticketId: ticket.slug, rejectionReason },
+      });
+
+      await notifyTicketEmail({
+        userIds: [creator._id],
+        templateType: "ticket_rejected",
+        dataBuilder: (user) => ({
+          recipientName: `${user.firstname} ${user.lastname}`,
+          ticketTitle: ticket.req_title,
+          category: ticket.category,
+          location: locationName,
+          rejectedBy: rejectorName,
+          rejectionReason: rejectionReason.trim(),
+          link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&status=Closed&item=${ticket.slug}`,
+        }),
+        session,
+      });
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Ticket rejected", ticket));
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw err;
+  }
+});
+
+/* ======================
+   START (assignee only)
+====================== */
+export const startTicket = asyncHandler(async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { id: ticketId } = req.params;
+    const userId = req.user._id.toString();
+
+    const ticket = await Ticket.findById(ticketId).session(session);
+    if (!ticket) throw new ApiError(404, "No such ticket found");
+
+    if (!ticket.assignedTo?.equals(userId)) {
+      throw new ApiError(
+        403,
+        "Only the assigned facilities user can start this ticket",
+      );
+    }
+    if (ticket.status !== TICKET_STATUS.APPROVED) {
+      throw new ApiError(
+        400,
+        `Ticket must be Approved to start work, currently ${ticket.status}`,
+      );
+    }
+
+    ticket.status = TICKET_STATUS.IN_PROGRESS;
+    ticket.statusHistory.push({
+      status: TICKET_STATUS.IN_PROGRESS,
+      changedBy: userId,
+      changedAt: new Date(),
+    });
+    await ticket.save({ session });
+
+    const recipientIds = [
+      ticket.createdBy.toString(),
+      ticket.approvedBy?.toString(),
+    ]
+      .filter(Boolean)
+      .filter((id) => id !== userId);
+
+    if (recipientIds.length) {
+      const [users, locationDoc, assignee] = await Promise.all([
+        User.find({ _id: { $in: recipientIds } }).select("firstname lastname email").session(session),
+        Location.findById(ticket.location).select("name").session(session),
+        User.findById(userId).select("firstname lastname").session(session),
+      ]);
+
+      const locationName = locationDoc?.name || "Unknown location";
+      const assigneeName = assignee ? `${assignee.firstname} ${assignee.lastname}` : "Facilities";
+
+      await notifyAndEmit(session, {
+        recipients: recipientIds.map((id) => ({ userId: id })),
+        title: "Ticket In Progress",
+        message: `Work has started on ticket "${ticket.req_title}".`,
+        link: `/it_facility?tab=track_tickets&status=In Progress&item=${ticket.slug}`,
+        createdBy: userId,
+        meta: { ticketId: ticket.slug },
+      });
+
+      await notifyTicketEmail({
+        userIds: recipientIds,
+        templateType: "ticket_in_progress",
+        dataBuilder: (user) => ({
+          recipientName: `${user.firstname} ${user.lastname}`,
+          ticketTitle: ticket.req_title,
+          category: ticket.category,
+          location: locationName,
+          assignedTo: assigneeName,
+          link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&status=In Progress&item=${ticket.slug}`,
+        }),
+        session,
+      });
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Ticket marked in progress", ticket));
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw err;
+  }
+});
+
+/* ======================
+   COMPLETE (assignee only)
+====================== */
+export const completeTicket = asyncHandler(async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { id: ticketId } = req.params;
+    const userId = req.user._id.toString();
+
+    const ticket = await Ticket.findById(ticketId).session(session);
+    if (!ticket) throw new ApiError(404, "No such ticket found");
+
+    if (!ticket.assignedTo?.equals(userId)) {
+      throw new ApiError(
+        403,
+        "Only the assigned facilities user can complete this ticket",
+      );
+    }
+    if (ticket.status !== TICKET_STATUS.IN_PROGRESS) {
+      throw new ApiError(
+        400,
+        `Ticket must be In Progress to complete, currently ${ticket.status}`,
+      );
+    }
+
+    ticket.status = TICKET_STATUS.COMPLETED;
+    ticket.resolvedAt = new Date();
+    ticket.statusHistory.push({
+      status: TICKET_STATUS.COMPLETED,
+      changedBy: userId,
+      changedAt: new Date(),
+    });
+    await ticket.save({ session });
+
+    const recipientIds = [
+      ticket.createdBy.toString(),
+      ticket.approvedBy?.toString(),
+    ]
+      .filter(Boolean)
+      .filter((id) => id !== userId);
+
+    if (recipientIds.length) {
+      const locationDoc = await Location.findById(ticket.location)
+        .select("name")
+        .session(session);
+      const locationName = locationDoc?.name || "Unknown location";
+
+      await notifyAndEmit(session, {
+        recipients: recipientIds.map((id) => ({ userId: id })),
+        title: "Ticket Completed",
+        message: `Ticket "${ticket.req_title}" has been completed.`,
+        link: `/it_facility?tab=track_tickets&status=Completed&item=${ticket.slug}`,
+        createdBy: userId,
+        meta: { ticketId: ticket.slug },
+      });
+
+      await notifyTicketEmail({
+        userIds: recipientIds,
+        templateType: "ticket_completed",
+        dataBuilder: (user) => ({
+          recipientName: `${user.firstname} ${user.lastname}`,
+          ticketTitle: ticket.req_title,
+          category: ticket.category,
+          location: locationName,
+          completedAt: ticket.resolvedAt.toLocaleDateString(),
+          link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&status=Completed&item=${ticket.slug}`,
+        }),
+        session,
+      });
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Ticket completed", ticket));
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw err;
+  }
+});
+
+/* ======================
+   CANCEL (creator only, Pending only)
+====================== */
+export const cancelTicket = asyncHandler(async (req, res) => {
+  const { id: ticketId } = req.params;
+  const userId = req.user._id.toString();
+
+  const ticket = await Ticket.findById(ticketId);
+  if (!ticket) throw new ApiError(404, "No such ticket found");
+
+  if (!ticket.createdBy.equals(userId))
+    throw new ApiError(403, "Only the creator can cancel this ticket");
+  if (ticket.status !== TICKET_STATUS.OPEN) {
+    throw new ApiError(
+      400,
+      "Ticket can only be cancelled while pending approval",
+    );
+  }
+
+  ticket.status = TICKET_STATUS.CLOSED;
+  ticket.statusHistory.push({
+    status: TICKET_STATUS.CLOSED,
+    changedBy: userId,
+    changedAt: new Date(),
+  });
+  await ticket.save();
+
+  return res.status(200).json(new ApiResponse(200, "Ticket cancelled", ticket));
+});
+
+/* ======================
+   EDIT (creator only, Pending only, no priority/status/assignment)
+====================== */
+export const editTicket = asyncHandler(async (req, res) => {
+  const { id: ticketId } = req.params;
+  const { description, requestTitle, category, location } = req.body;
+  const userId = req.user._id.toString();
+
+  const ticket = await Ticket.findById(ticketId);
+  if (!ticket) throw new ApiError(404, "No such ticket found");
+
+  if (!ticket.createdBy.equals(userId))
+    throw new ApiError(403, "Only the creator can edit this ticket");
+  if (ticket.status !== TICKET_STATUS.OPEN) {
+    throw new ApiError(400, "Ticket can only be edited while Open approval");
+  }
+
+  if (description) ticket.description = description;
+  if (requestTitle) ticket.req_title = requestTitle;
+  if (category) ticket.category = category;
+  if (location) ticket.location = location;
+
+  await ticket.save();
+  return res.status(200).json(new ApiResponse(200, "Ticket updated", ticket));
 });
 
 export const FetchTickets = asyncHandler(async (req, res) => {
@@ -417,35 +697,31 @@ export const FetchTickets = asyncHandler(async (req, res) => {
   const rolePermissions = ROLE_PERMISSIONS[req.user.role] ?? [];
   const customPermissions = req.user.customPermissions ?? [];
 
-  const effectivePermissions = new Set([
-    ...rolePermissions,
-    ...customPermissions,
-  ]);
+  // const effectivePermissions = new Set([
+  //   ...rolePermissions,
+  //   ...customPermissions,
+  // ]);
 
   /* ----------------------------------
      PERMISSION SCOPE (VISIBILITY)
   -----------------------------------*/
   const visibilityOr = [];
+  const managedLocations = await Location.find(
+    { managers: req.user._id },
+    "_id",
+  );
 
+  const managedLocationIds = managedLocations.map((l) => l._id);
   // Always allow own tickets
   visibilityOr.push({ createdBy: req.user._id }, { assignedTo: req.user._id });
-
+  if (managedLocationIds.length) {
+    visibilityOr.push({
+      location: { $in: managedLocationIds },
+    });
+  }
   // Category-based permissions
-  if (effectivePermissions.has(PERMISSIONS.VIEW_IT_TICKETS)) {
-    visibilityOr.push({ category: "IT Help Desk" });
-  }
-
-  if (effectivePermissions.has(PERMISSIONS.VIEW_PROPERTY_TICKETS)) {
-    visibilityOr.push({ category: "Property Maintenance" });
-  }
 
   // Full access overrides everything
-  if (
-    effectivePermissions.has(PERMISSIONS.VIEW_PROPERTY_TICKETS) &&
-    effectivePermissions.has(PERMISSIONS.VIEW_IT_TICKETS)
-  ) {
-    visibilityOr.length = 0; // 🔥 remove restrictions
-  }
 
   if (visibilityOr.length) {
     andConditions.push({ $or: visibilityOr });
@@ -463,7 +739,7 @@ export const FetchTickets = asyncHandler(async (req, res) => {
   const tickets = await Ticket.find(filter)
     .sort({ createdAt: sortOrder })
     .skip((page - 1) * limit)
-    .limit(limit)
+    .limit(limit).populate("location","name managers")
     .populate("createdBy", "firstname lastname email")
     .populate("assignedTo", "firstname lastname email");
 
@@ -481,15 +757,24 @@ export const FetchTickets = asyncHandler(async (req, res) => {
     return Ticket.countDocuments(cFilter);
   };
 
-  const [open, inProgress, completed, underReview, all] = await Promise.all([
-    countByStatus("Open"),
-    countByStatus("In Progress"),
-    countByStatus("Completed"),
-    countByStatus("Under Review"),
-    countByStatus(),
-  ]);
+  const [open, approved, inProgress, completed, rejected, closed, all] =
+    await Promise.all([
+      countByStatus(TICKET_STATUS.OPEN),
+      countByStatus(TICKET_STATUS.APPROVED),
+      countByStatus(TICKET_STATUS.IN_PROGRESS),
+      countByStatus(TICKET_STATUS.COMPLETED),
+      countByStatus(TICKET_STATUS.REJECTED),
+      countByStatus(TICKET_STATUS.CLOSED),
+      countByStatus(),
+    ]);
 
-  const counts = { open, inProgress, completed, underReview, total: all };
+  const counts = {
+    open,
+    approved,
+    inProgress,
+    completed,
+    total:all
+  };
 
   /* ----------------------------------
      RESPONSE
@@ -504,106 +789,14 @@ export const FetchTickets = asyncHandler(async (req, res) => {
         pages: Math.ceil(total / limit),
         limit,
       },
-    })
+    }),
   );
 });
 
-export const FetchComments = asyncHandler(async (req, res) => {
-  const { ticketId } = req.params;
 
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
-  const comments = await Comment.find({ ticketId })
-    .populate("userId", "firstname lastname email") // fetch user info
-    .sort({ createdAt: -1 }) // oldest first, change to -1 for newest first
-    .skip(skip)
-    .limit(limit);
+export const FetchTicketComments = (req, res) =>
+  fetchCommentsForEntity(req, res, "Ticket");
 
-  const total = await Comment.countDocuments({ ticketId });
-  res.status(200).json(
-    new ApiResponse(200, "Upcoming Events fetched successfully", {
-      comments: comments,
-      paggination: {
-        total: total,
-        page: Number(page),
-        limit: Number(limit),
-        totalPages: Math.ceil(total / Number(limit)),
-      },
-    })
-  );
-});
-export const AddComment = asyncHandler(async (req, res) => {
-  const { ticketId } = req.params;
+export const AddTicketComment = (req, res) =>
+  addCommentForEntity(req, res, "Ticket");
 
-  const userId = req.user._id;
-  const { message, clientId } = req.body;
-
-  if (!message && (!req.files || req.files.length === 0)) {
-    throw new ApiError(
-      400,
-      "Comment message or at least one attachment is required"
-    );
-  }
-
-  // Cloudinary uploads
-  const typeMap = {
-    image: [".jpg", ".jpeg", ".png", ".gif", ".webp"],
-    video: [".mp4", ".mov", ".avi", ".mkv"],
-    audio: [".mp3", ".wav", ".ogg"],
-    pdf: [".pdf"],
-    doc: [".doc", ".docx"],
-    ppt: [".ppt", ".pptx"],
-    excel: [".xls", ".xlsx"],
-    zip: [".zip", ".rar"],
-  };
-
-  const detectFileType = (ext) => {
-    return (
-      Object.keys(typeMap).find((key) => typeMap[key].includes(ext)) || "other"
-    );
-  };
-  let attachments = [];
-  if (req.files?.length > 0) {
-    const uploadPromises = req.files.map(async (file) => {
-      const uploadedFile = await uploadOnCloudinary(file.path);
-
-      if (!uploadedFile?.secure_url) {
-        throw new ApiError(
-          500,
-          `Attachment upload failed for ${file.originalname}`
-        );
-      }
-
-      const ext = path.extname(file.originalname).toLowerCase();
-
-      return {
-        fileName: uploadedFile.original_filename,
-        fileUrl: uploadedFile.secure_url,
-        size: uploadedFile.bytes,
-        type: detectFileType(ext),
-      };
-    });
-
-    attachments = await Promise.all(uploadPromises);
-  }
-  const payload = { ticketId, userId };
-  if (message) {
-    payload.message = message;
-  }
-  if (attachments.length !== 0) {
-    payload.attachments = attachments;
-  }
-  const comment = await Comment.create(payload);
-
-  const populatedComment = await Comment.findById(comment._id).populate(
-    "userId",
-    "firstname lastname email"
-  );
-
-  io.to(ticketId).emit("newComment", { comment: populatedComment, clientId });
-
-  res
-    .status(201)
-    .json(new ApiResponse(201, "Comment added successfully", populatedComment));
-});

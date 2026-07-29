@@ -39,7 +39,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
     const refreshResult = await baseQuery(
       { url: "/auth/refresh", method: "POST" },
       api,
-      extraOptions
+      extraOptions,
     );
 
     if (refreshResult?.data) {
@@ -64,7 +64,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
         setLoggedIn({
           accessToken,
           UserData: payload,
-        })
+        }),
       );
 
       result = await baseQuery(args, api, extraOptions);
@@ -103,7 +103,10 @@ export const api = createApi({
     "employee-incident",
     "payment-requistion",
     "functional-abilty",
-    "media-consent"
+    "media-consent",
+    "Locations",
+    "Task",
+    "Certification",
   ],
   endpoints: () => ({}),
 });

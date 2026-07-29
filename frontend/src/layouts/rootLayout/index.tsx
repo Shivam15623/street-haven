@@ -8,8 +8,8 @@ import ProfileDropdown from "../../helper/ProfileDropdown.tsx";
 import NotificationDropdown from "../../helper/NotificationDropdown.tsx";
 import DashboardIcon from "../../assets/icons/sidebaricons/dashboard.svg?react";
 import AgencyInfo from "../../assets/icons/sidebaricons/Agency.svg?react";
-import Events from "../../assets/icons/sidebaricons/EventsIcon2.svg?react";
-import FormIcon from "../../assets/icons/sidebaricons/Forms.svg?react";
+// import Events from "../../assets/icons/sidebaricons/EventsIcon2.svg?react";
+// import FormIcon from "../../assets/icons/sidebaricons/Forms.svg?react";
 import ItNFacility from "../../assets/icons/sidebaricons/Facility.svg?react";
 import ProgramIcon from "../../assets/icons/sidebaricons/Program.svg?react";
 import SearchContent from "../../helper/SearchContent.tsx";
@@ -26,12 +26,7 @@ const menuItems = [
     icon: DashboardIcon,
     public: true, // everyone can see
   },
-  {
-    label: "Forms",
-    path: "/forms",
-    icon: FormIcon,
-    public: true,
-  },
+
   {
     label: "Program & Manuals",
     path: "/programs&manuals",
@@ -50,12 +45,7 @@ const menuItems = [
     icon: AgencyInfo,
     public: true, // available for all
   },
-  {
-    label: "Events",
-    path: "/events",
-    icon: Events,
-    public: true,
-  },
+
   {
     label: "Employees",
     path: "/employees",

@@ -1,13 +1,12 @@
 import StreetTab from "../../../components/StreetTab";
 import CollectiveAgreementTab from "./component/Agreement/CollectiveAgreementTab";
 
-import TownhallMinutesTab from "./component/EventMinutes/TownhallMinutesTab";
-import "@assets/css/PageCss/orgchart.css";
-import HrUpdatesTab from "./component/HrUpdates/HrUpdatesTab";
+
+
 import { useNavigate, useSearchParams } from "react-router-dom";
 import AnnouncementTab from "./component/Announcements/AnnouncementTab";
 import { useEffect, useState } from "react";
-import OrganizationalChartTab from "./component/Organizational/OrganizationalChartTab";
+
 const AgencyInfo = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -55,23 +54,8 @@ const AgencyInfo = () => {
               />
             ),
           },
-          {
-            key: "event_minutes",
-            label: "Event Minutes",
-            content: (
-              <TownhallMinutesTab isActive={active === "event_minutes"} />
-            ),
-          },
-          {
-            key: "organizational_chart",
-            label: "Organizational Chart",
-            content: <OrganizationalChartTab />,
-          },
-          {
-            key: "hr_updates",
-            label: "HR updates",
-            content: <HrUpdatesTab isActive={active === "hr_updates"} />,
-          },
+         
+         
           {
             key: "announcements",
             label: "Announcement",

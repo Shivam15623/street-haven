@@ -7,6 +7,7 @@ export type Column<T> = {
   accessorKey?: keyof T | string;
   render?: (row: T) => React.ReactNode;
   sortable?: boolean;
+  
 };
 
 type DataTableProps<T> = {

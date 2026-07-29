@@ -14,24 +14,34 @@ const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
  * @param {string} param0.to Recipient email
  * @param {string} param0.subject Email subject
  * @param {string} param0.html HTML content
- */
-export const sendEmail = async ({ to, subject, html }) => {
+ */ export const sendEmail = async ({ to, subject, html }) => {
   try {
     const senderEmail = "phenomenalshivam2@gmail.com";
     const senderName = "CRM";
-    const sendSmtpEmail = {
-      sender: { name: senderName, email: senderEmail },
+
+    const response = await apiInstance.sendTransacEmail({
+      sender: {
+        name: senderName,
+        email: senderEmail,
+      },
       to: [{ email: to }],
       subject,
       htmlContent: html,
-    };
+    });
 
-    const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
-
+    console.log("Brevo Response:", response);
 
     return response;
   } catch (error) {
+    console.error("========== BREVO ERROR ==========");
+    console.error(error);
 
-    throw new Error("Failed to send email via Brevo API");
+    if (error.response) {
+      console.error("Status:", error.response.status);
+      console.error("Body:", error.response.body);
+      console.error("Text:", error.response.text);
+    }
+
+    throw error;
   }
 };

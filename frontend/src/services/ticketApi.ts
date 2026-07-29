@@ -25,7 +25,7 @@ export interface commentData {
   };
   createdAt: string;
 }
-type commentResponse = ApiResponse<{
+export type commentResponse = ApiResponse<{
   comments: commentData[];
   paggination: {
     total: number;
@@ -65,20 +65,67 @@ const ticketApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Ticket"],
     }),
-    addComment: builder.mutation<
+    approveTicket: builder.mutation<
+      ApiGeneralResponse,
+      { ticketId: string; priority: string }
+    >({
+      query: ({ ticketId, priority }) => ({
+        url: `/ticket/${ticketId}/approve`,
+        method: "PATCH",
+        body: { priority },
+      }),
+      invalidatesTags: ["Ticket"],
+    }),
+
+    rejectTicket: builder.mutation<
+      ApiGeneralResponse,
+      { ticketId: string; rejectionReason: string }
+    >({
+      query: ({ ticketId, rejectionReason }) => ({
+        url: `/ticket/${ticketId}/reject`,
+        method: "PATCH",
+        body: { rejectionReason },
+      }),
+      invalidatesTags: ["Ticket"],
+    }),
+
+    startTicket: builder.mutation<ApiGeneralResponse, string>({
+      query: (ticketId) => ({
+        url: `/ticket/${ticketId}/start`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Ticket"],
+    }),
+
+    completeTicket: builder.mutation<ApiGeneralResponse, string>({
+      query: (ticketId) => ({
+        url: `/ticket/${ticketId}/complete`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Ticket"],
+    }),
+
+    cancelTicket: builder.mutation<ApiGeneralResponse, string>({
+      query: (ticketId) => ({
+        url: `/ticket/${ticketId}/cancel`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Ticket"],
+    }),
+    addTicketComment: builder.mutation<
       ApiGeneralResponse,
       { ticketId: string; formdata: FormData; onProgress?: (p: number) => void }
     >({
       queryFn: ({ ticketId, formdata, onProgress }) =>
         uploadWithProgress(
           `/ticket/${ticketId}/comments`,
-          "POST"
+          "POST",
         )({
           data: formdata,
           onProgress,
         }),
     }),
-    viewComments: builder.query<
+    viewTicketComments: builder.query<
       commentResponse,
       { page: number; limit: number; ticketId: string }
     >({
@@ -95,8 +142,13 @@ export const {
   useFetchTicketsQuery,
   useCreateTicketMutation,
   useEditTicketMutation,
-  useAddCommentMutation,
-  useViewCommentsQuery,
-  useLazyViewCommentsQuery,
+  useAddTicketCommentMutation,
+  useViewTicketCommentsQuery,
+  useLazyViewTicketCommentsQuery,
   useLazyFetchTicketsQuery,
+  useApproveTicketMutation,
+  useRejectTicketMutation,
+  useStartTicketMutation,
+  useCompleteTicketMutation,
+  useCancelTicketMutation,
 } = ticketApi;

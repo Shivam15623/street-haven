@@ -17,9 +17,11 @@ const TrackTickettab: React.FC<AgentTabProp> = ({ isActive }) => {
     priority: "All",
     status: statusParam as
       | "Open"
+      | "Approved"
+      | "Rejected"
       | "In Progress"
-      | "Under Review"
       | "Completed"
+      | "Closed"
       | "All",
     limit: 10,
     order: "desc",
@@ -34,6 +36,7 @@ const TrackTickettab: React.FC<AgentTabProp> = ({ isActive }) => {
       getTickets(filter);
     }
   }, [isActive, filter, getTickets]);
+  console.log("data",ticketData?.data)
   // Pagination calculation
   const total = ticketData?.data?.paggination?.total ?? 0;
   const totalPages = Math.ceil(total / filter?.limit);
@@ -82,16 +85,37 @@ const TrackTickettab: React.FC<AgentTabProp> = ({ isActive }) => {
               count={ticketData?.data.counts.open ?? 0}
               label="Open"
               variant="open"
-              onClick={() => {
-                setFilter((prev) => ({ ...prev, status: "Open", page: 1 }));
-              }}
+              icon="lucide:clock-3"
+              onClick={() =>
+                setFilter((prev) => ({
+                  ...prev,
+                  status: "Open",
+                  page: 1,
+                }))
+              }
               active={filter.status === "Open"}
             />
+
+            <TicketCountCard
+              count={ticketData?.data.counts.approved ?? 0}
+              label="Approved"
+              variant="approved"
+              icon="lucide:badge-check"
+              onClick={() =>
+                setFilter((prev) => ({
+                  ...prev,
+                  status: "Approved",
+                  page: 1,
+                }))
+              }
+              active={filter.status === "Approved"}
+            />
+
             <TicketCountCard
               count={ticketData?.data.counts.inProgress ?? 0}
               label="In Progress"
               variant="progress"
-              icon="lucide:clock"
+              icon="lucide:loader-circle"
               onClick={() =>
                 setFilter((prev) => ({
                   ...prev,
@@ -103,36 +127,61 @@ const TrackTickettab: React.FC<AgentTabProp> = ({ isActive }) => {
             />
 
             <TicketCountCard
-              count={ticketData?.data.counts.underReview ?? 0}
-              label="Under Review"
-              icon="solar:eye-linear"
-              variant="review"
-              onClick={() =>
-                setFilter((prev) => ({
-                  ...prev,
-                  status: "Under Review",
-                  page: 1,
-                }))
-              }
-              active={filter.status === "Under Review"}
-            />
-            <TicketCountCard
               count={ticketData?.data.counts.completed ?? 0}
               label="Completed"
               variant="completed"
-              icon="si:info-line"
+              icon="lucide:circle-check-big"
               onClick={() =>
-                setFilter((prev) => ({ ...prev, status: "Completed", page: 1 }))
+                setFilter((prev) => ({
+                  ...prev,
+                  status: "Completed",
+                  page: 1,
+                }))
               }
               active={filter.status === "Completed"}
             />
+{/* 
+            <TicketCountCard
+              count={ticketData?.data.counts.rejected ?? 0}
+              label="Rejected"
+              variant="rejected"
+              icon="lucide:circle-x"
+              onClick={() =>
+                setFilter((prev) => ({
+                  ...prev,
+                  status: "Rejected",
+                  page: 1,
+                }))
+              }
+              active={filter.status === "Rejected"}
+            />
+
+            <TicketCountCard
+              count={ticketData?.data.counts.closed ?? 0}
+              label="Closed"
+              variant="closed"
+              icon="lucide:lock"
+              onClick={() =>
+                setFilter((prev) => ({
+                  ...prev,
+                  status: "Closed",
+                  page: 1,
+                }))
+              }
+              active={filter.status === "Closed"}
+            /> */}
+
             <TicketCountCard
               count={ticketData?.data.counts.total ?? 0}
               label="Total"
               variant="total"
-              icon="iconamoon:ticket-light"
+              icon="lucide:tickets"
               onClick={() =>
-                setFilter((prev) => ({ ...prev, status: "All", page: 1 }))
+                setFilter((prev) => ({
+                  ...prev,
+                  status: "All",
+                  page: 1,
+                }))
               }
               active={filter.status === "All"}
             />

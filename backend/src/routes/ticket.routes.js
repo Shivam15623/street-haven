@@ -1,11 +1,19 @@
 import { Router } from "express";
 import passport from "passport";
 import {
-  AddComment,
+
+  AddTicketComment,
+  approveTicket,
+  cancelTicket,
+  completeTicket,
   createTicket,
   editTicket,
-  FetchComments,
+
+  FetchTicketComments,
+
   FetchTickets,
+  rejectTicket,
+  startTicket,
 } from "../controllers/Ticket.controller.js";
 import { upload } from "../middleware/multer.js";
 import { validateAddComment, validateRequest } from "../middleware/validate.js";
@@ -16,15 +24,16 @@ import {
 } from "../validations/ticket.js";
 import { idParamSchema } from "../validations/common.js";
 import { upsertCategoryAssignment } from "../controllers/ticketCategoryAssignment.controller.js";
+import { checkActiveUser } from "../middleware/checkActiveUsers.js";
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
-
+router.use(checkActiveUser);
 router.get("/view", validateRequest(fetchTicketsSchema, "query"), FetchTickets);
 router.post(
   "/create",
   upload.single("photo"),
   validateRequest(createTicketSchema, "body"),
-  createTicket
+  createTicket,
 );
 router
   .route("/edit/:id")
@@ -32,14 +41,43 @@ router
     validateRequest(idParamSchema, "params"),
     upload.single("photo"),
     validateRequest(editTicketSchema, "body"),
-    editTicket
+    editTicket,
   );
+// Ticket lifecycle
+router.patch(
+  "/:id/approve",
+  validateRequest(idParamSchema, "params"),
+  approveTicket,
+);
 
+router.patch(
+  "/:id/reject",
+  validateRequest(idParamSchema, "params"),
+  rejectTicket,
+);
+
+router.patch(
+  "/:id/start",
+  validateRequest(idParamSchema, "params"),
+  startTicket,
+);
+
+router.patch(
+  "/:id/complete",
+  validateRequest(idParamSchema, "params"),
+  completeTicket,
+);
+
+router.patch(
+  "/:id/cancel",
+  validateRequest(idParamSchema, "params"),
+  cancelTicket,
+);
 // ticket comments
-router.route("/:ticketId/comments").get(FetchComments);
+router.route("/:entityId/comments").get(FetchTicketComments);
 router
-  .route("/:ticketId/comments")
-  .post(upload.array("attachments", 7), validateAddComment, AddComment);
+  .route("/:entityId/comments")
+  .post(upload.array("files", 7), validateAddComment, AddTicketComment);
 router.route("/category-assignment").post(upsertCategoryAssignment);
 
 export default router;

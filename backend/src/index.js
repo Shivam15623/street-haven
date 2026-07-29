@@ -15,8 +15,8 @@ export const io = new Server(server, {
   },
   transports: ["websocket", "polling"],
 });
-export const activeTicketUsers = {};
-// Handle socket connections
+export const activeRoomUsers = {}; // renamed from activeTicketUsers
+
 io.on("connection", (socket) => {
   socket.on("join-page-room", (room) => {
     socket.join(room);
@@ -25,18 +25,26 @@ io.on("connection", (socket) => {
   socket.on("leave-page-room", (room) => {
     socket.leave(room);
   });
-  // Example: join a room for ticket
-  socket.on("joinRoom", ({ ticketId, userId }) => {
-    socket.join(ticketId);
 
-    if (!activeTicketUsers[ticketId]) activeTicketUsers[ticketId] = new Set();
-    activeTicketUsers[ticketId].add(userId);
+  // Generic join for ticket/task comment rooms
+  socket.on("joinRoom", ({ room, userId }) => {
+    socket.join(room);
+
+    if (!activeRoomUsers[room]) activeRoomUsers[room] = new Set();
+    activeRoomUsers[room].add(userId);
+
+    // track which room(s) this socket is in, for cleanup on disconnect
+    socket.data.userId = userId;
+    if (!socket.data.rooms) socket.data.rooms = new Set();
+    socket.data.rooms.add(room);
   });
 
-  socket.on("leaveRoom", ({ ticketId, userId }) => {
-    socket.leave(ticketId);
-    activeTicketUsers[ticketId]?.delete(userId);
+  socket.on("leaveRoom", ({ room, userId }) => {
+    socket.leave(room);
+    activeRoomUsers[room]?.delete(userId);
+    socket.data.rooms?.delete(room);
   });
+
   socket.on("joinUserRoom", ({ userId }) => {
     socket.join(`user_${userId}`);
     logUserRooms();
@@ -47,9 +55,12 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    Object.keys(activeTicketUsers).forEach((ticketId) => {
-      activeTicketUsers[ticketId]?.delete(socket.id); // if you map socketId to userId
-    });
+    // clean up every room this socket had joined, using the userId we stashed on connect
+    if (socket.data.rooms) {
+      socket.data.rooms.forEach((room) => {
+        activeRoomUsers[room]?.delete(socket.data.userId);
+      });
+    }
   });
 });
 function logUserRooms() {
@@ -68,12 +79,10 @@ function logUserRooms() {
       });
     }
   }
-
-
 }
 ConnectDb()
   .then(() => {
-    server.listen(process.env.PORT || 8000, () => {
+    server.listen(process.env.PORT || 5000, () => {
       console.log(`⚙️ Server is running at port : ${process.env.PORT}`);
     });
   })

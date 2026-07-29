@@ -13,6 +13,7 @@ export interface EmployeeData {
   createdAt: string;
   updatedAt: string;
   superviserId: string;
+  locations:string[];
   title: string;
   hireDate: Date;
 
@@ -69,6 +70,7 @@ interface AllEmployeeQuery {
   sortBy?: string;
   order?: "asc" | "desc";
   forDropdown?: boolean;
+  role?: Role;
 }
 export interface RoleInfo {
   _id: string;
@@ -86,11 +88,13 @@ const EmployeeApi = api.injectEndpoints({
         sortBy = "createdAt",
         order = "desc",
         forDropdown = false,
+        role,
       }) => ({
         url: "/employees/view",
         method: "GET",
-        params: { page, limit, search, sortBy, order, forDropdown },
-      }), keepUnusedDataFor: 300,
+        params: { page, limit, search, sortBy, order, forDropdown, role },
+      }),
+      keepUnusedDataFor: 300,
       providesTags: ["Employees"],
     }),
     editEmployee: builder.mutation<
@@ -184,18 +188,6 @@ const EmployeeApi = api.injectEndpoints({
           title: string;
           hireDate: Date;
         };
-        supervisor?: {
-          _id: string;
-          firstname: string;
-          lastname: string;
-          title: string;
-        };
-        subordinates?: {
-          _id: string;
-          firstname: string;
-          lastname: string;
-          title: string;
-        }[];
       }>,
       { id: string; orgChart: boolean }
     >({

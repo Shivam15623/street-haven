@@ -1,7 +1,7 @@
 import type { AllPermissions } from "../utills/auth/permissions";
 import type { ApiResponse } from "./Response";
 
-interface User {
+export interface User {
   _id: string;
   firstName: string;
   lastName: string;
@@ -39,8 +39,8 @@ export const ROLES = {
   ADMIN: "admin",
   MANAGER: "manager",
   EMPLOYEE: "employee",
+  VOLUNTEER:"volunteer",
   HR: "hr",
-
 } as const;
 export type Role = (typeof ROLES)[keyof typeof ROLES];
 
@@ -95,6 +95,7 @@ export interface SignupCredentials {
   password: string;
   role: Role;
   superviserId: string;
+  locations:string[]
   customPermissions: string[];
 }
 export interface ForgotPasswordcredential {

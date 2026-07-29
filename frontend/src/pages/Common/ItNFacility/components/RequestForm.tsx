@@ -1,6 +1,6 @@
 import { Formik } from "formik";
 import * as Yup from "yup";
-import { Col, Form, Row } from "react-bootstrap";
+import { Col, Form, Row, Spinner } from "react-bootstrap";
 import ImageUpload from "../../../../components/child/Imageupload";
 import { useCreateTicketMutation } from "../../../../services/ticketApi";
 import { showError, showSuccess } from "../../../../utills/toastutills";
@@ -9,23 +9,36 @@ import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoa
 import {
   getErrorMessage,
 } from "../../../../utills/utills";
+import { useFetchLocationsQuery } from "../../../../services/locationApi";
+import { useState } from "react";
+const PREDEFINED_CATEGORIES = [
+  { label: "Plumbing", value: "plumbing" },
+  { label: "Electrical", value: "electrical" },
+  { label: "HVAC", value: "hvac" },
+  { label: "Carpentry", value: "carpentry" },
+  { label: "Appliances", value: "appliances" },
+  { label: "Cleaning", value: "cleaning" },
+];
 
 const requestSchema = Yup.object({
   reqTitle: Yup.string().required("Request Title is required"),
   description: Yup.string().required("Description is required"),
-  priority: Yup.string().oneOf(["Low", "Medium", "High"]).default("Low"),
-  category: Yup.string()
-    .oneOf(["IT Help Desk", "Property Maintenance"])
-    .required("Category is required"),
-  location: Yup.string().required("location is required"),
+  category: Yup.string().required("Category is required"),
+  location: Yup.string().required("Location is required"),
   photo: Yup.mixed<File>().nullable(),
 });
 type requestticketValue = Yup.InferType<typeof requestSchema>;
+
 interface RequestFormProps {
   onCancel: () => void;
 }
+
 const RequestForm: React.FC<RequestFormProps> = ({ onCancel }) => {
   const [createTicket, { isLoading }] = useCreateTicketMutation();
+  const { data, isLoading: locationLoading, isError: locationError } =
+    useFetchLocationsQuery({});
+
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
 
   const handlecreateTicket = async (
     values: requestticketValue,
@@ -35,7 +48,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onCancel }) => {
       const formData = new FormData();
       formData.append("reqTitle", values.reqTitle);
       formData.append("description", values.description);
-      formData.append("priority", values.priority);
+   
       formData.append("category", values.category);
       formData.append("location", values.location);
       if (values.photo) {
@@ -45,11 +58,13 @@ const RequestForm: React.FC<RequestFormProps> = ({ onCancel }) => {
       if (res.success) {
         showSuccess(res.message);
         resetForm();
+        setIsCustomCategory(false);
       }
     } catch (error) {
       showError(getErrorMessage(error));
     }
   };
+
   return (
     <>
       <div className="card mb-5 ">
@@ -68,8 +83,8 @@ const RequestForm: React.FC<RequestFormProps> = ({ onCancel }) => {
               initialValues={{
                 reqTitle: "",
                 description: "",
-                priority: "Low",
-                category: "IT Help Desk",
+        
+                category: "",
                 location: "",
                 photo: undefined,
               }}
@@ -153,60 +168,64 @@ const RequestForm: React.FC<RequestFormProps> = ({ onCancel }) => {
                     </Row>
 
                     {/* Priority & category side by side */}
-                    <Row>
+               
+                     <Row>
                       <Col>
-                        <Form.Group
-                          controlId="priority"
-                          className="d-flex flex-column gap-8"
-                        >
-                          <Form.Label className="fw-medium  text-street-dark">
-                            Priority
-                          </Form.Label>
-                          <Form.Select
-                            name="priority"
-                            size="sm"
-                            value={values.priority}
-                            onChange={handleChange}
-                            className="text-street-base"
-                            isInvalid={touched.priority && !!errors.priority}
-                          >
-                            <option value="">Select Priority</option>
-                            <option value="Low">Low</option>
-                            <option value="Medium">Medium</option>
-                            <option value="High">High</option>
-                          </Form.Select>
-                          <Form.Control.Feedback type="invalid">
-                            {errors.priority}
-                          </Form.Control.Feedback>
-                        </Form.Group>
-                      </Col>
-                    </Row>
-                    <Row>
-                      <Col>
-                        <Form.Group
-                          controlId="category"
-                          className="d-flex flex-column gap-8"
-                        >
+                        <Form.Group controlId="category" className="d-flex flex-column gap-8">
                           <Form.Label className="fw-medium text-street-dark">
                             Category
                           </Form.Label>
-                          <Form.Select
-                            name="category"
-                            size="sm"
-                            value={values.category}
-                            onChange={handleChange}
-                            className="text-street-base"
-                            isInvalid={touched.category && !!errors.category}
-                          >
-                            <option value="">Select category</option>
-                            {["IT Help Desk", "Property Maintenance"].map(
-                              (cat) => (
-                                <option key={cat} value={cat}>
-                                  {cat}
+
+                          {!isCustomCategory ? (
+                            <Form.Select
+                              name="category"
+                              size="sm"
+                              value={values.category}
+                              onChange={(e) => {
+                                if (e.target.value === "__custom__") {
+                                  setIsCustomCategory(true);
+                                  setFieldValue("category", "");
+                                } else {
+                                  handleChange(e);
+                                }
+                              }}
+                              className="text-street-base"
+                              isInvalid={touched.category && !!errors.category}
+                            >
+                              <option value="">Select category</option>
+                              {PREDEFINED_CATEGORIES.map((cat) => (
+                                <option key={cat.value} value={cat.value}>
+                                  {cat.label}
                                 </option>
-                              )
-                            )}
-                          </Form.Select>
+                              ))}
+                              <option value="__custom__">+ Add custom category</option>
+                            </Form.Select>
+                          ) : (
+                            <div className="d-flex gap-8">
+                              <Form.Control
+                                type="text"
+                                size="sm"
+                                autoFocus
+                                placeholder="Enter custom category"
+                                value={values.category}
+                                onChange={(e) => setFieldValue("category", e.target.value)}
+                                onBlur={handleBlur}
+                                name="category"
+                                className="py-12 px-16 text-street-base"
+                                isInvalid={touched.category && !!errors.category}
+                              />
+                              <button
+                                type="button"
+                                className="btn btn-street-neutral btn-sm"
+                                onClick={() => {
+                                  setIsCustomCategory(false);
+                                  setFieldValue("category", "IT Help Desk");
+                                }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          )}
                           <Form.Control.Feedback type="invalid">
                             {errors.category}
                           </Form.Control.Feedback>
@@ -215,29 +234,47 @@ const RequestForm: React.FC<RequestFormProps> = ({ onCancel }) => {
                     </Row>
 
                     {/* Location */}
-                    <Row>
+                     <Row>
                       <Col>
-                        <Form.Group
-                          controlId="location"
-                          className="d-flex flex-column gap-8"
-                        >
+                        <Form.Group controlId="location" className="d-flex flex-column gap-8">
                           <Form.Label className="fw-medium text-street-dark">
                             Location
                           </Form.Label>
-                          <Form.Control
-                            type="text"
-                            size="sm"
-                            name="location"
-                            placeholder="Enter location"
-                            value={values.location}
-                            className="py-12 px-16 text-street-base"
-                            onChange={handleChange}
-                            onBlur={handleBlur}
-                            isInvalid={touched.location && !!errors.location}
-                          />
+                          <div className="d-flex align-items-center gap-8">
+                            <Form.Select
+                              name="location"
+                              size="sm"
+                              value={values.location}
+                              onChange={handleChange}
+                              disabled={locationLoading || locationError}
+                              className="text-street-base"
+                              isInvalid={touched.location && !!errors.location}
+                            >
+                              <option value="">
+                                {locationLoading
+                                  ? "Loading locations..."
+                                  : locationError
+                                  ? "Failed to load locations"
+                                  : "Select location"}
+                              </option>
+                              {data?.data.map((loc) => (
+                                <option key={loc._id} value={loc._id}>
+                                  {loc.name}
+                                </option>
+                              ))}
+                            </Form.Select>
+                            {locationLoading && (
+                              <Spinner animation="border" size="sm" role="status" />
+                            )}
+                          </div>
                           <Form.Control.Feedback type="invalid">
                             {errors.location}
                           </Form.Control.Feedback>
+                          {locationError && (
+                            <small className="text-danger">
+                              Could not load locations. Please refresh the page.
+                            </small>
+                          )}
                         </Form.Group>
                       </Col>
                     </Row>

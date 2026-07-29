@@ -1,12 +1,12 @@
 import { Col, Row } from "react-bootstrap";
 import DashboardCard from "./components/DashboardCard";
-import UpcomingEvents from "./components/UpcomingEvents";
+
 import RecentActivity from "./components/RecentActivity";
 import "@assets/css/PageCss/dashboard.css";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
 import { selectAuth } from "../../../redux/AuthSlice";
-import { useFetchEventsupcomingQuery } from "../../../services/EventApi";
+
 import { useFetchTicketsQuery } from "../../../services/ticketApi";
 import { useRecentAnnouncementcountQuery } from "../../../services/AnnouncementApi";
 
@@ -20,11 +20,6 @@ const EmployeeDashboard = () => {
     limit: 100,
     order: "desc",
     search: "",
-  });
-  const { data, isLoading } = useFetchEventsupcomingQuery({
-    limit: 5,
-    order: "desc",
-    page: 1,
   });
 
   const { data: recentAnnouncement } = useRecentAnnouncementcountQuery();
@@ -55,7 +50,7 @@ const EmployeeDashboard = () => {
           </div>
         </div>
       </div>
-      <Row className=" g-2 g-md-4">
+      {/* <Row className=" g-2 g-md-4">
         <Col xs={6} sm={6} md={3}>
           <div
             onClick={() =>
@@ -108,16 +103,10 @@ const EmployeeDashboard = () => {
             CMS
           </div>
         </Col>
-      </Row>
+      </Row> */}
 
       <Row className=" g-2 g-md-3 g-lg-4">
-        <DashboardCard
-          icon="lucide:calendar"
-          label="Events"
-          value={data?.data.events.length ?? 0}
-          key={"Events"}
-          link={`/events`}
-        />
+       
 
         <DashboardCard
           icon="iconamoon:ticket-light"
@@ -140,10 +129,7 @@ const EmployeeDashboard = () => {
           <RecentActivity />
         </Col>
         <Col md={6}>
-          <UpcomingEvents
-            events={data?.data.events ?? []}
-            loading={isLoading}
-          />
+         
         </Col>
       </Row>
     </div>

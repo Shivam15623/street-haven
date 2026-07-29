@@ -6,7 +6,7 @@ import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import { createNotification } from "../helper/CreateNotoification.js";
 import { addActivityLog } from "../helper/addActivityLogs.js";
-import { uploadAttachment } from "./meetingMinutes.controller.js";
+
 import { deleteFromCloudinary } from "../utills/cloudinary.js";
 
 export const AddProgramManual = asyncHandler(async (req, res) => {

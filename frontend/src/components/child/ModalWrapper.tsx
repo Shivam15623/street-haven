@@ -8,7 +8,7 @@ export interface ModalWrapperProps {
   title?: string;
   subtitle?: string;
   children: React.ReactNode;
-  size?: "sm" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl";
   footer?: React.ReactNode;
   backdrop?: boolean | "static";
   keyboard?: boolean;
@@ -39,19 +39,29 @@ const ModalWrapper: React.FC<ModalWrapperProps> = ({
   isLoading,
   ModalLoader,
 }) => {
+  // react-bootstrap's Modal has no "md" size — its default (no size prop) IS medium.
+  // So we only forward the size prop when it's not "md".
+  const bsSize = size === "md" ? undefined : size;
+
+  // don't let the modal be dismissed mid-submit (backdrop click / Esc)
+  const effectiveBackdrop = isLoading ? "static" : backdrop;
+  const effectiveKeyboard = isLoading ? false : keyboard;
+
   return (
     <Modal
       show={show}
       onHide={onHide}
-      size={size}
+      size={bsSize}
       aria-labelledby="modal-wrapper-title"
       className="overflow-hidden"
       centered={centered}
-      backdrop={backdrop}
-      keyboard={keyboard}
+      backdrop={effectiveBackdrop}
+      keyboard={effectiveKeyboard}
       contentClassName="overflow"
     >
-      <div className={`position-relative d-flex flex-column ${className}`}>
+      <div
+        className={`position-relative d-flex flex-column ${className ?? ""}`}
+      >
         {isLoading && ModalLoader}
         {title && (
           <Modal.Header closeButton={false} className={headerClassName}>
@@ -70,11 +80,14 @@ const ModalWrapper: React.FC<ModalWrapperProps> = ({
             </div>
 
             {/* Custom Close Button */}
-
             <Icon
               icon="mdi:close"
-              className="text-lg sm:text-xxl"
-              onClick={onHide}
+              className={`text-lg sm:text-xxl ${
+                isLoading ? "opacity-50 pe-none" : "cursor-pointer"
+              }`}
+              onClick={isLoading ? undefined : onHide}
+              role="button"
+              aria-label="Close"
             />
           </Modal.Header>
         )}
@@ -97,7 +110,7 @@ const ModalWrapper: React.FC<ModalWrapperProps> = ({
           <Modal.Footer className={footerClassName}>{footer}</Modal.Footer>
         ) : (
           <Modal.Footer className={footerClassName}>
-            <Button variant="secondary" onClick={onHide}>
+            <Button variant="secondary" onClick={onHide} disabled={isLoading}>
               Close
             </Button>
           </Modal.Footer>

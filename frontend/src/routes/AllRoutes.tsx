@@ -1,9 +1,7 @@
 import {
   LazyProgramManuals,
   LazyEmployeedashboard,
-  LazyEvents,
   LazyForgotPassword,
-  LazyFormReports,
   LazyHelpDesk,
   LazyLogin,
   LazyProfile,
@@ -13,6 +11,8 @@ import {
   LazyVerifyTotp,
   LazyGenereateTotp,
   LazyRootLayout,
+  LazyTasks,
+  LazyAdminCertificationsPage,
 } from "../Lazy Components";
 import { Navigate, type RouteObject } from "react-router-dom";
 import RouteGuard from "../Routeguard";
@@ -31,7 +31,7 @@ export const AllRoutes: RouteObject[] = [
     element: withSuspense(
       <RouteGuard isPublic={true}>
         <LazyLogin />
-      </RouteGuard>
+      </RouteGuard>,
     ),
   },
 
@@ -40,7 +40,7 @@ export const AllRoutes: RouteObject[] = [
     element: withSuspense(
       <RouteGuard isPublic={true}>
         <LazyForgotPassword />
-      </RouteGuard>
+      </RouteGuard>,
     ),
   },
 
@@ -49,7 +49,7 @@ export const AllRoutes: RouteObject[] = [
     element: withSuspense(
       <RouteGuard isPublic={true}>
         <LazyResetPassword />
-      </RouteGuard>
+      </RouteGuard>,
     ),
   },
 
@@ -58,7 +58,7 @@ export const AllRoutes: RouteObject[] = [
     element: withSuspense(
       <RouteGuard isPublic={true}>
         <LazyGenereateTotp />
-      </RouteGuard>
+      </RouteGuard>,
     ),
   },
 
@@ -67,7 +67,7 @@ export const AllRoutes: RouteObject[] = [
     element: withSuspense(
       <RouteGuard isPublic={true}>
         <LazyVerifyTotp />
-      </RouteGuard>
+      </RouteGuard>,
     ),
   },
 
@@ -76,7 +76,7 @@ export const AllRoutes: RouteObject[] = [
     element: withSuspense(
       <RouteGuard isPublic={false}>
         <LazyRootLayout />
-      </RouteGuard>
+      </RouteGuard>,
     ),
     children: [
       {
@@ -93,15 +93,6 @@ export const AllRoutes: RouteObject[] = [
         element: (
           <RouteGuard isPublic={false}>
             <LazyProgramManuals />
-          </RouteGuard>
-        ),
-      },
-
-      {
-        path: "events",
-        element: (
-          <RouteGuard isPublic={false}>
-            <LazyEvents />
           </RouteGuard>
         ),
       },
@@ -125,15 +116,6 @@ export const AllRoutes: RouteObject[] = [
       },
 
       {
-        path: "forms",
-        element: (
-          <RouteGuard isPublic={false}>
-            <LazyFormReports />
-          </RouteGuard>
-        ),
-      },
-
-      {
         path: "profile",
         element: (
           <RouteGuard isPublic={false}>
@@ -150,6 +132,28 @@ export const AllRoutes: RouteObject[] = [
             requireRole={[ROLES.ADMIN, ROLES.SUPER_ADMIN]}
           >
             <LazyEmployees />
+          </RouteGuard>
+        ),
+      },
+      {
+        path: "tasks",
+        element: (
+          <RouteGuard
+            isPublic={false}
+            requireRole={[ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.VOLUNTEER]}
+          >
+            <LazyTasks />
+          </RouteGuard>
+        ),
+      },
+      {
+        path: "certificates",
+        element: (
+          <RouteGuard
+            isPublic={false}
+            requireRole={[ROLES.ADMIN, ROLES.SUPER_ADMIN]}
+          >
+            <LazyAdminCertificationsPage />
           </RouteGuard>
         ),
       },

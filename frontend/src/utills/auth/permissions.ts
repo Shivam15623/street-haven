@@ -86,5 +86,8 @@ export const PERMISSIONS = {
   TICKET_VIEW_SELF: "ticket_view_self",
   VIEW_IT_TICKETS: "view_it_tickets",
   VIEW_PROPERTY_TICKETS: "view_property_tickets",
+
+  VIEW_TASK:"view_task",
+  UPDATE_TASK_STATUS:"update_task_status"
 } as const;
 export type AllPermissions = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

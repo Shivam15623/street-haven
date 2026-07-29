@@ -32,7 +32,7 @@ const programManualSchema = () =>
         (value) => {
           const plainText = getPlainTextFromHTML(value || "");
           return plainText.length >= 10;
-        }
+        },
       ),
     tags: Yup.array()
       .of(Yup.string())
@@ -96,7 +96,7 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
   // 🔹 Save handler (unified)
   const handleSave = async (
     values: typeof initialValues,
-    { resetForm }: { resetForm: () => void }
+    { resetForm }: { resetForm: () => void },
   ) => {
     try {
       const formData = buildFormData(values);
@@ -156,8 +156,8 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
                 ? "Saving..."
                 : "Adding..."
               : isEdit
-              ? "Save Changes"
-              : "Add Manual"}
+                ? "Save Changes"
+                : "Add Manual"}
           </button>
           <button
             className="btn btn-street-neutral btn-street-lg radius-12 d-none d-sm-flex align-items-center text-sm justify-content-center"
@@ -218,11 +218,16 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
                 onChange={(e) => setFieldValue("type", e.target.value)}
               >
                 <option value="">Select Type</option>
-                <option value="HR">HR</option>
-                <option value="Technical">Technical</option>
-                <option value="Finance">Finance</option>
-                <option value="Operations">Operations</option>
-                <option value="Other">Other</option>
+                {[
+                  "Orientation",
+                  "Safety",
+                  "Policies",
+                  "Training",
+                  "Forms",
+                  "Other",
+                ].map((m) => {
+                  return <option value={m}>{m}</option>;
+                })}
               </BootstrapForm.Select>
               <BootstrapForm.Control.Feedback type="invalid">
                 <ErrorMessage name="type" />

@@ -1,19 +1,25 @@
-import React from "react";
-import { Icon } from "@iconify/react";
+import { Icon } from "@iconify/react/dist/iconify.js";
 
 type TicketCountCardProps = {
-  count: number ;
+  count: number;
   label: string;
-  variant?: "open" | "completed" | "progress" | "total" | "review";
-  icon?: string; // lucide icon name
-  onClick?: () => void; // click handler
-  active: boolean; // highlight active filter
+  variant?:
+    | "open"
+    | "approved"
+    | "progress"
+    | "completed"
+    | "rejected"
+    | "closed"
+    | "total";
+  icon?: string;
+  onClick?: () => void;
+  active: boolean;
 };
 
 export const TicketCountCard: React.FC<TicketCountCardProps> = ({
   count,
   label,
-  variant = "neutral",
+  variant = "total",
   icon = "lucide:circle-alert",
   onClick,
   active = false,
@@ -21,7 +27,7 @@ export const TicketCountCard: React.FC<TicketCountCardProps> = ({
   return (
     <div className="col">
       <div
-        className={`card h-100 ticket-card `}
+        className="card h-100 ticket-card"
         style={{ cursor: "pointer" }}
         onClick={onClick}
       >
@@ -36,6 +42,7 @@ export const TicketCountCard: React.FC<TicketCountCardProps> = ({
             </h4>
             <p className="text-xs xs:text-sm fw-normal">{label}</p>
           </div>
+
           <div className={`ticket-icon ${variant}`}>
             <Icon icon={icon} width={20} height={20} />
           </div>

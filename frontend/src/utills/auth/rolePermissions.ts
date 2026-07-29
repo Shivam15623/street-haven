@@ -126,4 +126,39 @@ export const ROLE_PERMISSIONS = {
     // 🔹 Forms
     PERMISSIONS.VIEW_SUBMIT_FORM,
   ],
+  volunteer: [
+    // 🔹 Announcements
+    PERMISSIONS.VIEW_ANNOUNCEMENTS,
+
+    // 🔹 Collective Agreements
+    PERMISSIONS.VIEW_COLLECTIVE_AGREEMENTS,
+
+    // 🔹 Emergency Contacts
+    PERMISSIONS.VIEW_EMERGENCY_CONTACTS,
+
+    // 🔹 Events
+    PERMISSIONS.VIEW_EVENTS,
+
+    // 🔹 Event Minutes
+    PERMISSIONS.VIEW_EVENT_MINUTES,
+
+    // 🔹 FAQs
+    PERMISSIONS.VIEW_FAQS,
+
+    // 🔹 HR Updates
+    PERMISSIONS.VIEW_HR_UPDATES,
+
+    // 🔹 Organizational Chart
+    PERMISSIONS.VIEW_ORG_CHART,
+
+    // 🔹 Program Manuals
+    PERMISSIONS.VIEW_PROGRAM_MANUALS,
+
+    // 🔹 Forms
+    PERMISSIONS.VIEW_SUBMIT_FORM,
+
+    // 🔹 Tasks
+    PERMISSIONS.VIEW_TASK,
+    PERMISSIONS.UPDATE_TASK_STATUS,
+  ],
 };

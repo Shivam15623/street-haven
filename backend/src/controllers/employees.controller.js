@@ -1,11 +1,13 @@
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
-import User from "../model/user.js";
+import User, { ROLES } from "../model/user.js";
 import {
   deleteFromCloudinary,
   uploadOnCloudinary,
 } from "../utills/cloudinary.js";
 import { ApiError } from "../utills/ApiError.js";
+import Location from "../model/location.js";
+import mongoose from "mongoose";
 export const AllEmployees = asyncHandler(async (req, res) => {
   const {
     page = 1,
@@ -13,10 +15,16 @@ export const AllEmployees = asyncHandler(async (req, res) => {
     search = "",
     sortBy = "createdAt",
     order = "asc",
-    forDropdown = false, // toggle dropdown mode
+    forDropdown = false,
+    role, // <-- New
   } = req.query;
 
-  const query = {}; // always exclude admins for dropdown
+  const query = {};
+
+  // Role filter
+  if (role) {
+    query.role = role;
+  }
 
   // Search
   if (search) {
@@ -30,207 +38,540 @@ export const AllEmployees = asyncHandler(async (req, res) => {
   const isDropdown = String(forDropdown).toLowerCase() === "true";
 
   const selectFields = isDropdown
-    ? "_id firstname lastname email"
+    ? "_id firstname lastname email role"
     : "-forgotPasswordToken -forgotPasswordTokenExpiry -refreshToken -password";
 
-  if (forDropdown === "true" || forDropdown === true) {
-    // Return all matching employees for dropdown, no pagination
+  if (isDropdown) {
     const employees = await User.find(query)
       .select(selectFields)
       .sort({ firstname: 1 });
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(200, "Employees fetched successfully", { employees })
-      );
-  }
 
-  // Otherwise, paginated list
-  const employees = await User.find(query)
-    .select(selectFields)
-    .sort({ [sortBy]: order === "asc" ? 1 : -1 })
-    .skip((Number(page) - 1) * Number(limit))
-    .limit(Number(limit));
+    return res.status(200).json(
+      new ApiResponse(200, "Employees fetched successfully", {
+        employees,
+      }),
+    );
+  }
+  const employees = await User.aggregate([
+    { $match: query },
+
+    {
+      $lookup: {
+        from: "locations",
+        let: { userId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $in: ["$$userId", "$managers"],
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+            },
+          },
+        ],
+        as: "locations",
+      },
+    },
+
+    {
+      $addFields: {
+        locations: {
+          $map: {
+            input: "$locations",
+            as: "location",
+            in: "$$location._id",
+          },
+        },
+      },
+    },
+
+    {
+      $project: {
+        password: 0,
+        refreshToken: 0,
+        forgotPasswordToken: 0,
+        forgotPasswordTokenExpiry: 0,
+      },
+    },
+
+    { $sort: { [sortBy]: order === "asc" ? 1 : -1 } },
+    { $skip: (Number(page) - 1) * Number(limit) },
+    { $limit: Number(limit) },
+  ]);
 
   const totalEmployees = await User.countDocuments(query);
 
-  if (employees.length === 0) {
-    return res
-      .status(200)
-      .json(new ApiResponse(201, "Data Not Found", { employees: [] }));
-  }
-
   return res.status(200).json(
-    new ApiResponse(201, "Data Fetched Successfully", {
+    new ApiResponse(200, "Employees fetched successfully", {
       employees,
-      paggination: {
+      pagination: {
         total: totalEmployees,
         page: Number(page),
         limit: Number(limit),
         totalPages: Math.ceil(totalEmployees / Number(limit)),
       },
-    })
+    }),
   );
 });
 export const AddEmployee = asyncHandler(async (req, res) => {
-  const {
-    firstName,
-    lastName,
-    email,
-    password,
-    phone,
-    role,
-    title,
-    hireDate,
-    superviserId,
-    customPermissions,
-  } = req.body;
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-  const ExistingUser = await User.findOne({
-    $or: [{ email: email }, { phoneNo: phone }],
-  });
+  try {
+    const {
+      firstName,
+      lastName,
+      email,
+      password,
+      phone,
+      role,
+      title,
+      hireDate,
+      superviserId,
+      customPermissions,
+      locations,
+    } = req.body;
 
-  const superviser = await User.findOne({
-    _id: superviserId,
-  });
+    const existingUser = await User.findOne({
+      $or: [{ email }, { phoneNo: phone }],
+    }).session(session);
 
-  if (ExistingUser) {
-    if (ExistingUser.email === email) {
-      throw new ApiError(400, "User already exists with this email");
+    if (existingUser) {
+      if (existingUser.email === email)
+        throw new ApiError(400, "User already exists with this email");
+      if (existingUser.phoneNo === phone)
+        throw new ApiError(400, "User already exists with this phone number");
     }
-    if (ExistingUser.phoneNo === phone) {
-      throw new ApiError(400, "User already exists with this phone number");
+
+    const resolvedRole = role || ROLES.EMPLOYEE;
+
+    // Hire Date / Volunteer Start Date is the same field for all roles now
+    if (!hireDate) {
+      throw new ApiError(
+        400,
+        resolvedRole === ROLES.VOLUNTEER
+          ? "Volunteer start date is required."
+          : "Hire date is required.",
+      );
     }
-  }
-  if (!superviser) {
-    throw new ApiError(404, "No Such Superviser Found");
-  }
+    const resolvedHireDate = new Date(hireDate);
 
-  const newUser = await User.create({
-    firstname: firstName,
-    lastname: lastName,
-    email,
-    password,
-    phoneNo: phone,
-    role: role || "employee",
-    title,
-    hireDate: hireDate || new Date(),
-    totpSecret: null,
-    isTOTPEnabled: false,
-    isTOTPVerified: false,
-    superviserId: superviserId,
-    customPermissions: customPermissions,
-  });
+    // Supervisor is optional — only validate if one was actually provided
+    let superviser = null;
+    if (superviserId) {
+      superviser = await User.findById(superviserId).session(session);
+      if (!superviser) throw new ApiError(404, "No such superviser found");
+    }
 
-  if (!newUser) {
-    throw new ApiError(500, "Account not created due to server error");
+    /* ======================
+       VALIDATE LOCATIONS (only relevant for managers)
+    ====================== */
+    let validLocationIds = [];
+
+    if (locations?.length) {
+      if (resolvedRole !== ROLES.MANAGER) {
+        throw new ApiError(
+          400,
+          "Only users with the manager role can be assigned to locations",
+        );
+      }
+
+      const invalidIds = locations.filter(
+        (id) => !mongoose.Types.ObjectId.isValid(id),
+      );
+      if (invalidIds.length)
+        throw new ApiError(
+          400,
+          `Invalid location id(s): ${invalidIds.join(", ")}`,
+        );
+
+      const foundLocations = await Location.find({
+        _id: { $in: locations },
+      }).session(session);
+      if (foundLocations.length !== locations.length) {
+        const foundIds = foundLocations.map((l) => l._id.toString());
+        const missing = locations.filter((id) => !foundIds.includes(id));
+        throw new ApiError(404, `Location(s) not found: ${missing.join(", ")}`);
+      }
+
+      validLocationIds = foundLocations.map((l) => l._id);
+    }
+
+    const userData = {
+      firstname: firstName,
+      lastname: lastName,
+      email,
+      password,
+      phoneNo: phone,
+      role: resolvedRole,
+      title,
+      hireDate: resolvedHireDate,
+      superviserId: superviserId || null,
+      customPermissions,
+      totpSecret: null,
+      isTOTPEnabled: false,
+      isTOTPVerified: false,
+    };
+
+    if (resolvedRole === ROLES.VOLUNTEER) {
+      userData.status = "active";
+      userData.volunteerStints = [
+        {
+          startAt: resolvedHireDate,
+          endAt: null,
+        },
+      ];
+      userData.currentStint = {
+        startAt: resolvedHireDate,
+        endAt: null,
+      };
+    }
+
+    /* ======================
+       CREATE USER
+    ====================== */
+    const [newUser] = await User.create([userData], { session });
+
+    if (!newUser)
+      throw new ApiError(500, "Account not created due to server error");
+
+    /* ======================
+       ASSIGN TO LOCATIONS (write on the Location side — single source of truth)
+    ====================== */
+    if (validLocationIds.length) {
+      await Location.updateMany(
+        { _id: { $in: validLocationIds } },
+        { $addToSet: { managers: newUser._id } },
+        { session },
+      );
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res
+      .status(201)
+      .json(
+        new ApiResponse(201, "Employee account created successfully", newUser),
+      );
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw err;
   }
-
-  return res
-    .status(201)
-    .json(new ApiResponse(201, "Employee Account created successfully"));
 });
 
 export const EditEmployee = asyncHandler(async (req, res) => {
-  const { id: userId } = req.params;
-  const findUser = await User.findById(userId);
-  if (!findUser) {
-    throw new ApiError(404, "No such user found");
-  }
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-  const {
-    firstname,
-    lastname,
-    email,
-    phoneNo,
-    role,
-    title,
-    hireDate,
-    superviserId,
-    customPermissions,
-  } = req.body;
+  try {
+    const { id: userId } = req.params;
+    const findUser = await User.findById(userId).session(session);
+    if (!findUser) throw new ApiError(404, "No such user found");
 
-  const updates = {};
+    const {
+      firstname,
+      lastname,
+      email,
+      phoneNo,
+      role,
+      title,
+      hireDate,
+      endAt,
+      superviserId,
+      customPermissions,
+      locations,
+    } = req.body;
 
-  // If profile picture is uploaded → skip equality check and update
-  if (req.file && req.file.path) {
-    if (findUser.profilePic) {
-      try {
-        await deleteFromCloudinary(findUser.profilePic); // delete old picture
-      } catch (err) {
-        console.error("Error deleting old profile picture:", err.message);
+    const updates = {};
+
+    /* ======================
+       PROFILE PIC
+    ====================== */
+    if (req.file?.path) {
+      if (findUser.profilePic) {
+        try {
+          await deleteFromCloudinary(findUser.profilePic);
+        } catch (err) {
+          console.error("Error deleting old profile picture:", err.message);
+        }
+      }
+      const uploadedPic = await uploadOnCloudinary(req.file.path);
+      if (!uploadedPic.secure_url)
+        throw new ApiError(500, "Error while uploading profile picture");
+      updates.profilePic = uploadedPic.secure_url;
+    }
+
+    /* ======================
+       BASIC FIELD DIFFS
+    ====================== */
+    if (firstname && firstname !== findUser.firstname)
+      updates.firstname = firstname;
+    if (lastname && lastname !== findUser.lastname) updates.lastname = lastname;
+    if (email && email !== findUser.email) updates.email = email;
+    if (phoneNo && phoneNo !== findUser.phoneNo) updates.phoneNo = phoneNo;
+    if (title && title !== findUser.title) updates.title = title;
+    if (customPermissions) updates.customPermissions = customPermissions;
+
+    let roleChangingAwayFromManager = false;
+    const resolvedRole = role ?? findUser.role;
+
+    if (role && role !== findUser.role) {
+      updates.role = role;
+      if (findUser.role === ROLES.MANAGER && role !== ROLES.MANAGER) {
+        roleChangingAwayFromManager = true;
       }
     }
 
-    const uploadedPic = await uploadOnCloudinary(req.file.path);
-    if (!uploadedPic.secure_url) {
-      throw new ApiError(500, "Error while uploading profile picture");
-    }
-    updates.profilePic = uploadedPic.secure_url;
-  } else {
-    // Only check equality when NO profile picture update
-    const isSame =
-      (firstname ? firstname === findUser.firstname : true) &&
-      (lastname ? lastname === findUser.lastname : true) &&
-      (email ? email === findUser.email : true) &&
-      (phoneNo ? phoneNo === findUser.phoneNo : true) &&
-      (role ? role === findUser.role : true) &&
-      (title ? title === findUser.title : true) &&
-      (hireDate
-        ? new Date(hireDate).toISOString() === findUser.hireDate.toISOString()
-        : true) &&
-      (superviserId ? superviserId === findUser.superviserId : true) &&
-      (customPermissions
-        ? customPermissions === findUser.customPermissions
-        : true);
+    /* ======================
+       HIRE DATE vs VOLUNTEER STINT
+       - Non-volunteers: hireDate is a plain top-level field.
+       - Volunteers: hireDate maps to currentStint.startAt, and endAt is
+         only ever applied if it was actually sent — never nulled/forced.
+    ====================== */
+    if (resolvedRole === ROLES.VOLUNTEER) {
+      const currentStint = findUser.currentStint || {};
 
-    if (isSame) {
+      if (hireDate) {
+        const resolvedStart = new Date(hireDate);
+        const existingStart = currentStint.startAt
+          ? new Date(currentStint.startAt).toISOString()
+          : null;
+
+        if (resolvedStart.toISOString() !== existingStart) {
+          updates["currentStint.startAt"] = resolvedStart;
+        }
+      }
+
+      // Only touch endAt/status if endAt was actually provided.
+      // Omitted/empty endAt leaves currentStint.endAt and status untouched.
+      if (endAt !== undefined && endAt !== null && endAt !== "") {
+        const resolvedEnd = new Date(endAt);
+        const existingEnd = currentStint.endAt
+          ? new Date(currentStint.endAt).toISOString()
+          : null;
+
+        if (resolvedEnd.toISOString() !== existingEnd) {
+          updates["currentStint.endAt"] = resolvedEnd;
+          // Inactive only once the end date has actually passed.
+          updates.status = resolvedEnd <= new Date() ? "inactive" : "active";
+        }
+      }
+    } else if (
+      hireDate &&
+      findUser.hireDate &&
+      new Date(hireDate).toISOString() !== findUser.hireDate.toISOString()
+    ) {
+      updates.hireDate = new Date(hireDate);
+    }
+
+    if (superviserId && superviserId !== String(findUser.superviserId)) {
+      const superviser = await User.findById(superviserId).session(session);
+      if (!superviser) throw new ApiError(404, "No such superviser found");
+      updates.superviserId = superviserId;
+    }
+
+    /* ======================
+       LOCATIONS — only meaningful if resolved role is/stays manager
+    ====================== */
+    let desiredLocationIds = null;
+
+    if (locations !== undefined) {
+      if (resolvedRole !== ROLES.MANAGER) {
+        throw new ApiError(
+          400,
+          "Only users with the manager role can be assigned to locations",
+        );
+      }
+      const invalidIds = locations.filter(
+        (id) => !mongoose.Types.ObjectId.isValid(id),
+      );
+      if (invalidIds.length)
+        throw new ApiError(
+          400,
+          `Invalid location id(s): ${invalidIds.join(", ")}`,
+        );
+
+      const foundLocations = await Location.find({
+        _id: { $in: locations },
+      }).session(session);
+      if (foundLocations.length !== locations.length) {
+        const foundIds = foundLocations.map((l) => l._id.toString());
+        const missing = locations.filter((id) => !foundIds.includes(id));
+        throw new ApiError(404, `Location(s) not found: ${missing.join(", ")}`);
+      }
+      desiredLocationIds = foundLocations.map((l) => l._id.toString());
+    }
+
+    /* ======================
+       NO-OP CHECK
+    ====================== */
+    if (
+      !Object.keys(updates).length &&
+      desiredLocationIds === null &&
+      !roleChangingAwayFromManager
+    ) {
+      await session.abortTransaction();
+      session.endSession();
       return res
         .status(200)
         .json(
-          new ApiResponse(200, "No changes detected. Profile is the same.")
+          new ApiResponse(200, "No changes detected. Profile is the same."),
         );
     }
-  }
 
-  // Collect only changed fields
-  if (firstname && firstname !== findUser.firstname)
-    updates.firstname = firstname;
-  if (lastname && lastname !== findUser.lastname) updates.lastname = lastname;
-  if (email && email !== findUser.email) updates.email = email;
-  if (phoneNo && phoneNo !== findUser.phoneNo) updates.phoneNo = phoneNo;
-  if (role && role !== findUser.role) updates.role = role;
-  if (title && title !== findUser.title) updates.title = title;
-  if (
-    hireDate &&
-    new Date(hireDate).toISOString() !== findUser.hireDate.toISOString()
-  )
-    updates.hireDate = new Date(hireDate);
-  if (customPermissions) updates.customPermissions = customPermissions;
-  if (superviserId && superviserId !== findUser.superviserId) {
-    const superviser = await User.findOne({
-      _id: superviserId,
-    });
-    if (!superviser) {
-      throw new ApiError(404, "No Such Superviser Found");
+    /* ======================
+       APPLY USER UPDATES
+    ====================== */
+    const updatedUser = Object.keys(updates).length
+      ? await User.findByIdAndUpdate(
+          userId,
+          { $set: updates },
+          {
+            new: true,
+            runValidators: true,
+
+            session,
+          },
+        )
+      : findUser;
+
+    if (!updatedUser)
+      throw new ApiError(500, "Error while updating user details");
+
+    /* ======================
+       CLOSE OUT THE MATCHING OPEN STINT IN HISTORY
+       (only runs when an endAt update was actually applied above)
+    ====================== */
+    if (updates["currentStint.endAt"]) {
+      const openStint = updatedUser.volunteerStints.find((s) => !s.endAt);
+      if (openStint) {
+        openStint.endAt = updates["currentStint.endAt"];
+        openStint.endedReason = "left";
+        await updatedUser.save({ session, validateModifiedOnly: true });
+      }
     }
-    updates.superviserId = superviserId;
+
+    /* ======================
+       SYNC LOCATION.managers
+    ====================== */
+    if (roleChangingAwayFromManager) {
+      await Location.updateMany(
+        { managers: userId },
+        { $pull: { managers: userId } },
+        { session },
+      );
+    } else if (desiredLocationIds !== null) {
+      const currentlyManaging = await Location.find({ managers: userId })
+        .select("_id")
+        .session(session);
+      const currentIds = currentlyManaging.map((l) => l._id.toString());
+
+      const toAdd = desiredLocationIds.filter((id) => !currentIds.includes(id));
+      const toRemove = currentIds.filter(
+        (id) => !desiredLocationIds.includes(id),
+      );
+
+      if (toAdd.length) {
+        await Location.updateMany(
+          { _id: { $in: toAdd } },
+          { $addToSet: { managers: userId } },
+          { session },
+        );
+      }
+      if (toRemove.length) {
+        await Location.updateMany(
+          { _id: { $in: toRemove } },
+          { $pull: { managers: userId } },
+          { session },
+        );
+      }
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          "Employee profile updated successfully",
+          updatedUser,
+        ),
+      );
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    throw err;
+  }
+});
+export const EmployeeStatusChange = asyncHandler(async (req, res) => {
+  const { id: userId } = req.params;
+  const { status, startAt, endAt } = req.body; // startAt required when reactivating
+
+  const findUser = await User.findById(userId);
+  if (!findUser) throw new ApiError(404, "No such User Exists");
+
+  if (findUser.status === status) {
+    throw new ApiError(400, `User is already ${status}`);
   }
 
-  const updatedUser = await User.findByIdAndUpdate(userId, updates, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!updatedUser) {
-    throw new ApiError(500, "Error while updating user details");
+  // --- Going INACTIVE ---
+  if (status === "inactive") {
+    if (findUser.role === "volunteer" && findUser.currentStint?.startAt) {
+      const closedStint = {
+        startAt: findUser.currentStint.startAt,
+        endAt: endAt ? new Date(endAt) : new Date(),
+        endedReason: "left", // or "admin_deactivated" based on who triggered this
+      };
+      findUser.volunteerStints.push(closedStint);
+      findUser.currentStint = { startAt: undefined, endAt: undefined };
+    }
+    findUser.status = "inactive";
   }
+
+  // --- Going ACTIVE (reactivation) ---
+  if (status === "active") {
+    if (findUser.role === "volunteer") {
+      const lastStint =
+        findUser.volunteerStints[findUser.volunteerStints.length - 1];
+
+      if (lastStint?.endAt) {
+        const oneYearMs = 365 * 24 * 60 * 60 * 1000;
+        const gap = Date.now() - new Date(lastStint.endAt).getTime();
+
+        if (gap > oneYearMs) {
+          throw new ApiError(
+            400,
+            "This volunteer left more than a year ago. Please create a new profile instead of reactivating.",
+          );
+        }
+      }
+
+      if (!startAt) {
+        throw new ApiError(
+          400,
+          "startAt is required to reactivate a volunteer",
+        );
+      }
+
+      findUser.currentStint = { startAt: new Date(startAt), endAt: null };
+    }
+    findUser.status = "active";
+  }
+
+  await findUser.save();
 
   return res
     .status(200)
-    .json(new ApiResponse(200, "Employee profile updated successfully"));
+    .json(new ApiResponse(200, "User status updated successfully", findUser));
 });
-
 export const EditEmployeePassword = asyncHandler(async (req, res) => {
   const { id: userId } = req.params;
 
@@ -243,7 +584,7 @@ export const EditEmployeePassword = asyncHandler(async (req, res) => {
   if (newPassword === confirmPassword) {
     throw new ApiError(
       400,
-      "confirm password does not match with new Password"
+      "confirm password does not match with new Password",
     );
   }
   findUser.password = newPassword;
@@ -264,7 +605,7 @@ export const RemoveEmployee = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, null, "Employee removed successfully"));
+    .json(new ApiResponse(200, "Employee removed successfully", null));
 });
 export const resetTotp = asyncHandler(async (req, res) => {
   const { id: userId } = req.params;
@@ -281,7 +622,7 @@ export const resetTotp = asyncHandler(async (req, res) => {
     {
       new: true,
       runValidators: false, // 👈 VERY IMPORTANT
-    }
+    },
   );
 
   if (!employee) {
@@ -293,8 +634,8 @@ export const resetTotp = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         true,
-        `${employee.firstname} ${employee.lastname}'s TOTP reset successfully`
-      )
+        `${employee.firstname} ${employee.lastname}'s TOTP reset successfully`,
+      ),
     );
 });
 
@@ -328,33 +669,23 @@ export const employeeSuperviserForm = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         "Employees with supervisor data fetched successfully",
-        formattedEmployees
-      )
+        formattedEmployees,
+      ),
     );
 });
 export const getEmployeeById = asyncHandler(async (req, res) => {
   const { id: userId } = req.params;
-  const isOrgChart = req.query.orgChart === "true";
 
   // 🔹 Base fields (always)
   let selectFields =
     "firstname lastname title email role profilePic phoneNo hireDate superviserId";
 
   // 🔹 Extra fields only for org chart view
-  if (isOrgChart) {
-    selectFields += " customPermissions";
-  }
 
   // 🔹 Build query dynamically
   let query = User.findById(userId).select(selectFields);
 
   // 🔹 Populate supervisor ONLY if org chart is requested
-  if (isOrgChart) {
-    query = query.populate({
-      path: "superviserId",
-      select: "firstname lastname title",
-    });
-  }
 
   const user = await query;
 
@@ -362,21 +693,11 @@ export const getEmployeeById = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Employee not found");
   }
 
-  let subordinates = [];
-
   // 🔹 Fetch subordinates only for org chart
-  if (isOrgChart) {
-    subordinates = await User.find(
-      { superviserId: userId },
-      "firstname lastname title"
-    );
-  }
 
   res.status(200).json(
     new ApiResponse(200, "Employee fetched successfully", {
       employee: user,
-      supervisor: isOrgChart ? user.superviserId : undefined,
-      subordinates: isOrgChart ? subordinates : undefined,
-    })
+    }),
   );
 });

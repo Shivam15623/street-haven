@@ -1,19 +1,48 @@
 // TicketCard.tsx
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Icon } from "@iconify/react";
 import { Link } from "react-router-dom";
 
 import TicketDetails from "./TicketEdit";
-import Badge from "../../../../components/child/Badge";
+import Badge, { type BadgeVariant } from "../../../../components/child/Badge";
 import type { TicketData } from "../../../../interfaces/Ticket";
 import TicketComment from "./TicketComment";
 
 import DOMPurify from "dompurify";
+import {
+  useApproveTicketMutation,
+  useCancelTicketMutation,
+  useCompleteTicketMutation,
+  useRejectTicketMutation,
+  useStartTicketMutation,
+} from "../../../../services/ticketApi";
+import RejectTicketModal from "./RejectTicketModal";
+import ApproveTicketModal from "./ApproveTicketModal";
+import { Button } from "react-bootstrap";
+import { showError, showSuccess } from "../../../../utills/toastutills";
+import { getErrorMessage } from "../../../../utills/utills";
+import { useSelector } from "react-redux";
+import { selectAuth } from "../../../../redux/AuthSlice";
+import { getTicketActions } from "../utillity/ticketPermissions";
 
 interface TicketCardProps {
   ticket: TicketData;
 }
+const titleCase = (str: string) =>
+  str
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 
+const statusVariant: Record<string, BadgeVariant> = {
+  Open: "warning-soft",
+  Approved: "info-soft",
+  "In Progress": "orange-soft",
+  Completed: "success-soft",
+  Rejected: "danger-soft",
+  Closed: "secondary-soft",
+};
 const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
   const {
     req_title,
@@ -26,15 +55,33 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     assignedTo,
     createdBy,
     createdAt,
-    _id,
+
+    displayId,
   } = ticket;
+  const [showApprove, setShowApprove] = useState(false);
+  const [showReject, setShowReject] = useState(false);
 
+  const [approveTicket, { isLoading: approving }] = useApproveTicketMutation();
+  const [startTicket, { isLoading: starting }] = useStartTicketMutation();
+  const [completeTicket, { isLoading: completing }] =
+    useCompleteTicketMutation();
+  const [cancelTicket, { isLoading: cancelling }] = useCancelTicketMutation();
+  const [rejectTicket, { isLoading: rejecting }] = useRejectTicketMutation();
+  const { user: currentUser } = useSelector(selectAuth);
+  // shape assumed: { _id, role: "manager" | "facilities" | "employee" | "admin" }
 
-  // Meta info
+  const actions = useMemo(
+    () =>
+      getTicketActions({
+        ticket,
+        currentUser,
+      }),
+    [ticket, currentUser],
+  );
   const meta: string[] = [
-    `#${_id}`, // Ticket ID
-    category,
-    location || "No location",
+    `#${displayId}`, // Ticket ID
+    titleCase(category),
+    location?.name || "No location",
     `Submitted: ${createdAt ? new Date(createdAt).toLocaleDateString() : ""}`,
   ];
 
@@ -50,30 +97,23 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
             {req_title}
           </h1>
           <div className="d-flex flex-row gap-10">
-            <Badge
-              variant={
-                status === "Completed"
-                  ? "success-soft"
-                  : status === "Open"
-                  ? "danger-soft"
-                  : status === "In Progress"
-                  ? "warning-soft"
-                  : "primary-soft"
-              }
-            >
+            <Badge variant={statusVariant[status] ?? "secondary-soft"}>
               {status}
             </Badge>
-            <Badge
-              variant={
-                priority === "High"
-                  ? "danger-soft"
-                  : priority === "Medium"
-                  ? "warning-soft"
-                  : "success-soft"
-              }
-            >
-              {priority}
-            </Badge>
+
+            {priority && (
+              <Badge
+                variant={
+                  priority === "High"
+                    ? "danger-soft"
+                    : priority === "Medium"
+                      ? "warning-soft"
+                      : "success-soft"
+                }
+              >
+                {priority}
+              </Badge>
+            )}
           </div>
         </div>
 
@@ -139,13 +179,196 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
               </div>
             )}
           </div>
-          <div className="d-flex flex flex-row gap-2">
-            <TicketComment ticket={ticket} />
+          <div className="d-flex flex-row flex-wrap align-items-center gap-8">
+            {/* Comment stays icon-only circular, but consistent size with others */}
+            {actions.includes("chat") && <TicketComment ticket={ticket} />}
 
-            <TicketDetails ticket={ticket} />
+            {actions.includes("approve") && (
+              <>
+                <Button
+                  className="btn-street-primary radius-40 px-16 py-8 text-sm fw-semibold d-flex align-items-center gap-6 border-0"
+                  onClick={() => setShowApprove(true)}
+                >
+                  <Icon icon="lucide:check" className="w-16-px h-16-px" />
+                  Approve
+                </Button>
+                <Button
+                  className="btn-danger radius-40 px-16 py-8 text-sm fw-semibold d-flex align-items-center gap-6 border-0"
+                  onClick={() => setShowReject(true)}
+                >
+                  <Icon icon="lucide:x" className="w-16-px h-16-px" />
+                  Reject
+                </Button>
+              </>
+            )}
+
+            {actions.includes("start") && (
+              <Button
+                className="btn-street-primary radius-40 px-16 py-8 text-sm fw-semibold d-flex align-items-center gap-6 border-0"
+                disabled={starting}
+                onClick={async () => {
+                  try {
+                    const res = await startTicket(ticket._id).unwrap();
+                    if (res.success) showSuccess(res.message);
+                  } catch (error) {
+                    showError(getErrorMessage(error));
+                  }
+                }}
+              >
+                <Icon icon="lucide:play" className="w-16-px h-16-px" />
+                {starting ? "Starting..." : "Start Work"}
+              </Button>
+            )}
+
+            {actions.includes("complete") && (
+              <Button
+                className="btn-success radius-40 px-16 py-8 text-sm fw-semibold d-flex align-items-center gap-6 border-0"
+                disabled={completing}
+                onClick={async () => {
+                  try {
+                    const res = await completeTicket(ticket._id).unwrap();
+                    if (res.success) showSuccess(res.message);
+                  } catch (error) {
+                    showError(getErrorMessage(error));
+                  }
+                }}
+              >
+                <Icon
+                  icon="lucide:check-circle-2"
+                  className="w-16-px h-16-px"
+                />
+                {completing ? "Completing..." : "Mark Completed"}
+              </Button>
+            )}
+
+            {/* Cancel: neutral, not red/orange — cancelling isn't an error, it's a routine action */}
+            {actions.includes("cancel") && (
+              <Button
+                className="btn-street-neutral radius-40 px-16 py-8 text-sm fw-semibold d-flex align-items-center gap-6 border-0"
+                disabled={cancelling}
+                onClick={async () => {
+                  try {
+                    const res = await cancelTicket(ticket._id).unwrap();
+                    if (res.success) showSuccess(res.message);
+                  } catch (error) {
+                    showError(getErrorMessage(error));
+                  }
+                }}
+              >
+                <Icon icon="lucide:x-circle" className="w-16-px h-16-px" />
+                {cancelling ? "Cancelling..." : "Cancel"}
+              </Button>
+            )}
+
+            {actions.includes("edit") && <TicketDetails ticket={ticket} />}
           </div>
+          {/* <div className="d-flex flex flex-row gap-2">
+            <TicketComment ticket={ticket} />
+            {isManagerOfLocation && status === "Open" && (
+              <>
+                <Button
+                  className="btn-street-primary"
+                  onClick={() => setShowApprove(true)}
+                >
+                  Approve
+                </Button>
+                <Button variant="danger" onClick={() => setShowReject(true)}>
+                  Reject
+                </Button>
+              </>
+            )}
+            {isAssignee && status === "Approved" && (
+              <Button
+                className="btn-street-primary"
+                disabled={starting}
+                onClick={async () => {
+                  try {
+                    const res = await startTicket(ticket._id).unwrap();
+                    if (res.success) showSuccess(res.message);
+                  } catch (error) {
+                    showError(getErrorMessage(error));
+                  }
+                }}
+              >
+                Start Work
+              </Button>
+            )}
+
+            {isAssignee && status === "In Progress" && (
+              <Button
+                variant="success"
+                disabled={completing}
+                onClick={async () => {
+                  try {
+                    const res = await completeTicket(ticket._id).unwrap();
+                    if (res.success) showSuccess(res.message);
+                  } catch (error) {
+                    showError(getErrorMessage(error));
+                  }
+                }}
+              >
+                Mark Completed
+              </Button>
+            )}
+
+        
+            {isCreator && status === "Open" && (
+              <Button
+                variant="outline-danger"
+                disabled={cancelling}
+                onClick={async () => {
+                  try {
+                    const res = await cancelTicket(ticket._id).unwrap();
+                    if (res.success) showSuccess(res.message);
+                  } catch (error) {
+                    showError(getErrorMessage(error));
+                  }
+                }}
+              >
+                Cancel
+              </Button>
+            )}
+            <TicketDetails ticket={ticket} />
+          </div> */}
         </div>
       </div>
+      <ApproveTicketModal
+        show={showApprove}
+        onHide={() => setShowApprove(false)}
+        isLoading={approving}
+        onApprove={async (priority) => {
+          try {
+            const res = await approveTicket({
+              ticketId: ticket._id,
+              priority,
+            }).unwrap();
+            if (res.success) {
+              showSuccess(res.message);
+            }
+          } catch (error) {
+            showError(getErrorMessage(error));
+          }
+        }}
+      />
+
+      <RejectTicketModal
+        show={showReject}
+        onHide={() => setShowReject(false)}
+        isLoading={rejecting}
+        onReject={async (reason) => {
+          try {
+            const res = await rejectTicket({
+              ticketId: ticket._id,
+              rejectionReason: reason,
+            }).unwrap();
+            if (res.success) {
+              showSuccess(res.message);
+            }
+          } catch (error) {
+            showError(getErrorMessage(error));
+          }
+        }}
+      />
     </div>
   );
 };

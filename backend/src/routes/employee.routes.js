@@ -20,9 +20,11 @@ import {
   viewEmployees,
 } from "../validations/employee.js";
 import { idParamSchema } from "../validations/common.js";
+import { checkActiveUser } from "../middleware/checkActiveUsers.js";
 
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
+router.use(checkActiveUser);
 router
   .route("/view")
   .get(validateRequest(viewEmployees, "query"), AllEmployees);
@@ -32,34 +34,34 @@ router
     upload.single("profilePic"),
     validateRequest(editEmployeeSchema, "body"),
     authorizePermissions({ action: PERMISSIONS.EDIT_EMPLOYEE }),
-    EditEmployee
+    EditEmployee,
   );
 router
   .route("/changePassword/:id")
   .patch(
     authorizePermissions({ action: PERMISSIONS.RESET_PASSWORD }),
     validateRequest(idParamSchema, "params"),
-    EditEmployeePassword
+    EditEmployeePassword,
   );
 router
   .route("/delete/:id")
   .delete(
     authorizePermissions({ action: PERMISSIONS.DELETE_EMPLOYEE }),
     validateRequest(idParamSchema, "params"),
-    RemoveEmployee
+    RemoveEmployee,
   );
 router
   .route("/add")
   .post(
     authorizePermissions({ action: PERMISSIONS.CREATE_EMPLOYEE }),
     validateRequest(createEmployeeSchema, "body"),
-    AddEmployee
+    AddEmployee,
   );
 router
   .route("/resetTotp/:id")
   .patch(
     authorizePermissions({ action: PERMISSIONS.CREATE_EMPLOYEE }),
-    resetTotp
+    resetTotp,
   );
 router.route("/form-superviser").get(employeeSuperviserForm);
 router.route("/:id").get(getEmployeeById);

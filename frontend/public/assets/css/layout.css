@@ -218,7 +218,7 @@
     padding: 0.5rem 0.75rem;
   }
 }
-[data-theme="light"] .ticket-icon.open {
+/* [data-theme="light"] .ticket-icon.open {
   background: #f8717133;
   color: #dc2626;
 }
@@ -234,7 +234,7 @@
 }
 [data-theme="dark"] .ticket-icon.open {
   background: rgba(248, 113, 113, 0.15);
-  color: #f87171; /* Softer red on dark */
+  color: #f87171; 
 }
 
 [data-theme="dark"] .ticket-icon.progress {
@@ -245,7 +245,7 @@
 [data-theme="dark"] .ticket-icon.completed {
   background: rgba(16, 185, 129, 0.15);
   color: #34d399;
-}
+} */
 
 /* Badge custom */
 
@@ -270,7 +270,10 @@
   background-color: var(--street-primary-base-10);
   color: var(--street-primary-base);
 }
-
+.sh-badge-info-soft {
+  background: rgba(59, 130, 246, 0.12);
+  color: #2563eb;
+}
 /* Success */
 .sh-badge-success {
   background-color: #16a34a;
@@ -309,6 +312,10 @@
 .sh-badge-secondary-soft {
   background-color: var(--street-bg-f4);
   color: var(--street-text-base);
+}
+.sh-badge-orange-soft {
+  background: rgba(249, 115, 22, 0.15);
+  color: #ea580c;
 }
 
 /* ================================
@@ -358,6 +365,14 @@
 [data-theme="dark"] .sh-badge-secondary-soft {
   background-color: rgba(36, 47, 59, 1);
   color: #e5e7eb;
+}
+[data-theme="dark"] .sh-badge-info-soft {
+  background: rgba(59, 130, 246, 0.18);
+  color: #60a5fa;
+}
+[data-theme="dark"] .sh-badge-orange-soft {
+  background: rgba(249, 115, 22, 0.2);
+  color: #fb923c;
 }
 /* ===========================
    Notification Dropdown
