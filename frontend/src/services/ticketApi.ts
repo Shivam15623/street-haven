@@ -213,7 +213,18 @@ const ticketApi = api.injectEndpoints({
         },
       }),
     }),
-    exportTicketReport: builder.mutation({
+    exportTicketReport: builder.mutation<
+      Blob,
+      {
+        startDate: string;
+        endDate: string;
+        location: string;
+        status: string;
+        createdBy: string;
+        assignedTo: string;
+        approvedBy: string;
+      }
+    >({
       query: ({
         startDate,
         endDate,
@@ -261,4 +272,5 @@ export const {
   useCancelTicketMutation,
   useGetTicketDetailQuery,
   useLazyGetTicketDetailQuery,
+  useExportTicketReportMutation,
 } = ticketApi;

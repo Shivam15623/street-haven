@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { htmlToText } from "html-to-text";
 import { io } from "../index.js";
 import Comment from "../model/comments.js";
 import { notifyTicketEmail } from "../helper/notifyTicketEvent.js";
@@ -990,7 +991,6 @@ export const GetTicketsReport = asyncHandler(async (req, res) => {
   );
 });
 
-
 /* ------------------------------------------------------------------
    GET /api/tickets/report/:id
    Full detail view for a single ticket (drawer/modal on click).
@@ -1114,6 +1114,41 @@ export const GetTicketDetail = asyncHandler(async (req, res) => {
    GET /api/tickets/report/export
    Same filter, no pagination — streams an .xlsx file.
 -------------------------------------------------------------------*/
+const stripHtml = (html) => {
+  if (!html) return "-";
+  return htmlToText(html, {
+    wordwrap: false,
+    selectors: [
+      { selector: "a", options: { ignoreHref: true } },
+      { selector: "img", format: "skip" },
+    ],
+  }).trim();
+};
+
+/* ---- Pull the timestamp of a specific status transition from statusHistory ---- */
+const getStatusDate = (statusHistory, statusName) => {
+  const entry = statusHistory?.find((h) => h.status === statusName);
+  return entry ? entry.changedAt : null;
+};
+
+/* ---- Pull the timestamp of the first assignment from assignmentHistory ---- */
+const getAssignedDate = (assignmentHistory) => {
+  if (!assignmentHistory?.length) return null;
+  return assignmentHistory[0].assignedAt;
+};
+
+/* ---- Format a Date (or null) for Excel display ---- */
+const formatDate = (date) => (date ? new Date(date).toLocaleString() : "-");
+
+/* ---- Human-readable duration between two dates ---- */
+const getDuration = (start, end) => {
+  if (!start || !end) return "-";
+  const diffMs = new Date(end).getTime() - new Date(start).getTime();
+  if (diffMs < 0) return "-";
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
+  return `${days}d ${hours}h`;
+};
 export const ExportTicketsReport = asyncHandler(async (req, res) => {
   const filter = await buildReportFilter(req);
 
@@ -1121,23 +1156,39 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
     .sort({ createdAt: -1 })
     .populate("location", "name")
     .populate("createdBy", "firstname lastname email")
-    .populate("assignedTo", "firstname lastname email");
+    .populate("assignedTo", "firstname lastname email")
+    .populate("approvedBy", "firstname lastname email")
+    .populate("rejectedBy", "firstname lastname email")
+    .populate("statusHistory.changedBy", "firstname lastname email")
+    .lean();
 
   const workbook = new ExcelJS.Workbook();
+
   const sheet = workbook.addWorksheet("Tickets Report");
 
   sheet.columns = [
-    { header: "Ticket ID", key: "id", width: 16 },
-    { header: "Title", key: "title", width: 30 },
+    { header: "Ticket ID", key: "ticketId", width: 16 },
+    { header: "Ticket Number", key: "ticketNumber", width: 14 },
+    { header: "Title", key: "title", width: 28 },
+    { header: "Description", key: "description", width: 40 },
     { header: "Status", key: "status", width: 14 },
     { header: "Priority", key: "priority", width: 12 },
     { header: "Category", key: "category", width: 16 },
-    { header: "Location", key: "location", width: 24 },
+    { header: "Location", key: "location", width: 22 },
     { header: "Submitted By", key: "submittedBy", width: 22 },
     { header: "Submitted Email", key: "submittedEmail", width: 26 },
+    { header: "Approved By", key: "approvedBy", width: 22 },
     { header: "Assigned To", key: "assignedTo", width: 22 },
-    { header: "Submitted Date", key: "submittedDate", width: 16 },
+    { header: "Rejected By", key: "rejectedBy", width: 22 },
     { header: "Rejection Reason", key: "rejectionReason", width: 30 },
+    { header: "Created Date", key: "createdDate", width: 20 },
+    { header: "Approved Date", key: "approvedDate", width: 20 },
+    { header: "Assigned Date", key: "assignedDate", width: 20 },
+    { header: "Last Updated Date", key: "updatedDate", width: 20 },
+    { header: "Resolved By", key: "resolvedBy", width: 22 },
+    { header: "Resolved Date", key: "resolvedDate", width: 20 },
+    { header: "Resolution Time", key: "resolutionTime", width: 16 },
+    { header: "Attachment URL", key: "attachmentUrl", width: 40 },
   ];
   sheet.getRow(1).font = { bold: true };
   sheet.getRow(1).fill = {
@@ -1147,9 +1198,16 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
   };
 
   tickets.forEach((t) => {
+    const approvedDate = getStatusDate(t.statusHistory, TICKET_STATUS.APPROVED);
+    const assignedDate = getAssignedDate(t.assignmentHistory);
+    const completedStatus = t.statusHistory?.find(
+      (history) => history.status === TICKET_STATUS.COMPLETED,
+    );
     sheet.addRow({
-      id: t.displayId,
+      ticketId: `TICKET-${String(t.ticketNumber).padStart(5, "0")}`,
+      ticketNumber: t.ticketNumber,
       title: t.req_title,
+      description: stripHtml(t.description),
       status: t.status,
       priority: t.priority || "-",
       category: t.category,
@@ -1158,17 +1216,43 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
         ? `${t.createdBy.firstname} ${t.createdBy.lastname}`
         : "-",
       submittedEmail: t.createdBy?.email || "-",
+      approvedBy: t.approvedBy
+        ? `${t.approvedBy.firstname} ${t.approvedBy.lastname}`
+        : "-",
       assignedTo: t.assignedTo
         ? `${t.assignedTo.firstname} ${t.assignedTo.lastname}`
         : "-",
-      submittedDate: t.createdAt ? t.createdAt.toLocaleDateString() : "-",
+      rejectedBy: t.rejectedBy
+        ? `${t.rejectedBy.firstname} ${t.rejectedBy.lastname}`
+        : "-",
       rejectionReason: t.rejectionReason || "-",
+      createdDate: formatDate(t.createdAt),
+      approvedDate: formatDate(approvedDate),
+      assignedDate: formatDate(assignedDate),
+      updatedDate: formatDate(t.updatedAt),
+      resolvedBy: completedStatus?.changedBy
+        ? `${completedStatus.changedBy.firstname} ${completedStatus.changedBy.lastname}`
+        : "-",
+
+      resolvedDate: formatDate(t.resolvedAt),
+      resolutionTime: getDuration(t.createdAt, t.resolvedAt),
+      attachmentUrl: t.photo?.fileUrl || "-",
     });
   });
 
   if (tickets.length === 0) {
-    sheet.addRow({ id: "No tickets found for the selected filters." });
+    sheet.addRow({ ticketId: "No tickets found for the selected filters." });
   }
+
+  // Wrap long text columns (description, rejection reason) for readability
+  sheet.getColumn("description").alignment = {
+    wrapText: true,
+    vertical: "top",
+  };
+  sheet.getColumn("rejectionReason").alignment = {
+    wrapText: true,
+    vertical: "top",
+  };
 
   res.setHeader(
     "Content-Type",

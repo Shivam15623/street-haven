@@ -1,6 +1,9 @@
 import { useState } from "react";
 import TicketFilter from "./TicketFilter";
-import { useFetchTicketReportsQuery } from "../../../../../services/ticketApi";
+import {
+  useExportTicketReportMutation,
+  useFetchTicketReportsQuery,
+} from "../../../../../services/ticketApi";
 import TicketReportTable from "./TicketTable";
 
 export type TicketStatus =
@@ -50,13 +53,52 @@ const TicketReport = () => {
 
   const { data, isLoading, isFetching, error } =
     useFetchTicketReportsQuery(filters);
-if(isLoading){
-  return<>Test</>
-}
+  const [exportTicketReport, { isLoading: isExporting }] =
+    useExportTicketReportMutation();
+
+  const handleExport = async () => {
+    try {
+      const blob = await exportTicketReport({
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+        location: filters.location,
+        status: filters.status,
+        createdBy: filters.createdBy,
+        assignedTo: filters.assignedTo,
+        approvedBy: filters.approvedBy,
+      }).unwrap();
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `tickets-report-${Date.now()}.xlsx`;
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export failed", error);
+    }
+  };
+  if (isLoading) {
+    return <>Test</>;
+  }
 
   return (
     <div className="d-flex flex-row row gap-3">
       <TicketFilter filters={filters} setFilters={setFilters} />
+      <button
+        className="btn btn-primary"
+        onClick={handleExport}
+        disabled={isExporting}
+      >
+        {isExporting ? "Exporting..." : "Export Excel"}
+      </button>
 
       {isLoading || isFetching ? <div>Loading reports...</div> : null}
 
