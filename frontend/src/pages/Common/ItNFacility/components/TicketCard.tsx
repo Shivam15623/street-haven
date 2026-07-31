@@ -55,7 +55,6 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     assignedTo,
     createdBy,
     createdAt,
-
     displayId,
   } = ticket;
   const [showApprove, setShowApprove] = useState(false);
@@ -179,21 +178,23 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
               </div>
             )}
           </div>
+          {/* Footer actions — unified button system: radius-12, fixed 40px height, consistent icon+label gap */}
           <div className="d-flex flex-row flex-wrap align-items-center gap-8">
-            {/* Comment stays icon-only circular, but consistent size with others */}
             {actions.includes("chat") && <TicketComment ticket={ticket} />}
 
             {actions.includes("approve") && (
               <>
                 <Button
-                  className="btn-street-primary radius-40 px-16 py-8 text-sm fw-semibold d-flex align-items-center gap-6 border-0"
+                  className="btn-street-primary radius-12 px-16 d-flex align-items-center justify-content-center gap-6 border-0 text-sm fw-semibold"
+                  style={{ height: "40px" }}
                   onClick={() => setShowApprove(true)}
                 >
                   <Icon icon="lucide:check" className="w-16-px h-16-px" />
                   Approve
                 </Button>
                 <Button
-                  className="btn-danger radius-40 px-16 py-8 text-sm fw-semibold d-flex align-items-center gap-6 border-0"
+                  className="btn-danger radius-12 px-16 d-flex align-items-center justify-content-center gap-6 border-0 text-sm fw-semibold"
+                  style={{ height: "40px" }}
                   onClick={() => setShowReject(true)}
                 >
                   <Icon icon="lucide:x" className="w-16-px h-16-px" />
@@ -204,7 +205,8 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
 
             {actions.includes("start") && (
               <Button
-                className="btn-street-primary radius-40 px-16 py-8 text-sm fw-semibold d-flex align-items-center gap-6 border-0"
+                className="btn-street-primary radius-12 px-16 d-flex flex-row align-items-center justify-content-center gap-6 border-0 text-sm fw-semibold"
+                style={{ height: "40px" }}
                 disabled={starting}
                 onClick={async () => {
                   try {
@@ -222,7 +224,8 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
 
             {actions.includes("complete") && (
               <Button
-                className="btn-success radius-40 px-16 py-8 text-sm fw-semibold d-flex align-items-center gap-6 border-0"
+                className="btn-success radius-12 px-16 d-flex align-items-center justify-content-center gap-6 border-0 text-sm fw-semibold"
+                style={{ height: "40px" }}
                 disabled={completing}
                 onClick={async () => {
                   try {
@@ -241,10 +244,10 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
               </Button>
             )}
 
-            {/* Cancel: neutral, not red/orange — cancelling isn't an error, it's a routine action */}
             {actions.includes("cancel") && (
               <Button
-                className="btn-street-neutral radius-40 px-16 py-8 text-sm fw-semibold d-flex align-items-center gap-6 border-0"
+                className="btn-street-neutral radius-12 px-16 d-flex flex-row align-items-center justify-content-center gap-6 border-0 text-sm fw-semibold"
+                style={{ height: "40px" }}
                 disabled={cancelling}
                 onClick={async () => {
                   try {

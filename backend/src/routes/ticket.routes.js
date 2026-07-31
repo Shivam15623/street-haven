@@ -1,17 +1,17 @@
 import { Router } from "express";
 import passport from "passport";
 import {
-
   AddTicketComment,
   approveTicket,
   cancelTicket,
   completeTicket,
   createTicket,
   editTicket,
-
+  ExportTicketsReport,
   FetchTicketComments,
-
   FetchTickets,
+  GetTicketDetail,
+  GetTicketsReport,
   rejectTicket,
   startTicket,
 } from "../controllers/Ticket.controller.js";
@@ -35,6 +35,9 @@ router.post(
   validateRequest(createTicketSchema, "body"),
   createTicket,
 );
+router.get("/report", GetTicketsReport);
+router.get("/report/export", ExportTicketsReport);
+router.get("/report/:id",GetTicketDetail)
 router
   .route("/edit/:id")
   .patch(

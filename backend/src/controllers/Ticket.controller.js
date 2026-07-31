@@ -10,13 +10,17 @@ import { asyncHandler } from "../utills/AsyncHandler.js";
 import { uploadOnCloudinary } from "../utills/cloudinary.js";
 import { createNotification } from "../helper/CreateNotoification.js";
 import path from "path";
+import ExcelJS from "exceljs";
 import { PERMISSIONS } from "../auth/permissions.js";
 import { ROLE_PERMISSIONS } from "../auth/rolePermissions.js";
 import { getAssignedAgentByCategory } from "../helper/getAssignedUser.js";
 import Location from "../model/location.js";
 import { generateEmailTemplate } from "../helper/EmailsMailer/emailTemplates.js";
 import { sendEmail } from "../helper/EmailsMailer/emailSender.js";
-import { addCommentForEntity, fetchCommentsForEntity } from "./comments.controller.js";
+import {
+  addCommentForEntity,
+  fetchCommentsForEntity,
+} from "./comments.controller.js";
 
 export const createTicket = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
@@ -256,14 +260,20 @@ export const approveTicket = asyncHandler(async (req, res) => {
        FETCH EVERYONE WE NEED TO NOTIFY / EMAIL
     ====================== */
     const [creator, approver, facilitiesUser, locationDoc] = await Promise.all([
-      User.findById(ticket.createdBy).select("firstname lastname email").session(session),
+      User.findById(ticket.createdBy)
+        .select("firstname lastname email")
+        .session(session),
       User.findById(userId).select("firstname lastname email").session(session),
-      User.findById(FACILITIES_MANAGER_ID).select("firstname lastname email").session(session),
+      User.findById(FACILITIES_MANAGER_ID)
+        .select("firstname lastname email")
+        .session(session),
       Location.findById(ticket.location).select("name").session(session),
     ]);
 
     const locationName = locationDoc?.name || "Unknown location";
-    const approverName = approver ? `${approver.firstname} ${approver.lastname}` : "Manager";
+    const approverName = approver
+      ? `${approver.firstname} ${approver.lastname}`
+      : "Manager";
 
     /* ======================
        IN-APP NOTIFICATIONS (different message per audience)
@@ -386,13 +396,17 @@ export const rejectTicket = asyncHandler(async (req, res) => {
     await ticket.save({ session });
 
     const [creator, rejector, locationDoc] = await Promise.all([
-      User.findById(ticket.createdBy).select("firstname lastname email").session(session),
+      User.findById(ticket.createdBy)
+        .select("firstname lastname email")
+        .session(session),
       User.findById(userId).select("firstname lastname email").session(session),
       Location.findById(ticket.location).select("name").session(session),
     ]);
 
     const locationName = locationDoc?.name || "Unknown location";
-    const rejectorName = rejector ? `${rejector.firstname} ${rejector.lastname}` : "Manager";
+    const rejectorName = rejector
+      ? `${rejector.firstname} ${rejector.lastname}`
+      : "Manager";
 
     if (creator && creator._id.toString() !== userId) {
       await notifyAndEmit(session, {
@@ -475,13 +489,17 @@ export const startTicket = asyncHandler(async (req, res) => {
 
     if (recipientIds.length) {
       const [users, locationDoc, assignee] = await Promise.all([
-        User.find({ _id: { $in: recipientIds } }).select("firstname lastname email").session(session),
+        User.find({ _id: { $in: recipientIds } })
+          .select("firstname lastname email")
+          .session(session),
         Location.findById(ticket.location).select("name").session(session),
         User.findById(userId).select("firstname lastname").session(session),
       ]);
 
       const locationName = locationDoc?.name || "Unknown location";
-      const assigneeName = assignee ? `${assignee.firstname} ${assignee.lastname}` : "Facilities";
+      const assigneeName = assignee
+        ? `${assignee.firstname} ${assignee.lastname}`
+        : "Facilities";
 
       await notifyAndEmit(session, {
         recipients: recipientIds.map((id) => ({ userId: id })),
@@ -739,7 +757,8 @@ export const FetchTickets = asyncHandler(async (req, res) => {
   const tickets = await Ticket.find(filter)
     .sort({ createdAt: sortOrder })
     .skip((page - 1) * limit)
-    .limit(limit).populate("location","name managers")
+    .limit(limit)
+    .populate("location", "name managers")
     .populate("createdBy", "firstname lastname email")
     .populate("assignedTo", "firstname lastname email");
 
@@ -773,7 +792,7 @@ export const FetchTickets = asyncHandler(async (req, res) => {
     approved,
     inProgress,
     completed,
-    total:all
+    total: all,
   };
 
   /* ----------------------------------
@@ -793,10 +812,373 @@ export const FetchTickets = asyncHandler(async (req, res) => {
   );
 });
 
-
 export const FetchTicketComments = (req, res) =>
   fetchCommentsForEntity(req, res, "Ticket");
 
 export const AddTicketComment = (req, res) =>
   addCommentForEntity(req, res, "Ticket");
 
+const buildReportFilter = async (req) => {
+  const {
+    startDate,
+    endDate,
+    location,
+    status,
+    createdBy,
+    assignedTo,
+    approvedBy,
+  } = req.query;
+
+  const andConditions = [];
+
+  /* ---- Location filter ---- */
+  if (location) {
+    if (!mongoose.Types.ObjectId.isValid(location)) {
+      throw new ApiError(400, "Invalid location id");
+    }
+    andConditions.push({
+      location: new mongoose.Types.ObjectId(location),
+    });
+  }
+
+  /* ---- Created By filter ---- */
+  if (createdBy) {
+    if (!mongoose.Types.ObjectId.isValid(createdBy)) {
+      throw new ApiError(400, "Invalid createdBy id");
+    }
+    andConditions.push({
+      createdBy: new mongoose.Types.ObjectId(createdBy),
+    });
+  }
+
+  /* ---- Assigned To filter ---- */
+  if (assignedTo) {
+    if (!mongoose.Types.ObjectId.isValid(assignedTo)) {
+      throw new ApiError(400, "Invalid assignedTo id");
+    }
+    andConditions.push({
+      assignedTo: new mongoose.Types.ObjectId(assignedTo),
+    });
+  }
+
+  /* ---- Approved By filter ---- */
+  if (approvedBy) {
+    if (!mongoose.Types.ObjectId.isValid(approvedBy)) {
+      throw new ApiError(400, "Invalid approvedBy id");
+    }
+    andConditions.push({
+      approvedBy: new mongoose.Types.ObjectId(approvedBy),
+    });
+  }
+
+  /* ---- Date range ---- */
+  const dateFilter = {};
+
+  if (startDate) {
+    dateFilter.$gte = new Date(startDate);
+  }
+
+  if (endDate) {
+    dateFilter.$lte = new Date(`${endDate}T23:59:59.999Z`);
+  }
+
+  if (!startDate && !endDate) {
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    dateFilter.$gte = ninetyDaysAgo;
+  }
+
+  andConditions.push({ createdAt: dateFilter });
+
+  /* ---- Status filter ---- */
+  if (status && status !== "All") {
+    andConditions.push({ status });
+  }
+
+  return andConditions.length ? { $and: andConditions } : {};
+};
+
+/* ------------------------------------------------------------------
+   GET /api/tickets/report
+   Paginated preview + counts for the on-screen Reports tab.
+   Admin-only — gate this in the route with authorize(["admin","super-admin"]).
+-------------------------------------------------------------------*/
+export const GetTicketsReport = asyncHandler(async (req, res) => {
+  let { page = 1, limit = 10 } = req.query;
+  page = Number(page);
+  limit = Number(limit);
+
+  const filter = await buildReportFilter(req);
+
+  const [ticketsRaw, total] = await Promise.all([
+    Ticket.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate("location", "name")
+      .populate("createdBy", "firstname lastname email")
+      .populate("assignedTo", "firstname lastname email")
+      .populate("approvedBy", "firstname lastname email"),
+    Ticket.countDocuments(filter),
+  ]);
+
+  /* ---- Counts scoped to the SAME filter (minus status, so cards show breakdown) ---- */
+  const { status: _omit, ...countsFilterBase } = req.query;
+
+  const countsFilter = await buildReportFilter({
+    ...req,
+    query: countsFilterBase,
+  });
+  const tickets = ticketsRaw.map((t) => ({
+    id: t._id,
+    slug: t.slug,
+    ticketId: t.displayId,
+    title: t.req_title,
+    status: t.status,
+    priority: t.priority || "-",
+    category: t.category,
+    location: t.location?.name || "-",
+    submittedBy: t.createdBy
+      ? `${t.createdBy.firstname} ${t.createdBy.lastname}`
+      : "-",
+    assignedTo: t.assignedTo
+      ? `${t.assignedTo.firstname} ${t.assignedTo.lastname}`
+      : "Unassigned",
+    created: t.createdAt,
+    approvedBy: t.approvedBy
+      ? `${t.approvedBy.firstname} ${t.approvedBy.lastname}`
+      : "Unapproved",
+    resolved: t.resolvedAt || null,
+  }));
+  const countByStatus = (ticketStatus) =>
+    Ticket.countDocuments({
+      $and: [...(countsFilter.$and || []), { status: ticketStatus }],
+    });
+
+  const [open, approved, inProgress, completed, rejected, closed, all] =
+    await Promise.all([
+      countByStatus(TICKET_STATUS.OPEN),
+      countByStatus(TICKET_STATUS.APPROVED),
+      countByStatus(TICKET_STATUS.IN_PROGRESS),
+      countByStatus(TICKET_STATUS.COMPLETED),
+      countByStatus(TICKET_STATUS.REJECTED),
+      countByStatus(TICKET_STATUS.CLOSED),
+      Ticket.countDocuments(countsFilter),
+    ]);
+
+  const counts = {
+    open,
+    approved,
+    inProgress,
+    completed,
+    rejected,
+    closed,
+    total: all,
+  };
+
+  return res.status(200).json(
+    new ApiResponse(200, "Report fetched successfully", {
+      counts,
+      tickets,
+      pagination: {
+        total,
+        page,
+        pages: Math.ceil(total / limit),
+        limit,
+      },
+    }),
+  );
+});
+
+
+/* ------------------------------------------------------------------
+   GET /api/tickets/report/:id
+   Full detail view for a single ticket (drawer/modal on click).
+   Admin-only — gate this in the route with authorize(["admin","super-admin"]).
+-------------------------------------------------------------------*/
+export const GetTicketDetail = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Invalid ticket id");
+  }
+
+  const ticket = await Ticket.findById(id)
+    .populate("location", "name")
+    .populate("createdBy", "firstname lastname email")
+    .populate("assignedTo", "firstname lastname email")
+    .populate("approvedBy", "firstname lastname email")
+    .populate("rejectedBy", "firstname lastname email")
+    .populate("assignmentHistory.assignedTo", "firstname lastname")
+    .populate("assignmentHistory.assignedBy", "firstname lastname")
+    .populate("statusHistory.changedBy", "firstname lastname")
+    .populate({
+      path: "latestComment",
+      populate: { path: "author", select: "firstname lastname" }, // adjust field name if your Comment schema differs
+    });
+
+  if (!ticket) {
+    throw new ApiError(404, "Ticket not found");
+  }
+
+  /* ---- Turnaround time, only meaningful once resolved ---- */
+  let turnaround = null;
+  if (ticket.resolvedAt) {
+    const diffMs = ticket.resolvedAt.getTime() - ticket.createdAt.getTime();
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
+    turnaround = `${days}d ${hours}h`;
+  }
+
+  /* ---- Merge statusHistory + assignmentHistory into one chronological timeline ---- */
+  const timeline = [
+    ...ticket.statusHistory.map((h) => ({
+      type: "status",
+      status: h.status,
+      by: h.changedBy
+        ? `${h.changedBy.firstname} ${h.changedBy.lastname}`
+        : "System",
+      at: h.changedAt,
+    })),
+    ...ticket.assignmentHistory.map((h) => ({
+      type: "assignment",
+      assignedTo: h.assignedTo
+        ? `${h.assignedTo.firstname} ${h.assignedTo.lastname}`
+        : "Unassigned",
+      by: h.assignedBy
+        ? `${h.assignedBy.firstname} ${h.assignedBy.lastname}`
+        : "System",
+      at: h.assignedAt,
+    })),
+  ].sort((a, b) => new Date(a.at) - new Date(b.at));
+
+  const detail = {
+    ticketId: ticket.displayId,
+    title: ticket.req_title,
+    description: ticket.description,
+    status: ticket.status,
+    priority: ticket.priority || "-",
+    priorityLocked: ticket.priorityLocked,
+    category: ticket.category,
+    location: ticket.location?.name || "-",
+    photo: ticket.photo || null,
+
+    submittedBy: ticket.createdBy
+      ? {
+          name: `${ticket.createdBy.firstname} ${ticket.createdBy.lastname}`,
+          email: ticket.createdBy.email,
+        }
+      : null,
+    assignedTo: ticket.assignedTo
+      ? {
+          name: `${ticket.assignedTo.firstname} ${ticket.assignedTo.lastname}`,
+          email: ticket.assignedTo.email,
+        }
+      : null,
+    approvedBy: ticket.approvedBy
+      ? {
+          name: `${ticket.approvedBy.firstname} ${ticket.approvedBy.lastname}`,
+          email: ticket.approvedBy.email,
+        }
+      : null,
+    rejectedBy: ticket.rejectedBy
+      ? {
+          name: `${ticket.rejectedBy.firstname} ${ticket.rejectedBy.lastname}`,
+          email: ticket.rejectedBy.email,
+        }
+      : null,
+    rejectionReason: ticket.rejectionReason || null,
+
+    createdAt: ticket.createdAt,
+    resolvedAt: ticket.resolvedAt || null,
+    turnaround,
+
+    latestComment: ticket.latestComment
+      ? {
+          text: ticket.latestComment.text, // adjust field name if different
+          author: ticket.latestComment.author
+            ? `${ticket.latestComment.author.firstname} ${ticket.latestComment.author.lastname}`
+            : "-",
+          createdAt: ticket.latestComment.createdAt,
+        }
+      : null,
+
+    timeline,
+  };
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Ticket detail fetched successfully", detail));
+});
+/* ------------------------------------------------------------------
+   GET /api/tickets/report/export
+   Same filter, no pagination — streams an .xlsx file.
+-------------------------------------------------------------------*/
+export const ExportTicketsReport = asyncHandler(async (req, res) => {
+  const filter = await buildReportFilter(req);
+
+  const tickets = await Ticket.find(filter)
+    .sort({ createdAt: -1 })
+    .populate("location", "name")
+    .populate("createdBy", "firstname lastname email")
+    .populate("assignedTo", "firstname lastname email");
+
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Tickets Report");
+
+  sheet.columns = [
+    { header: "Ticket ID", key: "id", width: 16 },
+    { header: "Title", key: "title", width: 30 },
+    { header: "Status", key: "status", width: 14 },
+    { header: "Priority", key: "priority", width: 12 },
+    { header: "Category", key: "category", width: 16 },
+    { header: "Location", key: "location", width: 24 },
+    { header: "Submitted By", key: "submittedBy", width: 22 },
+    { header: "Submitted Email", key: "submittedEmail", width: 26 },
+    { header: "Assigned To", key: "assignedTo", width: 22 },
+    { header: "Submitted Date", key: "submittedDate", width: 16 },
+    { header: "Rejection Reason", key: "rejectionReason", width: 30 },
+  ];
+  sheet.getRow(1).font = { bold: true };
+  sheet.getRow(1).fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFF2F2F2" },
+  };
+
+  tickets.forEach((t) => {
+    sheet.addRow({
+      id: t.displayId,
+      title: t.req_title,
+      status: t.status,
+      priority: t.priority || "-",
+      category: t.category,
+      location: t.location?.name || "-",
+      submittedBy: t.createdBy
+        ? `${t.createdBy.firstname} ${t.createdBy.lastname}`
+        : "-",
+      submittedEmail: t.createdBy?.email || "-",
+      assignedTo: t.assignedTo
+        ? `${t.assignedTo.firstname} ${t.assignedTo.lastname}`
+        : "-",
+      submittedDate: t.createdAt ? t.createdAt.toLocaleDateString() : "-",
+      rejectionReason: t.rejectionReason || "-",
+    });
+  });
+
+  if (tickets.length === 0) {
+    sheet.addRow({ id: "No tickets found for the selected filters." });
+  }
+
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  );
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="tickets-report-${Date.now()}.xlsx"`,
+  );
+
+  await workbook.xlsx.write(res);
+  res.end();
+});

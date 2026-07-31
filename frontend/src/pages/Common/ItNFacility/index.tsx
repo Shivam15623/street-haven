@@ -5,9 +5,13 @@ import TrackTickettab from "./components/TrackTickettab";
 import "@assets/css/PageCss/ItFacility.css";
 import { useSearchParams } from "react-router-dom";
 import { useState } from "react";
+import TicketReport from "./components/TicketReport/TicketReport";
+import { useSelector } from "react-redux";
+import { selectAuth } from "../../../redux/AuthSlice";
 
 const HelpDesk = () => {
   const [searchParams] = useSearchParams();
+  const { user } = useSelector(selectAuth);
   const tabParam = searchParams.get("tab") ?? "submit_request";
   const [active, setActive] = useState<string>(tabParam);
   return (
@@ -35,6 +39,16 @@ const HelpDesk = () => {
             key: "track_tickets",
             label: "Track Tickets",
           },
+          ...(user?.role === "super_admin"
+            ? [
+                {
+                  content: <TicketReport />,
+                  key: "ticket_reports",
+                  label: "Ticket Reports",
+                },
+              ]
+            : []),
+
           {
             content: <FAQResourcesTab isActive={active === "faq_resources"} />,
             key: "faq_resources",
