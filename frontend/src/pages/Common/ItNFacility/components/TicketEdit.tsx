@@ -55,9 +55,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
     useFetchLocationsQuery({}, { skip: !showModal });
   const isAssigned = ticket.assignedTo?._id === user?._id;
   const isRequester = ticket.createdBy._id === user?._id;
-  const isApprovingManager =
-    ticket.approvedBy?._id === user?._id &&
-    ticket.location?.managers.find((m) => m === user?._id);
+  const isApprovingManager = ticket.approvedBy?._id === user?._id;
   const [editphoto, seteditphoto] = useState(false);
 
   const { data: employeeData, isLoading: isEmployeeLoading } =
@@ -88,7 +86,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
     "Open",
     "In Progress",
     "Completed",
-    "Approoved",
+    "Approved", // was "Approoved"
     "Rejected",
     "Closed",
   ];
@@ -108,8 +106,12 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
       if (values.location && values.location !== ticket.location?._id)
         formData.append("location", values.location);
 
+      // BEFORE: formData.append("assignedId", values.assignedId)
+      // Backend reads req.body.assignedTo — this key must match or the
+      // reassignment silently gets dropped.
       if (values.assignedId && values.assignedId !== ticket.assignedTo?._id)
-        formData.append("assignedId", values.assignedId);
+        formData.append("assignedTo", values.assignedId);
+
       if (values.photo) {
         formData.append("photo", values.photo);
       }
@@ -512,7 +514,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                   </Col>
                 </Row>
                 {/* Attachment */}
-                <Row className="mb-3  ">
+                <Row className="mb-3">
                   <Col sm={2}>
                     <p className="form-label">Attachment</p>
                   </Col>
@@ -525,7 +527,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       >
                         {ticket.photo?.fileName}
                       </Link>
-                      {!hasCreatorPermissions && (
+                      {hasCreatorPermissions && (
                         <Icon
                           icon="mdi:file-edit"
                           className="ms-2 icon-street-edit"
