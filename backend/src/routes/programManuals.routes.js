@@ -16,10 +16,11 @@ import {
 import { authorizePermissions } from "../middleware/AuthRole.js";
 import { PERMISSIONS } from "../auth/permissions.js";
 import { idParamSchema } from "../validations/common.js";
+import { checkActiveUser } from "../middleware/checkActiveUsers.js";
 
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
-
+router.use(checkActiveUser);
 router.route("/view").get(validateRequest(fetchProgramMannuals),GetProgramManuals);
 router
   .route("/create")

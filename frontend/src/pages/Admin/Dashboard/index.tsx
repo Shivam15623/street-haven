@@ -1,21 +1,17 @@
 import { Col, Row } from "react-bootstrap";
 import DashboardCard from "../../Employee/Dashboard/components/DashboardCard";
 import RecentActivity from "../../Employee/Dashboard/components/RecentActivity";
-import UpcomingEvents from "../../Employee/Dashboard/components/UpcomingEvents";
+
 import dayjs from "dayjs";
 import "@assets/css/PageCss/dashboard.css";
 import { selectAuth } from "../../../redux/AuthSlice";
 import { useSelector } from "react-redux";
-import { useFetchEventsupcomingQuery } from "../../../services/EventApi";
+
 const AdminDashboard = () => {
   const today = dayjs().format("dddd, MMMM D, YYYY");
   const { user } = useSelector(selectAuth);
 
-  const { data, isLoading } = useFetchEventsupcomingQuery({
-    limit: 5,
-    order: "desc",
-    page: 1,
-  });
+
   return (
     <div className="d-flex flex-column gap-4 ">
       <div className="d-flex flex-column flex-sm-row justify-content-between gap-2">
@@ -92,14 +88,7 @@ const AdminDashboard = () => {
       </Row>
 
       <Row className=" g-2 g-md-3 g-lg-4">
-        <DashboardCard
-          icon="lucide:calendar"
-          label="Events"
-          value={data?.data.events.length ?? 0}
-          key={"Events"}
-          link={`/events`}
-        />
-
+    
         <DashboardCard
           icon="iconamoon:ticket-light"
           label="Open Tickets"
@@ -120,12 +109,7 @@ const AdminDashboard = () => {
           {" "}
           <RecentActivity />
         </Col>
-        <Col md={6}>
-          <UpcomingEvents
-            events={data?.data.events ?? []}
-            loading={isLoading}
-          />
-        </Col>
+       
       </Row>
     </div>
   );

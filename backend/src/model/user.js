@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose,{Schema} from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import slugify from "slugify";
@@ -9,8 +9,32 @@ export const ROLES = {
   ADMIN: "admin",
   MANAGER: "manager",
   EMPLOYEE: "employee",
+  VOLUNTEER:"volunteer",
   HR: "hr",
 };
+const volunteerStintSchema = new Schema(
+{
+    startAt: {
+        type: Date,
+        required: true,
+    },
+
+    endAt: {
+        type: Date,
+        default: null,
+    },
+
+    endedReason: {
+        type: String,
+        enum: [
+            "left",
+            "admin_deactivated"
+        ],
+        default: null,
+    },
+},
+{ _id: false }
+);
 const UserSchema = new mongoose.Schema(
   {
     firstname: {
@@ -25,6 +49,21 @@ const UserSchema = new mongoose.Schema(
       trim: true,
       match: [/^[A-Za-z ]+$/, "Last name must contain only letters"],
     },
+  status: {
+    type: String,
+    enum: ["active", "inactive"],
+    default: "active",
+},
+
+volunteerStints: {
+    type: [volunteerStintSchema],
+    default: [],
+},
+
+currentStint: {
+    startAt: Date,
+    endAt: Date,
+},
     email: {
       type: String,
       required: true,
@@ -32,8 +71,8 @@ const UserSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
       match: [
-        /^[a-zA-Z0-9._%+-]+@streethaven\.com$/,
-        "Email must be a streethaven.com email",
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        "Please enter a valid email address",
       ],
     },
     title: {
@@ -76,6 +115,7 @@ const UserSchema = new mongoose.Schema(
         "Please enter a valid Canadian phone number (e.g. +1 (416) 555-1234)",
       ],
     },
+
     hireDate: {
       type: Date,
       required: true,
@@ -110,7 +150,7 @@ const UserSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 5);
 
@@ -160,7 +200,7 @@ UserSchema.methods.generateAccessToken = function () {
     process.env.ACCESS_TOKEN_SECRET,
     {
       expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "7d",
-    }
+    },
   );
 };
 
@@ -173,7 +213,7 @@ UserSchema.methods.generateRefreshToken = function () {
     process.env.REFRESH_TOKEN_SECRET,
     {
       expiresIn: process.env.REFRESH_TOKEN_EXPIRY || "30d",
-    }
+    },
   );
 };
 const User = mongoose.model("User", UserSchema);

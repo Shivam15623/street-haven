@@ -46,7 +46,7 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.EDIT_ORG_CHART,
     PERMISSIONS.VIEW_ORG_CHART,
 
-    // 🔹 Program Manuals
+    // 🔹 Training Materials
     PERMISSIONS.VIEW_PROGRAM_MANUALS,
 
     // 🔹 Forms
@@ -86,7 +86,7 @@ export const ROLE_PERMISSIONS = {
     // 🔹 Organizational Chart
     PERMISSIONS.VIEW_ORG_CHART,
 
-    // 🔹 Program Manuals
+    // 🔹 Training Materials
     PERMISSIONS.VIEW_PROGRAM_MANUALS,
 
     // 🔹 Forms
@@ -104,7 +104,7 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.VIEW_EMERGENCY_CONTACTS,
 
     // 🔹 Employees
-
+    PERMISSIONS.TICKET_VIEW_SELF,
     // 🔹 Events
     PERMISSIONS.VIEW_EVENTS,
 
@@ -120,10 +120,31 @@ export const ROLE_PERMISSIONS = {
     // 🔹 Organizational Chart
     PERMISSIONS.VIEW_ORG_CHART,
 
-    // 🔹 Program Manuals
+    // 🔹 Training Materials
     PERMISSIONS.VIEW_PROGRAM_MANUALS,
 
     // 🔹 Forms
     PERMISSIONS.VIEW_SUBMIT_FORM,
+  ],
+  volunteer: [
+    // 🔹 Announcements
+    PERMISSIONS.VIEW_ANNOUNCEMENTS,
+
+    // 🔹 Collective Agreements
+    PERMISSIONS.VIEW_COLLECTIVE_AGREEMENTS,
+
+    // 🔹 Emergency Contacts
+    PERMISSIONS.VIEW_EMERGENCY_CONTACTS,
+    // 🔹 FAQs
+    PERMISSIONS.VIEW_FAQS,
+
+    // 🔹 Training Materials
+    PERMISSIONS.VIEW_PROGRAM_MANUALS,
+    PERMISSIONS.TASK_VIEW_SELF,
+    PERMISSIONS.TASK_SUBMIT,
+    PERMISSIONS.TASK_REPORT_EXPORT,
+
+    PERMISSIONS.TRAINING_CERTIFICATE_SUBMIT,
+    PERMISSIONS.TRAINING_CERTIFICATE_VIEW_SELF,
   ],
 };

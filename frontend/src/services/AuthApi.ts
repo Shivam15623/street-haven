@@ -1,6 +1,11 @@
 import { api } from "../redux/ApiSlice";
 import type { ApiGeneralResponse } from "../interfaces/Response";
-import { setLoggedIn, setLoggedOut } from "../redux/AuthSlice";
+import {
+  setAccountInactive,
+  setAuthChecking,
+  setLoggedIn,
+  setLoggedOut,
+} from "../redux/AuthSlice";
 import type {
   ForgotPasswordcredential,
   GenerateTotpCredentials,
@@ -84,10 +89,14 @@ export const authApi = api.injectEndpoints({
         url: "/auth/silent-auth",
         method: "GET",
       }),
+
       onQueryStarted: async (_arg, { dispatch, queryFulfilled }) => {
+        dispatch(setAuthChecking());
+
         try {
           const { data } = await queryFulfilled;
-          const { user } = data.data;
+          const { user,accessToken } = data.data;
+
           const payload = {
             _id: user._id,
             email: user.email,
@@ -98,19 +107,26 @@ export const authApi = api.injectEndpoints({
             role: user.role,
             slug: user.slug,
             createdAt: user.createdAt,
+            status:user.status,
             title: user.title || "",
             hireDate: new Date(user.hireDate).toISOString(),
             customPermissions: user.customPermissions || [],
           };
-          if (data?.data.accessToken) {
-            dispatch(
-              setLoggedIn({
-                accessToken: data.data.accessToken,
-                UserData: payload,
-              })
-            );
+
+          dispatch(
+            setLoggedIn({
+              accessToken:accessToken,
+              UserData: payload,
+            }),
+          );
+        } catch (error: any) {
+          const response = error?.error?.data;
+          console.log("t",response);
+          if (response?.code === "ACCOUNT_INACTIVE") {
+            dispatch(setAccountInactive());
+            return;
           }
-        } catch {
+
           dispatch(setLoggedOut());
         }
       },

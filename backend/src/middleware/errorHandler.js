@@ -1,7 +1,8 @@
 // middleware/errorHandler.js
 const errorHandler = (err, req, res, next) => {
   // Determine status code
-  const statusCode = err.statusCode || (err.name === "ValidationError" ? 400 : 500);
+  const statusCode =
+    err.statusCode || (err.name === "ValidationError" ? 400 : 500);
 
   // Log error (useful in both dev and prod, you can replace with a logging service in prod)
   console.error(`[${new Date().toISOString()}]`, err);
@@ -10,6 +11,7 @@ const errorHandler = (err, req, res, next) => {
   const response = {
     success: false,
     message: err.message || "Internal Server Error",
+    code: err.code || null,
   };
 
   // Include stack and detailed errors only in development

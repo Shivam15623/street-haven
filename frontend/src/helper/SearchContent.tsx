@@ -66,7 +66,7 @@ const SearchContent: React.FC<SearchProps> = ({ mobileMode, onclose }) => {
 
   const { data: results, isLoading } = useSearchAllContentQuery(
     debouncedQuery,
-    { skip: debouncedQuery === "" || !debouncedQuery }
+    { skip: debouncedQuery === "" || !debouncedQuery },
   );
 
   // ---------- Close dropdown on outside click ----------
@@ -114,7 +114,7 @@ const SearchContent: React.FC<SearchProps> = ({ mobileMode, onclose }) => {
     navigate(`/agency_info?tab=event_minutes&item=${slug}`);
 
   const goToManual = (slug: string) =>
-    navigate(`/programs&manuals?item=${slug}`);
+    navigate(`/volunteer-training?item=${slug}`);
   const goToAnnouncement = (slug: string) =>
     navigate(`/agency_info?tab=announcements&item=${slug}`);
   const goToAgreement = (slug: string) =>
@@ -184,7 +184,7 @@ const SearchContent: React.FC<SearchProps> = ({ mobileMode, onclose }) => {
               />
 
               <ResultGroup
-                title="Program Manuals"
+                title="Training Materials"
                 icon="ion:book-outline"
                 items={results.data.programManuals}
                 onClick={goToManual}

@@ -1,18 +1,29 @@
 import { Col, Row } from "react-bootstrap";
 import DashboardCard from "./components/DashboardCard";
-import UpcomingEvents from "./components/UpcomingEvents";
+
 import RecentActivity from "./components/RecentActivity";
 import "@assets/css/PageCss/dashboard.css";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
 import { selectAuth } from "../../../redux/AuthSlice";
-import { useFetchEventsupcomingQuery } from "../../../services/EventApi";
+
 import { useFetchTicketsQuery } from "../../../services/ticketApi";
 import { useRecentAnnouncementcountQuery } from "../../../services/AnnouncementApi";
+import { useGetAllTasksQuery } from "../../../services/taskApi";
+import { PERMISSIONS } from "../../../utills/auth/permissions";
+import useHasPermission from "../../../hooks/Auth";
 
 const EmployeeDashboard = () => {
   const today = dayjs().format("dddd, MMMM D, YYYY");
   const { user } = useSelector(selectAuth);
+  const { hasPermission } = useHasPermission();
+
+  const canViewTickets = hasPermission({
+    action: PERMISSIONS.TICKET_VIEW_SELF,
+  });
+  const canViewTasks = hasPermission({
+    action: PERMISSIONS.TASK_VIEW_SELF,
+  });
   const { data: ticketData } = useFetchTicketsQuery({
     page: 1,
     priority: "All",
@@ -21,10 +32,13 @@ const EmployeeDashboard = () => {
     order: "desc",
     search: "",
   });
-  const { data, isLoading } = useFetchEventsupcomingQuery({
-    limit: 5,
-    order: "desc",
+  const { data: taskData } = useGetAllTasksQuery({
     page: 1,
+
+    status: "assigned",
+    limit: 100,
+
+    search: "",
   });
 
   const { data: recentAnnouncement } = useRecentAnnouncementcountQuery();
@@ -55,7 +69,7 @@ const EmployeeDashboard = () => {
           </div>
         </div>
       </div>
-      <Row className=" g-2 g-md-4">
+      {/* <Row className=" g-2 g-md-4">
         <Col xs={6} sm={6} md={3}>
           <div
             onClick={() =>
@@ -108,24 +122,27 @@ const EmployeeDashboard = () => {
             CMS
           </div>
         </Col>
-      </Row>
+      </Row> */}
 
       <Row className=" g-2 g-md-3 g-lg-4">
-        <DashboardCard
-          icon="lucide:calendar"
-          label="Events"
-          value={data?.data.events.length ?? 0}
-          key={"Events"}
-          link={`/events`}
-        />
-
-        <DashboardCard
-          icon="iconamoon:ticket-light"
-          label="Open Tickets"
-          link={`/it_facility?tab=track_tickets&status=Open`}
-          value={ticketData?.data.counts.open ?? 0}
-          key={"Open Tickets"}
-        />
+        {canViewTickets && (
+          <DashboardCard
+            icon="iconamoon:ticket-light"
+            label="Open Tickets"
+            link="/it_facility?tab=track_tickets&status=Open"
+            value={ticketData?.data.counts.open ?? 0}
+            key="Open Tickets"
+          />
+        )}
+        {canViewTasks && (
+          <DashboardCard
+            icon="mdi:clipboard-text-outline"
+            label="Assigned Tasks"
+            link="/tasks"
+            value={taskData?.data?.counts.assigned ?? 0}
+            key="Assigned Tasks"
+          />
+        )}
         <DashboardCard
           icon="lucide:party-popper"
           label="Announcements"
@@ -139,12 +156,7 @@ const EmployeeDashboard = () => {
           {" "}
           <RecentActivity />
         </Col>
-        <Col md={6}>
-          <UpcomingEvents
-            events={data?.data.events ?? []}
-            loading={isLoading}
-          />
-        </Col>
+        <Col md={6}></Col>
       </Row>
     </div>
   );

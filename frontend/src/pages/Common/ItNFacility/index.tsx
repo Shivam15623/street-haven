@@ -5,11 +5,33 @@ import TrackTickettab from "./components/TrackTickettab";
 import "@assets/css/PageCss/ItFacility.css";
 import { useSearchParams } from "react-router-dom";
 import { useState } from "react";
+import TicketReport from "./components/TicketReport/TicketReport";
+import { useSelector } from "react-redux";
+import { selectAuth } from "../../../redux/AuthSlice";
+import LocationsTab from "./components/locations/LocationsTab";
+import useHasPermission from "../../../hooks/Auth";
+import { PERMISSIONS } from "../../../utills/auth/permissions";
 
 const HelpDesk = () => {
   const [searchParams] = useSearchParams();
-  const tabParam = searchParams.get("tab") ?? "submit_request";
-  const [active, setActive] = useState<string>(tabParam);
+  const { user } = useSelector(selectAuth);
+  const { hasPermission } = useHasPermission();
+
+  const isAdmin = user?.role === "super_admin" || user?.role === "admin";
+
+  const canViewSelfTickets = hasPermission({
+    action: PERMISSIONS.TICKET_VIEW_SELF,
+  });
+
+  const defaultTab = canViewSelfTickets
+    ? "submit_request"
+    : isAdmin
+      ? "ticket_reports"
+      : "faq_resources";
+
+  const tabParam = searchParams.get("tab");
+
+  const [active, setActive] = useState(tabParam ?? defaultTab);
   return (
     <div className="d-flex flex-column gap-4">
       {" "}
@@ -25,16 +47,38 @@ const HelpDesk = () => {
         activeKey={active}
         onTabChange={(key) => setActive(key)}
         tabs={[
-          {
-            content: <SubmitRequestTab />,
-            key: "submit_request",
-            label: "Submit Request",
-          },
-          {
-            content: <TrackTickettab isActive={active === "track_tickets"} />,
-            key: "track_tickets",
-            label: "Track Tickets",
-          },
+          ...(canViewSelfTickets
+            ? [
+                {
+                  content: <SubmitRequestTab />,
+                  key: "submit_request",
+                  label: "Submit Request",
+                },
+                {
+                  content: (
+                    <TrackTickettab isActive={active === "track_tickets"} />
+                  ),
+                  key: "track_tickets",
+                  label: "Track Tickets",
+                },
+              ]
+            : []),
+
+          ...(isAdmin
+            ? [
+                {
+                  content: <TicketReport />,
+                  key: "ticket_reports",
+                  label: "Ticket Reports",
+                },
+                {
+                  content: <LocationsTab />,
+                  key: "locations",
+                  label: "Locations",
+                },
+              ]
+            : []),
+
           {
             content: <FAQResourcesTab isActive={active === "faq_resources"} />,
             key: "faq_resources",

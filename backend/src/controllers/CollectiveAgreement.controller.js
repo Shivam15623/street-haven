@@ -2,12 +2,49 @@ import CollectiveAgreement from "../model/Agreement.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
-import { deleteFromCloudinary } from "../utills/cloudinary.js";
+import { deleteFromCloudinary, uploadOnCloudinary } from "../utills/cloudinary.js";
 import mongoose from "mongoose";
 import { addActivityLog } from "../helper/addActivityLogs.js";
-import { uploadAttachment } from "./meetingMinutes.controller.js";
+
 import { io } from "../index.js";
 import { createNotification } from "../helper/CreateNotoification.js";
+/** -----------------------------------------
+ *  Common File-Type Detection Utility
+ * ----------------------------------------- */
+export const typeMap = {
+  image: [".jpg", ".jpeg", ".png", ".gif", ".webp"],
+  video: [".mp4", ".mov", ".avi", ".mkv"],
+  audio: [".mp3", ".wav", ".ogg"],
+  pdf: [".pdf"],
+  doc: [".doc", ".docx"],
+  ppt: [".ppt", ".pptx"],
+  excel: [".xls", ".xlsx"],
+  zip: [".zip", ".rar"],
+};
+
+export const detectFileType = (ext) => {
+  return (
+    Object.keys(typeMap).find((key) => typeMap[key].includes(ext)) || "other"
+  );
+};
+
+/** -----------------------------------------
+ *  Upload File Helper
+ * ----------------------------------------- */
+export const uploadAttachment = async (filePath) => {
+  const uploaded = await uploadOnCloudinary(filePath);
+  if (!uploaded || !uploaded.secure_url) {
+    throw new ApiError(500, "Attachment upload failed");
+  }
+
+  const ext = path.extname(uploaded?.originalname || "").toLowerCase();
+  return {
+    fileName: uploaded.original_filename || "file",
+    fileUrl: uploaded.secure_url,
+    size: uploaded.bytes,
+    fileType: detectFileType(ext),
+  };
+};
 
 export const createCollectiveAgreement = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
@@ -33,7 +70,7 @@ export const createCollectiveAgreement = asyncHandler(async (req, res) => {
           createdBy: userId,
         },
       ],
-      { session }
+      { session },
     );
 
     const savedAgreement = newAgreement[0];
@@ -55,7 +92,7 @@ export const createCollectiveAgreement = asyncHandler(async (req, res) => {
           tab: "collective_agreement",
         },
       },
-      session
+      session,
     );
 
     io.emit("newNotification", notification);
@@ -76,7 +113,7 @@ export const createCollectiveAgreement = asyncHandler(async (req, res) => {
           attachment: attachmentData,
         },
       },
-      session // <-- pass session
+      session, // <-- pass session
     );
 
     // Commit transaction
@@ -89,8 +126,8 @@ export const createCollectiveAgreement = asyncHandler(async (req, res) => {
         new ApiResponse(
           201,
           "Collective Agreement Created Successfully!",
-          savedAgreement
-        )
+          savedAgreement,
+        ),
       );
   } catch (err) {
     // Rollback
@@ -115,8 +152,8 @@ export const fetchCollectiveAgreements = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         "Collective Agreements fetched successfully",
-        agreements
-      )
+        agreements,
+      ),
     );
 });
 
@@ -229,7 +266,7 @@ export const editCollectiveAgreement = asyncHandler(async (req, res) => {
           isGlobal: true, // usually agreements are global
           createdBy: req.user?._id,
         },
-        session
+        session,
       );
       io.emit("newNotification", notification);
     }

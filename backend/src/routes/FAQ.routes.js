@@ -25,12 +25,14 @@ import {
   updateFAQQuestionBodySchema,
 } from "../validations/faqs.js";
 import { idParamSchema } from "../validations/common.js";
+import { checkActiveUser } from "../middleware/checkActiveUsers.js";
 
 const router = Router();
 
 // ------------------ FAQ Category Routes ------------------
 // Apply JWT auth for all FAQ routes
 router.use(passport.authenticate("jwt", { session: false }));
+router.use(checkActiveUser);
 
 // FAQ Category CRUD
 router.post(

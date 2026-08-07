@@ -7,6 +7,9 @@ import { useLoginMutation } from "../../../../services/AuthApi";
 import { showError, showSuccess } from "../../../../utills/toastutills";
 import PasswordInput from "../../../../components/Authentication/PasswordInput";
 import { getErrorMessage } from "../../../../utills/utills";
+import { useDispatch } from "react-redux";
+import { setAccountInactive } from "../../../../redux/AuthSlice";
+import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 interface LoginValues {
   email: string;
   password: string;
@@ -20,6 +23,7 @@ const loginSchema = Yup.object({
 
 const LoginForm: React.FC = () => {
   const [login, { isLoading }] = useLoginMutation();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const handleLogin = async (values: LoginValues) => {
     try {
@@ -46,6 +50,20 @@ const LoginForm: React.FC = () => {
         showSuccess(response.message);
       }
     } catch (error) {
+      const response = error as FetchBaseQueryError;
+
+      if (
+        "data" in response &&
+        response.data &&
+        typeof response.data === "object" &&
+        "code" in response.data &&
+        response.data.code === "ACCOUNT_INACTIVE"
+      ) {
+        dispatch(setAccountInactive());
+        navigate("/account-inactive");
+        return;
+      }
+
       showError(getErrorMessage(error));
     }
   };

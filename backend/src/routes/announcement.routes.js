@@ -17,10 +17,11 @@ import {
 } from "../validations/announcement.js";
 import { PERMISSIONS } from "../auth/permissions.js";
 import { authorizePermissions } from "../middleware/AuthRole.js";
+import { checkActiveUser } from "../middleware/checkActiveUsers.js";
 
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
-
+router.use(checkActiveUser);
 router
   .route("/create")
   .post(

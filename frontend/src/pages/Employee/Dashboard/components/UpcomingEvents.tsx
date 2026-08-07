@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import { Icon } from "@iconify/react";
 import CardlistWrapper from "./CardListWrapper";
 
 import type { EventUpcomingData } from "../../../../interfaces/EventInterfaces";
 import dayjs from "dayjs";
-import EventDetailspop from "./EventDetailspop";
- // ✅ import your modal component
+
+// ✅ import your modal component
 
 interface UpcomingEventCardProps {
   events: EventUpcomingData[];
@@ -16,30 +16,11 @@ const UpcomingEvents: React.FC<UpcomingEventCardProps> = ({
   events,
   loading,
 }) => {
- 
-
   // 🔹 Modal state
-  const [open, setOpen] = useState(false);
-  const [selectedEventSlug, setSelectedEventSlug] = useState<string | null>(
-    null
-  );
-
-  const handleOpen = (slug: string) => {
-    setSelectedEventSlug(slug);
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-    setSelectedEventSlug(null);
-  };
 
   return (
     <>
-      <CardlistWrapper
-        title="Upcoming Events"
-        viewAllLink={`/events`}
-      >
+      <CardlistWrapper title="Upcoming Events" viewAllLink={`/events`}>
         <div className="d-flex flex-column gap-3">
           {loading &&
             Array.from({ length: 4 }).map((_, i) => (
@@ -77,7 +58,6 @@ const UpcomingEvents: React.FC<UpcomingEventCardProps> = ({
             events.map((event) => (
               <div
                 key={event._id}
-                onClick={() => handleOpen(event.slug)} // ✅ open modal on click
                 className="cursor-pointer d-flex flex-column justify-content-center px-8 py-10 px-sm-16 py-sm-20 border-0-5 rounded-2 hover:bg-light"
                 style={{
                   borderColor: "#AAAAAA",
@@ -92,7 +72,10 @@ const UpcomingEvents: React.FC<UpcomingEventCardProps> = ({
                   {/* Date & Time */}
                   <p className="d-flex flex-row text-street-base gap-2 mb-0">
                     <span className="mb-0 text-xs d-flex flex-row align-items-center gap-1">
-                      <Icon icon="uis:calender" className="text-street-primary" />
+                      <Icon
+                        icon="uis:calender"
+                        className="text-street-primary"
+                      />
                       {dayjs(event.eventDate).format("MM/DD/YYYY")}
                     </span>
                     <span className="mb-0 text-xs d-flex flex-row align-items-center gap-1">
@@ -126,13 +109,6 @@ const UpcomingEvents: React.FC<UpcomingEventCardProps> = ({
       </CardlistWrapper>
 
       {/* 🔹 Event Details Modal */}
-      {selectedEventSlug && (
-        <EventDetailspop
-          eventslug={selectedEventSlug}
-          open={open}
-          handleClose={handleClose}
-        />
-      )}
     </>
   );
 };

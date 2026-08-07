@@ -8,8 +8,9 @@ const NotificationSchema = new mongoose.Schema(
         "ticket",
         "event",
         "announcement",
+        "task",
         "event_minute",
-        "program_mannual",
+        "training_material",
         "collective_agreement",
         "hr_updates",
         "system",
@@ -27,7 +28,7 @@ const NotificationSchema = new mongoose.Schema(
         "status_changed",
         "deleted",
         "registered",
-        "unregistered"
+        "unregistered",
       ],
       required: true,
     },
@@ -49,7 +50,7 @@ const NotificationSchema = new mongoose.Schema(
       ref: "User",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Auto-delete expired notifications

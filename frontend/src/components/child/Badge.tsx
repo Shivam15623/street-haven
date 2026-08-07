@@ -7,12 +7,13 @@ export type BadgeVariant =
   | "success-soft"
   | "secondary-soft"
   | "primary-soft"
+  | "info-soft"
+  | "orange-soft"
   | "primary"
   | "secondary"
   | "success"
   | "warning"
   | "danger";
-
 type BadgeShape = "pill" | "badge";
 
 interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
@@ -57,7 +58,7 @@ const Badge: React.FC<BadgeProps> = ({
         sizeClasses,
         shapeClasses,
         variantClass,
-        className
+        className,
       )}
       aria-hidden={ariaHidden}
       onClick={onClick}

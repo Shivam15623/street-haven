@@ -1,4 +1,4 @@
-import React from "react";
+import React, { lazy } from "react";
 
 import { ErrorMessage, Field, Formik } from "formik";
 import * as yup from "yup";
@@ -11,10 +11,10 @@ import {
 import { showError, showSuccess } from "../../../../../utills/toastutills";
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
-import QuillEditor from "../../../../../components/child/QuillEditor";
+
 import FileField from "../../../../../components/child/FileField";
 import { getAxiosErrorMessage } from "../../../../../utills/utills";
-
+const QuillEditor = lazy(() => import("../../../../../components/child/QuillEditor"));
 // ✅ Schema
 const AnnouncementsFormSchema = () =>
   yup.object().shape({
