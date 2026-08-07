@@ -86,5 +86,21 @@ export const PERMISSIONS = {
   TICKET_VIEW_SELF: "ticket_view_self",
   VIEW_IT_TICKETS: "view_it_tickets",
   VIEW_PROPERTY_TICKETS: "view_property_tickets",
+
+  
+  TASK_VIEW_SELF:"task_view_self",
+  TASK_VIEW_ALL:"task_view_all",
+  TASK_EDIT:"task_edit",
+  TASK_DELETE:"task_delete",
+  TASK_APPROVE_REJECT:"task_approve_reject",
+  TASK_SUBMIT:"task_submit",
+  TASK_REPORT_EXPORT:"task_report_export",
+
+  TRAINING_CERTIFICATE_VIEW_SELF:"training_certificate_view_self",
+  TRAINING_CERTIFICATE_VIEW_ALL:"training_certificate_view_all",
+  TRAINING_CERTIFICATE_SUBMIT:"training_certificate_submit",
+  TRAINING_CERTIFICATE_APPROVE_REJECT:"training_certificate_approve_reject"
+
+
 } as const;
 export type AllPermissions = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

@@ -7,6 +7,7 @@ import type { HasPermissionFn } from "../../../../hooks/Auth";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import ResetTotp from "./ResetTotp";
+import StatusToggle from "./StatusToggle";
 
 dayjs.extend(relativeTime);
 function formatRole(role: string): string {
@@ -16,7 +17,7 @@ function formatRole(role: string): string {
     .join(" ");
 }
 export const EmployeeColumn = (
-  hasPermission: HasPermissionFn
+  hasPermission: HasPermissionFn,
 ): Column<EmployeeData>[] => {
   const columns: Column<EmployeeData>[] = [
     {
@@ -56,6 +57,11 @@ export const EmployeeColumn = (
       accessorKey: "role",
       render: (row) => <div>{formatRole(row.role)}</div>,
     },
+    {
+      title: "Status",
+      accessorKey: "isActive",
+      render: (row) => <StatusToggle id={row._id} status={row.status} />,
+    },
   ];
 
   // -----------------------------------
@@ -84,8 +90,9 @@ export const EmployeeColumn = (
                 hireDate: row.hireDate,
                 timePeriod: dayjs(row.hireDate).fromNow(),
                 title: row.title,
+                locations: row.locations,
                 superviserId: row.superviserId,
-                customPermissions:row.customPermissions
+                customPermissions: row.customPermissions,
               }}
             />
           )}

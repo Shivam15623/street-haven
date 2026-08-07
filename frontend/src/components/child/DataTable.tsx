@@ -37,7 +37,7 @@ function DataTable<T extends object>({
   order,
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
-
+  console.log("toatal", total);
   const totalPages = Math.ceil(total / limit);
   const pageSizes = [10, 25, 50, 100];
 
@@ -118,7 +118,7 @@ function DataTable<T extends object>({
                       if (col.sortable !== false && col.accessorKey) {
                         onSortChange(
                           col.accessorKey as string,
-                          isSorted && order === "asc" ? "desc" : "asc"
+                          isSorted && order === "asc" ? "desc" : "asc",
                         );
                         onPageChange(1);
                       }
@@ -168,8 +168,8 @@ function DataTable<T extends object>({
                       {col.render
                         ? col.render(row)
                         : col.accessorKey
-                        ? (row as any)[col.accessorKey]
-                        : null}
+                          ? (row as any)[col.accessorKey]
+                          : null}
                     </td>
                   ))}
                 </tr>

@@ -13,6 +13,8 @@ export interface EmployeeData {
   createdAt: string;
   updatedAt: string;
   superviserId: string;
+  locations: string[];
+  status: "active" | "inactive";
   title: string;
   hireDate: Date;
 
@@ -55,7 +57,7 @@ export interface ModulePermission {
 
 type EmployeesResponse = ApiResponse<{
   employees: EmployeeData[];
-  paggination: {
+  pagination: {
     total: number;
     page: number;
     limit: number;
@@ -69,6 +71,7 @@ interface AllEmployeeQuery {
   sortBy?: string;
   order?: "asc" | "desc";
   forDropdown?: boolean;
+  role?: Role[];
 }
 export interface RoleInfo {
   _id: string;
@@ -86,11 +89,13 @@ const EmployeeApi = api.injectEndpoints({
         sortBy = "createdAt",
         order = "desc",
         forDropdown = false,
+        role,
       }) => ({
         url: "/employees/view",
         method: "GET",
-        params: { page, limit, search, sortBy, order, forDropdown },
-      }), keepUnusedDataFor: 300,
+        params: { page, limit, search, sortBy, order, forDropdown, role },
+      }),
+      keepUnusedDataFor: 300,
       providesTags: ["Employees"],
     }),
     editEmployee: builder.mutation<
@@ -158,6 +163,13 @@ const EmployeeApi = api.injectEndpoints({
         method: "GET",
       }),
     }),
+    statusToggle: builder.mutation<ApiGeneralResponse, { id: string }>({
+      query: ({ id }) => ({
+        url: `/employees/status-toggle/${id}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Employees"],
+    }),
     resetTotp: builder.mutation<ApiGeneralResponse, { id: string }>({
       query: ({ id }) => ({
         url: `employees/resetTotp/${id}`,
@@ -184,18 +196,6 @@ const EmployeeApi = api.injectEndpoints({
           title: string;
           hireDate: Date;
         };
-        supervisor?: {
-          _id: string;
-          firstname: string;
-          lastname: string;
-          title: string;
-        };
-        subordinates?: {
-          _id: string;
-          firstname: string;
-          lastname: string;
-          title: string;
-        }[];
       }>,
       { id: string; orgChart: boolean }
     >({
@@ -222,4 +222,5 @@ export const {
   useEmployeeSuperFormQuery,
   useLazyEmployeeSuperFormQuery,
   useLazyFetchEmployeeByIdQuery,
+  useStatusToggleMutation,
 } = EmployeeApi;

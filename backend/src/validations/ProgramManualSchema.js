@@ -28,7 +28,7 @@ export const createProgramManualSchema = Joi.object({
 
   type: Joi.string()
     .trim()
-    .valid("HR", "Technical", "Finance", "Operations", "Other")
+    .valid("Orientation", "Safety", "Policies", "Training", "Forms", "Other")
     .required()
     .messages({
       "any.only": "Invalid type",
@@ -56,7 +56,7 @@ export const editProgramManualSchema = Joi.object({
 
   type: Joi.string()
     .trim()
-    .valid("HR", "Technical", "Finance", "Operations", "Other")
+    .valid("Orientation", "Safety", "Policies", "Training", "Forms", "Other")
     .optional()
     .messages({
       "any.only": "Invalid type",

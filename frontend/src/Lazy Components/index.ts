@@ -20,7 +20,7 @@ export const LazyVerifyTotp = React.lazy(
 export const LazyRootLayout = React.lazy(
   () => import("../layouts/rootLayout")
 );
-
+export const LazyInActiveUser=React.lazy(()=> import("../pages/Authentication/Forbidden"))
 export const LazyEmployeedashboard = React.lazy(
   () => import("../pages/Employee/Dashboard")
 );
@@ -35,14 +35,13 @@ export const LazyProgramManuals = React.lazy(
 export const LazyHelpDesk = React.lazy(
   () => import("../pages/Common/ItNFacility")
 );
-export const LazyFormReports = React.lazy(
-  () => import("../pages/Common/FormsNreports")
-);
+
 export const LazyAgencyInfo = React.lazy(
   () => import("../pages/Common/AgencyInformation")
 );
 export const LazyEmployees = React.lazy(
   () => import("../pages/Admin/Employees")
 );
-export const LazyEvents = React.lazy(() => import("../pages/Common/Events"));
+export const LazyTasks=React.lazy(()=>import("../pages/Common/Task"))
 export const LazyProfile = React.lazy(() => import("../pages/Common/Profile"));
+export const LazyAdminCertificationsPage=React.lazy(()=>import("../pages/Common/AdminCertificationsPage"))

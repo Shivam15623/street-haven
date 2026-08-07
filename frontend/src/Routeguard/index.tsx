@@ -15,7 +15,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   requireRole = [],
 }) => {
   const location = useLocation();
-  const { isLoggedIn, user } = useSelector(selectAuth);
+  const { isLoggedIn, user, authStatus } = useSelector(selectAuth);
 
   // ⏳ Auth hydration phase (redux-persist)
   if (isLoggedIn === undefined) {
@@ -35,7 +35,21 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   if (isPublic && isLoggedIn) {
     return <Navigate to="/" replace />;
   }
+  if (authStatus === "unknown") {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
 
+  if (authStatus === "inactive") {
+    if (location.pathname !== "/account-inactive") {
+      return <Navigate to="/account-inactive" replace />;
+    }
+
+    return <>{children}</>;
+  }
   // 🧑‍⚖️ Role-based access (ONLY if logged in)
   if (
     isLoggedIn &&

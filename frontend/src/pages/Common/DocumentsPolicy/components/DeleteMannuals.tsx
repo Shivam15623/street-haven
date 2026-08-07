@@ -50,7 +50,7 @@ const DeleteMannuals: React.FC<DeleteMannualsProps> = ({
       </button>
       <ModalWrapper
         show={showModal}
-        title="Delete Program Manual"
+        title="Delete Training Material"
         size="lg"
         headerClassName="text-xl p-0 pb-20 text-street-dark"
         className="p-20 p-sm-24 p-md-32 gap-16"
@@ -77,7 +77,7 @@ const DeleteMannuals: React.FC<DeleteMannualsProps> = ({
       >
         <div className="text-street-dark text-sm d-flex flex-column gap-2">
           <p>
-            Are you sure you want to delete this program manual? This action
+            Are you sure you want to delete this training material? This action
             cannot be undone.
           </p>
           <div

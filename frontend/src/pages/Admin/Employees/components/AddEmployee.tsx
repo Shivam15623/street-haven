@@ -18,6 +18,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { PERMISSIONS } from "../../../../utills/auth/permissions";
 import { getErrorMessage } from "../../../../utills/utills";
+import { useFetchLocationsQuery } from "../../../../services/locationApi";
 dayjs.extend(relativeTime);
 interface AddEmployeeValues {
   firstName: string;
@@ -31,6 +32,7 @@ interface AddEmployeeValues {
   hireDate: string; // <-- keep as string for HTML input
   timePeriod: string;
   customPermissions: string[];
+  locations: string[];
 }
 
 const roleValues = Object.values(ROLES) as Array<string>;
@@ -52,8 +54,8 @@ const AddEmployeeSchema = Yup.object({
     .matches(/^[a-zA-Z\s]+$/, "Last Name can only contain letters and spaces"),
   email: Yup.string()
     .matches(
-      /^[A-Za-z0-9._%+-]+@streethaven\.com$/,
-      "Email must be from @streethaven.com domain"
+      /^[A-Za-z0-9._%+-]/,
+      "Email must be from @streethaven.com domain",
     )
     .email("Email is required"),
   title: Yup.string().required("Title is required"),
@@ -61,7 +63,7 @@ const AddEmployeeSchema = Yup.object({
     .required("Phone number is required")
     .matches(
       /^(?:\+1\s?)?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
-      "Enter a valid 10-digit Canadian phone number"
+      "Enter a valid 10-digit Canadian phone number",
     ),
   role: Yup.string()
     .oneOf(roleValues, "Invalid role selected")
@@ -80,17 +82,27 @@ const AddEmployeeSchema = Yup.object({
     .of(
       Yup.string().oneOf(
         Object.values(PERMISSIONS),
-        "Invalid permission selected"
-      )
+        "Invalid permission selected",
+      ),
     )
     .default([])
     .nullable(),
+  locations: Yup.array()
+    .of(Yup.string())
+    .when("role", {
+      is: ROLES.MANAGER,
+      then: (schema) => schema.min(1, "Select at least one location"),
+      otherwise: (schema) => schema.notRequired(),
+    })
+    .default([]),
 });
 const AddEmployee = () => {
   const [showModal, setShowModal] = useState(false);
   const [addEmployee, { isLoading }] = useAddEmployeeMutation();
   const { data: employeeData, isLoading: isEmployeeLoading } =
     useAllEmployeesQuery({ forDropdown: true }, { skip: !showModal });
+  const { data: locationsData, isLoading: locationsLoading } =
+    useFetchLocationsQuery({}, { skip: !showModal });
   const handleAddEmployee = async (values: AddEmployeeValues) => {
     try {
       const res = await addEmployee(values).unwrap();
@@ -156,6 +168,7 @@ const AddEmployee = () => {
             hireDate: "",
             timePeriod: "",
             customPermissions: [],
+            locations: [],
           }}
           validationSchema={AddEmployeeSchema}
           onSubmit={handleAddEmployee}
@@ -377,7 +390,11 @@ const AddEmployee = () => {
                     controlId="hireDate"
                     className="d-flex flex-column gap-1"
                   >
-                    <Form.Label className="fw-normal m-0">Hire Date</Form.Label>
+                    <Form.Label className="fw-normal m-0">
+                      {values.role === ROLES.VOLUNTEER
+                        ? "Volunteer Start Date"
+                        : "Hire Date"}
+                    </Form.Label>
                     <CustomDatePicker
                       name="hireDate"
                       value={values.hireDate ? new Date(values.hireDate) : null}
@@ -442,60 +459,59 @@ const AddEmployee = () => {
                   </Form.Group>
                 </Col>
               </Row>
+
               {/* Ticket Permissions */}
-              <Row>
-                <Col>
-                  <Form.Group className="d-flex flex-column gap-2">
-                    <Form.Label className="fw-normal m-0">
-                      Ticket Permissions
-                    </Form.Label>
+              {values.role === ROLES.MANAGER && (
+                <Row>
+                  <Col>
+                    <Form.Group
+                      controlId="locations"
+                      className="d-flex flex-column gap-1"
+                    >
+                      <Form.Label className="fw-normal m-0">
+                        Assigned Locations
+                      </Form.Label>
 
-                    <Form.Check
-                      type="checkbox"
-                      id="view-it-ticket"
-                      label="View IT Related Tickets"
-                      checked={values.customPermissions.includes(
-                        PERMISSIONS.VIEW_PROPERTY_TICKETS
+                      {locationsLoading ? (
+                        <div className="text-street-base text-sm">
+                          Loading locations...
+                        </div>
+                      ) : (
+                        <div
+                          className="d-flex flex-column gap-2 border rounded p-2"
+                          style={{ maxHeight: 180, overflowY: "auto" }}
+                        >
+                          {locationsData?.data.map((loc) => (
+                            <Form.Check
+                              key={loc._id}
+                              type="checkbox"
+                              id={`location-${loc._id}`}
+                              label={loc.name}
+                              checked={values.locations.includes(loc._id)}
+                              onChange={(e) => {
+                                const checked = e.target.checked;
+                                setFieldValue(
+                                  "locations",
+                                  checked
+                                    ? [...values.locations, loc._id]
+                                    : values.locations.filter(
+                                        (id) => id !== loc._id,
+                                      ),
+                                );
+                              }}
+                            />
+                          ))}
+                        </div>
                       )}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        const permission = PERMISSIONS.VIEW_PROPERTY_TICKETS;
-
-                        setFieldValue(
-                          "customPermissions",
-                          checked
-                            ? [...values.customPermissions, permission]
-                            : values.customPermissions.filter(
-                                (p) => p !== permission
-                              )
-                        );
-                      }}
-                    />
-
-                    <Form.Check
-                      type="checkbox"
-                      id="view-facilities-ticket"
-                      label="View Facilities Related Tickets"
-                      checked={values.customPermissions.includes(
-                        PERMISSIONS.VIEW_IT_TICKETS
+                      {touched.locations && errors.locations && (
+                        <div className="invalid-feedback d-block">
+                          {String(errors.locations)}
+                        </div>
                       )}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        const permission = PERMISSIONS.VIEW_IT_TICKETS;
-
-                        setFieldValue(
-                          "customPermissions",
-                          checked
-                            ? [...values.customPermissions, permission]
-                            : values.customPermissions.filter(
-                                (p) => p !== permission
-                              )
-                        );
-                      }}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
+                    </Form.Group>
+                  </Col>
+                </Row>
+              )}
             </Form>
           )}
         </Formik>

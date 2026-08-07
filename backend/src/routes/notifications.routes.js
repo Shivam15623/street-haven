@@ -1,8 +1,10 @@
 import { Router } from "express";
 import passport from "passport";
 import { AllNotifications, MarkNotificationsAsRead } from "../controllers/notification.controller.js";
+import { checkActiveUser } from "../middleware/checkActiveUsers.js";
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
+router.use(checkActiveUser);
 router.route("/view").get(AllNotifications);
 router.route("/mark-read").post(MarkNotificationsAsRead);
 export default router;

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { lazy, useState } from "react";
 import { Col, Row, Form } from "react-bootstrap";
 import { Formik, Form as FormikForm } from "formik";
 import * as Yup from "yup";
@@ -12,13 +12,13 @@ import { useAllEmployeesQuery } from "../../../../services/EmployeeApi";
 import ImageUpload from "../../../../components/child/Imageupload";
 import { useSelector } from "react-redux";
 import { selectAuth } from "../../../../redux/AuthSlice";
-
-import QuillEditor from "../../../../components/child/QuillEditor";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
-import useHasPermission from "../../../../hooks/Auth";
-import { PERMISSIONS } from "../../../../utills/auth/permissions";
-import { getErrorMessage } from "../../../../utills/utills";
 
+import { getErrorMessage } from "../../../../utills/utills";
+import { useFetchLocationsQuery } from "../../../../services/locationApi";
+const QuillEditor = lazy(
+  () => import("../../../../components/child/QuillEditor"),
+);
 // ✅ Validation Schema
 const TicketSchema = Yup.object({
   requestTitle: Yup.string(),
@@ -39,36 +39,60 @@ interface TicketCardProps {
   ticket: TicketData;
 }
 
+const PREDEFINED_CATEGORIES = [
+  { label: "Plumbing", value: "plumbing" },
+  { label: "Electrical", value: "electrical" },
+  { label: "HVAC", value: "hvac" },
+  { label: "Carpentry", value: "carpentry" },
+  { label: "Appliances", value: "appliances" },
+  { label: "Cleaning", value: "cleaning" },
+];
+
 const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
   const [showModal, setShowModal] = useState(false);
   const { user } = useSelector(selectAuth);
-
+  const { data: locationsData, isLoading: locationsLoading } =
+    useFetchLocationsQuery({}, { skip: !showModal });
   const isAssigned = ticket.assignedTo?._id === user?._id;
   const isRequester = ticket.createdBy._id === user?._id;
+  const isApprovingManager =
+    ticket.approvedBy?._id === user?._id &&
+    ticket.location?.managers.find((m) => m === user?._id);
   const [editphoto, seteditphoto] = useState(false);
-  const categorybased =
-    ticket.category === "Property Maintenance"
-      ? PERMISSIONS.VIEW_PROPERTY_TICKETS
-      : PERMISSIONS.VIEW_IT_TICKETS;
 
-  const { hasPermission } = useHasPermission();
   const { data: employeeData, isLoading: isEmployeeLoading } =
     useAllEmployeesQuery({ forDropdown: true }, { skip: !showModal });
   const [editTicket, { isLoading }] = useEditTicketMutation();
-  const hasEditStatus = hasPermission({ action: categorybased }) || isAssigned;
+  const hasCreatorPermissions = isRequester && ticket.status === "Open";
+
+  // pre-select custom-category UI if the ticket's category isn't one of the predefined ones
+  const [isCustomCategory, setIsCustomCategory] = useState(
+    () => !PREDEFINED_CATEGORIES.some((c) => c.value === ticket.category),
+  );
 
   const initialValues: TicketValues = {
     requestTitle: ticket.req_title,
     requester: ticket.createdBy.firstname + " " + ticket.createdBy.lastname,
-    assignedId: ticket.assignedTo ? ticket.assignedTo._id : "Unassigned",
+    // "" (not "Unassigned") so it matches the placeholder <option value="">
+    assignedId: ticket.assignedTo ? ticket.assignedTo._id : "",
     status: ticket.status,
-    id: ticket._id,
+    // show the human-facing slug, never the raw Mongo _id
+    id: ticket.displayId ?? ticket.slug,
     description: ticket.description,
-    priority: ticket.priority,
+    priority: ticket.priority ?? "",
     category: ticket.category,
-    location: ticket.location ?? "", // default to empty string
+    location: ticket.location?._id ?? "", // default to empty string
   };
-  const statusOptions = ["Open", "In Progress", "Completed", "Under Review"];
+
+  const statusOptions = [
+    "Open",
+    "In Progress",
+    "Completed",
+    "Approoved",
+    "Rejected",
+    "Closed",
+  ];
+
   const handleEdit = async (values: TicketValues) => {
     try {
       const formData = new FormData();
@@ -80,15 +104,11 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
         formData.append("priority", values.priority);
       if (values.category && values.category !== ticket.category)
         formData.append("category", values.category);
-      if (values.location && values.location !== ticket.location)
+      // compare against the populated location's _id, not the object itself
+      if (values.location && values.location !== ticket.location?._id)
         formData.append("location", values.location);
-      if (values.status && values.status !== ticket.status)
-        formData.append("status", values.status);
-      if (
-        values.assignedId &&
-        values.assignedId !== ticket.assignedTo?._id &&
-        values.assignedId !== "Unassigned"
-      )
+
+      if (values.assignedId && values.assignedId !== ticket.assignedTo?._id)
         formData.append("assignedId", values.assignedId);
       if (values.photo) {
         formData.append("photo", values.photo);
@@ -166,6 +186,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
           {({
             handleSubmit,
             handleChange,
+            handleBlur,
             values,
             errors,
             touched,
@@ -197,7 +218,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       type="text"
                       name="requestTitle"
                       value={values.requestTitle}
-                      disabled={!isRequester}
+                      disabled={!hasCreatorPermissions}
                       onChange={handleChange}
                       isInvalid={touched.requestTitle && !!errors.requestTitle}
                     />
@@ -247,10 +268,10 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       name="assignedId"
                       value={values.assignedId}
                       onChange={handleChange}
-                      disabled={!hasEditStatus}
+                      disabled={!isAssigned && !isApprovingManager}
                       isInvalid={touched.assignedId && !!errors.assignedId}
                     >
-                      <option value="">Select Assignee</option>
+                      <option value="">Unassigned</option>
                       {isEmployeeLoading ? (
                         <option disabled>Loading...</option>
                       ) : (
@@ -281,7 +302,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       size="sm"
                       name="status"
                       value={values.status}
-                      disabled={!hasEditStatus}
+                      disabled
                       onChange={handleChange}
                       isInvalid={touched.status && !!errors.status}
                     >
@@ -298,7 +319,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                   </Col>
                 </Row>
 
-                {/* Ticket ID */}
+                {/* Ticket ID (human-facing slug, never the raw Mongo _id) */}
                 <Row className="mb-3">
                   <Form.Label
                     className="align-items-center d-flex"
@@ -336,7 +357,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                     <QuillEditor
                       content={values.description}
                       onChange={(val) => setFieldValue("description", val)}
-                      disabled={!isRequester}
+                      disabled={!hasCreatorPermissions}
                       isInvalid={touched.description && !!errors.description}
                       errorMessage={errors.description as string}
                     />
@@ -360,7 +381,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       name="priority"
                       size="sm"
                       value={values.priority}
-                      disabled={!isRequester}
+                      disabled={!isApprovingManager}
                       onChange={handleChange}
                       className="text-street-base"
                       isInvalid={touched.priority && !!errors.priority}
@@ -376,39 +397,84 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                   </Col>
                 </Row>
 
-                {/* Category */}
+                {/* Category (single field — predefined list + custom-entry toggle) */}
                 <Row className="mb-3">
-                  <Form.Label
-                    className="align-items-center d-flex"
-                    column
-                    sm={2}
-                  >
-                    Category
-                  </Form.Label>
+                  <Col sm={2}>
+                    <Form.Label className="fw-medium text-street-dark">
+                      Category
+                    </Form.Label>
+                  </Col>
                   <Col sm={10}>
-                    <Form.Select
-                      name="category"
-                      size="sm"
-                      value={values.category}
-                      onChange={handleChange}
-                      disabled={!isRequester}
-                      className="text-street-base"
-                      isInvalid={touched.category && !!errors.category}
+                    <Form.Group
+                      controlId="category"
+                      className="d-flex flex-column gap-8"
                     >
-                      <option value="">Select category</option>
-                      {["IT Help Desk", "Property Maintenance"].map((cat) => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </Form.Select>
-                    <Form.Control.Feedback type="invalid">
-                      {errors.category}
-                    </Form.Control.Feedback>
+                      {!isCustomCategory ? (
+                        <Form.Select
+                          name="category"
+                          size="sm"
+                          value={values.category}
+                          disabled={!hasCreatorPermissions}
+                          onChange={(e) => {
+                            if (e.target.value === "__custom__") {
+                              setIsCustomCategory(true);
+                              setFieldValue("category", "");
+                            } else {
+                              handleChange(e);
+                            }
+                          }}
+                          className="text-street-base"
+                          isInvalid={touched.category && !!errors.category}
+                        >
+                          <option value="">Select category</option>
+                          {PREDEFINED_CATEGORIES.map((cat) => (
+                            <option key={cat.value} value={cat.value}>
+                              {cat.label}
+                            </option>
+                          ))}
+                          <option value="__custom__">
+                            + Add custom category
+                          </option>
+                        </Form.Select>
+                      ) : (
+                        <div className="d-flex gap-8">
+                          <Form.Control
+                            type="text"
+                            size="sm"
+                            autoFocus
+                            placeholder="Enter custom category"
+                            value={values.category}
+                            disabled={!hasCreatorPermissions}
+                            onChange={(e) =>
+                              setFieldValue("category", e.target.value)
+                            }
+                            onBlur={handleBlur}
+                            name="category"
+                            className="py-12 px-16 text-street-base"
+                            isInvalid={touched.category && !!errors.category}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-street-neutral btn-sm"
+                            disabled={!hasCreatorPermissions}
+                            onClick={() => {
+                              setIsCustomCategory(false);
+                              setFieldValue("category", "");
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+                      <Form.Control.Feedback type="invalid">
+                        {errors.category}
+                      </Form.Control.Feedback>
+                    </Form.Group>
                   </Col>
                 </Row>
 
                 {/* Location */}
+
                 <Row className="mb-3">
                   <Form.Label
                     className="align-items-center d-flex"
@@ -417,22 +483,34 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                   >
                     Location
                   </Form.Label>
+
                   <Col sm={10}>
-                    <Form.Control
-                      type="text"
+                    <Form.Select
                       size="sm"
                       name="location"
-                      disabled={!isRequester}
                       value={values.location}
                       onChange={handleChange}
+                      disabled={!hasCreatorPermissions || locationsLoading}
                       isInvalid={touched.location && !!errors.location}
-                    />
+                    >
+                      <option value="">
+                        {locationsLoading
+                          ? "Loading locations..."
+                          : "Select location"}
+                      </option>
+
+                      {locationsData?.data?.map((loc) => (
+                        <option key={loc._id} value={loc._id}>
+                          {loc.name}
+                        </option>
+                      ))}
+                    </Form.Select>
+
                     <Form.Control.Feedback type="invalid">
                       {errors.location}
                     </Form.Control.Feedback>
                   </Col>
                 </Row>
-
                 {/* Attachment */}
                 <Row className="mb-3  ">
                   <Col sm={2}>
@@ -447,7 +525,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       >
                         {ticket.photo?.fileName}
                       </Link>
-                      {!!isRequester && (
+                      {!hasCreatorPermissions && (
                         <Icon
                           icon="mdi:file-edit"
                           className="ms-2 icon-street-edit"

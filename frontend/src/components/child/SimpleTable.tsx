@@ -3,7 +3,7 @@ import React from "react";
 // Types
 export interface Column<T> {
   header: string;
-  accessor: (row: T) => React.ReactNode;
+  accessor: (row: T, index: number) => React.ReactNode;
 }
 
 interface TableProps<T> {
@@ -52,7 +52,7 @@ const SimpleTable = <T extends unknown>({
                         whiteSpace: "normal",
                       }}
                     >
-                      {col.accessor(row)}
+                      {col.accessor(row, rowIdx)}
                     </td>
                   ))}
                 </tr>

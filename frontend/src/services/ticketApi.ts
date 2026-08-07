@@ -25,7 +25,7 @@ export interface commentData {
   };
   createdAt: string;
 }
-type commentResponse = ApiResponse<{
+export type commentResponse = ApiResponse<{
   comments: commentData[];
   paggination: {
     total: number;
@@ -34,7 +34,57 @@ type commentResponse = ApiResponse<{
     page: number;
   };
 }>;
+export interface TicketDetail {
+  ticketId: string;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  priorityLocked: boolean;
+  category: string;
+  location: string;
+  photo: { fileName: string; fileUrl: string; _id: string } | null;
 
+  submittedBy: UserInfo | null;
+  assignedTo: UserInfo | null;
+  approvedBy: UserInfo | null;
+  rejectedBy: UserInfo | null;
+
+  rejectionReason: string | null;
+
+  createdAt: string;
+  resolvedAt: string | null;
+  turnaround: string | null;
+
+  latestComment: LatestComment | null;
+
+  timeline: TimelineItem[];
+}
+
+export interface UserInfo {
+  name: string;
+  email: string;
+}
+
+export interface LatestComment {
+  text: string;
+  author: string;
+  createdAt: string;
+}
+
+export interface TimelineItem {
+  type: "status" | "assignment";
+
+  // Status history
+  status?: string;
+
+  // Assignment history
+  assignedTo?: string;
+
+  // Common fields
+  by: string;
+  at: string;
+}
 const ticketApi = api.injectEndpoints({
   endpoints: (builder) => ({
     fetchTickets: builder.query<TicketFetchResponseData, TicketFetchQuery>({
@@ -65,20 +115,67 @@ const ticketApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Ticket"],
     }),
-    addComment: builder.mutation<
+    approveTicket: builder.mutation<
+      ApiGeneralResponse,
+      { ticketId: string; priority: string }
+    >({
+      query: ({ ticketId, priority }) => ({
+        url: `/ticket/${ticketId}/approve`,
+        method: "PATCH",
+        body: { priority },
+      }),
+      invalidatesTags: ["Ticket"],
+    }),
+
+    rejectTicket: builder.mutation<
+      ApiGeneralResponse,
+      { ticketId: string; rejectionReason: string }
+    >({
+      query: ({ ticketId, rejectionReason }) => ({
+        url: `/ticket/${ticketId}/reject`,
+        method: "PATCH",
+        body: { rejectionReason },
+      }),
+      invalidatesTags: ["Ticket"],
+    }),
+
+    startTicket: builder.mutation<ApiGeneralResponse, string>({
+      query: (ticketId) => ({
+        url: `/ticket/${ticketId}/start`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Ticket"],
+    }),
+
+    completeTicket: builder.mutation<ApiGeneralResponse, string>({
+      query: (ticketId) => ({
+        url: `/ticket/${ticketId}/complete`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Ticket"],
+    }),
+
+    cancelTicket: builder.mutation<ApiGeneralResponse, string>({
+      query: (ticketId) => ({
+        url: `/ticket/${ticketId}/cancel`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Ticket"],
+    }),
+    addTicketComment: builder.mutation<
       ApiGeneralResponse,
       { ticketId: string; formdata: FormData; onProgress?: (p: number) => void }
     >({
       queryFn: ({ ticketId, formdata, onProgress }) =>
         uploadWithProgress(
           `/ticket/${ticketId}/comments`,
-          "POST"
+          "POST",
         )({
           data: formdata,
           onProgress,
         }),
     }),
-    viewComments: builder.query<
+    viewTicketComments: builder.query<
       commentResponse,
       { page: number; limit: number; ticketId: string }
     >({
@@ -89,14 +186,91 @@ const ticketApi = api.injectEndpoints({
       }),
       keepUnusedDataFor: 300,
     }),
+    fetchTicketReports: builder.query({
+      query: ({
+        startDate,
+        endDate,
+        location,
+        status,
+        page = 1,
+        limit = 10,
+        createdBy,
+        assignedTo,
+        approvedBy,
+      }) => ({
+        url: `/ticket/report`,
+        method: "GET",
+        params: {
+          startDate,
+          endDate,
+          location,
+          status,
+          page,
+          limit,
+          createdBy,
+          assignedTo,
+          approvedBy,
+        },
+      }),
+    }),
+    exportTicketReport: builder.mutation<
+      Blob,
+      {
+        startDate: string;
+        endDate: string;
+        location: string;
+        status: string;
+        createdBy: string;
+        assignedTo: string;
+        approvedBy: string;
+      }
+    >({
+      query: ({
+        startDate,
+        endDate,
+        location,
+        status,
+        createdBy,
+        assignedTo,
+        approvedBy,
+      }) => ({
+        url: `/ticket/report/export`,
+        method: "GET",
+        params: {
+          startDate,
+          endDate,
+          location,
+          status,
+          createdBy,
+          assignedTo,
+          approvedBy,
+        },
+        responseHandler: (response: Response) => response.blob(),
+      }),
+    }),
+    getTicketDetail: builder.query<ApiResponse<TicketDetail>, { id: string }>({
+      query: ({ id }) => ({
+        url: `/ticket/report/${id}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 export const {
   useFetchTicketsQuery,
+  useFetchTicketReportsQuery,
   useCreateTicketMutation,
   useEditTicketMutation,
-  useAddCommentMutation,
-  useViewCommentsQuery,
-  useLazyViewCommentsQuery,
+  useAddTicketCommentMutation,
+  useViewTicketCommentsQuery,
+  useLazyViewTicketCommentsQuery,
   useLazyFetchTicketsQuery,
+  useApproveTicketMutation,
+  useRejectTicketMutation,
+  useStartTicketMutation,
+  useCompleteTicketMutation,
+  useCancelTicketMutation,
+  useGetTicketDetailQuery,
+  useLazyGetTicketDetailQuery,
+  useExportTicketReportMutation,
 } = ticketApi;

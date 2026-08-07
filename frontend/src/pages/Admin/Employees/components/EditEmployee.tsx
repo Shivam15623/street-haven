@@ -16,6 +16,7 @@ import CustomDatePicker from "../../../../components/child/DatePicker";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 import { PERMISSIONS } from "../../../../utills/auth/permissions";
 import { getErrorMessage } from "../../../../utills/utills";
+import { useFetchLocationsQuery } from "../../../../services/locationApi";
 
 // Yup validation schema
 const editEmployeeSchema = yup.object({
@@ -24,17 +25,14 @@ const editEmployeeSchema = yup.object({
   role: yup.string().required("Role is required"),
   email: yup
     .string()
-    .matches(
-      /^[A-Za-z0-9._%+-]+@streethaven\.com$/,
-      "Email must be from @streethaven.com domain"
-    )
+    .matches(/^[a-zA-Z0-9._%+-]/, "Email must be from @streethaven.com domain")
     .required("Email is required"),
   title: yup.string().required("Title is required"),
   phoneNo: yup
     .string()
     .matches(
       /^\+1\s\(\d{3}\)\s\d{3}-\d{4}$/,
-      "Enter a valid Canadian phone number"
+      "Enter a valid Canadian phone number",
     )
     .required("Phone number is required"),
   profilePic: yup.mixed<File>().nullable(),
@@ -46,10 +44,20 @@ const editEmployeeSchema = yup.object({
     .of(
       yup
         .string()
-        .oneOf(Object.values(PERMISSIONS), "Invalid permission selected")
+        .oneOf(Object.values(PERMISSIONS), "Invalid permission selected"),
     )
     .default([])
     .nullable(),
+  locations: yup
+    .array()
+    .of(yup.string().required())
+    .when("role", {
+      is: ROLES.MANAGER,
+      then: (schema) => schema.min(1, "Select at least one location"),
+      otherwise: (schema) => schema.notRequired(),
+    })
+    .default([]),
+  endAt: yup.date().nullable().optional(),
 });
 
 type EditEmployeeValues = yup.InferType<typeof editEmployeeSchema>;
@@ -67,16 +75,16 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [editEmployee, { isLoading }] = useEditEmployeeMutation();
-
+  const { data: locationsData, isLoading: locationsLoading } =
+    useFetchLocationsQuery({}, { skip: !showModal });
   const { data: employeeData, isLoading: isEmployeeLoading } =
     useAllEmployeesQuery(
       { forDropdown: true },
-      { skip: !showModal, refetchOnMountOrArgChange: false }
+      { skip: !showModal, refetchOnMountOrArgChange: false },
     );
+  console.log("data", employeeData, initialValues);
   const handleSave = async (values: EditEmployeeValues) => {
     try {
-      // Ensure timePeriod exists
-
       const formData = new FormData();
       formData.append("firstname", values.firstname);
       formData.append("lastname", values.lastname);
@@ -84,28 +92,37 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
       formData.append("phoneNo", values.phoneNo);
       formData.append("role", values.role);
       formData.append("title", values.title);
-      if (
-        values.superviserId &&
-        values.superviserId !== null &&
-        values.superviserId !== ""
-      )
+
+      if (values.superviserId)
         formData.append("superviserId", values.superviserId);
+
       function toISODate(value: Date | string | null | undefined) {
         if (!value) return "";
         return value instanceof Date
           ? value.toISOString()
           : new Date(value).toISOString();
       }
+
       if (values.customPermissions?.length) {
-        values.customPermissions.forEach((permission) => {
-          formData.append("customPermissions[]", permission!);
-        });
+        values.customPermissions.forEach((p) =>
+          formData.append("customPermissions[]", p!),
+        );
       }
 
-      // Usage
-      formData.append("hireDate", toISODate(values.hireDate));
+      // send locations only when role is manager — avoids the backend's
+      // "only managers can be assigned to locations" guard rejecting the request
+      if (values.role === ROLES.MANAGER && values.locations?.length) {
+        values.locations.forEach((locId) =>
+          formData.append("locations[]", locId),
+        );
+      }
 
+      formData.append("hireDate", toISODate(values.hireDate));
       if (values.profilePic) formData.append("profilePic", values.profilePic);
+      // Only send endAt if it's actually set — never force null/undefined through
+      if (values.endAt) {
+        formData.append("endAt", toISODate(values.endAt));
+      }
 
       const res = await editEmployee({ id, data: formData }).unwrap();
       if (res.success) showSuccess(res.message);
@@ -270,52 +287,46 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
                 />
               </BootstrapForm.Group>
               {/* Ticket Permissions */}
-              <BootstrapForm.Group className="mb-3">
-                <BootstrapForm.Label>Ticket Permissions</BootstrapForm.Label>
+              {values.role === ROLES.MANAGER && (
+                <BootstrapForm.Group className="mb-3">
+                  <BootstrapForm.Label>Assigned Locations</BootstrapForm.Label>
 
-                <BootstrapForm.Check
-                  type="checkbox"
-                  id="view-it-tickets"
-                  label="View It Tickets"
-                  checked={values.customPermissions?.includes(
-                    PERMISSIONS.VIEW_IT_TICKETS
+                  {locationsLoading ? (
+                    <div className="text-sm">Loading locations...</div>
+                  ) : (
+                    <div
+                      className="d-flex flex-column gap-2 border rounded p-2"
+                      style={{ maxHeight: 180, overflowY: "auto" }}
+                    >
+                      {locationsData?.data.map((loc) => (
+                        <BootstrapForm.Check
+                          key={loc._id}
+                          type="checkbox"
+                          id={`edit-location-${loc._id}`}
+                          label={loc.name}
+                          checked={(values.locations ?? []).includes(loc._id)}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setFieldValue(
+                              "locations",
+                              checked
+                                ? [...(values.locations ?? []), loc._id]
+                                : (values.locations ?? []).filter(
+                                    (id: string) => id !== loc._id,
+                                  ),
+                            );
+                          }}
+                        />
+                      ))}
+                    </div>
                   )}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    const permission = PERMISSIONS.VIEW_IT_TICKETS;
-
-                    setFieldValue(
-                      "customPermissions",
-                      checked
-                        ? [...(values.customPermissions ?? []), permission]
-                        : (values.customPermissions ?? []).filter(
-                            (p) => p !== permission
-                          )
-                    );
-                  }}
-                />
-                <BootstrapForm.Check
-                  type="checkbox"
-                  id="view-facility-tickets"
-                  label="View Facility Tickets"
-                  checked={values.customPermissions?.includes(
-                    PERMISSIONS.VIEW_PROPERTY_TICKETS
+                  {touched.locations && errors.locations && (
+                    <div className="invalid-feedback d-block">
+                      {String(errors.locations)}
+                    </div>
                   )}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    const permission = PERMISSIONS.VIEW_PROPERTY_TICKETS;
-
-                    setFieldValue(
-                      "customPermissions",
-                      checked
-                        ? [...(values.customPermissions ?? []), permission]
-                        : (values.customPermissions ?? []).filter(
-                            (p) => p !== permission
-                          )
-                    );
-                  }}
-                />
-              </BootstrapForm.Group>
+                </BootstrapForm.Group>
+              )}
 
               {/* Phone */}
               <BootstrapForm.Group className="mb-3">
@@ -340,6 +351,7 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
               </BootstrapForm.Group>
 
               {/* Title & Hire Date */}
+              {/* Title & Hire/Start Date */}
               <Row>
                 <Col md={6}>
                   <BootstrapForm.Group className="mb-3">
@@ -347,9 +359,7 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
                     <Field
                       name="title"
                       type="text"
-                      className={`form-control ${
-                        touched.title && errors.title ? "is-invalid" : ""
-                      }`}
+                      className={`form-control ${touched.title && errors.title ? "is-invalid" : ""}`}
                     />
                     <ErrorMessage
                       component="div"
@@ -360,7 +370,11 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
                 </Col>
                 <Col md={6}>
                   <BootstrapForm.Group className="mb-3">
-                    <BootstrapForm.Label>Hire Date</BootstrapForm.Label>
+                    <BootstrapForm.Label>
+                      {values.role === ROLES.VOLUNTEER
+                        ? "Volunteer Start Date"
+                        : "Hire Date"}
+                    </BootstrapForm.Label>
                     <CustomDatePicker
                       value={values.hireDate ? new Date(values.hireDate) : null}
                       onChange={(date) => setFieldValue("hireDate", date)}
@@ -374,6 +388,21 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
                   </BootstrapForm.Group>
                 </Col>
               </Row>
+
+              {/* Volunteer-only: End Date (optional, only sent if set) */}
+              {values.role === ROLES.VOLUNTEER && (
+                <BootstrapForm.Group className="mb-3">
+                  <BootstrapForm.Label>End Date (optional)</BootstrapForm.Label>
+                  <CustomDatePicker
+                    value={values.endAt ? new Date(values.endAt) : null}
+                    onChange={(date) => setFieldValue("endAt", date)}
+                    onBlur={handleBlur}
+                  />
+                  <div className="form-text">
+                    Leave blank if the volunteer is still active.
+                  </div>
+                </BootstrapForm.Group>
+              )}
               <BootstrapForm.Group className="mb-3">
                 <BootstrapForm.Label
                   className="align-items-center d-flex"

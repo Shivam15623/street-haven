@@ -1,0 +1,213 @@
+.task-comment-header{
+    padding:5px 10px 5px 10px !important;
+}
+.task-comment-title{
+    font-size: 24px !important;
+    font-weight: 600;
+   
+}
+/* ===========================
+   Task Card Grid
+=========================== */
+
+.task-card-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 767px) {
+  .task-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ===========================
+   Summary Card
+=========================== */
+
+.task-summary-card .card-body {
+  padding: 36px;
+  border-radius: 12px;
+  background-color: #ffffff;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+[data-theme="dark"] .task-summary-card .card-body {
+  background-color: var(--street-card);
+}
+
+.task-icon.total.summary {
+  width: 70px;
+  height: 70px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+  background: #f4f4f4;
+  color: #555;
+}
+
+/* ===========================
+   Base Card
+=========================== */
+
+.task-card {
+  border-radius: 12px;
+  background-color: #ffffff;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+[data-theme="dark"] .task-card {
+  background-color: var(--street-card);
+}
+
+.task-card h4 {
+  font-weight: 700;
+  margin-bottom: 0;
+}
+
+.task-card p {
+  margin-bottom: 0;
+  opacity: 0.85;
+}
+
+/* ===========================
+   Icon Wrapper
+=========================== */
+
+.task-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+}
+
+/* ===========================
+   LIGHT MODE
+=========================== */
+
+[data-theme="light"] .task-icon.new {
+  background: rgba(59, 130, 246, 0.15);
+  color: #2563eb;
+}
+
+[data-theme="light"] .task-icon.assigned {
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+}
+
+[data-theme="light"] .task-icon.under_review {
+  background: rgba(168, 85, 247, 0.15);
+  color: #9333ea;
+}
+
+[data-theme="light"] .task-icon.completed {
+  background: rgba(34, 197, 94, 0.15);
+  color: #16a34a;
+}
+
+[data-theme="light"] .task-icon.total {
+  background: #f4f4f4;
+  color: #555;
+}
+
+/* ===========================
+   DARK MODE
+=========================== */
+
+[data-theme="dark"] .task-icon.new {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+[data-theme="dark"] .task-icon.assigned {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .task-icon.under_review {
+  background: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+}
+
+[data-theme="dark"] .task-icon.completed {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+[data-theme="dark"] .task-icon.total {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e7eb;
+}
+
+/* ===========================
+   Active Card
+=========================== */
+
+.active-task-card {
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 12px;
+}
+
+/* ===========================
+   LIGHT MODE ACTIVE
+=========================== */
+
+[data-theme="light"] .active-task-card.new {
+  border-color: #2563eb;
+}
+
+[data-theme="light"] .active-task-card.assigned {
+  border-color: #d97706;
+}
+
+[data-theme="light"] .active-task-card.under_review {
+  border-color: #9333ea;
+}
+
+[data-theme="light"] .active-task-card.completed {
+  border-color: #16a34a;
+}
+
+[data-theme="light"] .active-task-card.total {
+  border-color: #555;
+}
+
+/* ===========================
+   DARK MODE ACTIVE
+=========================== */
+
+[data-theme="dark"] .active-task-card.new {
+  border-color: #60a5fa;
+}
+
+[data-theme="dark"] .active-task-card.assigned {
+  border-color: #fbbf24;
+}
+
+[data-theme="dark"] .active-task-card.under_review {
+  border-color: #c084fc;
+}
+
+[data-theme="dark"] .active-task-card.completed {
+  border-color: #4ade80;
+}
+
+[data-theme="dark"] .active-task-card.total {
+  border-color: #e5e7eb;
+}
