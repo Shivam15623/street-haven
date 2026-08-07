@@ -48,7 +48,7 @@ export const ROLE_PERMISSIONS = {
 
     // 🔹 Training Materials
     PERMISSIONS.VIEW_PROGRAM_MANUALS,
-
+    PERMISSIONS.TICKET_VIEW_SELF,
     // 🔹 Forms
     PERMISSIONS.VIEW_SUBMIT_FORM,
   ],
@@ -67,7 +67,7 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.VIEW_EMERGENCY_CONTACTS,
 
     // 🔹 Employees
-
+    PERMISSIONS.TICKET_VIEW_SELF,
     // 🔹 Events
     PERMISSIONS.VIEW_EVENTS,
 
