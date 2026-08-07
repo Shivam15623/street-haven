@@ -3,12 +3,49 @@
 .request-form-card {
   transition: background-color 0.3s ease;
 }
+.ticket-card-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 1rem;
+}
+.ticket-summary-card .card-body {
+  padding: 36px;
+  border-radius: 12px;
+  background-color: #ffffff; /* Light mode */
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+.ticket-icon.total.summary {
+  width: 70px;
+  height: 70px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+  background: #f4f4f4;
+  color: #555;
+}
 
+[data-theme="dark"] .ticket-summary-card .card-body {
+  background-color: var(--street-card); /* Dark mode */
+}
+@media (max-width: 767px) {
+  .ticket-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 /* Base card styles */
 .ticket-card {
   border-radius: 12px;
   background-color: #ffffff; /* Light mode */
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 [data-theme="dark"] .ticket-card {
@@ -33,7 +70,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.3s ease, color 0.3s ease;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
 }
 
 /* ================= LIGHT ================= */

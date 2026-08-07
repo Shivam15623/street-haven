@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { lazy, useMemo } from "react";
 import { Form, Row, Col, Spinner } from "react-bootstrap";
 import { Formik, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
@@ -11,9 +11,8 @@ import {
 } from "../../../../services/taskApi";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
 import { useAllEmployeesQuery } from "../../../../services/EmployeeApi";
-import QuillEditor from "../../../../components/child/QuillEditor";
 import CustomDatePicker from "../../../../components/child/DatePicker";
-
+const QuillEditor = lazy(() => import("../../../../components/child/QuillEditor"));
 export interface AssignableUser {
   _id: string;
   name: string;
@@ -68,7 +67,7 @@ const ActionTaskModal: React.FC<ActionTaskModalProps> = ({
     isLoading: isEmployeeLoading,
     isError: isEmployeeError,
   } = useAllEmployeesQuery(
-    { forDropdown: true, role: "volunteer" },
+    { forDropdown: true, role: ["volunteer"] },
     { skip: !show },
   );
   const [createTask, { isLoading: isCreating }] = useCreateTaskMutation();
@@ -132,10 +131,10 @@ const ActionTaskModal: React.FC<ActionTaskModalProps> = ({
           : "Fill in the details to assign a new task"
       }
       footer={
-        <div className="d-flex justify-content-end gap-8 mt-24">
+        <div className="d-flex justify-content-end gap-8 ">
           <button
             type="button"
-            className="btn btn-secondary"
+            className="btn btn-secondary  text-sm d-flex flex-row align-items-center gap-8 justify-content-center"
             onClick={onHide}
             disabled={isLoading}
           >
@@ -144,7 +143,7 @@ const ActionTaskModal: React.FC<ActionTaskModalProps> = ({
           <button
             type="submit"
             form={isEdit ? "edit-task" : "create-task"}
-            className="btn btn-primary d-flex align-items-center gap-8"
+            className="btn btn-street-primary text-sm d-flex flex-row align-items-center gap-8 justify-content-center"
             disabled={isLoading}
           >
             {isLoading && (
@@ -176,7 +175,7 @@ const ActionTaskModal: React.FC<ActionTaskModalProps> = ({
             id={isEdit ? "edit-task" : "create-task"}
             onSubmit={formikSubmit}
           >
-            <Form.Group className="mb-16">
+            <Form.Group className="mb-16 d-flex flex-column gap-1">
               <Form.Label>Title</Form.Label>
               <Field
                 type="text"
@@ -192,7 +191,7 @@ const ActionTaskModal: React.FC<ActionTaskModalProps> = ({
               />
             </Form.Group>
 
-            <Form.Group className="mb-16">
+            <Form.Group className="mb-16 d-flex flex-column gap-1">
               <Form.Label>Description</Form.Label>
 
               <QuillEditor
@@ -211,7 +210,7 @@ const ActionTaskModal: React.FC<ActionTaskModalProps> = ({
 
             <Row>
               <Col md={6}>
-                <Form.Group className="mb-16">
+                <Form.Group className="mb-16 d-flex flex-column gap-1">
                   <Form.Label>Assign To</Form.Label>
                   <Field
                     as="select"
@@ -241,7 +240,7 @@ const ActionTaskModal: React.FC<ActionTaskModalProps> = ({
               </Col>
 
               <Col md={6}>
-                <Form.Group className="mb-16">
+                <Form.Group className="mb-16 d-flex flex-column gap-1">
                   <Form.Label>Due Date</Form.Label>
                   <CustomDatePicker
                     value={values.dueDate ? new Date(values.dueDate) : null}
@@ -260,7 +259,7 @@ const ActionTaskModal: React.FC<ActionTaskModalProps> = ({
             </Row>
 
             {isEdit && (
-              <Form.Group className="mb-16">
+              <Form.Group className="mb-16 d-flex flex-column gap-1">
                 <Form.Label>Status</Form.Label>
                 <Field
                   as="select"

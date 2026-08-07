@@ -2,8 +2,8 @@ import type { ApiResponse } from "./Response";
 
 export interface TicketData {
   _id: string; // optional when creating, present when fetched
-  displayId:string;
-  slug:string;
+  displayId: string;
+  slug: string;
   req_title: string;
   description: string;
   priority: "Low" | "Medium" | "High";
@@ -14,13 +14,18 @@ export interface TicketData {
     | "In Progress"
     | "Completed"
     | "Closed"; // default: Open
-  category:string;
+  category: string;
   location?: {
     _id: string;
     name: string;
     managers: string[];
   };
   photo?: TicketPhoto;
+  approvedBy?: {
+    _id: string;
+    firstname: string;
+    lastname: string;
+  };
   assignedTo?: userPopulatedData; // or a populated User object if you want
   createdBy: userPopulatedData; // required
   createdAt?: Date; // from timestamps

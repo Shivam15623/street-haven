@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { lazy, useState } from "react";
 import { Formik, FieldArray, ErrorMessage } from "formik";
 import {
   useCreateManualsMutation,
@@ -10,14 +10,15 @@ import { Form as BootstrapForm } from "react-bootstrap";
 import Badge from "../../../../components/child/Badge";
 import { showError, showSuccess } from "../../../../utills/toastutills";
 import type { Document } from "./DocumentCard";
-import QuillEditor from "../../../../components/child/QuillEditor";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 import FileField from "../../../../components/child/FileField";
 import {
   getErrorMessage,
   getPlainTextFromHTML,
 } from "../../../../utills/utills";
-
+const QuillEditor = lazy(
+  () => import("../../../../components/child/QuillEditor"),
+);
 // 🔹 Schema generator (avoids duplication)
 const programManualSchema = () =>
   Yup.object().shape({
@@ -125,7 +126,7 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
 
   return (
     <ModalWrapper
-      title={isEdit ? "Edit Program Manual" : "Add Program Manual"}
+      title={isEdit ? "Edit Training Material" : "Add Training Material"}
       size="lg"
       show={show}
       headerClassName="text-xl p-0 pb-20 text-street-dark"

@@ -1,4 +1,3 @@
-// middleware/checkActiveUser.js
 import { ApiError } from "../utills/ApiError.js";
 
 export const checkActiveUser = (req, res, next) => {

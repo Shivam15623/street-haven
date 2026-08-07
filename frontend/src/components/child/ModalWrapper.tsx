@@ -58,6 +58,7 @@ const ModalWrapper: React.FC<ModalWrapperProps> = ({
       backdrop={effectiveBackdrop}
       keyboard={effectiveKeyboard}
       contentClassName="overflow"
+      enforceFocus={false}
     >
       <div
         className={`position-relative d-flex flex-column ${className ?? ""}`}

@@ -9,16 +9,35 @@ import { selectAuth } from "../../../redux/AuthSlice";
 
 import { useFetchTicketsQuery } from "../../../services/ticketApi";
 import { useRecentAnnouncementcountQuery } from "../../../services/AnnouncementApi";
+import { useGetAllTasksQuery } from "../../../services/taskApi";
+import { PERMISSIONS } from "../../../utills/auth/permissions";
+import useHasPermission from "../../../hooks/Auth";
 
 const EmployeeDashboard = () => {
   const today = dayjs().format("dddd, MMMM D, YYYY");
   const { user } = useSelector(selectAuth);
+  const { hasPermission } = useHasPermission();
+
+  const canViewTickets = hasPermission({
+    action: PERMISSIONS.TICKET_VIEW_SELF,
+  });
+  const canViewTasks = hasPermission({
+    action: PERMISSIONS.TASK_VIEW_SELF,
+  });
   const { data: ticketData } = useFetchTicketsQuery({
     page: 1,
     priority: "All",
     status: "Open",
     limit: 100,
     order: "desc",
+    search: "",
+  });
+  const { data: taskData } = useGetAllTasksQuery({
+    page: 1,
+
+    status: "assigned",
+    limit: 100,
+
     search: "",
   });
 
@@ -106,15 +125,24 @@ const EmployeeDashboard = () => {
       </Row> */}
 
       <Row className=" g-2 g-md-3 g-lg-4">
-       
-
-        <DashboardCard
-          icon="iconamoon:ticket-light"
-          label="Open Tickets"
-          link={`/it_facility?tab=track_tickets&status=Open`}
-          value={ticketData?.data.counts.open ?? 0}
-          key={"Open Tickets"}
-        />
+        {canViewTickets && (
+          <DashboardCard
+            icon="iconamoon:ticket-light"
+            label="Open Tickets"
+            link="/it_facility?tab=track_tickets&status=Open"
+            value={ticketData?.data.counts.open ?? 0}
+            key="Open Tickets"
+          />
+        )}
+        {canViewTasks && (
+          <DashboardCard
+            icon="mdi:clipboard-text-outline"
+            label="Assigned Tasks"
+            link="/tasks"
+            value={taskData?.data?.counts.assigned ?? 0}
+            key="Assigned Tasks"
+          />
+        )}
         <DashboardCard
           icon="lucide:party-popper"
           label="Announcements"
@@ -128,9 +156,7 @@ const EmployeeDashboard = () => {
           {" "}
           <RecentActivity />
         </Col>
-        <Col md={6}>
-         
-        </Col>
+        <Col md={6}></Col>
       </Row>
     </div>
   );

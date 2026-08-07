@@ -4,13 +4,13 @@ import { Col, Form, Row, Spinner } from "react-bootstrap";
 import ImageUpload from "../../../../components/child/Imageupload";
 import { useCreateTicketMutation } from "../../../../services/ticketApi";
 import { showError, showSuccess } from "../../../../utills/toastutills";
-import QuillEditor from "../../../../components/child/QuillEditor";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 import {
   getErrorMessage,
 } from "../../../../utills/utills";
 import { useFetchLocationsQuery } from "../../../../services/locationApi";
-import { useState } from "react";
+import { lazy, useState } from "react";
+const QuillEditor = lazy(() => import("../../../../components/child/QuillEditor"));
 const PREDEFINED_CATEGORIES = [
   { label: "Plumbing", value: "plumbing" },
   { label: "Electrical", value: "electrical" },

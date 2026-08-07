@@ -245,7 +245,7 @@ const ticketApi = api.injectEndpoints({
           assignedTo,
           approvedBy,
         },
-        responseHandler: (response) => response.blob(),
+        responseHandler: (response: Response) => response.blob(),
       }),
     }),
     getTicketDetail: builder.query<ApiResponse<TicketDetail>, { id: string }>({

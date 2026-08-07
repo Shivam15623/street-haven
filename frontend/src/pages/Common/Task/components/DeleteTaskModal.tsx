@@ -46,7 +46,7 @@ const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
         <>
           <button
             type="button"
-            className="btn btn-secondary"
+            className="btn btn-secondary  text-sm d-flex flex-row align-items-center gap-8 justify-content-center"
             onClick={onHide}
             disabled={isLoading}
           >
@@ -54,7 +54,7 @@ const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
           </button>
           <button
             type="button"
-            className="btn btn-danger d-flex align-items-center gap-8"
+            className="btn btn-danger text-sm d-flex flex-row align-items-center gap-8 justify-content-center"
             onClick={handleDelete}
             disabled={isLoading}
           >

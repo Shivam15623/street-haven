@@ -1,149 +1,136 @@
-import { useState } from "react";
-import { Icon } from "@iconify/react";
+import { useMemo, useState } from "react";
 import {
   useGetAllTasksQuery,
   type ITask,
   type TaskStatus,
 } from "../../../../services/taskApi";
-import type { Column } from "../../../../components/child/DataTable";
 import DataTable from "../../../../components/child/DataTable";
-import TaskComment from "./TaskComment";
+import { useDebounce } from "../../../../hooks/useDebounce";
+import TaskSummaryCards from "./TaskSummaryCards";
+import TaskFilterBar from "./TaskFilterBar";
+import { useTaskColumns } from "./useTaskColumn";
+import { defaultFilters, type TaskFilters } from "../taskTable.types";
 
 const TaskTable = ({
   onEdit,
   onDelete,
+  OnView,
 }: {
   onEdit: (task: ITask) => void;
   onDelete: (task: ITask) => void;
+  OnView: (task: ITask) => void;
 }) => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<TaskStatus | undefined>(undefined);
   const [sortBy, setSortBy] = useState("createdAt");
-  const [order, setOrder] = useState<"asc" | "desc">("desc");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState(defaultFilters); // editing
+  const [appliedFilters, setAppliedFilters] = useState(defaultFilters); // querying
+  const debouncedSearch = useDebounce(filters.search, 2000);
+
+  const setFilter = <K extends keyof TaskFilters>(
+    key: K,
+    value: TaskFilters[K],
+  ) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setPage(1);
+  };
+  const applyFilters = () => {
+    setAppliedFilters(filters);
+    setPage(1);
+  };
+  const clearFilters = () => {
+    setFilters(defaultFilters);
+    setAppliedFilters(defaultFilters);
+    setPage(1);
+  };
+
+  const activeFilterCount = useMemo(() => {
+    return Object.entries(filters).filter(([key, val]) => {
+      if (key === "searchBy" || key === "dateType" || key === "search")
+        return false;
+      if (Array.isArray(val)) return val.length > 0;
+      return val !== "" && val !== null && val !== undefined;
+    }).length;
+  }, [filters]);
 
   const { data, isLoading } = useGetAllTasksQuery({
     page,
     limit,
-    search,
-    sortBy,
-    order,
+    search: debouncedSearch || undefined,
+    assignedBy: appliedFilters.assignedBy,
+    assignedTo: appliedFilters.assignedTo,
+    status,
+    sortBy: sortBy as
+      | "createdAt"
+      | "status"
+      | "title"
+      | "updatedAt"
+      | "dueStatus"
+      | "dueDate",
+    sortOrder,
+    dateType: appliedFilters.dateType,
+    datePreset: appliedFilters.datePreset || undefined,
+    startDate: appliedFilters.datePreset
+      ? undefined
+      : appliedFilters.startDate || undefined,
+    endDate: appliedFilters.datePreset
+      ? undefined
+      : appliedFilters.endDate || undefined,
+    dueStatus: appliedFilters.dueStatus || undefined,
+    hasDueDate: appliedFilters.hasDueDate || "",
+    isCompleted: appliedFilters.isCompleted || "",
   });
 
-  const columns: Column<ITask>[] = [
-    {
-      title: "Task",
-
-      render: (row) => {
-        return (
-          <div className="d-flex flex-column flex-1 gap-1">
-            <p className="text-xs xs:text-sm text-street-dark fw-semibold">
-              {row.title}
-            </p>
-          </div>
-        );
-      },
-
-      accessorKey: "title",
-    },
-    {
-      title: "Assigned To",
-      render: (row) => (
-        <>
-          {row.assignedTo?.firstname} {row.assignedTo?.lastname}
-        </>
-      ),
-      sortable: false,
-    },
-    {
-      title: "Assigned By",
-      render: (row) => (
-        <>
-          {row.assignedBy?.firstname} {row.assignedBy?.lastname}
-        </>
-      ),
-      sortable: false,
-    },
-    {
-      title: "Due Date",
-      render: (row) =>
-        row.dueDate ? new Date(row.dueDate).toLocaleDateString() : "-",
-      sortable: false,
-    },
-    {
-      title: "Status",
-      accessorKey: "status",
-      render: (row) => {
-        const badgeClass: Record<TaskStatus, string> = {
-          assigned: "bg-warning",
-          under_review: "bg-info",
-          completed: "bg-success",
-        };
-
-        return (
-          <span className={`badge ${badgeClass[row.status]}`}>
-            {row.status.replace("_", " ")}
-          </span>
-        );
-      },
-    },
-    {
-      title: "Actions",
-      sortable: false,
-      render: (row) => (
-        <div className="d-flex gap-2">
-          <button className="btn btn-sm btn-light" title="View">
-            <Icon icon="mdi:eye-outline" width={18} />
-          </button>
-
-          <button
-            className="btn btn-sm btn-light"
-            title="Edit"
-            onClick={() => onEdit(row)}
-          >
-            <Icon icon="mdi:pencil-outline" width={18} />
-          </button>
-
-          <button
-            className="btn btn-sm btn-light text-danger"
-            onClick={() => onDelete(row)}
-            title="Delete"
-          >
-            <Icon icon="mdi:delete-outline" width={18} />
-          </button>
-          <TaskComment task={row} />
-        </div>
-      ),
-    },
-  ];
+  const columns = useTaskColumns({ onEdit, onDelete, onView: OnView });
 
   if (isLoading) {
     return <div className="text-center py-5">Loading...</div>;
   }
 
   return (
-    <DataTable
-      columns={columns}
-      data={data?.data.tasks ?? []}
-      total={data?.data.total ?? 0}
-      page={page}
-      limit={limit}
-      sortBy={sortBy}
-      order={order}
-      onLimitChange={(value) => {
-        setLimit(value);
-        setPage(1);
-      }}
-      onPageChange={setPage}
-      onSearchChange={(value) => {
-        setSearch(value);
-        setPage(1);
-      }}
-      onSortChange={(field, direction) => {
-        setSortBy(field);
-        setOrder(direction);
-      }}
-    />
+    <>
+      <TaskSummaryCards
+        counts={data?.data?.counts}
+        total={data?.data?.total}
+        status={status}
+        onStatusChange={setStatus}
+      />
+
+      <TaskFilterBar
+        filters={filters}
+        search={debouncedSearch}
+        status={status}
+        setFilter={setFilter}
+        activeFilterCount={activeFilterCount}
+        showFilters={showFilters}
+        onToggleFilters={() => setShowFilters((v) => !v)}
+        onApply={applyFilters}
+        onClear={clearFilters}
+      />
+
+      <DataTable
+        columns={columns}
+        data={data?.data.tasks ?? []}
+        total={data?.data.total ?? 0}
+        page={page}
+        limit={limit}
+        sortBy={sortBy}
+        order={sortOrder}
+        onLimitChange={(value) => {
+          setLimit(value);
+          setPage(1);
+        }}
+        onPageChange={setPage}
+        onSearchChange={(value) => setFilter("search", value)}
+        onSortChange={(field, direction) => {
+          setSortBy(field);
+          setSortOrder(direction);
+        }}
+      />
+    </>
   );
 };
 

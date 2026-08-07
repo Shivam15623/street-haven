@@ -13,6 +13,7 @@ import {
   LazyRootLayout,
   LazyTasks,
   LazyAdminCertificationsPage,
+  LazyInActiveUser,
 } from "../Lazy Components";
 import { Navigate, type RouteObject } from "react-router-dom";
 import RouteGuard from "../Routeguard";
@@ -70,7 +71,14 @@ export const AllRoutes: RouteObject[] = [
       </RouteGuard>,
     ),
   },
-
+  {
+    path: "/account-inactive",
+    element: withSuspense(
+      <RouteGuard isPublic={true}>
+        <LazyInActiveUser />
+      </RouteGuard>,
+    ),
+  },
   {
     path: "/",
     element: withSuspense(
@@ -89,7 +97,7 @@ export const AllRoutes: RouteObject[] = [
       },
 
       {
-        path: "programs&manuals",
+        path: "volunteer-training",
         element: (
           <RouteGuard isPublic={false}>
             <LazyProgramManuals />

@@ -58,7 +58,7 @@ const ProgramManuals = () => {
 
     const handleManualDeleted = ({ manualId }: { manualId: string }) => {
       const exists = data?.data.manuals.some(
-        (manual) => manual._id === manualId
+        (manual) => manual._id === manualId,
       );
 
       // 🔥 Only refetch if it exists in current list
@@ -80,19 +80,23 @@ const ProgramManuals = () => {
       <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-4 ">
         {" "}
         <div className="d-flex flex-column gap-2">
+          {" "}
           <p className="fw-semibold text-xl xs:text-xxl text-street-dark">
-            Program Manuals
-          </p>
+            {" "}
+            Volunteer Training{" "}
+          </p>{" "}
           <p className="fw-normal text-sm xs:text-md">
-            Access training materials and program documentation
-          </p>
+            {" "}
+            Access training materials, training materials, and helpful
+            resources{" "}
+          </p>{" "}
         </div>
         {hasPermission({ action: "create_program_manual" }) && (
           <button
             className="btn  flex-grow-1 flex-sm-grow-0 btn-street-primary radius-12 text-sm d-flex align-items-center justify-content-center"
             onClick={() => setShowModal(true)}
           >
-            Add Manual
+            Add Material
           </button>
         )}
       </div>

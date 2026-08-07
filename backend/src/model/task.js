@@ -16,6 +16,7 @@ const taskSchema = new Schema(
     assignedTo: {
       type: Schema.Types.ObjectId,
       ref: "User",
+      default: null,
       required: true, // volunteer
     },
     assignedBy: {
@@ -26,8 +27,8 @@ const taskSchema = new Schema(
 
     status: {
       type: String,
-      enum: ["assigned", "under_review", "completed"],
-      default: "assigned",
+      enum: ["new", "assigned", "under_review", "completed"],
+      default: "new",
     },
 
     dueDate: {
@@ -35,20 +36,46 @@ const taskSchema = new Schema(
       default: null,
     },
 
-   
-
     statusHistory: [
       {
-        status: {
+        fromStatus: {
           type: String,
-          enum: ["assigned", "under_review", "completed"],
+          enum: ["new", "assigned", "under_review", "completed"],
+          default: null,
+        },
+        toStatus: {
+          type: String,
+          enum: ["new", "assigned", "under_review", "completed"],
         },
         changedBy: { type: Schema.Types.ObjectId, ref: "User" },
         changedAt: { type: Date, default: Date.now },
       },
     ],
+    assignmentHistory: [
+      {
+        fromAssignedTo: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+          default: null,
+        },
+        assignedTo: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        assignedBy: {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        assignedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 taskSchema.index({ assignedTo: 1, status: 1 }); // for volunteer's task list

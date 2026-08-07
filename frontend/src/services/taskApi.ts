@@ -1,9 +1,9 @@
+import type { FileType } from "../interfaces/fileinterface";
 import type { ApiGeneralResponse, ApiResponse } from "../interfaces/Response";
 import { api } from "../redux/ApiSlice";
 import { uploadWithProgress } from "../utills/uploadWithProgress";
-import type { commentResponse } from "./ticketApi";
 
-export type TaskStatus = "assigned" | "under_review" | "completed";
+export type TaskStatus = "new" | "assigned" | "under_review" | "completed";
 
 export interface IUser {
   _id: string;
@@ -25,6 +25,7 @@ export interface ITask {
   assignedTo: IUser;
   assignedBy: IUser;
   status: TaskStatus;
+  dueStatus: "overdue" | "upcoming" | "today" | "noduedate";
   dueDate: string | null;
   statusHistory: IStatusHistory[];
   createdAt: string;
@@ -45,22 +46,61 @@ export interface EditTaskBody {
   dueDate?: string | null;
   status?: TaskStatus;
 }
-
 export interface GetTasksResponse {
   tasks: ITask[];
   total: number;
   page: number;
   limit: number;
   totalPages: number;
+  counts: {
+    new: number;
+    assigned: number;
+    under_review: number;
+    completed: number;
+  };
 }
+
+export type TaskDateType = "created" | "updated" | "due";
+
+export type TaskDatePreset = "today" | "week" | "month" | "year";
+
+export type TaskDueStatus = "overdue" | "upcoming" | "today" | "noduedate";
+
+export type TaskSearchBy = "title" | "description" | "both";
 
 export interface GetTasksParams {
   page?: number;
   limit?: number;
-  status?: TaskStatus;
+
   search?: string;
-  sortBy?: string;
-  order?: "asc" | "desc";
+  searchBy?: TaskSearchBy;
+
+  startDate?: string | Date;
+  endDate?: string | Date;
+
+  dateType?: TaskDateType;
+  datePreset?: TaskDatePreset;
+
+  status?: TaskStatus | TaskStatus[];
+
+  assignedTo?: string | string[];
+  assignedBy?: string | string[];
+
+  dueStatus?: TaskDueStatus;
+
+  hasDueDate?: ""|"true"|"false";
+
+  isCompleted?: ""|"true"|"false";
+
+  sortBy?:
+    | "title"
+    | "status"
+    | "dueDate"
+    | "dueStatus"
+    | "createdAt"
+    | "updatedAt";
+
+  sortOrder?: "asc" | "desc";
 }
 export interface EditTaskRequest {
   taskId: string;
@@ -71,7 +111,68 @@ export interface UpdateTaskStatusRequest {
   taskId: string;
   status: TaskStatus;
 }
+export interface TaskTimelineUser {
+  _id: string | null;
+  firstname: string;
+  lastname: string;
+  email: string | null;
+}
 
+export interface TaskActivityTimelineItem {
+  _id: string;
+  itemType: "activity";
+  action: "created" | "status_change" | "assignee_change" | "due_date_change";
+  field: string;
+  fromValue: string | null;
+  toValue: string | null;
+  note: string;
+  userId: TaskTimelineUser;
+  createdAt: string;
+}
+
+export interface TaskCommentTimelineItem {
+  _id: string;
+  itemType: "comment";
+  message: string;
+  attachments?: {
+    _id: string;
+    size: number;
+    fileName: string;
+    fileUrl: string;
+    type: FileType;
+  }[];
+  userId: TaskTimelineUser | null;
+  createdAt: string;
+}
+
+export type TaskTimelineItem =
+  | TaskActivityTimelineItem
+  | TaskCommentTimelineItem;
+
+// pagination is now cursor-based, not page-based
+export interface GetTaskTimelineResponseData {
+  items: TaskTimelineItem[];
+  pagination: {
+    limit: number;
+    hasMore: boolean;
+    nextCursor: string | null;
+  };
+}
+export interface TaskDetail {
+  _id: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  dueDate: string | null;
+  assignedTo: TaskTimelineUser | null;
+  assignedBy: TaskTimelineUser;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface TaskDetailData {
+  task: TaskDetail;
+  activity: TaskActivityTimelineItem[];
+}
 export const taskApi = api.injectEndpoints({
   endpoints: (builder) => ({
     createTask: builder.mutation<ApiResponse<ITask>, CreateTaskBody>({
@@ -87,14 +188,84 @@ export const taskApi = api.injectEndpoints({
       ApiResponse<GetTasksResponse>,
       GetTasksParams | void
     >({
-      query: (params) => ({
-        url: "/task",
-        params,
-      }),
+      query: (params) => {
+        if (!params) {
+          return {
+            url: "/task",
+          };
+        }
+
+        const queryParams = Object.fromEntries(
+          Object.entries(params).filter(([_, value]) => {
+            if (value === undefined || value === null || value === "")
+              return false;
+            if (Array.isArray(value) && value.length === 0) return false;
+            return true;
+          }),
+        );
+
+        return {
+          url: "/task",
+          params: queryParams,
+        };
+      },
       providesTags: ["Task"],
     }),
+    exportTaskReport: builder.mutation<
+      Blob,
+      {
+        search?: string;
 
-    getTaskDetails: builder.query<ApiResponse<ITask>, string>({
+        startDate?: string | Date;
+        endDate?: string | Date;
+
+        dateType?: TaskDateType;
+        datePreset?: TaskDatePreset;
+
+        status?: TaskStatus | TaskStatus[];
+
+        assignedTo?: string | string[];
+        assignedBy?: string | string[];
+
+        dueStatus?: TaskDueStatus;
+
+        hasDueDate?: ""|"true"|"false";
+
+        isCompleted?: ""|"true"|"false";
+      }
+    >({
+      query: ({
+        search,
+        startDate,
+        endDate,
+        dateType,
+        datePreset,
+        status,
+        assignedTo,
+        assignedBy,
+        dueStatus,
+        hasDueDate,
+        isCompleted,
+      }) => ({
+        url: `/task/report/export`,
+        method: "GET",
+        params: {
+          search,
+          startDate,
+          endDate,
+          dateType,
+          datePreset,
+          status,
+          assignedTo,
+          assignedBy,
+          dueStatus,
+          hasDueDate,
+          isCompleted,
+        },
+        responseHandler: (response: Response) => response.blob(),
+      }),
+    }),
+    getTaskDetails: builder.query<ApiResponse<TaskDetailData>, string>({
       query: (taskId) => `/task/${taskId}`,
       providesTags: (_result, _error, id) => [{ type: "Task", id }],
     }),
@@ -147,13 +318,16 @@ export const taskApi = api.injectEndpoints({
         }),
     }),
     viewTaskComments: builder.query<
-      commentResponse,
-      { page: number; limit: number; taskId: string }
+      ApiResponse<GetTaskTimelineResponseData>,
+      { taskId: string; limit: number; cursor?: string | null }
     >({
-      query: ({ taskId, page, limit }) => ({
+      query: ({ taskId, limit, cursor }) => ({
         url: `/task/${taskId}/comments`,
         method: "GET",
-        params: { page, limit },
+        params: {
+          limit,
+          ...(cursor ? { cursor } : {}),
+        },
       }),
       keepUnusedDataFor: 300,
     }),
@@ -170,4 +344,6 @@ export const {
   useAddTaskCommentMutation,
   useViewTaskCommentsQuery,
   useLazyViewTaskCommentsQuery,
+  useLazyGetTaskDetailsQuery,
+  useExportTaskReportMutation,
 } = taskApi;

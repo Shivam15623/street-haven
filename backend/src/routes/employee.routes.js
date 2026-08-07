@@ -4,6 +4,7 @@ import {
   AllEmployees,
   EditEmployee,
   EditEmployeePassword,
+  EmployeeActiveInactiveToggle,
   employeeSuperviserForm,
   getEmployeeById,
   RemoveEmployee,
@@ -63,6 +64,7 @@ router
     authorizePermissions({ action: PERMISSIONS.CREATE_EMPLOYEE }),
     resetTotp,
   );
+router.patch("/status-toggle/:id", EmployeeActiveInactiveToggle);
 router.route("/form-superviser").get(employeeSuperviserForm);
 router.route("/:id").get(getEmployeeById);
 export default router;

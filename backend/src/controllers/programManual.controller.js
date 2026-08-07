@@ -22,7 +22,7 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
-    // Create Program Manual within the session
+    // Create Training Material within the session
     const programmanual = await ProgramManual.create(
       [
         {
@@ -34,7 +34,7 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
           attachment: attachmentData,
         },
       ],
-      { session }
+      { session },
     );
 
     if (!programmanual || programmanual.length === 0) {
@@ -45,35 +45,35 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
     const notification = await createNotification(
       {
         action: "created",
-        category: "program_mannual",
+        category: "training_material",
         severity: "info",
-        title: "New Program Manual Added",
-        message: `${firstname} added a new Program Manual: "${title}"`,
-        link: `/programs&manuals?slug=${programmanual[0].slug}`,
+        title: "New Training Material Added",
+        message: `${firstname} added a new Training Material: "${title}"`,
+        link: `/volunteer-training?slug=${programmanual[0].slug}`,
         createdBy: userId,
         isGlobal: true,
         expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
         meta: { programManualId: programmanual[0].slug },
       },
 
-      session
+      session,
     );
     await addActivityLog(
       {
-        actionType: "PROGRAM_MANNUAL_CREATED",
+        actionType: "TRAINING_MATERIAL_CREATED",
         performedBy: {
           id: req.user?._id,
           name: `${firstname} ${lastname}`,
           type: "user",
         },
-        message: `A new program manual has been created: ${title}`,
+        message: `A new training material has been created: ${title}`,
 
         meta: {
           recordId: programmanual._id,
           moduleName: "ProgramManual",
         },
       },
-      session // <-- pass session
+      session, // <-- pass session
     );
     // Commit transaction
     await session.commitTransaction();
@@ -88,8 +88,8 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           201,
-          "Program Manual added and notifications sent successfully"
-        )
+          "Training Material added and notifications sent successfully",
+        ),
       );
   } catch (error) {
     await session.abortTransaction();
@@ -100,14 +100,14 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
   }
 });
 
-// 📌 Edit Program Manual
+// 📌 Edit Training Material
 export const EditProgramManual = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { title, description, tags, type } = req.body;
 
   const programManual = await ProgramManual.findById(id);
   if (!programManual) {
-    throw new ApiError(404, "Program Manual not found");
+    throw new ApiError(404, "Training Material not found");
   }
 
   const updates = {};
@@ -165,12 +165,12 @@ export const EditProgramManual = asyncHandler(async (req, res) => {
   ====================== */
   if (attachmentChanged) {
     const notification = await createNotification({
-      category: "program_mannual",
+      category: "training_material",
       action: "updated",
       severity: "info",
       title: "Program manual updated",
-      message: `The program manual "${updatedManual.title}" has been updated. Please refer to the latest version.`,
-      link: `/programs&manuals?slug=${updatedManual.slug}`,
+      message: `The training material "${updatedManual.title}" has been updated. Please refer to the latest version.`,
+      link: `/volunteer-training?slug=${updatedManual.slug}`,
       isGlobal: true,
       createdBy: req.user?._id,
       meta: {
@@ -183,7 +183,7 @@ export const EditProgramManual = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, "Program Manual updated successfully"));
+    .json(new ApiResponse(200, "Training Material updated successfully"));
 });
 
 export const DeleteProgramManual = asyncHandler(async (req, res) => {
@@ -191,7 +191,7 @@ export const DeleteProgramManual = asyncHandler(async (req, res) => {
 
   const programManual = await ProgramManual.findById(id);
   if (!programManual) {
-    throw new ApiError(404, "Program Manual not found");
+    throw new ApiError(404, "Training Material not found");
   }
 
   // ✅ Safely delete attachment from Cloudinary
@@ -215,7 +215,7 @@ export const DeleteProgramManual = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, "Program Manual deleted successfully"));
+    .json(new ApiResponse(200, "Training Material deleted successfully"));
 });
 
 export const GetProgramManuals = asyncHandler(async (req, res) => {
@@ -257,7 +257,7 @@ export const GetProgramManuals = asyncHandler(async (req, res) => {
   const totalCount = await ProgramManual.countDocuments(query);
 
   return res.status(200).json(
-    new ApiResponse(200, "Program Manuals fetched successfully", {
+    new ApiResponse(200, "Training Materials fetched successfully", {
       manuals,
       paggination: {
         total: totalCount,
@@ -265,6 +265,6 @@ export const GetProgramManuals = asyncHandler(async (req, res) => {
         limit: Number(limit),
         totalPages: Math.ceil(totalCount / limit),
       },
-    })
+    }),
   );
 });

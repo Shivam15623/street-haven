@@ -23,9 +23,10 @@ export const AllEmployees = asyncHandler(async (req, res) => {
 
   // Role filter
   if (role) {
-    query.role = role;
+    query.role = {
+      $in: Array.isArray(role) ? role : role.split(","),
+    };
   }
-
   // Search
   if (search) {
     query.$or = [
@@ -104,7 +105,7 @@ export const AllEmployees = asyncHandler(async (req, res) => {
   ]);
 
   const totalEmployees = await User.countDocuments(query);
-
+  console.log("employees", employees);
   return res.status(200).json(
     new ApiResponse(200, "Employees fetched successfully", {
       employees,
@@ -700,4 +701,64 @@ export const getEmployeeById = asyncHandler(async (req, res) => {
       employee: user,
     }),
   );
+});
+
+export const EmployeeActiveInactiveToggle = asyncHandler(async (req, res) => {
+  const { id: userId } = req.params;
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new ApiError(404, "Employee Not Found");
+  }
+
+  const isVolunteer = user.role === ROLES.VOLUNTEER;
+
+  if (user.status === "active") {
+    // --- DEACTIVATE ---
+    user.status = "inactive";
+
+    if (isVolunteer) {
+      const now = new Date();
+      user.volunteerStints.push({
+        startAt: user.currentStint?.startAt || user.hireDate,
+        endAt: now,
+        endedReason: "admin_deactivated"
+          
+      });
+      user.currentStint = { startAt: undefined, endAt: undefined };
+    }
+
+    await user.save({ validateModifiedOnly: true });
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "User marked inactive", user));
+  } else {
+    // --- REACTIVATE ---
+    if (isVolunteer) {
+      const lastStint = user.volunteerStints[user.volunteerStints.length - 1];
+
+      if (lastStint && lastStint.endAt) {
+        const oneYearMs = 365 * 24 * 60 * 60 * 1000;
+        const gap = Date.now() - new Date(lastStint.endAt).getTime();
+
+        if (gap > oneYearMs) {
+          throw new ApiError(
+            400,
+            "This volunteer's last stint ended over a year ago. Please create a new profile instead of reactivating.",
+          );
+        }
+      }
+
+      user.currentStint = {
+        startAt: req.body?.startAt ? new Date(req.body.startAt) : new Date(),
+        endAt: undefined,
+      };
+    }
+
+    // For non-volunteers, just flip status back — no stint tracking, no time limit
+    user.status = "active";
+
+    await user.save({ validateModifiedOnly: true });
+    return res.status(200).json(new ApiResponse(200, "User reactivated", user));
+  }
 });

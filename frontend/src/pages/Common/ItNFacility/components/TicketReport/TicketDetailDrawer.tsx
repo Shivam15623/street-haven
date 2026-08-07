@@ -139,7 +139,7 @@ const TicketDetailDrawer = ({ ticketId, open, onClose }: Props) => {
           </div>
 
           {/* Key info grid */}
-          <div className="border border-neutral-200 radius-12 p-16">
+          <div className="border-1 border-sh-base-50 radius-12 p-16">
             <div className="row row-gap-2">
               <div className="col-6">
                 <InfoRow

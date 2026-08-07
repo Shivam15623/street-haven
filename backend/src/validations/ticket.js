@@ -1,7 +1,6 @@
 import Joi from "joi";
 import { objectId } from "./common.js";
 
-
 export const createTicketSchema = Joi.object({
   reqTitle: Joi.string().trim().required().messages({
     "any.required": "Request title is required",
@@ -15,14 +14,12 @@ export const createTicketSchema = Joi.object({
     "string.base": "Description must be a string",
   }),
 
-  category: Joi.string()
-    .required()
-    .messages({
-      "any.only":
-        "Category must be one of Plumbing, Electrical, HVAC, Carpentry, Appliances, or Cleaning",
-      "any.required": "Category is required",
-      "string.empty": "Category is required",
-    }),
+  category: Joi.string().required().messages({
+    "any.only":
+      "Category must be one of Plumbing, Electrical, HVAC, Carpentry, Appliances, or Cleaning",
+    "any.required": "Category is required",
+    "string.empty": "Category is required",
+  }),
 
   location: Joi.string().custom(objectId).required().messages({
     "any.required": "Location is required",
@@ -32,18 +29,16 @@ export const createTicketSchema = Joi.object({
 });
 
 export const editTicketSchema = Joi.object({
-  assignedId: Joi.string().hex().length(24).optional(),
-  status: Joi.string()
-    .valid("Open", "In Progress", "Under Review", "Completed")
-    .optional(),
   description: Joi.string().optional(),
   requestTitle: Joi.string().trim().optional(),
-  category: Joi.string()
-    .valid("IT Help Desk", "Property Maintenance")
-    .optional(),
+  category: Joi.string().optional().messages({
+    "string.empty": "Category is required",
+  }),
 
-  location: Joi.string().optional(),
-  priority: Joi.string().valid("Low", "Medium", "High").optional(),
+  location: Joi.string().custom(objectId).optional().messages({
+    "string.empty": "Location is required",
+    "any.invalid": "Invalid location id",
+  }),
 });
 export const addCommentSchema = Joi.object({
   message: Joi.string().trim().allow("").optional(),

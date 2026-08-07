@@ -185,7 +185,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
             {actions.includes("approve") && (
               <>
                 <Button
-                  className="btn-street-primary radius-12 px-16 d-flex align-items-center justify-content-center gap-6 border-0 text-sm fw-semibold"
+                  className="btn-street-primary radius-12 px-16 d-flex align-items-center justify-content-center gap-2 border-0 text-sm fw-semibold"
                   style={{ height: "40px" }}
                   onClick={() => setShowApprove(true)}
                 >
@@ -193,7 +193,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                   Approve
                 </Button>
                 <Button
-                  className="btn-danger radius-12 px-16 d-flex align-items-center justify-content-center gap-6 border-0 text-sm fw-semibold"
+                  className="btn-danger radius-12 px-16 d-flex align-items-center justify-content-center gap-2 border-0 text-sm fw-semibold"
                   style={{ height: "40px" }}
                   onClick={() => setShowReject(true)}
                 >
@@ -205,7 +205,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
 
             {actions.includes("start") && (
               <Button
-                className="btn-street-primary radius-12 px-16 d-flex flex-row align-items-center justify-content-center gap-6 border-0 text-sm fw-semibold"
+                className="btn-street-primary radius-12 px-16 d-flex flex-row align-items-center justify-content-center gap-2 border-0 text-sm fw-semibold"
                 style={{ height: "40px" }}
                 disabled={starting}
                 onClick={async () => {
@@ -224,7 +224,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
 
             {actions.includes("complete") && (
               <Button
-                className="btn-success radius-12 px-16 d-flex align-items-center justify-content-center gap-6 border-0 text-sm fw-semibold"
+                className="btn-success radius-12 px-16 d-flex align-items-center justify-content-center gap-2 border-0 text-sm fw-semibold"
                 style={{ height: "40px" }}
                 disabled={completing}
                 onClick={async () => {
@@ -246,7 +246,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
 
             {actions.includes("cancel") && (
               <Button
-                className="btn-street-neutral radius-12 px-16 d-flex flex-row align-items-center justify-content-center gap-6 border-0 text-sm fw-semibold"
+                className="btn-street-neutral radius-12 px-16 d-flex flex-row align-items-center justify-content-center gap-2 border-0 text-sm fw-semibold"
                 style={{ height: "40px" }}
                 disabled={cancelling}
                 onClick={async () => {

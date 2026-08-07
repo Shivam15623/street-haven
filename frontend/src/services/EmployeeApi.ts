@@ -13,7 +13,8 @@ export interface EmployeeData {
   createdAt: string;
   updatedAt: string;
   superviserId: string;
-  locations:string[];
+  locations: string[];
+  status: "active" | "inactive";
   title: string;
   hireDate: Date;
 
@@ -56,7 +57,7 @@ export interface ModulePermission {
 
 type EmployeesResponse = ApiResponse<{
   employees: EmployeeData[];
-  paggination: {
+  pagination: {
     total: number;
     page: number;
     limit: number;
@@ -70,7 +71,7 @@ interface AllEmployeeQuery {
   sortBy?: string;
   order?: "asc" | "desc";
   forDropdown?: boolean;
-  role?: Role;
+  role?: Role[];
 }
 export interface RoleInfo {
   _id: string;
@@ -162,6 +163,13 @@ const EmployeeApi = api.injectEndpoints({
         method: "GET",
       }),
     }),
+    statusToggle: builder.mutation<ApiGeneralResponse, { id: string }>({
+      query: ({ id }) => ({
+        url: `/employees/status-toggle/${id}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Employees"],
+    }),
     resetTotp: builder.mutation<ApiGeneralResponse, { id: string }>({
       query: ({ id }) => ({
         url: `employees/resetTotp/${id}`,
@@ -214,4 +222,5 @@ export const {
   useEmployeeSuperFormQuery,
   useLazyEmployeeSuperFormQuery,
   useLazyFetchEmployeeByIdQuery,
+  useStatusToggleMutation,
 } = EmployeeApi;

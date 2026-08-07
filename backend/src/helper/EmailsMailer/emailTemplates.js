@@ -178,10 +178,10 @@ export const generateEmailTemplate = ({ type, data }) => {
       </p>
     `,
       };
-      case "ticket_rejected":
-  return {
-    subject: `Ticket Rejected - ${data.ticketTitle}`,
-    html: `
+    case "ticket_rejected":
+      return {
+        subject: `Ticket Rejected - ${data.ticketTitle}`,
+        html: `
       <h2>Ticket Rejected</h2>
       <p>Hello ${data.recipientName},</p>
       <p>Unfortunately, the following ticket was not approved.</p>
@@ -198,12 +198,12 @@ export const generateEmailTemplate = ({ type, data }) => {
         </a>
       </p>
     `,
-  };
+      };
 
-case "ticket_assigned":
-  return {
-    subject: `New Ticket Assigned - ${data.ticketTitle}`,
-    html: `
+    case "ticket_assigned":
+      return {
+        subject: `New Ticket Assigned - ${data.ticketTitle}`,
+        html: `
       <h2>New Ticket Assigned to You</h2>
       <p>Hello ${data.recipientName},</p>
       <p>A ticket has been approved and assigned to you for work.</p>
@@ -219,12 +219,12 @@ case "ticket_assigned":
         </a>
       </p>
     `,
-  };
+      };
 
-case "ticket_cancelled":
-  return {
-    subject: `Ticket Cancelled - ${data.ticketTitle}`,
-    html: `
+    case "ticket_cancelled":
+      return {
+        subject: `Ticket Cancelled - ${data.ticketTitle}`,
+        html: `
       <h2>Ticket Cancelled</h2>
       <p>Hello ${data.recipientName},</p>
       <p>The following ticket was cancelled by its creator before approval.</p>
@@ -233,7 +233,58 @@ case "ticket_cancelled":
         <tr><td style="padding:6px 12px;"><strong>Location</strong></td><td>${data.location}</td></tr>
       </table>
     `,
-  };
+      };
+
+    case "ticket_rerouted_old_manager":
+      return {
+        subject: `Ticket No Longer Assigned to You - ${data.ticketTitle}`,
+        html: `
+      <h2>Ticket Rerouted</h2>
+
+      <p>Hello ${data.managerName},</p>
+
+      <p>
+        The following ticket has been moved to a different location and
+        is no longer awaiting approval from you.
+      </p>
+
+      <table style="border-collapse:collapse;">
+        <tr>
+          <td style="padding:6px 12px;">
+            <strong>Ticket</strong>
+          </td>
+          <td>${data.ticketTitle}</td>
+        </tr>
+
+        <tr>
+          <td style="padding:6px 12px;">
+            <strong>Previous Location</strong>
+          </td>
+          <td>${data.oldLocation}</td>
+        </tr>
+
+        <tr>
+          <td style="padding:6px 12px;">
+            <strong>New Location</strong>
+          </td>
+          <td>${data.newLocation}</td>
+        </tr>
+
+        <tr>
+          <td style="padding:6px 12px;">
+            <strong>Submitted By</strong>
+          </td>
+          <td>${data.createdBy}</td>
+        </tr>
+      </table>
+
+      <p style="margin-top:24px;">
+        This ticket is no longer pending approval from you.
+      </p>
+
+      
+    `,
+      };
     default:
       throw new Error("Invalid email type");
   }

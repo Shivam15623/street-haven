@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback, lazy } from "react";
 
 import { Icon } from "@iconify/react/dist/iconify.js";
 import dayjs from "dayjs";
@@ -8,7 +8,6 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { useSocket } from "../../hooks/useSocket";
 import { selectAuth } from "../../redux/AuthSlice";
 import { useSelector } from "react-redux";
-import QuillEditor from "../child/QuillEditor";
 import FileViewer from "../FileViewer/FileViewer";
 import { groupCommentsByDate } from "./utills";
 import { useInfiniteScroll } from "./hooks";
@@ -16,7 +15,7 @@ import { showError } from "../../utills/toastutills";
 import { getErrorMessage } from "../../utills/utills";
 import Sheet from "../child/Sheet";
 import { AttachmentPreview } from "./AttachmentPreview";
-
+const QuillEditor = lazy(() => import("../child/QuillEditor"));
 dayjs.extend(relativeTime);
 
 // Types

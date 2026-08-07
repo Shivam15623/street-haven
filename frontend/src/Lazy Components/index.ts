@@ -20,7 +20,7 @@ export const LazyVerifyTotp = React.lazy(
 export const LazyRootLayout = React.lazy(
   () => import("../layouts/rootLayout")
 );
-
+export const LazyInActiveUser=React.lazy(()=> import("../pages/Authentication/Forbidden"))
 export const LazyEmployeedashboard = React.lazy(
   () => import("../pages/Employee/Dashboard")
 );

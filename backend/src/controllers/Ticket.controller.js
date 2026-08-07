@@ -174,11 +174,12 @@ async function isManagerOfTicketLocation(userId, locationId, session) {
   return !!location;
 }
 
-async function notifyAndEmit(
+export async function notifyAndEmit(
   session,
-  { recipients, title, message, link, createdBy, meta },
+  { recipients, title, message, link, createdBy, meta, emit = true },
 ) {
-  if (!recipients.length) return;
+  if (!recipients?.length) return null;
+
   const notification = await createNotification(
     {
       recipients,
@@ -193,12 +194,15 @@ async function notifyAndEmit(
     },
     session,
   );
-  recipients.forEach((r) => {
-    io.to(`user_${r.userId}`).emit("newNotification", notification);
-  });
+
+  if (emit) {
+    recipients.forEach((r) => {
+      io.to(`user_${r.userId}`).emit("newNotification", notification);
+    });
+  }
+
   return notification;
 }
-
 /* ======================
    APPROVE
 ====================== */
@@ -655,27 +659,309 @@ export const cancelTicket = asyncHandler(async (req, res) => {
 /* ======================
    EDIT (creator only, Pending only, no priority/status/assignment)
 ====================== */
+
 export const editTicket = asyncHandler(async (req, res) => {
   const { id: ticketId } = req.params;
-  const { description, requestTitle, category, location } = req.body;
-  const userId = req.user._id.toString();
 
-  const ticket = await Ticket.findById(ticketId);
-  if (!ticket) throw new ApiError(404, "No such ticket found");
+  const {
+    description,
+    requestTitle,
+    category,
+    location: newLocationId,
+  } = req.body;
 
-  if (!ticket.createdBy.equals(userId))
-    throw new ApiError(403, "Only the creator can edit this ticket");
-  if (ticket.status !== TICKET_STATUS.OPEN) {
-    throw new ApiError(400, "Ticket can only be edited while Open approval");
+  const userId = req.user._id;
+
+  const session = await mongoose.startSession();
+
+  // Keep these outside transaction because we need them
+  // after commit for email/socket side effects.
+  let emailEvents = [];
+  let socketEvents = [];
+
+  try {
+    session.startTransaction();
+
+    // -----------------------------------------
+    // 1. Get ticket
+    // -----------------------------------------
+    let uploadedFile;
+    if (req.file?.path) {
+      uploadedFile = await uploadOnCloudinary(req.file.path);
+      if (!uploadedFile?.secure_url) {
+        throw new ApiError(500, "Photo upload failed");
+      }
+    }
+
+    const ticket = await Ticket.findById(ticketId).session(session);
+
+    if (!ticket) {
+      throw new ApiError(404, "No such ticket found");
+    }
+
+    // -----------------------------------------
+    // 2. Permission checks
+    // -----------------------------------------
+
+    if (!ticket.createdBy.equals(userId)) {
+      throw new ApiError(403, "Only the creator can edit this ticket");
+    }
+
+    if (ticket.status !== TICKET_STATUS.OPEN) {
+      throw new ApiError(400, "Ticket can only be edited while Open approval");
+    }
+
+    // -----------------------------------------
+    // 3. Determine whether location changed
+    // -----------------------------------------
+
+    const oldLocationId = ticket.location?.toString();
+
+    const locationChanged =
+      newLocationId && newLocationId.toString() !== oldLocationId;
+
+    let oldLocation = null;
+    let newLocation = null;
+
+    let oldManagerIds = [];
+    let newManagerIds = [];
+
+    // -----------------------------------------
+    // 4. If location changed,
+    //    get old + new location managers
+    // -----------------------------------------
+
+    if (locationChanged) {
+      [oldLocation, newLocation] = await Promise.all([
+        Location.findById(oldLocationId)
+          .select("_id name managers isActive")
+          .session(session),
+
+        Location.findById(newLocationId)
+          .select("_id name managers isActive")
+          .session(session),
+      ]);
+
+      if (!newLocation) {
+        throw new ApiError(404, "New location not found");
+      }
+
+      if (!newLocation.isActive) {
+        throw new ApiError(400, "Cannot move ticket to an inactive location");
+      }
+
+      oldManagerIds = oldLocation?.managers?.map((id) => id.toString()) ?? [];
+
+      newManagerIds = newLocation.managers.map((id) => id.toString());
+    }
+
+    // -----------------------------------------
+    // 5. Update editable fields
+    // -----------------------------------------
+
+    if (description !== undefined) {
+      ticket.description = description;
+    }
+
+    if (requestTitle !== undefined) {
+      ticket.req_title = requestTitle;
+    }
+
+    if (category !== undefined) {
+      ticket.category = category;
+    }
+
+    if (locationChanged) {
+      ticket.location = newLocation._id;
+    }
+    if (uploadedFile) {
+      ticket.photo = {
+        fileName: uploadedFile.original_filename,
+        fileUrl: uploadedFile.secure_url,
+      };
+    }
+    // -----------------------------------------
+    // 6. Save ticket
+    // -----------------------------------------
+
+    await ticket.save({ session });
+
+    // -----------------------------------------
+    // 7. Handle location rerouting
+    // -----------------------------------------
+
+    if (locationChanged) {
+      const oldManagerSet = new Set(oldManagerIds);
+      const newManagerSet = new Set(newManagerIds);
+
+      // Managers who no longer manage this ticket's location
+      const removedManagerIds = oldManagerIds.filter(
+        (managerId) => !newManagerSet.has(managerId),
+      );
+
+      // Managers who are newly responsible
+      const addedManagerIds = newManagerIds.filter(
+        (managerId) => !oldManagerSet.has(managerId),
+      );
+
+      // Managers present in both locations
+      const unchangedManagerIds = newManagerIds.filter((managerId) =>
+        oldManagerSet.has(managerId),
+      );
+
+      // -----------------------------------------
+      // 8. Create notification for removed managers
+      // -----------------------------------------
+
+      if (removedManagerIds.length) {
+        await notifyAndEmit(session, {
+          recipients: removedManagerIds.map((userId) => ({
+            userId,
+          })),
+
+          title: "Ticket Rerouted",
+
+          message: `Ticket ${ticket.displayId} has been moved from ${oldLocation.name} to ${newLocation.name} and is no longer pending your approval.`,
+
+          link: `/tickets/${ticket._id}`,
+
+          createdBy: userId,
+
+          meta: {
+            ticketId: ticket._id,
+            ticketNumber: ticket.ticketNumber,
+            event: "ticket_rerouted",
+            oldLocation: {
+              id: oldLocation._id,
+              name: oldLocation.name,
+            },
+            newLocation: {
+              id: newLocation._id,
+              name: newLocation.name,
+            },
+          },
+
+          // Important:
+          // Don't emit socket event until transaction commits.
+          emit: false,
+        });
+
+        emailEvents.push({
+          userIds: removedManagerIds,
+
+          templateType: "ticket_rerouted_old_manager",
+
+          dataBuilder: (user) => ({
+            managerName: `${user.firstname} ${user.lastname}`,
+
+            ticketTitle: ticket.req_title,
+
+            oldLocation: oldLocation.name,
+
+            newLocation: newLocation.name,
+
+            createdBy: req.user.firstname
+              ? `${req.user.firstname} ${req.user.lastname}`
+              : "Ticket Creator",
+
+            link: `${process.env.FRONTEND_URL}/tickets/${ticket._id}`,
+          }),
+        });
+      }
+
+      // -----------------------------------------
+      // 9. Notify newly responsible managers
+      // -----------------------------------------
+
+      if (addedManagerIds.length) {
+        await notifyAndEmit(session, {
+          recipients: addedManagerIds.map((userId) => ({
+            userId,
+          })),
+
+          title: "Ticket Requires Approval",
+
+          message: `Ticket ${ticket.displayId} has been moved to ${newLocation.name} and is now awaiting your approval.`,
+
+          link: `/tickets/${ticket._id}`,
+
+          createdBy: userId,
+
+          meta: {
+            ticketId: ticket._id,
+            ticketNumber: ticket.ticketNumber,
+            event: "ticket_rerouted_to_manager",
+            location: {
+              id: newLocation._id,
+              name: newLocation.name,
+            },
+          },
+
+          emit: false,
+        });
+
+        emailEvents.push({
+          userIds: addedManagerIds,
+
+          templateType: "ticket_pending_manager",
+
+          dataBuilder: (user) => ({
+            managerName: `${user.firstname} ${user.lastname}`,
+
+            ticketTitle: ticket.req_title,
+
+            category: ticket.category,
+
+            location: newLocation.name,
+
+            createdBy: req.user.firstname
+              ? `${req.user.firstname} ${req.user.lastname}`
+              : "Ticket Creator",
+
+            link: `${process.env.FRONTEND_URL}/tickets/${ticket._id}`,
+          }),
+        });
+      }
+
+      // `unchangedManagerIds` intentionally gets no email.
+      //
+      // Example:
+      // A = [M1, M2]
+      // B = [M2, M3]
+      //
+      // M1 -> removed
+      // M2 -> unchanged
+      // M3 -> added
+    }
+
+    // -----------------------------------------
+    // 10. Commit everything
+    // -----------------------------------------
+
+    await session.commitTransaction();
+
+    // -----------------------------------------
+    // 11. Send emails AFTER successful commit
+    // -----------------------------------------
+
+    await Promise.all(
+      emailEvents.map((event) =>
+        notifyTicketEmail({
+          ...event,
+          session: undefined,
+        }),
+      ),
+    );
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Ticket updated successfully", ticket));
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    await session.endSession();
   }
-
-  if (description) ticket.description = description;
-  if (requestTitle) ticket.req_title = requestTitle;
-  if (category) ticket.category = category;
-  if (location) ticket.location = location;
-
-  await ticket.save();
-  return res.status(200).json(new ApiResponse(200, "Ticket updated", ticket));
 });
 
 export const FetchTickets = asyncHandler(async (req, res) => {
@@ -761,7 +1047,8 @@ export const FetchTickets = asyncHandler(async (req, res) => {
     .limit(limit)
     .populate("location", "name managers")
     .populate("createdBy", "firstname lastname email")
-    .populate("assignedTo", "firstname lastname email");
+    .populate("assignedTo", "firstname lastname email")
+    .populate("approvedBy", "firstname lastname");
 
   const total = await Ticket.countDocuments(filter);
 

@@ -10,6 +10,7 @@
   transition: background-color 0.3s ease;
 }
 
+
 /* Background colors */
 .theme-toggle.light {
   background-color: #f4f4f4;
@@ -165,7 +166,9 @@
   font-size: 0.9rem;
   color: var(--street-text-base, #333);
   padding: 0.75rem 1rem;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
   border-radius: 8px;
 }
 
@@ -599,7 +602,9 @@
   font-size: 20px;
   color: #555;
   opacity: 0.5;
-  transition: color 0.2s ease, opacity 0.2s ease;
+  transition:
+    color 0.2s ease,
+    opacity 0.2s ease;
   flex-shrink: 0;
 }
 .search-Content input {
@@ -649,7 +654,9 @@
   border: none;
   outline: none;
   background: transparent;
-  font: 600 14px "Open Sans", sans-serif;
+  font:
+    600 14px "Open Sans",
+    sans-serif;
   color: var(--street-dark);
   opacity: 0.5;
   transition: color 0.2s ease;
@@ -790,6 +797,25 @@
 .active-page .sidebar-agency-stroke {
   stroke: white;
 }
+.sidebar-task-stroke {
+  fill: #0f1c2a;
+}
+[data-theme="dark"] .sidebar-task-stroke {
+  fill: white;
+}
+.active-page .sidebar-task-stroke {
+  fill: #0160a6;
+}
+.sidebar-certificate-stroke {
+  fill: #0f1c2a;
+}
+
+[data-theme="dark"] .sidebar-certificate-stroke {
+  fill: white;
+}
+.active-page .sidebar-certificate-stroke {
+  fill: #0160a6;
+}
 .sidebar-program-stroke {
   stroke: white;
 }
@@ -923,7 +949,7 @@
 }
 
 .react-datepicker__month {
-  margin: 0;
+  margin: 0 !important;
   padding: 0.5rem;
   background-color: #fff;
 }
@@ -1003,6 +1029,9 @@
 }
 [data-theme="dark"] .react-datepicker__day {
   color: #aaaaaa;
+}
+[data-theme="dark"] .react-datepicker__day-name {
+  color: white;
 }
 [data-theme="dark"] .react-datepicker__day-names {
   color: white;

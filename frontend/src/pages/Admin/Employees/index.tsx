@@ -40,10 +40,11 @@ const Employees = () => {
     },
     {
       refetchOnMountOrArgChange: false,
-    }
+    },
   );
 
   const employees = data?.data?.employees ?? [];
+  console.log("employees", data);
   const handleLimitChange = (value: number) => {
     setLimit(value);
     setPage(1);
@@ -78,7 +79,7 @@ const Employees = () => {
               columns={columns}
               onLimitChange={handleLimitChange}
               data={employees}
-              total={data?.data?.paggination?.total ?? 0}
+              total={data?.data?.pagination?.total ?? 0}
               page={page}
               limit={limit}
               sortBy={sortBy}

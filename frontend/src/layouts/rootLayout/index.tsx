@@ -8,6 +8,8 @@ import ProfileDropdown from "../../helper/ProfileDropdown.tsx";
 import NotificationDropdown from "../../helper/NotificationDropdown.tsx";
 import DashboardIcon from "../../assets/icons/sidebaricons/dashboard.svg?react";
 import AgencyInfo from "../../assets/icons/sidebaricons/Agency.svg?react";
+import TasksIcon from "../../assets/icons/sidebaricons/Task.svg?react";
+import CertificateIcon from "../../assets/icons/sidebaricons/Certificate.svg?react";
 // import Events from "../../assets/icons/sidebaricons/EventsIcon2.svg?react";
 // import FormIcon from "../../assets/icons/sidebaricons/Forms.svg?react";
 import ItNFacility from "../../assets/icons/sidebaricons/Facility.svg?react";
@@ -28,8 +30,8 @@ const menuItems = [
   },
 
   {
-    label: "Program & Manuals",
-    path: "/programs&manuals",
+    label: "Volunteers Training",
+    path: "/volunteer-training",
     icon: ProgramIcon,
     public: true,
   },
@@ -45,12 +47,23 @@ const menuItems = [
     icon: AgencyInfo,
     public: true, // available for all
   },
-
+  {
+    label: "Tasks",
+    path: "/tasks",
+    icon: TasksIcon,
+    permissions: [PERMISSIONS.TASK_VIEW_SELF, PERMISSIONS.TASK_VIEW_ALL], // available for all
+  },
   {
     label: "Employees",
     path: "/employees",
     icon: EmployeesIcon,
     permission: PERMISSIONS.VIEW_EMPLOYEES,
+  },
+  {
+    label: "Certifications",
+    path: "/certificates",
+    icon: CertificateIcon,
+    permission: PERMISSIONS.TRAINING_CERTIFICATE_VIEW_ALL,
   },
 ];
 
@@ -62,16 +75,27 @@ const RootLayout = () => {
   const navigation = useNavigation();
   const isLoading = navigation.state === "loading";
   const filteredMenu = menuItems.filter((m) => {
-    if (m.public) return true; // public items visible to all
+    // Public menu item
+    if (m.public) return true;
+
+    // Single permission
     if (m.permission) {
-      if (hasPermission({ action: m.permission })) {
-        return true;
-      } else {
-        return false;
-      }
+      return hasPermission({
+        action: m.permission,
+      });
     }
 
-    return false; // hide if neither public nor allowed roles
+    // Multiple permissions - ANY one is enough
+    if (m.permissions?.length) {
+      return m.permissions.some((permission) =>
+        hasPermission({
+          action: permission,
+        }),
+      );
+    }
+
+    // No public flag or permission
+    return false;
   });
 
   useEffect(() => {

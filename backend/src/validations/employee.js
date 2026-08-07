@@ -3,19 +3,47 @@ import Joi from "joi";
 import { ROLES } from "../model/user.js";
 import { PERMISSIONS } from "../auth/permissions.js";
 import { objectId } from "./common.js";
-
 export const viewEmployees = Joi.object({
   page: Joi.number().optional(),
   limit: Joi.number().optional(),
+
   search: Joi.string().allow("").optional(),
+
   sortBy: Joi.string()
     .pattern(/^[A-Za-z]+$/)
     .optional(),
-  order: Joi.string()
-    .valid("desc", "asc") // allowed roles
-    .optional(),
+
+  order: Joi.string().valid("desc", "asc").optional(),
+
   forDropdown: Joi.boolean().optional(),
-  role:Joi.string().trim().valid(...Object.values(ROLES)).optional()
+
+  role: Joi.alternatives()
+    .try(
+      Joi.string()
+        .trim()
+        .custom((value, helpers) => {
+          console.log(value)
+          const roles = value.split(",");
+          console.log(roles,Array.isArray(roles))
+
+          const invalid = roles.some(
+            (role) => !Object.values(ROLES).includes(role),
+          );
+
+          if (invalid) {
+            return helpers.error("any.invalid");
+          }
+
+          return roles;
+        }),
+
+      Joi.array().items(
+        Joi.string()
+          .trim()
+          .valid(...Object.values(ROLES)),
+      ),
+    )
+    .optional(),
 });
 
 export const createEmployeeSchema = Joi.object({
@@ -89,11 +117,11 @@ export const createEmployeeSchema = Joi.object({
     "date.base": "Hire date must be a valid date",
     "any.required": "Hire date is required",
   }),
-   locations: Joi.array()
+  locations: Joi.array()
     .items(
       Joi.string().custom(objectId).messages({
         "any.invalid": "Invalid location id",
-      })
+      }),
     )
     .default([])
     .messages({

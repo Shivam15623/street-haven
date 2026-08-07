@@ -70,6 +70,15 @@ export const Login = asyncHandler(async (req, res) => {
   if (!user) {
     throw new ApiError(404, "Account not found with this email");
   }
+  if (user.status === "inactive") {
+    throw new ApiError(
+      403,
+      "Your account has been deactivated",
+      [],
+      "",
+      "ACCOUNT_INACTIVE",
+    );
+  }
 
   // 2. Validate password
   const isPasswordCorrect = await user.isPasswordCorrect(password);
@@ -158,7 +167,13 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
       throw new ApiError(401, "User not found");
     }
     if (user.status !== "active") {
-      throw new ApiError(403, "Your account has been deactivated");
+      throw new ApiError(
+        403,
+        "Your account has been deactivated",
+        [],
+        "",
+        "ACCOUNT_INACTIVE",
+      );
     }
     if (incomingRefreshToken !== user.refreshToken) {
       throw new ApiError(401, "Token mismatch or expired");
@@ -182,6 +197,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
       phoneNo: findUser.phoneNo,
       role: findUser.role,
       slug: findUser.slug,
+        status:finduser.status,
       profilePic: findUser.profilePic,
       createdAt: findUser.createdAt,
       hireDate: findUser.hireDate,
@@ -235,7 +251,13 @@ export const silentAuth = asyncHandler(async (req, res) => {
     throw new ApiError(401, "User not found");
   }
   if (user.status !== "active") {
-    throw new ApiError(403, "Your account has been deactivated");
+    throw new ApiError(
+      403,
+      "Your account has been deactivated",
+      [],
+      "",
+      "ACCOUNT_INACTIVE",
+    );
   }
   if (incomingRefreshToken !== user.refreshToken) {
     throw new ApiError(401, "Token mismatch");
@@ -254,6 +276,7 @@ export const silentAuth = asyncHandler(async (req, res) => {
     phoneNo: finduser.phoneNo,
     role: finduser.role,
     slug: finduser.slug,
+    status:finduser.status,
     profilePic: finduser.profilePic,
     createdAt: finduser.createdAt,
     hireDate: finduser.hireDate,
@@ -374,6 +397,7 @@ export const verifyTOTP = asyncHandler(async (req, res) => {
     email: user.email,
     phoneNo: user.phoneNo,
     role: user.role,
+    status:user.status,
     slug: user.slug,
     profilePic: user.profilePic,
     createdAt: user.createdAt,

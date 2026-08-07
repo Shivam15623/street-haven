@@ -372,8 +372,8 @@
 /* === reset css start === */
 /* === reset css start === */
 *:where(
-    :not(html, iframe, canvas, img, svg, video, audio):not(svg *, symbol *)
-  ) {
+  :not(html, iframe, canvas, img, svg, video, audio):not(svg *, symbol *)
+) {
   all: unset;
   display: revert;
 }
@@ -9366,7 +9366,38 @@ h6,
   color: #fff;
   border-color: var(--street-primary-base);
 }
+/* Base action button style for Light & Dark modes */
+.btn-action-icon {
+  border: 1px solid #f8f9fa;
+  background-color: #f8f9fa; /* Soft gray background in light mode */
+  color: #6c757d; /* Standard muted text color */
+  transition: all 0.2s ease-in-out;
+}
 
+/* Dark mode overrides */
+[data-bs-theme="dark"] .btn-action-icon {
+  background-color: rgba(
+    255,
+    255,
+    255,
+    0.08
+  ); /* Soft translucent white background */
+  color: #ad2130; /* Light muted gray text */
+}
+
+/* Hover States (Works in both light & dark modes) */
+.btn-action-icon.btn-action-view:hover {
+  background-color: #f8f9fa;
+  color: #0d6efd;
+}
+
+.btn-action-icon.btn-action-edit:hover {
+  color: #ffc107;
+}
+
+.btn-action-icon.btn-action-delete:hover {
+  color: #dc3545;
+}
 .nullInvalid-password-input.is-invalid {
   border-color: #dc3545; /* keep red border */
   padding-right: 2.5rem !important; /* space for your eye icon */
@@ -9452,7 +9483,9 @@ h6,
   background-color: #f4f4f4; /* light neutral bg */
   color: var(--street-text-base); /* normal text */
   border: 1px solid #f4f4f4;
-  transition: background-color 0.2s ease, color 0.2s ease,
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
     border-color 0.2s ease;
 }
 
@@ -9479,7 +9512,9 @@ h6,
   background-color: #0160a60d; /* faint tint of primary */
   color: var(--street-primary-base); /* primary text */
   border: none;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .btn-street-light-primary:hover {
@@ -13867,7 +13902,7 @@ textarea:active {
 }
 
 .form-switch .form-check-input:checked::before {
-  left: calc(100% - 18px);
+  left: calc(100% - 10px);
   transition: 0.2s linear;
 }
 
@@ -13883,9 +13918,11 @@ textarea:active {
   background: #fff;
   border-radius: 50%;
   top: 50%;
-  transform: translateY(-50%);
-  left: 2px;
+  left: 10px;
   transition: 0.2s linear;
+  transform: translate(-50%, -50%) scale(1);
+  visibility: visible;
+  opacity: 1;
 }
 
 /* Switch Css End */
@@ -15243,6 +15280,7 @@ td.fc-header-center {
   width: 100%;
   z-index: 2; /* Above overlay */
 }
+
 .auth-textBox .mtext {
   font-family: "Open Sans";
   font-weight: 700;
@@ -15750,7 +15788,20 @@ td.fc-header-center {
 .chat-single-message + .chat-single-message {
   margin-top: 2rem;
 }
-
+.chat-date-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: transparent;
+  font-size: 12px;
+  font-weight: 400;
+  padding: 0.25rem 0.75rem;
+  color: var(--street-gray-base);
+}
+[data-theme="dark"] .chat-date-label {
+  color: white;
+}
 .chat-single-message {
   display: flex;
   flex-wrap: wrap;

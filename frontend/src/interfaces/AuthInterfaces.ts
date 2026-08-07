@@ -9,6 +9,7 @@ export interface User {
   phoneNo: string;
   role: Role;
   profilePic?: string;
+  status: "active" | "inactive";
   slug: string;
   createdAt: string;
   title: string;
@@ -24,11 +25,16 @@ export interface ChangeUserDetailsPayLoad {
   slug?: string;
   createdAt?: string;
 }
-
+export type AuthStatus =
+  | "unknown"
+  | "authenticated"
+  | "unauthenticated"
+  | "inactive";
 export interface AuthState {
   isLoggedIn: boolean;
   accessToken: string;
   user?: User | null;
+  authStatus: AuthStatus;
 }
 export interface SetLoggedInPayload {
   accessToken: string;
@@ -39,7 +45,7 @@ export const ROLES = {
   ADMIN: "admin",
   MANAGER: "manager",
   EMPLOYEE: "employee",
-  VOLUNTEER:"volunteer",
+  VOLUNTEER: "volunteer",
   HR: "hr",
 } as const;
 export type Role = (typeof ROLES)[keyof typeof ROLES];
@@ -60,6 +66,7 @@ interface UserVerify {
   phoneNo: string;
   role: Role;
   profilePic?: string;
+  status: "active" | "inactive";
   slug: string;
   createdAt: string;
   title: string;
@@ -95,7 +102,7 @@ export interface SignupCredentials {
   password: string;
   role: Role;
   superviserId: string;
-  locations:string[]
+  locations: string[];
   customPermissions: string[];
 }
 export interface ForgotPasswordcredential {
