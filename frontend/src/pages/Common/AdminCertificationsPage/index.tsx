@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import dayjs from "dayjs";
 import {
@@ -9,7 +10,6 @@ import {
 import { showError } from "../../../utills/toastutills";
 import { getErrorMessage } from "../../../utills/utills";
 import StreetTab from "../../../components/StreetTab";
-
 
 const STATUS_CONFIG: Record<
   CertificationStatus,
@@ -36,11 +36,23 @@ const FILTERS: { key: CertificationStatus | ""; label: string }[] = [
   { key: "", label: "All" },
 ];
 
+const VALID_STATUS_KEYS = ["pending", "approved", "rejected", "all"];
+
 const AdminCertificationsPage = () => {
-  const [statusFilter, setStatusFilter] = useState<CertificationStatus | "">(
-    "pending", // default to pending — this is the actionable queue
-  );
-  const [page, setPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const statusFromUrl = searchParams.get("status");
+  const statusFilter: CertificationStatus | "" =
+    statusFromUrl && VALID_STATUS_KEYS.includes(statusFromUrl)
+      ? statusFromUrl === "all"
+        ? ""
+        : (statusFromUrl as CertificationStatus)
+      : "pending"; // default
+
+  const pageFromUrl = Number(searchParams.get("page"));
+  const page =
+    Number.isInteger(pageFromUrl) && pageFromUrl > 0 ? pageFromUrl : 1;
+
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
 
@@ -55,6 +67,17 @@ const AdminCertificationsPage = () => {
 
   const certifications = data?.data?.certifications ?? [];
   const pagination = data?.data?.pagination;
+
+  const updateParams = (next: { status?: string; page?: number }) => {
+    const params = new URLSearchParams(searchParams);
+    if (next.status !== undefined) params.set("status", next.status);
+    if (next.page !== undefined) params.set("page", String(next.page));
+    setSearchParams(params, { replace: true });
+  };
+
+  const setPage = (updater: (p: number) => number) => {
+    updateParams({ page: updater(page) });
+  };
 
   const handleApprove = async (certificationId: string) => {
     try {
@@ -97,8 +120,7 @@ const AdminCertificationsPage = () => {
         <StreetTab
           activeKey={statusFilter || "all"}
           onTabChange={(key) => {
-            setStatusFilter(key === "all" ? "" : (key as CertificationStatus));
-            setPage(1);
+            updateParams({ status: key, page: 1 });
           }}
           tabs={FILTERS.map((f) => ({
             key: f.key || "all",

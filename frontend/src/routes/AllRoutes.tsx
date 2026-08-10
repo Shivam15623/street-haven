@@ -155,6 +155,17 @@ export const AllRoutes: RouteObject[] = [
         ),
       },
       {
+        path: "tasks/:slug",
+        element: (
+          <RouteGuard
+            isPublic={false}
+            requireRole={[ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.VOLUNTEER]}
+          >
+            <LazyTasks />
+          </RouteGuard>
+        ),
+      },
+      {
         path: "certificates",
         element: (
           <RouteGuard

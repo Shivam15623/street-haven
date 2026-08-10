@@ -91,7 +91,7 @@ export const submitCertification = asyncHandler(async (req, res) => {
           message: `${req.user.firstname} ${req.user.lastname} ${
             existing ? "resubmitted" : "submitted"
           } a training certificate for review.`,
-          link: `/certifications/${certification._id}`,
+          link: `/certificates?status=pending`,
           meta: {
             certificationId: certification._id,
             volunteerId,
@@ -268,7 +268,7 @@ export const updateCertificationStatus = asyncHandler(async (req, res) => {
           status === "approved"
             ? "Your training certificate has been approved."
             : `Your training certificate was rejected. Reason: ${remarks}`,
-        link: `/certifications/${certification._id}`,
+        link: `/profile?tab=training_certificate`,
         meta: {
           certificationId: certification._id,
           event: "certification_status_changed",

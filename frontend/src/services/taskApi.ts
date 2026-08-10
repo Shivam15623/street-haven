@@ -88,9 +88,9 @@ export interface GetTasksParams {
 
   dueStatus?: TaskDueStatus;
 
-  hasDueDate?: ""|"true"|"false";
+  hasDueDate?: "" | "true" | "false";
 
-  isCompleted?: ""|"true"|"false";
+  isCompleted?: "" | "true" | "false";
 
   sortBy?:
     | "title"
@@ -183,7 +183,13 @@ export const taskApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Task"],
     }),
-
+    getTaskBySlug: builder.query<ApiResponse<ITask>, string>({
+      query: (slug) => ({
+        url: `/task/slug/${slug}`,
+        method: "GET",
+      }),
+      providesTags: (result, error, slug) => [{ type: "Task", id: slug }],
+    }),
     getAllTasks: builder.query<
       ApiResponse<GetTasksResponse>,
       GetTasksParams | void
@@ -211,6 +217,7 @@ export const taskApi = api.injectEndpoints({
       },
       providesTags: ["Task"],
     }),
+
     exportTaskReport: builder.mutation<
       Blob,
       {
@@ -229,9 +236,9 @@ export const taskApi = api.injectEndpoints({
 
         dueStatus?: TaskDueStatus;
 
-        hasDueDate?: ""|"true"|"false";
+        hasDueDate?: "" | "true" | "false";
 
-        isCompleted?: ""|"true"|"false";
+        isCompleted?: "" | "true" | "false";
       }
     >({
       query: ({
@@ -346,4 +353,5 @@ export const {
   useLazyViewTaskCommentsQuery,
   useLazyGetTaskDetailsQuery,
   useExportTaskReportMutation,
+  useGetTaskBySlugQuery
 } = taskApi;
