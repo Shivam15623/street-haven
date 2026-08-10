@@ -19,6 +19,7 @@ interface UserProfile {
   phoneNo: string;
   role: Role;
   profilePic?: string;
+  status: "inactive" | "active";
   slug: string;
   createdAt: string;
   updatedAt: string;

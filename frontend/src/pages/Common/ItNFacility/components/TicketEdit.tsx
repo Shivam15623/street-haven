@@ -55,16 +55,19 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
     useFetchLocationsQuery({}, { skip: !showModal });
   const isAssigned = ticket.assignedTo?._id === user?._id;
   const isRequester = ticket.createdBy._id === user?._id;
-  const isApprovingManager =
-    ticket.approvedBy?._id === user?._id &&
-    ticket.location?.managers.find((m) => m === user?._id);
+  const isApprovingManager = ticket.approvedBy?._id === user?._id;
   const [editphoto, seteditphoto] = useState(false);
 
   const { data: employeeData, isLoading: isEmployeeLoading } =
     useAllEmployeesQuery({ forDropdown: true }, { skip: !showModal });
   const [editTicket, { isLoading }] = useEditTicketMutation();
   const hasCreatorPermissions = isRequester && ticket.status === "Open";
-
+  // derive once, near hasCreatorPermissions
+  const canTouchApproverFields = [
+    "Approved",
+    "In Progress",
+    "Completed",
+  ].includes(ticket.status);
   // pre-select custom-category UI if the ticket's category isn't one of the predefined ones
   const [isCustomCategory, setIsCustomCategory] = useState(
     () => !PREDEFINED_CATEGORIES.some((c) => c.value === ticket.category),
@@ -88,7 +91,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
     "Open",
     "In Progress",
     "Completed",
-    "Approoved",
+    "Approved", // was "Approoved"
     "Rejected",
     "Closed",
   ];
@@ -108,8 +111,12 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
       if (values.location && values.location !== ticket.location?._id)
         formData.append("location", values.location);
 
+      // BEFORE: formData.append("assignedId", values.assignedId)
+      // Backend reads req.body.assignedTo — this key must match or the
+      // reassignment silently gets dropped.
       if (values.assignedId && values.assignedId !== ticket.assignedTo?._id)
-        formData.append("assignedId", values.assignedId);
+        formData.append("assignedTo", values.assignedId);
+
       if (values.photo) {
         formData.append("photo", values.photo);
       }
@@ -268,7 +275,10 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       name="assignedId"
                       value={values.assignedId}
                       onChange={handleChange}
-                      disabled={!isAssigned && !isApprovingManager}
+                      disabled={
+                        (!isAssigned && !isApprovingManager) ||
+                        !canTouchApproverFields
+                      }
                       isInvalid={touched.assignedId && !!errors.assignedId}
                     >
                       <option value="">Unassigned</option>
@@ -381,7 +391,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       name="priority"
                       size="sm"
                       value={values.priority}
-                      disabled={!isApprovingManager}
+                      disabled={!isApprovingManager || !canTouchApproverFields}
                       onChange={handleChange}
                       className="text-street-base"
                       isInvalid={touched.priority && !!errors.priority}
@@ -512,7 +522,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                   </Col>
                 </Row>
                 {/* Attachment */}
-                <Row className="mb-3  ">
+                <Row className="mb-3">
                   <Col sm={2}>
                     <p className="form-label">Attachment</p>
                   </Col>
@@ -525,7 +535,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       >
                         {ticket.photo?.fileName}
                       </Link>
-                      {!hasCreatorPermissions && (
+                      {hasCreatorPermissions && (
                         <Icon
                           icon="mdi:file-edit"
                           className="ms-2 icon-street-edit"

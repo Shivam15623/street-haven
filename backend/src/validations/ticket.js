@@ -39,6 +39,15 @@ export const editTicketSchema = Joi.object({
     "string.empty": "Location is required",
     "any.invalid": "Invalid location id",
   }),
+
+  priority: Joi.string().valid("Low", "Medium", "High").optional().messages({
+    "any.only": "Priority must be Low, Medium, or High",
+  }),
+
+  assignedTo: Joi.string().custom(objectId).optional().messages({
+    "string.empty": "Assignee is required",
+    "any.invalid": "Invalid assignee id",
+  }),
 });
 export const addCommentSchema = Joi.object({
   message: Joi.string().trim().allow("").optional(),

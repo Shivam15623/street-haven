@@ -34,18 +34,26 @@ const NotificationDropdown = () => {
   }, [data?.data.notifications]);
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !user?._id) return;
 
-    socket.emit("joinUserRoom", { userId: user?._id });
+    const joinRoom = () => {
+      socket.emit("joinUserRoom", { userId: user._id });
+    };
+
+    // join immediately if already connected
+    if (socket.connected) joinRoom();
+
+    // AND rejoin every time the underlying connection re-establishes
+    socket.on("connect", joinRoom);
 
     socket.on("newNotification", (notification: notificationData) => {
-      console.log("Received new notification:", notification);
       setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((prev) => prev + 1);
     });
 
     return () => {
-      socket.emit("leaveUserRoom", { userId: user?._id });
+      socket.emit("leaveUserRoom", { userId: user._id });
+      socket.off("connect", joinRoom);
       socket.off("newNotification");
     };
   }, [socket, user?._id]);
@@ -70,8 +78,8 @@ const NotificationDropdown = () => {
               prev.map((n) =>
                 ids.includes(n._id)
                   ? { ...n, readAt: new Date().toISOString() }
-                  : n
-              )
+                  : n,
+              ),
             );
           } catch (err) {
             showError(getErrorMessage(err));

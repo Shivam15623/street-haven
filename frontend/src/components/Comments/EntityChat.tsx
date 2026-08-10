@@ -644,9 +644,9 @@ const EntityChat = ({
                   <Icon icon="mdi:check" className="text-xl" /> Send for Review
                 </button>
               )}
-              {hasRole(["admin", "super_admin"]) && (
-                <>
-                  {task.status !== "completed" && (
+              {hasRole(["admin", "super_admin"]) &&
+                task.status === "under_review" && (
+                  <>
                     <button
                       type="button"
                       disabled={isUpdatingStatus}
@@ -655,8 +655,7 @@ const EntityChat = ({
                     >
                       <Icon icon="mdi:check-all" className="text-xl" /> Approve
                     </button>
-                  )}
-                  {task.status !== "completed" && (
+
                     <button
                       type="button"
                       disabled={isUpdatingStatus}
@@ -669,9 +668,8 @@ const EntityChat = ({
                       />{" "}
                       Reject
                     </button>
-                  )}
-                </>
-              )}
+                  </>
+                )}
             </div>
 
             <input
