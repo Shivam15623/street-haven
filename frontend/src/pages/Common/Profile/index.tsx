@@ -6,7 +6,7 @@ import CertificatesTab from "./component/CertificatesTab";
 import { useSelector } from "react-redux";
 import { selectAuth } from "../../../redux/AuthSlice";
 
-const VALID_TABS = ["personal_info", "training_certificate", "settings"];
+
 
 const Profile = () => {
   const { user } = useSelector(selectAuth);
