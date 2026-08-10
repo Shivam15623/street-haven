@@ -188,7 +188,7 @@ export const taskApi = api.injectEndpoints({
         url: `/task/slug/${slug}`,
         method: "GET",
       }),
-      providesTags: (result, error, slug) => [{ type: "Task", id: slug }],
+      providesTags: (_result, _error, slug) => [{ type: "Task", id: slug }],
     }),
     getAllTasks: builder.query<
       ApiResponse<GetTasksResponse>,
