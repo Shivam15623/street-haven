@@ -54,9 +54,9 @@ export const TaskNotificationService = {
       message: `You have been assigned "${task.title}" by ${user.firstName} ${user.lastName}.`,
       recipients: [{ userId: task.assignedTo }],
       createdBy: task.assignedBy,
-      link: `/tasks/${task._id}`,
+      link: `/tasks/${task.slug}`,
       meta: {
-        taskId: task._id,
+        taskId: task.slug,
       },
       session,
     });
@@ -75,9 +75,9 @@ export const TaskNotificationService = {
           message: `"${task.title}" has been reassigned to another volunteer.`,
           recipients: [{ userId: previousVolunteerId }],
           createdBy: task.assignedBy,
-          link: `/tasks/${task._id}`,
+          link: `/tasks/${task.slug}`,
           meta: {
-            taskId: task._id,
+            taskId: task.slug,
           },
           session,
         });
@@ -91,9 +91,9 @@ export const TaskNotificationService = {
           message: `You have been assigned "${task.title}".`,
           recipients: [{ userId: task.assignedTo }],
           createdBy: task.assignedBy,
-          link: `/tasks/${task._id}`,
+          link: `/tasks/${task.slug}`,
           meta: {
-            taskId: task._id,
+            taskId: task.slug,
           },
           session,
         });
@@ -112,9 +112,9 @@ export const TaskNotificationService = {
       message: `"${task.title}" has been submitted for review.`,
       recipients: [{ userId: task.assignedBy }],
       createdBy: task.assignedTo,
-      link: `/tasks/${task._id}`,
+      link: `/tasks/${task.slug}`,
       meta: {
-        taskId: task._id,
+        taskId: task.slug,
       },
       session,
     });
@@ -131,9 +131,9 @@ export const TaskNotificationService = {
       message: `Your task "${task.title}" has been approved.`,
       recipients: [{ userId: task.assignedTo }],
       createdBy: adminId,
-      link: `/tasks/${task._id}`,
+      link: `/tasks/${task.slug}`,
       meta: {
-        taskId: task._id,
+        taskId: task.slug,
       },
       session,
     });
@@ -152,9 +152,9 @@ export const TaskNotificationService = {
         : `"${task.title}" was sent back for changes.`,
       recipients: [{ userId: task.assignedTo }],
       createdBy: adminId,
-      link: `/tasks/${task._id}`,
+      link: `/tasks/${task.slug}`,
       meta: {
-        taskId: task._id,
+        taskId: task.slug,
       },
       session,
     });
@@ -171,9 +171,9 @@ export const TaskNotificationService = {
       message: `Due date changed from ${oldDate.toLocaleDateString()} to ${newDate.toLocaleDateString()}.`,
       recipients: [{ userId: task.assignedTo }],
       createdBy: task.assignedBy,
-      link: `/tasks/${task._id}`,
+      link: `/tasks/${task.slug}`,
       meta: {
-        taskId: task._id,
+        taskId: task.slug,
         oldDate,
         newDate,
       },
@@ -192,9 +192,9 @@ export const TaskNotificationService = {
       message: `"${task.title}" details have been updated.`,
       recipients: [{ userId: task.assignedTo }],
       createdBy: task.assignedBy,
-      link: `/tasks/${task._id}`,
+      link: `/tasks/${task.slug}`,
       meta: {
-        taskId: task._id,
+        taskId: task.slug,
       },
       session,
     });
@@ -211,9 +211,9 @@ export const TaskNotificationService = {
       message: `"${task.title}" has been cancelled.`,
       recipients: [{ userId: task.assignedTo }],
       createdBy: adminId,
-      link: `/tasks/${task._id}`,
+      link: `/tasks/${task.slug}`,
       meta: {
-        taskId: task._id,
+        taskId: task.slug,
       },
       session,
     });
@@ -230,9 +230,9 @@ export const TaskNotificationService = {
       message: `"${task.title}" is due tomorrow.`,
       recipients: [{ userId: task.assignedTo }],
       createdBy: task.assignedBy,
-      link: `/tasks/${task._id}`,
+      link: `/tasks/${task.slug}`,
       meta: {
-        taskId: task._id,
+        taskId: task.slug,
       },
       session,
     });
@@ -252,9 +252,9 @@ export const TaskNotificationService = {
         { userId: task.assignedBy },
       ],
       createdBy: task.assignedBy,
-      link: `/tasks/${task._id}`,
+      link: `/tasks/${task.slug}`,
       meta: {
-        taskId: task._id,
+        taskId: task.slug,
       },
       session,
     });

@@ -9,6 +9,7 @@ import {
   ExportTasksReport,
   FetchTaskComments,
   getAllTasks,
+  getTaskBySlug,
   getTaskDetails,
   GetTaskTimeline,
   updateTaskStatus,
@@ -29,18 +30,25 @@ router
     getAllTasks,
   )
   .post(authorizePermissions({ action: PERMISSIONS.TASK_CREATE }), createTask);
-
+router.get("/slug/:slug", getTaskBySlug);
 router
   .route("/:taskId")
   .get(
     authorizePermissions({ action: PERMISSIONS.TASK_VIEW_SELF }),
     getTaskDetails,
   )
-  .patch(authorizePermissions({action:PERMISSIONS.TASK_EDIT}),editTask)
-  .delete(authorizePermissions({action:PERMISSIONS.TASK_DELETE}),deleteTask);
+  .patch(authorizePermissions({ action: PERMISSIONS.TASK_EDIT }), editTask)
+  .delete(
+    authorizePermissions({ action: PERMISSIONS.TASK_DELETE }),
+    deleteTask,
+  );
 
 router.patch("/:taskId/status", updateTaskStatus);
-router.get("/report/export",authorizePermissions({action:PERMISSIONS.TASK_REPORT_EXPORT}), ExportTasksReport);
+router.get(
+  "/report/export",
+  authorizePermissions({ action: PERMISSIONS.TASK_REPORT_EXPORT }),
+  ExportTasksReport,
+);
 router.get("/:entityId/comments", GetTaskTimeline);
 router.post("/:entityId/comments", upload.array("files"), AddTaskComment);
 export default router;
