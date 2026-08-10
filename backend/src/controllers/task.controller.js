@@ -466,6 +466,7 @@ export const getAllTasks = asyncHandler(async (req, res) => {
     page = 1,
     limit = 10,
     search,
+    slug = "",
     searchBy = "both", // title | description | both
     startDate,
     endDate,
@@ -503,10 +504,11 @@ export const getAllTasks = asyncHandler(async (req, res) => {
   }
 
   const assignedByIds = toObjectIds(assignedBy);
-
   if (assignedByIds?.length) baseMatch.assignedBy = { $in: assignedByIds };
 
-  if (search) {
+  if (slug) {
+    baseMatch.slug = slug; // exact match, bypasses text search
+  } else if (search) {
     const searchRegex = new RegExp(search.trim(), "i");
     if (searchBy === "title") {
       baseMatch.title = searchRegex;
@@ -696,6 +698,114 @@ export const getAllTasks = asyncHandler(async (req, res) => {
       counts,
     }),
   );
+});
+
+export const getTaskBySlug = asyncHandler(async (req, res) => {
+  const { _id: userId, role } = req.user;
+  const { slug } = req.params;
+
+  if (!slug) {
+    throw new ApiError(400, "Slug is required");
+  }
+
+  const match = { slug };
+
+  // same role-scoping as getAllTasks — a volunteer can only resolve their own tasks
+  if (role === "admin" || role === "super_admin") {
+    match.assignedBy = new mongoose.Types.ObjectId(userId);
+  } else {
+    match.assignedTo = new mongoose.Types.ObjectId(userId);
+  }
+
+  const startOfToday = dayjs().startOf("day").toDate();
+  const endOfToday = dayjs().endOf("day").toDate();
+
+  const [task] = await Task.aggregate([
+    { $match: match },
+    {
+      $addFields: {
+        dueStatus: {
+          $switch: {
+            branches: [
+              { case: { $eq: ["$dueDate", null] }, then: "noduedate" },
+              {
+                case: {
+                  $and: [
+                    { $ne: ["$status", "completed"] },
+                    { $lt: ["$dueDate", startOfToday] },
+                  ],
+                },
+                then: "overdue",
+              },
+              {
+                case: {
+                  $and: [
+                    { $ne: ["$status", "completed"] },
+                    { $gte: ["$dueDate", startOfToday] },
+                    { $lte: ["$dueDate", endOfToday] },
+                  ],
+                },
+                then: "today",
+              },
+              {
+                case: {
+                  $and: [
+                    { $ne: ["$status", "completed"] },
+                    { $gt: ["$dueDate", endOfToday] },
+                  ],
+                },
+                then: "upcoming",
+              },
+            ],
+            default: "noduedate",
+          },
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "assignedTo",
+        foreignField: "_id",
+        as: "assignedTo",
+        pipeline: [{ $project: { firstname: 1, lastname: 1, email: 1 } }],
+      },
+    },
+    { $unwind: { path: "$assignedTo", preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: "users",
+        localField: "assignedBy",
+        foreignField: "_id",
+        as: "assignedBy",
+        pipeline: [{ $project: { firstname: 1, lastname: 1, email: 1 } }],
+      },
+    },
+    { $unwind: { path: "$assignedBy", preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        title: 1,
+        description: 1,
+        status: 1,
+        dueDate: 1,
+        dueStatus: 1,
+        slug: 1,
+        assignedTo: 1,
+        assignedBy: 1,
+        createdAt: 1,
+        updatedAt: 1,
+      },
+    },
+  ]);
+
+  if (!task) {
+    // deliberately vague: don't leak "exists but not yours" vs "doesn't exist"
+    throw new ApiError(404, "Task not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Task fetched successfully", task));
 });
 
 export const deleteTask = asyncHandler(async (req, res) => {
