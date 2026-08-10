@@ -1,4 +1,3 @@
-
 import ImageUploader from "./ImageUploader";
 import { useFetchUserProfileQuery } from "../../../../services/UserApi";
 import dayjs from "dayjs";
@@ -52,6 +51,10 @@ const PersonalInfoTab = () => {
 
         {/* Other info fields */}
         <InfoField label="Job Title" value={profile?.data.title ?? "---"} />
+        <InfoField
+          label="Status"
+          value={profile?.data.status === "inactive" ? "Inactive" : "Active"}
+        />
         <InfoField
           label="Hire Date"
           value={dayjs(profile?.data.hireDate).format("DD-MM-YYYY")}

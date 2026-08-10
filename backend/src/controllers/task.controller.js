@@ -13,6 +13,15 @@ import dayjs from "dayjs";
 import { htmlToText } from "html-to-text";
 
 import ExcelJS from "exceljs";
+import { createNotification } from "../helper/CreateNotoification.js";
+import { io } from "../index.js";
+const emitNotification = (recipients, notification) => {
+  console.log("Emitting notification to recipients:", recipients, notification);
+  for (const r of recipients) {
+    io.to(`user_${r.userId.toString()}`).emit("newNotification", notification);
+  }
+};
+
 export const createTask = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
 
@@ -104,96 +113,204 @@ export const editTask = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid task id");
   }
 
-  const task = await Task.findById(taskId);
+  const session = await mongoose.startSession();
+  let notifications = []; // { notification, recipients }[]
 
-  if (!task) {
-    throw new ApiError(404, "Task not found");
-  }
-  const changes = {
-    dueDate: false,
-    assignedTo: false,
-    status: false,
-  };
-  const oldDueDate = task.dueDate;
+  try {
+    session.startTransaction();
 
-  // Only creator/admin can edit
-  if (task.assignedBy.toString() !== userId.toString()) {
-    throw new ApiError(403, "You are not authorized to edit this task");
-  }
+    const task = await Task.findById(taskId).session(session);
+    if (!task) {
+      throw new ApiError(404, "Task not found");
+    }
 
-  const now = new Date();
+    // Only creator/admin can edit
+    if (task.assignedBy.toString() !== userId.toString()) {
+      throw new ApiError(403, "You are not authorized to edit this task");
+    }
 
-  // Update basic fields
-  if (title !== undefined) task.title = title;
-
-  if (description !== undefined) task.description = description;
-  if (
-    dueDate !== undefined &&
-    oldDueDate?.getTime() !== task.dueDate?.getTime()
-  ) {
-    task.dueDate = dueDate || null;
-    changes.dueDate = true;
-  }
-
-  // Handle assignment changes
-  if (
-    assignedTo !== undefined &&
-    assignedTo?.toString() !== task.assignedTo?.toString()
-  ) {
+    const changes = { dueDate: false, assignedTo: false, status: false };
+    const oldDueDate = task.dueDate;
     const oldAssignedTo = task.assignedTo;
+    const oldStatus = task.status;
+    const now = new Date();
 
-    task.assignedTo = assignedTo || null;
+    if (title !== undefined) task.title = title;
+    if (description !== undefined) task.description = description;
+
+    // FIX: compare old value against the *incoming* dueDate, not the
+    // not-yet-updated task.dueDate (previous check always evaluated false).
+    if (dueDate !== undefined) {
+      const newDueDate = dueDate ? new Date(dueDate) : null;
+      const changed = oldDueDate?.getTime() !== newDueDate?.getTime();
+      if (changed) {
+        task.dueDate = newDueDate;
+        changes.dueDate = true;
+      }
+    }
+
+    // Handle assignment changes
     if (
       assignedTo !== undefined &&
-      oldAssignedTo?.toString() !== task.assignedTo?.toString()
+      assignedTo?.toString() !== oldAssignedTo?.toString()
     ) {
       task.assignedTo = assignedTo || null;
       changes.assignedTo = true;
-    }
 
-    // Store assignment history only when assigned
-    if (assignedTo) {
-      task.assignmentHistory.push({
-        fromAssignedTo: oldAssignedTo || null,
-        assignedTo,
-        assignedBy: userId,
-        assignedAt: now,
-      });
-
-      // If previously unassigned
-      if (!oldAssignedTo) {
-        task.statusHistory.push({
-          fromStatus: task.status,
-          toStatus: "assigned",
-          changedBy: userId,
-          changedAt: now,
+      if (assignedTo) {
+        task.assignmentHistory.push({
+          fromAssignedTo: oldAssignedTo || null,
+          assignedTo,
+          assignedBy: userId,
+          assignedAt: now,
         });
 
-        task.status = "assigned";
+        if (!oldAssignedTo) {
+          task.statusHistory.push({
+            fromStatus: task.status,
+            toStatus: "assigned",
+            changedBy: userId,
+            changedAt: now,
+          });
+          task.status = "assigned";
+          changes.status = true;
+        }
       }
     }
+
+    // Handle explicit status changes (skip if assignment already set it above)
+    if (status !== undefined && status !== task.status) {
+      task.statusHistory.push({
+        fromStatus: task.status,
+        toStatus: status,
+        changedBy: userId,
+        changedAt: now,
+      });
+      task.status = status;
+      changes.status = true;
+    }
+
+    await task.save({ session });
+
+    // -----------------------------------------
+    // Notifications — only for fields that actually changed
+    // -----------------------------------------
+
+    // Reassignment: notify the new assignee (skip if self-assigning)
+    if (changes.assignedTo && task.assignedTo) {
+      const recipientId = task.assignedTo.toString();
+      if (recipientId !== userId.toString()) {
+        const recipients = [{ userId: recipientId }];
+        const notification = await createNotification(
+          {
+            category: "task",
+            action: "assigned",
+            severity: "info",
+            title: "Task Assigned to You",
+            message: `"${task.title}" has been assigned to you.`,
+            link: `/tasks/${task._id}`,
+            meta: { taskId: task._id, event: "task_assigned" },
+            recipients,
+            createdBy: userId,
+          },
+          session,
+        );
+        notifications.push({ notification, recipients });
+      }
+    }
+
+    // Reassignment away: notify the *previous* assignee they've been unassigned/reassigned
+    if (changes.assignedTo && oldAssignedTo) {
+      const recipientId = oldAssignedTo.toString();
+      if (recipientId !== userId.toString()) {
+        const recipients = [{ userId: recipientId }];
+        const notification = await createNotification(
+          {
+            category: "task",
+            action: "updated",
+            severity: "info",
+            title: "Task Reassigned",
+            message: `"${task.title}" has been reassigned and is no longer assigned to you.`,
+            link: `/tasks/${task._id}`,
+            meta: { taskId: task._id, event: "task_unassigned" },
+            recipients,
+            createdBy: userId,
+          },
+          session,
+        );
+        notifications.push({ notification, recipients });
+      }
+    }
+
+    // Status change: notify current assignee (if they're not the one making the change)
+    if (changes.status && task.assignedTo) {
+      const recipientId = task.assignedTo.toString();
+      if (recipientId !== userId.toString()) {
+        const recipients = [{ userId: recipientId }];
+        const notification = await createNotification(
+          {
+            category: "task",
+            action: "status_changed",
+            severity: "info",
+            title: "Task Status Updated",
+            message: `"${task.title}" status changed from ${oldStatus} to ${task.status}.`,
+            link: `/tasks/${task._id}`,
+            meta: {
+              taskId: task._id,
+              event: "task_status_changed",
+              fromStatus: oldStatus,
+              toStatus: task.status,
+            },
+            recipients,
+            createdBy: userId,
+          },
+          session,
+        );
+        notifications.push({ notification, recipients });
+      }
+    }
+
+    // Due date change: notify current assignee
+    if (changes.dueDate && task.assignedTo) {
+      const recipientId = task.assignedTo.toString();
+      if (recipientId !== userId.toString()) {
+        const recipients = [{ userId: recipientId }];
+        const notification = await createNotification(
+          {
+            category: "task",
+            action: "updated",
+            severity: "info",
+            title: "Task Due Date Changed",
+            message: task.dueDate
+              ? `Due date for "${task.title}" is now ${task.dueDate.toLocaleDateString()}.`
+              : `Due date for "${task.title}" has been removed.`,
+            link: `/tasks/${task._id}`,
+            meta: { taskId: task._id, event: "task_due_date_changed" },
+            recipients,
+            createdBy: userId,
+          },
+          session,
+        );
+        notifications.push({ notification, recipients });
+      }
+    }
+
+    await session.commitTransaction();
+
+    // Emit only after commit succeeds
+    for (const { notification, recipients } of notifications) {
+      emitNotification(recipients, notification);
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Task updated Successfully", task));
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    await session.endSession();
   }
-
-  // Handle status changes
-  if (status !== undefined && status !== task.status) {
-    task.statusHistory.push({
-      fromStatus: task.status,
-
-      toStatus: status,
-
-      changedBy: userId,
-
-      changedAt: now,
-    });
-    changes.status = true;
-    task.status = status;
-  }
-
-  await task.save();
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, "Task updated Successfully", task));
 });
 
 export const getTaskDetails = asyncHandler(async (req, res) => {

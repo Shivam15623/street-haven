@@ -56,6 +56,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     createdBy,
     createdAt,
     displayId,
+    approvedBy,
   } = ticket;
   const [showApprove, setShowApprove] = useState(false);
   const [showReject, setShowReject] = useState(false);
@@ -161,6 +162,17 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
               </div>
             )}
 
+            {approvedBy&&(
+               <div className="col-6 col-sm-auto">
+                <p className="fw-normal text-xs mb-0">
+                  • Approved by:{" "}
+                  <span className="text-street-dark fw-medium text-xs">
+                    {approvedBy.firstname} {approvedBy.lastname}
+                  </span>
+                </p>
+              </div>
+            )}
+
             {/* Attachments */}
             {photo && (
               <div className="col-6 col-sm-auto d-flex align-items-center gap-2">
@@ -187,6 +199,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                 <Button
                   className="btn-street-primary radius-12 px-16 d-flex align-items-center justify-content-center gap-2 border-0 text-sm fw-semibold"
                   style={{ height: "40px" }}
+                  disabled={approving}
                   onClick={() => setShowApprove(true)}
                 >
                   <Icon icon="lucide:check" className="w-16-px h-16-px" />
@@ -195,6 +208,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                 <Button
                   className="btn-danger radius-12 px-16 d-flex align-items-center justify-content-center gap-2 border-0 text-sm fw-semibold"
                   style={{ height: "40px" }}
+                   disabled={rejecting}
                   onClick={() => setShowReject(true)}
                 >
                   <Icon icon="lucide:x" className="w-16-px h-16-px" />
@@ -347,6 +361,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
             }).unwrap();
             if (res.success) {
               showSuccess(res.message);
+              setShowApprove(false);
             }
           } catch (error) {
             showError(getErrorMessage(error));
@@ -366,6 +381,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
             }).unwrap();
             if (res.success) {
               showSuccess(res.message);
+              setShowReject(false)
             }
           } catch (error) {
             showError(getErrorMessage(error));

@@ -13,6 +13,7 @@ const NotificationSchema = new mongoose.Schema(
         "training_material",
         "collective_agreement",
         "hr_updates",
+        "certificate",
         "system",
       ],
       required: true,
