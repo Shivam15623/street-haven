@@ -62,7 +62,12 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
     useAllEmployeesQuery({ forDropdown: true }, { skip: !showModal });
   const [editTicket, { isLoading }] = useEditTicketMutation();
   const hasCreatorPermissions = isRequester && ticket.status === "Open";
-
+  // derive once, near hasCreatorPermissions
+  const canTouchApproverFields = [
+    "Approved",
+    "In Progress",
+    "Completed",
+  ].includes(ticket.status);
   // pre-select custom-category UI if the ticket's category isn't one of the predefined ones
   const [isCustomCategory, setIsCustomCategory] = useState(
     () => !PREDEFINED_CATEGORIES.some((c) => c.value === ticket.category),
@@ -270,7 +275,10 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       name="assignedId"
                       value={values.assignedId}
                       onChange={handleChange}
-                      disabled={!isAssigned && !isApprovingManager}
+                      disabled={
+                        (!isAssigned && !isApprovingManager) ||
+                        !canTouchApproverFields
+                      }
                       isInvalid={touched.assignedId && !!errors.assignedId}
                     >
                       <option value="">Unassigned</option>
@@ -383,7 +391,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       name="priority"
                       size="sm"
                       value={values.priority}
-                      disabled={!isApprovingManager}
+                      disabled={!isApprovingManager || !canTouchApproverFields}
                       onChange={handleChange}
                       className="text-street-base"
                       isInvalid={touched.priority && !!errors.priority}

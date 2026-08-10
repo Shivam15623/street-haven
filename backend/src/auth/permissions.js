@@ -16,6 +16,7 @@ export const PERMISSIONS = {
   DELETE_EMPLOYEE: "delete_employee",
   VIEW_EMPLOYEES: "view_employees",
   RESET_PASSWORD: "reset_password",
+  EMPLOYEE_STATUS_CHANGE: "employee_status_change",
 
   // -------------------------
   // PROGRAM & MANUALS (Combined)
@@ -82,23 +83,22 @@ export const PERMISSIONS = {
   VIEW_SUBMISSIONS: "view_submissions",
   EDIT_FORM: "edit_form",
   DELETE_FORM: "delete_form",
-  
+
   TICKET_VIEW_SELF: "ticket_view_self",
-  VIEW_IT_TICKETS:"view_it_tickets",
-  VIEW_PROPERTY_TICKETS:"view_property_tickets",
+  VIEW_IT_TICKETS: "view_it_tickets",
+  VIEW_PROPERTY_TICKETS: "view_property_tickets",
 
+  TASK_VIEW_SELF: "task_view_self",
+  TASK_VIEW_ALL: "task_view_all",
+  TASK_EDIT: "task_edit",
+  TASK_DELETE: "task_delete",
+  TASK_APPROVE_REJECT: "task_approve_reject",
+  TASK_SUBMIT: "task_submit",
+  TASK_REPORT_EXPORT: "task_report_export",
+  TASK_CREATE: "task_create",
 
-  TASK_VIEW_SELF:"task_view_self",
-  TASK_VIEW_ALL:"task_view_all",
-  TASK_EDIT:"task_edit",
-  TASK_DELETE:"task_delete",
-  TASK_APPROVE_REJECT:"task_approve_reject",
-  TASK_SUBMIT:"task_submit",
-  TASK_REPORT_EXPORT:"task_report_export",
-
-  TRAINING_CERTIFICATE_VIEW_SELF:"training_certificate_view_self",
-  TRAINING_CERTIFICATE_VIEW_ALL:"training_certificate_view_all",
-  TRAINING_CERTIFICATE_SUBMIT:"training_certificate_submit",
-  TRAINING_CERTIFICATE_APPROVE_REJECT:"training_certificate_approve_reject"
-
+  TRAINING_CERTIFICATE_VIEW_SELF: "training_certificate_view_self",
+  TRAINING_CERTIFICATE_VIEW_ALL: "training_certificate_view_all",
+  TRAINING_CERTIFICATE_SUBMIT: "training_certificate_submit",
+  TRAINING_CERTIFICATE_APPROVE_REJECT: "training_certificate_approve_reject",
 };

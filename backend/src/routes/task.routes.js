@@ -15,17 +15,32 @@ import {
 } from "../controllers/task.controller.js";
 import { upload } from "../middleware/multer.js";
 import { checkActiveUser } from "../middleware/checkActiveUsers.js";
+import { authorizePermissions } from "../middleware/AuthRole.js";
+import { PERMISSIONS } from "../auth/permissions.js";
 
 const router = Router();
 
 router.use(passport.authenticate("jwt", { session: false }));
 router.use(checkActiveUser);
-router.route("/").get(getAllTasks).post(createTask);
+router
+  .route("/")
+  .get(
+    authorizePermissions({ action: PERMISSIONS.TASK_VIEW_SELF }),
+    getAllTasks,
+  )
+  .post(authorizePermissions({ action: PERMISSIONS.TASK_CREATE }), createTask);
 
-router.route("/:taskId").get(getTaskDetails).patch(editTask).delete(deleteTask);
+router
+  .route("/:taskId")
+  .get(
+    authorizePermissions({ action: PERMISSIONS.TASK_VIEW_SELF }),
+    getTaskDetails,
+  )
+  .patch(authorizePermissions({action:PERMISSIONS.TASK_EDIT}),editTask)
+  .delete(authorizePermissions({action:PERMISSIONS.TASK_DELETE}),deleteTask);
 
 router.patch("/:taskId/status", updateTaskStatus);
-router.get("/report/export",ExportTasksReport)
+router.get("/report/export",authorizePermissions({action:PERMISSIONS.TASK_REPORT_EXPORT}), ExportTasksReport);
 router.get("/:entityId/comments", GetTaskTimeline);
 router.post("/:entityId/comments", upload.array("files"), AddTaskComment);
 export default router;

@@ -62,7 +62,7 @@ const TICKET_ACTION_RULES: TicketActionRule[] = [
   {
     action: "edit",
     allowedStatuses: ["Open"],
-    requiredRelationships: ["creator"],
+    requiredRelationships: ["creator", "manager", "assignee", "admin"],
   },
   {
     action: "cancel",

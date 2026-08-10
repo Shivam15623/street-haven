@@ -57,11 +57,6 @@ export const EmployeeColumn = (
       accessorKey: "role",
       render: (row) => <div>{formatRole(row.role)}</div>,
     },
-    {
-      title: "Status",
-      accessorKey: "isActive",
-      render: (row) => <StatusToggle id={row._id} status={row.status} />,
-    },
   ];
 
   // -----------------------------------
@@ -69,7 +64,15 @@ export const EmployeeColumn = (
   // -----------------------------------
   const canUpdate = hasPermission({ action: "edit_employee" });
   const canDelete = hasPermission({ action: "delete_employee" });
+  const canResetStatus = hasPermission({ action: "employee_status_change" });
 
+  if (canResetStatus) {
+    columns.push({
+      title: "Status",
+      accessorKey: "isActive",
+      render: (row) => <StatusToggle id={row._id} status={row.status} />,
+    });
+  }
   // If at least one action is allowed → show Actions column
   if (canUpdate || canDelete) {
     columns.push({

@@ -1117,8 +1117,7 @@ export const FetchTickets = asyncHandler(async (req, res) => {
   /* ----------------------------------
      EFFECTIVE PERMISSIONS
   -----------------------------------*/
-  const rolePermissions = ROLE_PERMISSIONS[req.user.role] ?? [];
-  const customPermissions = req.user.customPermissions ?? [];
+
 
   // const effectivePermissions = new Set([
   //   ...rolePermissions,
