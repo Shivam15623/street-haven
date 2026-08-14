@@ -745,7 +745,7 @@ th {
   border: 0.5px solid #55555580;
 }
 .border-sh-base-50 {
-  border-color: var(--street-border-base-50);
+  border-color: var(--street-border-base-50) !important;
 }
 .border-sh-primary-1 {
   border: 1px solid var(--street-primary-base);

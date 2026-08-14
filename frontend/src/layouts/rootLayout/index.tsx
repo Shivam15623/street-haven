@@ -33,6 +33,7 @@ const menuItems = [
     label: "Volunteers Training",
     path: "/volunteer-training",
     icon: ProgramIcon,
+    permission: PERMISSIONS.VIEW_PROGRAM_MANUALS,
     public: true,
   },
   {
@@ -71,7 +72,7 @@ const RootLayout = () => {
   const [mobileMenu, setMobileMenu] = useState(false);
   const location = useLocation(); // Hook to get the current route
   const [mobileMode, setMobileMode] = useState(false);
-  const { hasPermission } = useHasPermission();
+  const { hasPermission, hasAnyPermission } = useHasPermission();
   const navigation = useNavigation();
   const isLoading = navigation.state === "loading";
   const filteredMenu = menuItems.filter((m) => {
@@ -87,11 +88,7 @@ const RootLayout = () => {
 
     // Multiple permissions - ANY one is enough
     if (m.permissions?.length) {
-      return m.permissions.some((permission) =>
-        hasPermission({
-          action: permission,
-        }),
-      );
+      return hasAnyPermission(m.permissions);
     }
 
     // No public flag or permission
@@ -309,7 +306,7 @@ const RootLayout = () => {
           <footer className="d-footer footer-color">
             <div className="row align-items-center justify-content-between">
               <div className="col-auto">
-                <p className="mb-0 text-street-base">© 2025 Street Haven</p>
+                <p className="mb-0 text-street-base">© 2026 Street Haven</p>
               </div>
             </div>
           </footer>

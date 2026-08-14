@@ -42,11 +42,10 @@ export interface SetLoggedInPayload {
 }
 export const ROLES = {
   SUPER_ADMIN: "super_admin",
-  ADMIN: "admin",
+  VOLUNTEER_ADMIN: "volunteer_admin",
   MANAGER: "manager",
-  EMPLOYEE: "employee",
+  STAFF: "staff",
   VOLUNTEER: "volunteer",
-  HR: "hr",
 } as const;
 export type Role = (typeof ROLES)[keyof typeof ROLES];
 

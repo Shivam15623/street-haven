@@ -1,6 +1,6 @@
 import Joi from "joi";
 
-const ALLOWED_ROLES = ["hr", "employee", "manager"];
+const ALLOWED_ROLES = [ "employee", "manager"];
 export const registerUserSchema = Joi.object({
   firstName: Joi.string()
     .pattern(/^[A-Za-z\s]+$/)

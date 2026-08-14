@@ -14,12 +14,13 @@ import {
   LazyTasks,
   LazyAdminCertificationsPage,
   LazyInActiveUser,
+  LazyUnauthorized,
 } from "../Lazy Components";
 import { Navigate, type RouteObject } from "react-router-dom";
 import RouteGuard from "../Routeguard";
-import { ROLES } from "../interfaces/AuthInterfaces";
 import { Suspense } from "react";
 import Loader from "../components/Loader";
+import { PERMISSIONS } from "../utills/auth/permissions";
 const withSuspense = (Component: React.ReactElement) => (
   <Suspense fallback={<Loader />}>{Component}</Suspense>
 );
@@ -80,6 +81,14 @@ export const AllRoutes: RouteObject[] = [
     ),
   },
   {
+    path: "/unauthorized",
+    element: withSuspense(
+      <RouteGuard isPublic={true}>
+        <LazyUnauthorized />
+      </RouteGuard>,
+    ),
+  },
+  {
     path: "/",
     element: withSuspense(
       <RouteGuard isPublic={false}>
@@ -99,7 +108,10 @@ export const AllRoutes: RouteObject[] = [
       {
         path: "volunteer-training",
         element: (
-          <RouteGuard isPublic={false}>
+          <RouteGuard
+            isPublic={false}
+            requirePermission={[PERMISSIONS.VIEW_PROGRAM_MANUALS]}
+          >
             <LazyProgramManuals />
           </RouteGuard>
         ),
@@ -137,7 +149,7 @@ export const AllRoutes: RouteObject[] = [
         element: (
           <RouteGuard
             isPublic={false}
-            requireRole={[ROLES.ADMIN, ROLES.SUPER_ADMIN]}
+            requirePermission={[PERMISSIONS.VIEW_EMPLOYEES]}
           >
             <LazyEmployees />
           </RouteGuard>
@@ -148,7 +160,10 @@ export const AllRoutes: RouteObject[] = [
         element: (
           <RouteGuard
             isPublic={false}
-            requireRole={[ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.VOLUNTEER]}
+            requirePermission={[
+              PERMISSIONS.TASK_VIEW_ALL,
+              PERMISSIONS.TASK_VIEW_SELF,
+            ]}
           >
             <LazyTasks />
           </RouteGuard>
@@ -159,7 +174,10 @@ export const AllRoutes: RouteObject[] = [
         element: (
           <RouteGuard
             isPublic={false}
-            requireRole={[ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.VOLUNTEER]}
+            requirePermission={[
+              PERMISSIONS.TASK_VIEW_ALL,
+              PERMISSIONS.TASK_VIEW_SELF,
+            ]}
           >
             <LazyTasks />
           </RouteGuard>
@@ -170,7 +188,7 @@ export const AllRoutes: RouteObject[] = [
         element: (
           <RouteGuard
             isPublic={false}
-            requireRole={[ROLES.ADMIN, ROLES.SUPER_ADMIN]}
+            requirePermission={[PERMISSIONS.TRAINING_CERTIFICATE_VIEW_ALL]}
           >
             <LazyAdminCertificationsPage />
           </RouteGuard>

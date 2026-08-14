@@ -21,6 +21,7 @@ export const LazyRootLayout = React.lazy(
   () => import("../layouts/rootLayout")
 );
 export const LazyInActiveUser=React.lazy(()=> import("../pages/Authentication/Forbidden"))
+export const LazyUnauthorized=React.lazy(()=>import("../pages/Authentication/Unauthorized"))
 export const LazyEmployeedashboard = React.lazy(
   () => import("../pages/Employee/Dashboard")
 );

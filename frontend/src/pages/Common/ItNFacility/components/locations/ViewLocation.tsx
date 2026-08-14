@@ -52,6 +52,9 @@ const ViewLocation: React.FC<ViewLocationProps> = ({
                 Location Name
               </div>
               <h5 className="mb-0 fw-bold text-street-dark">{location.name}</h5>
+              {location.slug && (
+                <span className="text-xs text-muted">{location.slug}</span>
+              )}
             </div>
             <Badge
               variant={location.isActive ? "success-soft" : "warning-soft"}
@@ -64,7 +67,7 @@ const ViewLocation: React.FC<ViewLocationProps> = ({
           <div className="px-1">
             <div className="d-flex justify-content-between align-items-center mb-2">
               <span className="text-xs text-muted text-uppercase fw-semibold">
-                Assigned Managers
+                Property Managers
               </span>
               <span className="badge bg-secondary-subtle text-dark rounded-pill">
                 {location.managers.length}
@@ -93,6 +96,36 @@ const ViewLocation: React.FC<ViewLocationProps> = ({
                     <Badge variant="primary-soft">{manager.role}</Badge>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+
+          {/* Facility Manager Section */}
+          <div className="px-1">
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <span className="text-xs text-muted text-uppercase fw-semibold">
+                Facility Manager
+              </span>
+            </div>
+
+            {!location.facilityManager ? (
+              <div className="p-3 text-center bg-light rounded text-muted text-sm border border-dashed">
+                No facility manager assigned
+              </div>
+            ) : (
+              <div className="d-flex justify-content-between align-items-center p-3 rounded border bg-white shadow-sm-hover">
+                <div className="d-flex flex-column">
+                  <span className="text-sm fw-semibold text-street-dark">
+                    {location.facilityManager.firstname}{" "}
+                    {location.facilityManager.lastname}
+                  </span>
+                  <span className="text-xs text-muted">
+                    {location.facilityManager.email}
+                  </span>
+                </div>
+                <Badge variant="primary-soft">
+                  {location.facilityManager.role}
+                </Badge>
               </div>
             )}
           </div>

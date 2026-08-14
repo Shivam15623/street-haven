@@ -15,13 +15,21 @@ import { htmlToText } from "html-to-text";
 import ExcelJS from "exceljs";
 import { createNotification } from "../helper/CreateNotoification.js";
 import { io } from "../index.js";
+import User from "../model/user.js";
 const emitNotification = (recipients, notification) => {
   console.log("Emitting notification to recipients:", recipients, notification);
   for (const r of recipients) {
     io.to(`user_${r.userId.toString()}`).emit("newNotification", notification);
   }
 };
-
+async function getSuperAdminIds(session, excludeUserId) {
+  const superAdmins = await User.find({ role: "super_admin" })
+    .select("_id")
+    .session(session);
+  return superAdmins
+    .map((u) => u._id.toString())
+    .filter((id) => id !== excludeUserId?.toString());
+}
 export const createTask = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
 
@@ -294,7 +302,28 @@ export const editTask = asyncHandler(async (req, res) => {
         notifications.push({ notification, recipients });
       }
     }
-
+    // Notify super_admin of any edit to this task, once, regardless of which fields changed
+    if (changes.assignedTo || changes.status || changes.dueDate) {
+      const superAdminIds = await getSuperAdminIds(session, userId);
+      if (superAdminIds.length) {
+        const recipients = superAdminIds.map((id) => ({ userId: id }));
+        const notification = await createNotification(
+          {
+            category: "task",
+            action: "updated",
+            severity: "info",
+            title: "Task Updated",
+            message: `"${task.title}" was updated by ${req.user.firstname} ${req.user.lastname}.`,
+            link: `/tasks/${task._id}`,
+            meta: { taskId: task._id, event: "task_updated" },
+            recipients,
+            createdBy: userId,
+          },
+          session,
+        );
+        notifications.push({ notification, recipients });
+      }
+    }
     await session.commitTransaction();
 
     // Emit only after commit succeeds
@@ -492,14 +521,14 @@ export const getAllTasks = asyncHandler(async (req, res) => {
   // ---------- base match (role scoping + explicit filters, NOT status) ----------
   const baseMatch = {};
 
-  if (role === "admin" || role === "super_admin") {
+  if (role === "volunteer_admin" || role === "super_admin") {
     baseMatch.assignedBy = new mongoose.Types.ObjectId(userId);
   } else {
     baseMatch.assignedTo = new mongoose.Types.ObjectId(userId);
   }
 
   const assignedToIds = toObjectIds(assignedTo);
-  if (role === "admin" || role === "super_admin") {
+  if (role === "volunteer_admin" || role === "super_admin") {
     if (assignedToIds?.length) baseMatch.assignedTo = { $in: assignedToIds };
   }
 
@@ -711,7 +740,7 @@ export const getTaskBySlug = asyncHandler(async (req, res) => {
   const match = { slug };
 
   // same role-scoping as getAllTasks — a volunteer can only resolve their own tasks
-  if (role === "admin" || role === "super_admin") {
+  if (role === "volunteer_admin" || role === "super_admin") {
     match.assignedBy = new mongoose.Types.ObjectId(userId);
   } else {
     match.assignedTo = new mongoose.Types.ObjectId(userId);
@@ -1128,7 +1157,7 @@ export const buildReportFilter = async (req) => {
   const filter = {};
 
   // ---------- role scoping ----------
-  if (role === "admin" || role === "super_admin") {
+  if (role === "volunteer_admin" || role === "super_admin") {
     filter.assignedBy = new mongoose.Types.ObjectId(userId);
   } else {
     filter.assignedTo = new mongoose.Types.ObjectId(userId);
@@ -1136,7 +1165,10 @@ export const buildReportFilter = async (req) => {
 
   // admin/super_admin can further narrow by assignedTo
   const assignedToIds = toObjectIds(assignedTo);
-  if ((role === "admin" || role === "super_admin") && assignedToIds?.length) {
+  if (
+    (role === "volunteer_admin" || role === "super_admin") &&
+    assignedToIds?.length
+  ) {
     filter.assignedTo = { $in: assignedToIds };
   }
 

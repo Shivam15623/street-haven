@@ -25,13 +25,8 @@ export const PERMISSIONS = {
   EDIT_PROGRAM_MANUAL: "edit_program_manual",
   DELETE_PROGRAM_MANUAL: "delete_program_manual",
   VIEW_PROGRAM_MANUALS: "view_program_manuals",
-  // -------------------------
-  // EVENT MINUTES
-  // -------------------------
-  CREATE_EVENT_MINUTE: "create_event_minute",
-  EDIT_EVENT_MINUTE: "edit_event_minute",
-  DELETE_EVENT_MINUTE: "delete_event_minute",
-  VIEW_EVENT_MINUTES: "view_event_minutes",
+
+
 
   // -------------------------
   // COLLECTIVE AGREEMENT
@@ -41,13 +36,7 @@ export const PERMISSIONS = {
   DELETE_COLLECTIVE_AGREEMENT: "delete_collective_agreement",
   VIEW_COLLECTIVE_AGREEMENTS: "view_collective_agreements",
 
-  // -------------------------
-  // HR UPDATES
-  // -------------------------
-  CREATE_HR_UPDATE: "create_hr_update",
-  EDIT_HR_UPDATE: "edit_hr_update",
-  DELETE_HR_UPDATE: "delete_hr_update",
-  VIEW_HR_UPDATES: "view_hr_updates",
+ 
 
   // -------------------------
   // ANNOUNCEMENTS
@@ -73,20 +62,14 @@ export const PERMISSIONS = {
   DELETE_EMERGENCY_CONTACT: "delete_emergency_contact",
   VIEW_EMERGENCY_CONTACTS: "view_emergency_contacts",
 
-  // Organizational Chart
-  CREATE_ORG_CHART: "create_org_chart",
-  EDIT_ORG_CHART: "edit_org_chart",
-  DELETE_ORG_CHART: "delete_org_chart",
-  VIEW_ORG_CHART: "view_org_chart",
 
-  VIEW_SUBMIT_FORM: "view_submit_form",
-  VIEW_SUBMISSIONS: "view_submissions",
-  EDIT_FORM: "edit_form",
-  DELETE_FORM: "delete_form",
+
 
   TICKET_VIEW_SELF: "ticket_view_self",
-  VIEW_IT_TICKETS: "view_it_tickets",
-  VIEW_PROPERTY_TICKETS: "view_property_tickets",
+  TICKET_CATEGORY_MANAGE:"ticket_category_manage",
+  TICKET_CREATE:"ticket_create",
+  
+
 
   TASK_VIEW_SELF: "task_view_self",
   TASK_VIEW_ALL: "task_view_all",

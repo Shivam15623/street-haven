@@ -62,12 +62,15 @@ import activityLogRoutes from "./routes/activitylogs.routes.js";
 import locationRouter from "./routes/location.routes.js"
 import taskRouter from './routes/task.routes.js'
 import certificateRouter from "./routes/certifications.js"
+import tickCategoryRouter from './routes/ticketCategory.routes.js'
+
 app.use("/api/v1/activity-logs", activityLogRoutes);
 app.use("/api/v1/auth", authLimiter, authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/program-manuals", programManualRouter);
 
 app.use("/api/v1/ticket", ticketRouter);
+app.use("/api/v1/ticket-category",tickCategoryRouter)
 app.use("/api/v1/location",locationRouter)
 app.use("/api/v1/search", searchRoutes);
 app.use("/api/v1/employees", EmployeeRoutes);

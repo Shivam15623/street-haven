@@ -101,12 +101,11 @@ export const certificationApi = api.injectEndpoints({
 
     // Volunteer: view own certifications
     // services/certificationApi.ts — key changes
-    getMyCertification: builder.query<ApiResponse<ICertification | null>, void>(
-      {
-        query: () => "/certifications/me",
-        providesTags: ["Certification"],
-      },
-    ),
+    // Volunteer: view own certifications
+    getMyCertification: builder.query<ApiResponse<ICertification[]>, void>({
+      query: () => "/certifications/me",
+      providesTags: ["Certification"],
+    }),
 
     // Volunteer: withdraw a pending submission
     deleteCertification: builder.mutation<ApiGeneralResponse, string>({

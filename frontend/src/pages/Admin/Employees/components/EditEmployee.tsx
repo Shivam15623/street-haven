@@ -133,12 +133,10 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
   };
 
   const formatRole = (role: string) =>
-    role === "hr"
-      ? "HR"
-      : role
-          .split("_")
-          .map((w) => w[0].toUpperCase() + w.slice(1).toLowerCase())
-          .join(" ");
+    role
+      .split("_")
+      .map((w) => w[0].toUpperCase() + w.slice(1).toLowerCase())
+      .join(" ");
 
   return (
     <>

@@ -33,21 +33,6 @@ export const submitCertification = asyncHandler(async (req, res) => {
   try {
     session.startTransaction();
 
-    const existing = await VolunteerCertification.findOne({
-      volunteer: volunteerId,
-    }).session(session);
-
-    if (existing && existing.status !== "rejected") {
-      throw new ApiError(
-        400,
-        `You already have a training certificate that is ${existing.status}`,
-      );
-    }
-
-    // NOTE: upload happens inside the transaction window but Cloudinary itself
-    // isn't transactional — if the DB write below fails we abort the Mongo
-    // transaction, but the uploaded file stays on Cloudinary. That's the same
-    // tradeoff editTicket already accepts for req.file uploads, so leaving as-is.
     const uploadedFile = await uploadOnCloudinary(req.file.path);
     if (!uploadedFile?.secure_url) {
       throw new ApiError(500, "Certificate file upload failed");
@@ -63,17 +48,11 @@ export const submitCertification = asyncHandler(async (req, res) => {
       status: "pending",
     };
 
-    const certification = existing
-      ? await VolunteerCertification.findByIdAndUpdate(
-          existing._id,
-          { ...payload, remarks: "" },
-          { new: true, session },
-        )
-      : await (
-          await VolunteerCertification.create([payload], { session })
-        )[0];
+    const certification = (
+      await VolunteerCertification.create([payload], { session })
+    )[0];
 
-    const admins = await User.find({ role: "admin" })
+    const admins = await User.find({ role: { $in: ["admin", "super_admin"] } })
       .select("_id")
       .session(session);
 
@@ -83,14 +62,10 @@ export const submitCertification = asyncHandler(async (req, res) => {
       notification = await createNotification(
         {
           category: "certificate",
-          action: existing ? "updated" : "created",
+          action: "created",
           severity: "info",
-          title: existing
-            ? "Certificate Resubmitted"
-            : "New Certificate Submitted",
-          message: `${req.user.firstname} ${req.user.lastname} ${
-            existing ? "resubmitted" : "submitted"
-          } a training certificate for review.`,
+          title: "New Certificate Submitted",
+          message: `${req.user.firstname} ${req.user.lastname} submitted a training certificate for review.`,
           link: `/certificates?status=pending`,
           meta: {
             certificationId: certification._id,
@@ -106,7 +81,6 @@ export const submitCertification = asyncHandler(async (req, res) => {
 
     await session.commitTransaction();
 
-    // socket emit only after commit succeeds
     if (notification && recipients.length) {
       emitNotification(recipients, notification);
     }
@@ -131,14 +105,18 @@ export const submitCertification = asyncHandler(async (req, res) => {
 // --- Volunteer: view own certifications ---
 export const getMyCertification = asyncHandler(async (req, res) => {
   const volunteerId = req.user._id;
-  const certification = await VolunteerCertification.findOne({
+  const certifications = await VolunteerCertification.find({
     volunteer: volunteerId,
-  });
+  }).sort({ createdAt: -1 });
 
   return res
     .status(200)
     .json(
-      new ApiResponse(200, "Certification fetched successfully", certification),
+      new ApiResponse(
+        200,
+        "Certifications fetched successfully",
+        certifications,
+      ),
     );
 });
 
@@ -279,7 +257,40 @@ export const updateCertificationStatus = asyncHandler(async (req, res) => {
       },
       session,
     );
+    const superAdmins = await User.find({ role: "super_admin" })
+      .select("_id")
+      .session(session);
+    const superAdminIds = superAdmins
+      .map((a) => a._id.toString())
+      .filter((id) => id !== req.user._id.toString());
 
+    let superAdminNotification = null;
+    let superAdminRecipients = [];
+
+    if (superAdminIds.length) {
+      superAdminRecipients = superAdminIds.map((id) => ({ userId: id }));
+      superAdminNotification = await createNotification(
+        {
+          category: "certificate",
+          action: "status_changed",
+          severity: status === "approved" ? "success" : "warning",
+          title:
+            status === "approved"
+              ? "Certificate Approved"
+              : "Certificate Rejected",
+          message: `${req.user.firstname} ${req.user.lastname} ${status} a training certificate submitted by ${certification.volunteer}.`,
+          link: `/certificates?status=${status}`,
+          meta: {
+            certificationId: certification._id,
+            event: "certification_status_changed",
+            status,
+          },
+          recipients: superAdminRecipients,
+          createdBy: req.user._id,
+        },
+        session,
+      );
+    }
     await session.commitTransaction();
 
     emitNotification(recipients, notification);
