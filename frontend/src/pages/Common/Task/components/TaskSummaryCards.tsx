@@ -19,7 +19,7 @@ interface Props {
 
 const TaskSummaryCards = ({ counts, total, status, onStatusChange }: Props) => {
   const { hasRole } = useHasPermission();
-  const isAdmin = hasRole(["admin", "super_admin"]);
+  const isAdmin = hasRole(["volunteer_admin", "super_admin"]);
 
   const cards = useMemo(
     () => [

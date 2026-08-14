@@ -1,5 +1,5 @@
 import React, { lazy, useState } from "react";
-import { Col, Row, Form } from "react-bootstrap";
+import { Col, Row, Form, Spinner } from "react-bootstrap";
 import { Formik, Form as FormikForm } from "formik";
 import * as Yup from "yup";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
@@ -16,6 +16,11 @@ import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoa
 
 import { getErrorMessage } from "../../../../utills/utills";
 import { useFetchLocationsQuery } from "../../../../services/locationApi";
+import {
+  useCreateTicketCategoryMutation,
+  useGetTicketCategoriesQuery,
+} from "../../../../services/ticketCategoryApi";
+import useHasPermission from "../../../../hooks/Auth";
 const QuillEditor = lazy(
   () => import("../../../../components/child/QuillEditor"),
 );
@@ -39,20 +44,21 @@ interface TicketCardProps {
   ticket: TicketData;
 }
 
-const PREDEFINED_CATEGORIES = [
-  { label: "Plumbing", value: "plumbing" },
-  { label: "Electrical", value: "electrical" },
-  { label: "HVAC", value: "hvac" },
-  { label: "Carpentry", value: "carpentry" },
-  { label: "Appliances", value: "appliances" },
-  { label: "Cleaning", value: "cleaning" },
-];
-
 const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
   const [showModal, setShowModal] = useState(false);
   const { user } = useSelector(selectAuth);
+  const { hasPermission } = useHasPermission();
   const { data: locationsData, isLoading: locationsLoading } =
     useFetchLocationsQuery({}, { skip: !showModal });
+  const {
+    data: categoryData,
+    isLoading: categoryLoading,
+    isError: categoryError,
+  } = useGetTicketCategoriesQuery({ isActive: "true" });
+  const [createTicketCategory, { isLoading: isCreatingCategory }] =
+    useCreateTicketCategoryMutation();
+
+  const [customCategoryValue, setCustomCategoryValue] = useState("");
   const isAssigned = ticket.assignedTo?._id === user?._id;
   const isRequester = ticket.createdBy._id === user?._id;
   const isApprovingManager = ticket.approvedBy?._id === user?._id;
@@ -69,9 +75,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
     "Completed",
   ].includes(ticket.status);
   // pre-select custom-category UI if the ticket's category isn't one of the predefined ones
-  const [isCustomCategory, setIsCustomCategory] = useState(
-    () => !PREDEFINED_CATEGORIES.some((c) => c.value === ticket.category),
-  );
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
 
   const initialValues: TicketValues = {
     requestTitle: ticket.req_title,
@@ -83,7 +87,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
     id: ticket.displayId ?? ticket.slug,
     description: ticket.description,
     priority: ticket.priority ?? "",
-    category: ticket.category,
+    category: ticket.category._id,
     location: ticket.location?._id ?? "", // default to empty string
   };
 
@@ -105,7 +109,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
         formData.append("description", values.description);
       if (values.priority && values.priority !== ticket.priority)
         formData.append("priority", values.priority);
-      if (values.category && values.category !== ticket.category)
+      if (values.category && values.category !== ticket.category._id)
         formData.append("category", values.category);
       // compare against the populated location's _id, not the object itself
       if (values.location && values.location !== ticket.location?._id)
@@ -133,7 +137,26 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
       showError(getErrorMessage(error));
     }
   };
-
+  const handleAddCustomCategory = async (
+    setFieldValue: (field: string, value: any) => void,
+  ) => {
+    const trimmed = customCategoryValue.trim();
+    if (!trimmed) {
+      showError("Please enter a category name");
+      return;
+    }
+    try {
+      const res = await createTicketCategory({ name: trimmed }).unwrap();
+      if (res.success) {
+        showSuccess(res.message);
+        setFieldValue("category", res.data._id);
+        setIsCustomCategory(false);
+        setCustomCategoryValue("");
+      }
+    } catch (error) {
+      showError(getErrorMessage(error));
+    }
+  };
   return (
     <div className="d-flex justify-content-end">
       <button
@@ -193,7 +216,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
           {({
             handleSubmit,
             handleChange,
-            handleBlur,
+
             values,
             errors,
             touched,
@@ -409,22 +432,20 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
 
                 {/* Category (single field — predefined list + custom-entry toggle) */}
                 <Row className="mb-3">
-                  <Col sm={2}>
-                    <Form.Label className="fw-medium text-street-dark">
-                      Category
-                    </Form.Label>
-                  </Col>
-                  <Col sm={10}>
-                    <Form.Group
-                      controlId="category"
-                      className="d-flex flex-column gap-8"
-                    >
-                      {!isCustomCategory ? (
+                  <Form.Label
+                    className="align-items-center d-flex"
+                    column
+                    sm={2}
+                  >
+                    Category
+                  </Form.Label>
+                  <Col>
+                    {!isCustomCategory ? (
+                      <div className="d-flex align-items-center gap-8">
                         <Form.Select
                           name="category"
                           size="sm"
                           value={values.category}
-                          disabled={!hasCreatorPermissions}
                           onChange={(e) => {
                             if (e.target.value === "__custom__") {
                               setIsCustomCategory(true);
@@ -433,53 +454,87 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                               handleChange(e);
                             }
                           }}
+                          disabled={
+                            categoryLoading ||
+                            categoryError ||
+                            !hasCreatorPermissions
+                          }
                           className="text-street-base"
                           isInvalid={touched.category && !!errors.category}
                         >
-                          <option value="">Select category</option>
-                          {PREDEFINED_CATEGORIES.map((cat) => (
-                            <option key={cat.value} value={cat.value}>
-                              {cat.label}
+                          <option value="">
+                            {categoryLoading
+                              ? "Loading categories..."
+                              : categoryError
+                                ? "Failed to load categories"
+                                : "Select category"}
+                          </option>
+                          {categoryData?.data.map((cat) => (
+                            <option key={cat._id} value={cat._id}>
+                              {cat.name}
                             </option>
                           ))}
-                          <option value="__custom__">
-                            + Add custom category
-                          </option>
+                          {hasPermission({
+                            action: "ticket_category_manage",
+                          }) && (
+                            <option value="__custom__">
+                              + Add custom category
+                            </option>
+                          )}
                         </Form.Select>
-                      ) : (
-                        <div className="d-flex gap-8">
-                          <Form.Control
-                            type="text"
-                            size="sm"
-                            autoFocus
-                            placeholder="Enter custom category"
-                            value={values.category}
-                            disabled={!hasCreatorPermissions}
-                            onChange={(e) =>
-                              setFieldValue("category", e.target.value)
-                            }
-                            onBlur={handleBlur}
-                            name="category"
-                            className="py-12 px-16 text-street-base"
-                            isInvalid={touched.category && !!errors.category}
-                          />
-                          <button
-                            type="button"
-                            className="btn btn-street-neutral btn-sm"
-                            disabled={!hasCreatorPermissions}
-                            onClick={() => {
-                              setIsCustomCategory(false);
-                              setFieldValue("category", "");
-                            }}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      )}
-                      <Form.Control.Feedback type="invalid">
-                        {errors.category}
-                      </Form.Control.Feedback>
-                    </Form.Group>
+                        {categoryLoading && (
+                          <Spinner animation="border" size="sm" role="status" />
+                        )}
+                      </div>
+                    ) : hasPermission({
+                        action: "ticket_category_manage",
+                      }) ? (
+                      <div className="d-flex gap-8">
+                        <Form.Control
+                          type="text"
+                          size="sm"
+                          autoFocus
+                          placeholder="Enter custom category"
+                          value={customCategoryValue}
+                          onChange={(e) =>
+                            setCustomCategoryValue(e.target.value)
+                          }
+                          className="py-12 px-16 text-street-base"
+                          disabled={
+                            isCreatingCategory || !hasCreatorPermissions
+                          }
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-street-primary btn-sm"
+                          disabled={isCreatingCategory}
+                          onClick={() => handleAddCustomCategory(setFieldValue)}
+                        >
+                          {isCreatingCategory ? "Adding..." : "Add"}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-street-neutral btn-sm"
+                          disabled={isCreatingCategory}
+                          onClick={() => {
+                            setIsCustomCategory(false);
+                            setCustomCategoryValue("");
+                            setFieldValue("category", "");
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : null}
+
+                    <Form.Control.Feedback type="invalid">
+                      {errors.category}
+                    </Form.Control.Feedback>
+                    {categoryError && (
+                      <small className="text-danger">
+                        Could not load categories. Please refresh the page.
+                      </small>
+                    )}
                   </Col>
                 </Row>
 

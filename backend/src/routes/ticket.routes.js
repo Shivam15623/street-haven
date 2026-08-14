@@ -25,19 +25,22 @@ import {
 import { idParamSchema } from "../validations/common.js";
 import { upsertCategoryAssignment } from "../controllers/ticketCategoryAssignment.controller.js";
 import { checkActiveUser } from "../middleware/checkActiveUsers.js";
+import { authorizePermissions } from "../middleware/AuthRole.js";
+import { PERMISSIONS } from "../auth/permissions.js";
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
 router.use(checkActiveUser);
-router.get("/view", validateRequest(fetchTicketsSchema, "query"), FetchTickets);
+router.get("/view", validateRequest(fetchTicketsSchema, "query"), authorizePermissions({ action: PERMISSIONS.TICKET_VIEW_SELF }), FetchTickets);
 router.post(
   "/create",
   upload.single("photo"),
   validateRequest(createTicketSchema, "body"),
+  authorizePermissions({ action: PERMISSIONS.TICKET_CREATE }),
   createTicket,
 );
 router.get("/report", GetTicketsReport);
 router.get("/report/export", ExportTicketsReport);
-router.get("/report/:id",GetTicketDetail)
+router.get("/report/:id", GetTicketDetail);
 router
   .route("/edit/:id")
   .patch(

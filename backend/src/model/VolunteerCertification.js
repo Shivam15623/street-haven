@@ -38,5 +38,6 @@ const VolunteerCertificationSchema = new Schema(
 {
     timestamps: true,
 });
+VolunteerCertificationSchema.index({ volunteer: 1, createdAt: -1 });
 const VolunteerCertification = mongoose.model("VolunteerCertification", VolunteerCertificationSchema);
 export default VolunteerCertification;

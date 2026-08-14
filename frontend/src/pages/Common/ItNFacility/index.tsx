@@ -17,7 +17,7 @@ const HelpDesk = () => {
   const { user } = useSelector(selectAuth);
   const { hasPermission } = useHasPermission();
 
-  const isAdmin = user?.role === "super_admin" || user?.role === "admin";
+  const isAdmin = user?.role === "super_admin" || user?.role === "volunteer_admin";
 
   const canViewSelfTickets = hasPermission({
     action: PERMISSIONS.TICKET_VIEW_SELF,

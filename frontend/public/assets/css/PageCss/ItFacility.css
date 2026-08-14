@@ -287,3 +287,22 @@
   border-bottom: 1px solid #374151;
   z-index: 10;
 }
+
+.ticket-category-select {
+}
+
+.ticket-category-select-menu {
+}
+.ticket-category-select-trigger {
+  height: 40px;
+  background-color: var(--street-card);
+  padding: 0.5625rem 9px 1.875rem 0.5625rem 0.9375rem;
+  border-radius: 8px;
+  box-shadow: none;
+}
+.ticket-category-select-option {
+}
+.ticket-category-select-edit {
+}
+.ticket-category-select-delete {
+}

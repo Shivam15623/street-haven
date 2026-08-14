@@ -14,7 +14,10 @@ export interface TicketData {
     | "In Progress"
     | "Completed"
     | "Closed"; // default: Open
-  category: string;
+  category: {
+    _id: string;
+    name: string;
+  };
   location?: {
     _id: string;
     name: string;

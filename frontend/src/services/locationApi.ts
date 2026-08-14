@@ -1,24 +1,5 @@
 import type { ApiGeneralResponse, ApiResponse } from "../interfaces/Response";
 import { api } from "../redux/ApiSlice";
-export interface Location {
-  _id: string;
-  name: string;
-  managers: IManager[]; // or Manager[] if populated later
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  slug: string;
-  __v: number;
-}
-interface locationViewQuery {
-  isActive?: boolean;
-}
-export interface GetLocationsResponse {
-  message: string;
-  statuscode: number;
-  data: Location[];
-  success: boolean;
-}
 
 export interface IManager {
   _id: string;
@@ -28,24 +9,46 @@ export interface IManager {
   role: string;
 }
 
+// Canonical location shape as returned from the API (managers/facilityManager populated)
 export interface ILocation {
   _id: string;
   name: string;
   slug: string;
   managers: IManager[];
+  facilityManager: IManager;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  __v?: number;
+}
+
+// Kept as an alias for backwards compatibility with existing imports
+// (e.g. `import { type Location } from "../services/locationApi"`).
+// Prefer importing `ILocation` going forward; consider removing this once
+// all usages are migrated.
+export type Location = ILocation;
+
+interface locationViewQuery {
+  isActive?: boolean;
+}
+
+export interface GetLocationsResponse {
+  message: string;
+  statuscode: number;
+  data: Location[];
+  success: boolean;
 }
 
 export interface CreateLocationBody {
   name: string;
   managerIds?: string[];
+  facilityManager?: string; // ObjectId of the facility manager, NOT the populated user
 }
 
 export interface UpdateLocationBody {
   name?: string;
   managerIds?: string[];
+  facilityManager?: string; // ObjectId of the facility manager, NOT the populated user
   isActive?: boolean;
 }
 
@@ -62,6 +65,12 @@ export interface ManagerActionRequest {
   locationId: string;
   managerId: string;
 }
+
+export interface SetFacilityManagerRequest {
+  locationId: string;
+  facilityManagerId: string;
+}
+
 export const locationApi = api.injectEndpoints({
   endpoints: (builder) => ({
     createLocation: builder.mutation<
@@ -140,6 +149,21 @@ export const locationApi = api.injectEndpoints({
         { type: "Locations", id: locationId },
       ],
     }),
+
+    setFacilityManager: builder.mutation<
+      ApiResponse<ILocation>,
+      SetFacilityManagerRequest
+    >({
+      query: ({ locationId, facilityManagerId }) => ({
+        url: `/location/${locationId}/facility-manager`,
+        method: "PATCH",
+        body: { facilityManagerId },
+      }),
+      invalidatesTags: (_result, _error, { locationId }) => [
+        "Locations",
+        { type: "Locations", id: locationId },
+      ],
+    }),
   }),
 });
 
@@ -150,5 +174,7 @@ export const {
   useEditLocationMutation,
   useGetLocationDetailsQuery,
   useAddManagerToLocationMutation,
+  useRemoveManagerFromLocationMutation,
+  useSetFacilityManagerMutation,
   useLazyGetLocationDetailsQuery,
 } = locationApi;

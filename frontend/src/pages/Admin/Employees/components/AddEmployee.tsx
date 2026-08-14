@@ -37,7 +37,6 @@ interface AddEmployeeValues {
 
 const roleValues = Object.values(ROLES) as Array<string>;
 function formatRole(role: string): string {
-  if (role === "hr") return "HR";
   return role
     .split("_")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
@@ -53,10 +52,7 @@ const AddEmployeeSchema = Yup.object({
     .min(3, "Last Name must be at least 3 characters")
     .matches(/^[a-zA-Z\s]+$/, "Last Name can only contain letters and spaces"),
   email: Yup.string()
-    .matches(
-      /^[A-Za-z0-9._%+-]/,
-      "Email must be from @streethaven.com domain",
-    )
+    .matches(/^[A-Za-z0-9._%+-]/, "Email must be from @streethaven.com domain")
     .email("Email is required"),
   title: Yup.string().required("Title is required"),
   phone: Yup.string()
@@ -163,7 +159,7 @@ const AddEmployee = () => {
             phone: "",
             password: "",
             title: "",
-            role: "employee",
+            role: "staff",
             superviserId: "",
             hireDate: "",
             timePeriod: "",

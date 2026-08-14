@@ -82,8 +82,9 @@ export const PERMISSIONS = {
   VIEW_SUBMISSIONS: "view_submissions",
   EDIT_FORM: "edit_form",
   DELETE_FORM: "delete_form",
-
+  TICKET_CREATE: "ticket_create",
   TICKET_VIEW_SELF: "ticket_view_self",
+  TICKET_CATEGORY_MANAGE: "ticket_category_manage",
   VIEW_IT_TICKETS: "view_it_tickets",
   VIEW_PROPERTY_TICKETS: "view_property_tickets",
 
