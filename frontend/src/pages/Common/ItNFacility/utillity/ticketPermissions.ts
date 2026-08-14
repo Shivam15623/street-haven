@@ -1,7 +1,7 @@
 import type { User } from "../../../../interfaces/AuthInterfaces";
 import type { TicketData } from "../../../../interfaces/Ticket";
 
-export type TicketRelationship = "creator" | "manager" | "assignee" | "admin";
+export type TicketRelationship = "creator" | "manager" | "assignee" | "volunteer_admin";
 interface TicketContext {
   ticket: TicketData;
   currentUser?: User | null;
@@ -17,7 +17,7 @@ export const getUserRelationships = (
   if (ticket.assignedTo?._id === currentUser._id) relationships.add("assignee");
   if (ticket.location?.managers?.includes(currentUser._id))
     relationships.add("manager");
-  if (currentUser.role === "admin") relationships.add("admin");
+  if (currentUser.role === "volunteer_admin") relationships.add("volunteer_admin");
 
   return relationships;
 };
@@ -57,12 +57,12 @@ const TICKET_ACTION_RULES: TicketActionRule[] = [
   {
     action: "chat",
     allowedStatuses: ALL_STATUSES,
-    requiredRelationships: ["creator", "manager", "assignee", "admin"],
+    requiredRelationships: ["creator", "manager", "assignee", "volunteer_admin"],
   },
   {
     action: "edit",
     allowedStatuses: ["Open"],
-    requiredRelationships: ["creator", "manager", "assignee", "admin"],
+    requiredRelationships: ["creator", "manager", "assignee", "volunteer_admin"],
   },
   {
     action: "cancel",

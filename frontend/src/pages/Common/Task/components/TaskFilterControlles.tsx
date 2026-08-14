@@ -135,12 +135,12 @@ const TaskFilterControls = ({ filters, setFilter }: Props) => {
           <UserMultiSelect
             label="Assigned By"
             value={filters.assignedBy}
-            role={["admin", "super_admin"]}
+            role={["volunteer_admin", "super_admin"]}
             onChange={(value) => setFilter("assignedBy", value)}
           />
         </div>
 
-        {hasRole(["admin", "super_admin"]) && (
+        {hasRole(["volunteer_admin", "super_admin"]) && (
           <div className="col-lg-6 col-md-6 col-12">
             <UserMultiSelect
               label="Assigned To"

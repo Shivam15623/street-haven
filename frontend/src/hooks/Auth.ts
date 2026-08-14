@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { selectAuth } from "../redux/AuthSlice";
 import type { AllPermissions } from "../utills/auth/permissions";
@@ -12,39 +13,36 @@ export type HasPermissionFn = (args: PermissionCheck) => boolean;
 const useHasPermission = () => {
   const { user } = useSelector(selectAuth);
 
-  // ─────────────────────────────
-  // Check if user has a specific permission
-  // ─────────────────────────────
+  const effectivePermissions = useMemo(() => {
+    if (!user) return new Set<AllPermissions>();
+    return new Set([
+      ...ROLE_PERMISSIONS[user.role],
+      ...(user.customPermissions ?? []),
+    ]);
+  }, [user]);
 
   const hasPermission = ({ action }: PermissionCheck) => {
     if (!user) return false;
-
-    const rolePermissions = [...ROLE_PERMISSIONS[user.role]];
-    const userPermissions = user.customPermissions;
-    const effectivePermissions = new Set([
-      ...rolePermissions,
-      ...userPermissions,
-    ]);
-
-    if (!effectivePermissions) return false;
-
     return effectivePermissions.has(action);
   };
 
-  // ─────────────────────────────
-  // Check if user has a specific role
-  // ─────────────────────────────
+  const hasAnyPermission = (actions: AllPermissions[]) => {
+    if (!user) return false;
+    return actions.some((action) => effectivePermissions.has(action));
+  };
+
+  const hasAllPermissions = (actions: AllPermissions[]) => {
+    if (!user) return false;
+    return actions.every((action) => effectivePermissions.has(action));
+  };
+
   const hasRole = (roles: string | string[]) => {
     if (!user) return false;
-
-    if (typeof roles === "string") {
-      return user.role === roles;
-    }
-
+    if (typeof roles === "string") return user.role === roles;
     return roles.includes(user.role);
   };
 
-  return { hasPermission, hasRole };
+  return { hasPermission, hasAnyPermission, hasAllPermissions, hasRole };
 };
 
 export default useHasPermission;

@@ -1,11 +1,11 @@
 import { io } from "../index.js";
 import { createNotification } from "../helper/CreateNotoification.js";
-
+import User from "../model/user.js";
 
 const CATEGORY = "task";
 
 const emitNotification = (recipients, notification) => {
-  console.log("Emitting notification to recipients:", recipients,notification);
+  console.log("Emitting notification to recipients:", recipients, notification);
   for (const r of recipients) {
     io.to(`user_${r.userId.toString()}`).emit("newNotification", notification);
   }
@@ -36,7 +36,7 @@ const notify = async ({
       link,
       meta,
     },
-    session
+    session,
   );
 
   emitNotification(recipients, notification);
@@ -44,10 +44,24 @@ const notify = async ({
   return notification;
 };
 
+/**
+ * Fetch all super_admin ids, excluding whoever triggered the event
+ * (so a super_admin performing the action doesn't notify themselves).
+ */
+const getSuperAdminRecipients = async (excludeUserId, session) => {
+  const superAdmins = await User.find({ role: "super_admin" })
+    .select("_id")
+    .session(session);
+
+  return superAdmins
+    .map((u) => u._id.toString())
+    .filter((id) => id !== excludeUserId?.toString())
+    .map((id) => ({ userId: id }));
+};
+
 export const TaskNotificationService = {
-  
-  async taskAssigned(task,user ,session) {
-    return notify({
+  async taskAssigned(task, user, session) {
+    const assigneeNotification = await notify({
       action: "assigned",
       severity: "info",
       title: "New Task Assigned",
@@ -60,6 +74,26 @@ export const TaskNotificationService = {
       },
       session,
     });
+
+    const superAdminRecipients = await getSuperAdminRecipients(
+      task.assignedBy,
+      session,
+    );
+    await notify({
+      action: "assigned",
+      severity: "info",
+      title: "Task Assigned",
+      message: `"${task.title}" was assigned to ${user.firstName} ${user.lastName} by ${user.firstName} ${user.lastName}.`,
+      recipients: superAdminRecipients,
+      createdBy: task.assignedBy,
+      link: `/tasks/${task.slug}`,
+      meta: {
+        taskId: task.slug,
+      },
+      session,
+    });
+
+    return assigneeNotification;
   },
 
   /**
@@ -98,6 +132,24 @@ export const TaskNotificationService = {
           session,
         });
       }
+
+      const superAdminRecipients = await getSuperAdminRecipients(
+        task.assignedBy,
+        session,
+      );
+      await notify({
+        action: "reassigned",
+        severity: "info",
+        title: "Task Reassigned",
+        message: `"${task.title}" was reassigned.`,
+        recipients: superAdminRecipients,
+        createdBy: task.assignedBy,
+        link: `/tasks/${task.slug}`,
+        meta: {
+          taskId: task.slug,
+        },
+        session,
+      });
     }
   },
 
@@ -105,7 +157,7 @@ export const TaskNotificationService = {
    * Volunteer submits for review
    */
   async submittedForReview(task, session) {
-    return notify({
+    const assignerNotification = await notify({
       action: "status_changed",
       severity: "info",
       title: "Task Submitted",
@@ -118,13 +170,33 @@ export const TaskNotificationService = {
       },
       session,
     });
+
+    const superAdminRecipients = await getSuperAdminRecipients(
+      task.assignedTo,
+      session,
+    );
+    await notify({
+      action: "status_changed",
+      severity: "info",
+      title: "Task Submitted for Review",
+      message: `"${task.title}" was submitted for review.`,
+      recipients: superAdminRecipients,
+      createdBy: task.assignedTo,
+      link: `/tasks/${task.slug}`,
+      meta: {
+        taskId: task.slug,
+      },
+      session,
+    });
+
+    return assignerNotification;
   },
 
   /**
    * Admin approves task
    */
   async approved(task, adminId, session) {
-    return notify({
+    const assigneeNotification = await notify({
       action: "status_changed",
       severity: "success",
       title: "Task Approved",
@@ -137,13 +209,33 @@ export const TaskNotificationService = {
       },
       session,
     });
+
+    const superAdminRecipients = await getSuperAdminRecipients(
+      adminId,
+      session,
+    );
+    await notify({
+      action: "status_changed",
+      severity: "success",
+      title: "Task Completed",
+      message: `"${task.title}" has been approved and marked complete.`,
+      recipients: superAdminRecipients,
+      createdBy: adminId,
+      link: `/tasks/${task.slug}`,
+      meta: {
+        taskId: task.slug,
+      },
+      session,
+    });
+
+    return assigneeNotification;
   },
 
   /**
    * Sent back for changes
    */
   async sentBack(task, adminId, remark, session) {
-    return notify({
+    const assigneeNotification = await notify({
       action: "status_changed",
       severity: "warning",
       title: "Task Requires Changes",
@@ -158,6 +250,28 @@ export const TaskNotificationService = {
       },
       session,
     });
+
+    const superAdminRecipients = await getSuperAdminRecipients(
+      adminId,
+      session,
+    );
+    await notify({
+      action: "status_changed",
+      severity: "warning",
+      title: "Task Sent Back",
+      message: remark
+        ? `"${task.title}" was sent back. Reason: ${remark}`
+        : `"${task.title}" was sent back for changes.`,
+      recipients: superAdminRecipients,
+      createdBy: adminId,
+      link: `/tasks/${task.slug}`,
+      meta: {
+        taskId: task.slug,
+      },
+      session,
+    });
+
+    return assigneeNotification;
   },
 
   /**
@@ -247,10 +361,7 @@ export const TaskNotificationService = {
       severity: "error",
       title: "Task Overdue",
       message: `"${task.title}" is overdue.`,
-      recipients: [
-        { userId: task.assignedTo },
-        { userId: task.assignedBy },
-      ],
+      recipients: [{ userId: task.assignedTo }, { userId: task.assignedBy }],
       createdBy: task.assignedBy,
       link: `/tasks/${task.slug}`,
       meta: {

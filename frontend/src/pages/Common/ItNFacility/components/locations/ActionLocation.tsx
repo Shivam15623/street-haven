@@ -12,6 +12,7 @@ import { showError, showSuccess } from "../../../../../utills/toastutills";
 import { getErrorMessage } from "../../../../../utills/utills";
 import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
 import UserMultiSelect from "../../../../../components/UserMultiSelect";
+import UserSelect from "../../../../../components/UserSelect";
 
 const locationSchema = () =>
   Yup.object().shape({
@@ -19,11 +20,13 @@ const locationSchema = () =>
       .required("Name is required")
       .min(3, "Name must be at least 3 characters"),
     managerIds: Yup.array().of(Yup.string()),
+    facilityManager: Yup.string().nullable(),
   });
 
 type LocationFormValues = {
   name: string;
   managerIds: string[];
+  facilityManager?: string;
 };
 
 type ActionsLocationProps = {
@@ -48,7 +51,8 @@ const ActionsLocation: React.FC<ActionsLocationProps> = ({
 
   const initialValues: LocationFormValues = {
     name: location?.name || "",
-    managerIds: location?.managers.map((m)=>m._id) || [],
+    managerIds: location?.managers.map((m) => m._id) || [],
+    facilityManager: location?.facilityManager?._id,
   };
 
   useEffect(() => {});
@@ -57,18 +61,18 @@ const ActionsLocation: React.FC<ActionsLocationProps> = ({
     { resetForm }: { resetForm: () => void },
   ) => {
     try {
+      const body = {
+        name: values.name,
+        managerIds: values.managerIds,
+        facilityManager: values.facilityManager,
+      };
+
       const res = isEdit
         ? await editLocation({
             locationId: location!._id,
-            body: {
-              name: values.name,
-              managerIds: values.managerIds,
-            },
+            body,
           }).unwrap()
-        : await createLocation({
-            name: values.name,
-            managerIds: values.managerIds,
-          }).unwrap();
+        : await createLocation(body).unwrap();
 
       if (res.success) {
         showSuccess(res.message);
@@ -165,6 +169,28 @@ const ActionsLocation: React.FC<ActionsLocationProps> = ({
               />
               <BootstrapForm.Control.Feedback type="invalid">
                 <ErrorMessage name="managerIds" />
+              </BootstrapForm.Control.Feedback>
+            </BootstrapForm.Group>
+
+            {/* Facility Manager */}
+            <BootstrapForm.Group className="position-relative">
+              {/*
+                NOTE: UserMultiSelect is reused here in "single select" mode by
+                capping the selection to one id. If your codebase has a
+                dedicated single-select user picker, swap this out for that
+                component instead — it'll be cleaner than the array workaround
+                below.
+              */}
+              <UserSelect
+                className="position-relative"
+                label="Facility Manager"
+                role={["manager"]}
+                value={values.facilityManager ?? ""}
+                disabled={isLoading || isEditing}
+                onChange={(vals) => setFieldValue("facilityManager", vals)}
+              />
+              <BootstrapForm.Control.Feedback type="invalid">
+                <ErrorMessage name="facilityManager" />
               </BootstrapForm.Control.Feedback>
             </BootstrapForm.Group>
           </BootstrapForm>

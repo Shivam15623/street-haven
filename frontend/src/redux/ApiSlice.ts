@@ -55,7 +55,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
         profilePic: user.profilePic,
         role: user.role,
         slug: user.slug,
-        status:user.status,
+        status: user.status,
         createdAt: user.createdAt,
         title: user.title || "",
         hireDate: new Date(user.hireDate).toISOString(),
@@ -108,6 +108,7 @@ export const api = createApi({
     "Locations",
     "Task",
     "Certification",
+    "TicketCategory",
   ],
   endpoints: () => ({}),
 });

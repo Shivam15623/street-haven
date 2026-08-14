@@ -68,7 +68,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
   const [cancelTicket, { isLoading: cancelling }] = useCancelTicketMutation();
   const [rejectTicket, { isLoading: rejecting }] = useRejectTicketMutation();
   const { user: currentUser } = useSelector(selectAuth);
-  // shape assumed: { _id, role: "manager" | "facilities" | "employee" | "admin" }
+
 
   const actions = useMemo(
     () =>
@@ -80,7 +80,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
   );
   const meta: string[] = [
     `#${displayId}`, // Ticket ID
-    titleCase(category),
+    titleCase(category.name),
     location?.name || "No location",
     `Submitted: ${createdAt ? new Date(createdAt).toLocaleDateString() : ""}`,
   ];

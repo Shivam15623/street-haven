@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import { htmlToText } from "html-to-text";
 import { io } from "../index.js";
-import Comment from "../model/comments.js";
 import { notifyTicketEmail } from "../helper/notifyTicketEvent.js";
 import Ticket, { TICKET_STATUS } from "../model/ticket.js";
 import User from "../model/user.js";
@@ -10,11 +9,7 @@ import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import { uploadOnCloudinary } from "../utills/cloudinary.js";
 import { createNotification } from "../helper/CreateNotoification.js";
-import path from "path";
 import ExcelJS from "exceljs";
-import { PERMISSIONS } from "../auth/permissions.js";
-import { ROLE_PERMISSIONS } from "../auth/rolePermissions.js";
-import { getAssignedAgentByCategory } from "../helper/getAssignedUser.js";
 import Location from "../model/location.js";
 import { generateEmailTemplate } from "../helper/EmailsMailer/emailTemplates.js";
 import { sendEmail } from "../helper/EmailsMailer/emailSender.js";
@@ -22,7 +17,13 @@ import {
   addCommentForEntity,
   fetchCommentsForEntity,
 } from "./comments.controller.js";
-
+import TicketCategory from "../model/ticketCategory.js";
+async function getSuperAdminIds(session) {
+  const superAdmins = await User.find({ role: "super_admin" })
+    .select("_id")
+    .session(session);
+  return superAdmins.map((u) => u._id.toString());
+}
 export const createTicket = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -45,6 +46,15 @@ export const createTicket = asyncHandler(async (req, res) => {
       throw new ApiError(400, "Selected location is not active");
     }
 
+    const categoryDoc =
+      await TicketCategory.findById(category).session(session);
+
+    if (!categoryDoc) {
+      throw new ApiError(404, "Selected category not found");
+    }
+    if (!categoryDoc.isActive) {
+      throw new ApiError(400, "Selected category is not active");
+    }
     /* ======================
        PHOTO UPLOAD
     ====================== */
@@ -64,7 +74,7 @@ export const createTicket = asyncHandler(async (req, res) => {
       m._id.equals(userId),
     );
 
-    if (isSelfManaged && !FACILITIES_MANAGER_ID) {
+    if (isSelfManaged && !locationDoc.facilityManager) {
       // Fail loudly rather than create a ticket that can never be assigned.
       throw new ApiError(500, "Facilities manager is not configured");
     }
@@ -94,7 +104,9 @@ export const createTicket = asyncHandler(async (req, res) => {
       payload.priority = "Medium";
       payload.priorityLocked = false; // creator/manager can still adjust it later
       payload.approvedBy = userId;
-      payload.assignedTo = new mongoose.Types.ObjectId(FACILITIES_MANAGER_ID);
+      payload.assignedTo = new mongoose.Types.ObjectId(
+        locationDoc.facilityManager,
+      );
 
       payload.statusHistory.push({
         status: TICKET_STATUS.APPROVED,
@@ -103,7 +115,7 @@ export const createTicket = asyncHandler(async (req, res) => {
       });
       payload.assignmentHistory = [
         {
-          assignedTo: FACILITIES_MANAGER_ID,
+          assignedTo: locationDoc.facilityManager,
           assignedBy: userId,
           assignedAt: now,
         },
@@ -128,7 +140,7 @@ export const createTicket = asyncHandler(async (req, res) => {
     ====================== */
     if (isSelfManaged) {
       // No approval step needed — go straight to notifying the facilities user.
-      const facilitiesUser = await User.findById(FACILITIES_MANAGER_ID)
+      const facilitiesUser = await User.findById(locationDoc.facilityManager)
         .select("firstname lastname email")
         .session(session);
 
@@ -148,12 +160,27 @@ export const createTicket = asyncHandler(async (req, res) => {
           data: {
             recipientName: `${facilitiesUser.firstname} ${facilitiesUser.lastname}`,
             ticketTitle: ticket.req_title,
-            category: ticket.category,
+            category: categoryDoc.name,
             location: locationDoc.name,
             priority: "Medium",
             link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&status=Approved&item=${ticket.slug}`,
           },
         });
+        const superAdminIds = (await getSuperAdminIds(session)).filter(
+          (id) => id !== userId.toString(),
+        );
+        let superAdminNotification = null;
+        if (superAdminIds.length) {
+          superAdminNotification = await notifyAndEmit(session, {
+            recipients: superAdminIds.map((id) => ({ userId: id })),
+            title: "New Ticket Created",
+            message: `A new ticket "${ticket.req_title}" was created by ${req.user.firstname} ${req.user.lastname}.`,
+            link: `/it_facility?tab=track_tickets&item=${ticket.slug}`,
+            createdBy: userId,
+            meta: { ticketId: ticket.slug },
+            emit: false,
+          });
+        }
 
         await session.commitTransaction();
         session.endSession();
@@ -202,7 +229,7 @@ export const createTicket = asyncHandler(async (req, res) => {
           createdBy: userId,
           meta: {
             ticketId: ticket.slug,
-            category,
+            category: categoryDoc.name,
             location: locationDoc.name,
           },
         },
@@ -215,7 +242,7 @@ export const createTicket = asyncHandler(async (req, res) => {
             data: {
               managerName: `${manager.firstname} ${manager.lastname}`,
               ticketTitle: ticket.req_title,
-              category: ticket.category,
+              category: categoryDoc.name, // was ticket.category
               location: locationDoc.name,
               createdBy: `${req.user.firstname} ${req.user.lastname}`,
               link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&status=pending&item=${ticket.slug}`,
@@ -235,7 +262,21 @@ export const createTicket = asyncHandler(async (req, res) => {
         );
       });
     }
-
+    const superAdminIds = await getSuperAdminIds(session);
+    if (superAdminIds.length) {
+      const superAdminNotification = await notifyAndEmit(session, {
+        recipients: superAdminIds.map((id) => ({ userId: id })),
+        title: "New Ticket Created",
+        message: `A new ticket "${ticket.req_title}" was created by ${req.user.firstname} ${req.user.lastname}.`,
+        link: `/it_facility?tab=track_tickets&item=${ticket.slug}`,
+        createdBy: userId,
+        meta: { ticketId: ticket.slug },
+        emit: false, // emit after commit, same as the rest of this handler
+      });
+      superAdminIds.forEach((id) =>
+        io.to(`user_${id}`).emit("newNotification", superAdminNotification),
+      );
+    }
     await session.commitTransaction();
     session.endSession();
 
@@ -248,7 +289,6 @@ export const createTicket = asyncHandler(async (req, res) => {
     throw err;
   }
 });
-const FACILITIES_MANAGER_ID = process.env.FACILITIES_MANAGER_ID;
 
 /* ======================
    SHARED HELPER
@@ -325,15 +365,27 @@ export const approveTicket = asyncHandler(async (req, res) => {
         "You are not a manager for this ticket's location",
       );
 
-    if (!FACILITIES_MANAGER_ID) {
-      throw new ApiError(500, "Facilities manager is not configured");
+    const locationDoc = await Location.findById(ticket.location)
+      .select("name facilityManager")
+      .session(session);
+
+    if (!locationDoc) {
+      throw new ApiError(404, "Ticket's location not found");
     }
+    if (!locationDoc.facilityManager) {
+      throw new ApiError(
+        500,
+        "Facilities manager is not configured for this location",
+      );
+    }
+
+    const facilityManagerId = locationDoc.facilityManager;
 
     ticket.priority = priority;
     ticket.priorityLocked = true;
     ticket.status = TICKET_STATUS.APPROVED;
     ticket.approvedBy = userId;
-    ticket.assignedTo = new mongoose.Types.ObjectId(FACILITIES_MANAGER_ID);
+    ticket.assignedTo = new mongoose.Types.ObjectId(facilityManagerId);
 
     ticket.statusHistory.push({
       status: TICKET_STATUS.APPROVED,
@@ -341,7 +393,7 @@ export const approveTicket = asyncHandler(async (req, res) => {
       changedAt: new Date(),
     });
     ticket.assignmentHistory.push({
-      assignedTo: FACILITIES_MANAGER_ID,
+      assignedTo: facilityManagerId,
       assignedBy: userId,
       assignedAt: new Date(),
     });
@@ -351,16 +403,18 @@ export const approveTicket = asyncHandler(async (req, res) => {
     /* ======================
        FETCH EVERYONE WE NEED TO NOTIFY / EMAIL
     ====================== */
-    const [creator, approver, facilitiesUser, locationDoc] = await Promise.all([
+    const [creator, approver, facilitiesUser, categoryDoc] = await Promise.all([
       User.findById(ticket.createdBy)
         .select("firstname lastname email")
         .session(session),
       User.findById(userId).select("firstname lastname email").session(session),
-      User.findById(FACILITIES_MANAGER_ID)
+      User.findById(facilityManagerId)
         .select("firstname lastname email")
         .session(session),
-      Location.findById(ticket.location).select("name").session(session),
+      TicketCategory.findById(ticket.category).select("name").session(session),
     ]);
+
+    const categoryName = categoryDoc?.name || "-";
 
     const locationName = locationDoc?.name || "Unknown location";
     const approverName = approver
@@ -404,7 +458,7 @@ export const approveTicket = asyncHandler(async (req, res) => {
         dataBuilder: (user) => ({
           recipientName: `${user.firstname} ${user.lastname}`,
           ticketTitle: ticket.req_title,
-          category: ticket.category,
+          category: categoryName,
           location: locationName,
           approvedBy: approverName,
           link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&status=Approved&item=${ticket.slug}`,
@@ -420,7 +474,7 @@ export const approveTicket = asyncHandler(async (req, res) => {
         dataBuilder: (user) => ({
           recipientName: `${user.firstname} ${user.lastname}`,
           ticketTitle: ticket.req_title,
-          category: ticket.category,
+          category: categoryName,
           location: locationName,
           priority,
           link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&status=Approved&item=${ticket.slug}`,
@@ -428,7 +482,17 @@ export const approveTicket = asyncHandler(async (req, res) => {
         session,
       });
     }
-
+    const superAdminIds = await getSuperAdminIds(session);
+    if (superAdminIds.length) {
+      await notifyAndEmit(session, {
+        recipients: superAdminIds.map((id) => ({ userId: id })),
+        title: "Ticket Approved",
+        message: `Ticket "${ticket.req_title}" was approved by ${approverName}.`,
+        link: `/it_facility?tab=track_tickets&status=Approved&item=${ticket.slug}`,
+        createdBy: userId,
+        meta: { ticketId: ticket.slug, priority },
+      });
+    }
     await session.commitTransaction();
     session.endSession();
     return res
@@ -525,7 +589,17 @@ export const rejectTicket = asyncHandler(async (req, res) => {
         session,
       });
     }
-
+    const superAdminIds = await getSuperAdminIds(session);
+    if (superAdminIds.length) {
+      await notifyAndEmit(session, {
+        recipients: superAdminIds.map((id) => ({ userId: id })),
+        title: "Ticket Approved",
+        message: `Ticket "${ticket.req_title}" was approved by ${approverName}.`,
+        link: `/it_facility?tab=track_tickets&status=Approved&item=${ticket.slug}`,
+        createdBy: userId,
+        meta: { ticketId: ticket.slug, priority },
+      });
+    }
     await session.commitTransaction();
     session.endSession();
     return res
@@ -580,15 +654,20 @@ export const startTicket = asyncHandler(async (req, res) => {
       .filter((id) => id !== userId);
 
     if (recipientIds.length) {
-      const [users, locationDoc, assignee] = await Promise.all([
+      const [users, locationDoc, assignee, categoryDoc] = await Promise.all([
         User.find({ _id: { $in: recipientIds } })
           .select("firstname lastname email")
           .session(session),
         Location.findById(ticket.location).select("name").session(session),
         User.findById(userId).select("firstname lastname").session(session),
+        TicketCategory.findById(ticket.category)
+          .select("name")
+          .session(session),
       ]);
 
       const locationName = locationDoc?.name || "Unknown location";
+      const categoryName = categoryDoc?.name || "-";
+
       const assigneeName = assignee
         ? `${assignee.firstname} ${assignee.lastname}`
         : "Facilities";
@@ -601,6 +680,17 @@ export const startTicket = asyncHandler(async (req, res) => {
         createdBy: userId,
         meta: { ticketId: ticket.slug },
       });
+      const superAdminIds = await getSuperAdminIds(session);
+      if (superAdminIds.length) {
+        await notifyAndEmit(session, {
+          recipients: superAdminIds.map((id) => ({ userId: id })),
+          title: "Ticket In Progress",
+          message: `Work has started on ticket "${ticket.req_title}" by ${assigneeName}.`,
+          link: `/it_facility?tab=track_tickets&status=In Progress&item=${ticket.slug}`,
+          createdBy: userId,
+          meta: { ticketId: ticket.slug },
+        });
+      }
 
       await notifyTicketEmail({
         userIds: recipientIds,
@@ -608,7 +698,7 @@ export const startTicket = asyncHandler(async (req, res) => {
         dataBuilder: (user) => ({
           recipientName: `${user.firstname} ${user.lastname}`,
           ticketTitle: ticket.req_title,
-          category: ticket.category,
+          category: categoryName,
           location: locationName,
           assignedTo: assigneeName,
           link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&status=In Progress&item=${ticket.slug}`,
@@ -672,10 +762,14 @@ export const completeTicket = asyncHandler(async (req, res) => {
       .filter((id) => id !== userId);
 
     if (recipientIds.length) {
-      const locationDoc = await Location.findById(ticket.location)
-        .select("name")
-        .session(session);
+      const [locationDoc, categoryDoc] = await Promise.all([
+        Location.findById(ticket.location).select("name").session(session),
+        TicketCategory.findById(ticket.category)
+          .select("name")
+          .session(session),
+      ]);
       const locationName = locationDoc?.name || "Unknown location";
+      const categoryName = categoryDoc?.name || "-";
 
       await notifyAndEmit(session, {
         recipients: recipientIds.map((id) => ({ userId: id })),
@@ -685,14 +779,24 @@ export const completeTicket = asyncHandler(async (req, res) => {
         createdBy: userId,
         meta: { ticketId: ticket.slug },
       });
-
+      const superAdminIds = await getSuperAdminIds(session);
+      if (superAdminIds.length) {
+        await notifyAndEmit(session, {
+          recipients: superAdminIds.map((id) => ({ userId: id })),
+          title: `Ticket Completed`,
+          message: `Ticket "${ticket.req_title}" has been completed.`,
+          link: `/it_facility?tab=track_tickets&status=Completed&item=${ticket.slug}`,
+          createdBy: userId,
+          meta: { ticketId: ticket.slug },
+        });
+      }
       await notifyTicketEmail({
         userIds: recipientIds,
         templateType: "ticket_completed",
         dataBuilder: (user) => ({
           recipientName: `${user.firstname} ${user.lastname}`,
           ticketTitle: ticket.req_title,
-          category: ticket.category,
+          category: categoryName,
           location: locationName,
           completedAt: ticket.resolvedAt.toLocaleDateString(),
           link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&status=Completed&item=${ticket.slug}`,
@@ -912,13 +1016,26 @@ export const editTicket = asyncHandler(async (req, res) => {
       oldManagerIds = oldLocation?.managers?.map((id) => id.toString()) ?? [];
       newManagerIds = newLocation.managers.map((id) => id.toString());
     }
+    // -----------------------------------------
+    // 4b. Category-change validation (creator path only)
+    // -----------------------------------------
+    let newCategoryDoc = null;
+    if (category !== undefined) {
+      newCategoryDoc = await TicketCategory.findById(category).session(session);
+      if (!newCategoryDoc) {
+        throw new ApiError(404, "Selected category not found");
+      }
+      if (!newCategoryDoc.isActive) {
+        throw new ApiError(400, "Selected category is not active");
+      }
+    }
 
     // -----------------------------------------
     // 5. Apply field updates
     // -----------------------------------------
     if (description !== undefined) ticket.description = description;
     if (requestTitle !== undefined) ticket.req_title = requestTitle;
-    if (category !== undefined) ticket.category = category;
+    if (category !== undefined) ticket.category = newCategoryDoc._id;
     if (locationChanged) ticket.location = newLocation._id;
     if (uploadedFile) {
       ticket.photo = {
@@ -1043,13 +1160,22 @@ export const editTicket = asyncHandler(async (req, res) => {
           emit: false,
         });
 
+        // Resolve category name for the email — reuse newCategoryDoc if it was
+        // just changed in this request, otherwise look up the existing one.
+        const categoryForEmail =
+          newCategoryDoc ??
+          (await TicketCategory.findById(ticket.category)
+            .select("name")
+            .session(session));
+
+        // ...inside the emailEvents.push for reassignment:
         emailEvents.push({
           userIds: [recipientId],
           templateType: "ticket_assigned",
           dataBuilder: (user) => ({
             recipientName: `${user.firstname} ${user.lastname}`,
             ticketTitle: ticket.req_title,
-            category: ticket.category,
+            category: categoryForEmail?.name ?? "-",
             priority: ticket.priority || "-",
             link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&item=${ticket.slug}`,
           }),
@@ -1118,7 +1244,6 @@ export const FetchTickets = asyncHandler(async (req, res) => {
      EFFECTIVE PERMISSIONS
   -----------------------------------*/
 
-
   // const effectivePermissions = new Set([
   //   ...rolePermissions,
   //   ...customPermissions,
@@ -1127,32 +1252,41 @@ export const FetchTickets = asyncHandler(async (req, res) => {
   /* ----------------------------------
      PERMISSION SCOPE (VISIBILITY)
   -----------------------------------*/
+  /* ----------------------------------
+   PERMISSION SCOPE (VISIBILITY)
+-----------------------------------*/
+
   const visibilityOr = [];
-  const managedLocations = await Location.find(
-    { managers: req.user._id },
-    "_id",
-  );
 
-  const managedLocationIds = managedLocations.map((l) => l._id);
-  // Always allow own tickets
-  visibilityOr.push({ createdBy: req.user._id }, { assignedTo: req.user._id });
-  if (managedLocationIds.length) {
-    visibilityOr.push({
-      location: { $in: managedLocationIds },
-    });
-  }
-  // Category-based permissions
+  if (req.user.role !== "super_admin") {
+    const managedLocations = await Location.find(
+      { managers: req.user._id },
+      "_id",
+    );
 
-  // Full access overrides everything
+    const managedLocationIds = managedLocations.map((l) => l._id);
 
-  if (visibilityOr.length) {
-    andConditions.push({ $or: visibilityOr });
+    // Always allow own tickets
+    visibilityOr.push(
+      { createdBy: req.user._id },
+      { assignedTo: req.user._id },
+    );
+
+    // Allow tickets from managed locations
+    if (managedLocationIds.length) {
+      visibilityOr.push({
+        location: { $in: managedLocationIds },
+      });
+    }
+
+    if (visibilityOr.length) {
+      andConditions.push({ $or: visibilityOr });
+    }
   }
 
   if (andConditions.length) {
     filter.$and = andConditions;
   }
-
   /* ----------------------------------
      FETCH TICKETS
   -----------------------------------*/
@@ -1162,6 +1296,7 @@ export const FetchTickets = asyncHandler(async (req, res) => {
     .sort({ createdAt: sortOrder })
     .skip((page - 1) * limit)
     .limit(limit)
+    .populate("category", "name isActive")
     .populate("location", "name managers")
     .populate("createdBy", "firstname lastname email")
     .populate("assignedTo", "firstname lastname email")
@@ -1320,6 +1455,7 @@ export const GetTicketsReport = asyncHandler(async (req, res) => {
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
+      .populate("category", "name")
       .populate("location", "name")
       .populate("createdBy", "firstname lastname email")
       .populate("assignedTo", "firstname lastname email")
@@ -1341,7 +1477,7 @@ export const GetTicketsReport = asyncHandler(async (req, res) => {
     title: t.req_title,
     status: t.status,
     priority: t.priority || "-",
-    category: t.category,
+    category: t.category.name,
     location: t.location?.name || "-",
     submittedBy: t.createdBy
       ? `${t.createdBy.firstname} ${t.createdBy.lastname}`
@@ -1409,6 +1545,7 @@ export const GetTicketDetail = asyncHandler(async (req, res) => {
 
   const ticket = await Ticket.findById(id)
     .populate("location", "name")
+    .populate("category", "name isActive")
     .populate("createdBy", "firstname lastname email")
     .populate("assignedTo", "firstname lastname email")
     .populate("approvedBy", "firstname lastname email")
@@ -1463,7 +1600,8 @@ export const GetTicketDetail = asyncHandler(async (req, res) => {
     status: ticket.status,
     priority: ticket.priority || "-",
     priorityLocked: ticket.priorityLocked,
-    category: ticket.category,
+    category: ticket.category?.name || "-",
+    categoryId: ticket.category?._id || null,
     location: ticket.location?.name || "-",
     photo: ticket.photo || null,
 
@@ -1559,6 +1697,7 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
   const tickets = await Ticket.find(filter)
     .sort({ createdAt: -1 })
     .populate("location", "name")
+    .populate("category", "name")
     .populate("createdBy", "firstname lastname email")
     .populate("assignedTo", "firstname lastname email")
     .populate("approvedBy", "firstname lastname email")
@@ -1614,7 +1753,7 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
       description: stripHtml(t.description),
       status: t.status,
       priority: t.priority || "-",
-      category: t.category,
+      category: t.category?.name || "-",
       location: t.location?.name || "-",
       submittedBy: t.createdBy
         ? `${t.createdBy.firstname} ${t.createdBy.lastname}`

@@ -45,7 +45,7 @@ const AnnouncementCard: React.FC<AnnouncementProps> = ({ announcement }) => {
                   className="text-xs text-street-primary"
                 />
                 <span>
-                  {createdBy.firstname} {createdBy.lastname}
+                  {createdBy?.firstname} {createdBy?.lastname}
                 </span>
               </p>
             </div>

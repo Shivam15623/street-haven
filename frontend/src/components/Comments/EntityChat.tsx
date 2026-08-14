@@ -644,7 +644,7 @@ const EntityChat = ({
                   <Icon icon="mdi:check" className="text-xl" /> Send for Review
                 </button>
               )}
-              {hasRole(["admin", "super_admin"]) &&
+              {hasRole(["volunteer_admin", "super_admin"]) &&
                 task.status === "under_review" && (
                   <>
                     <button

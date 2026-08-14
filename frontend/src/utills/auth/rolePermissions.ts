@@ -3,143 +3,53 @@ import { PERMISSIONS } from "./permissions.js";
 export const ROLE_PERMISSIONS = {
   super_admin: Object.values(PERMISSIONS),
 
-  admin: Object.values(PERMISSIONS).filter((p) => {
-    return ![
+  volunteer_admin: Object.values(PERMISSIONS).filter((p) => {
+    const excludedPermissions: string[] = [
       PERMISSIONS.EDIT_EMPLOYEE,
       PERMISSIONS.DELETE_EMPLOYEE,
       PERMISSIONS.CREATE_EMPLOYEE,
-      PERMISSIONS.EDIT_FORM,
-      PERMISSIONS.DELETE_FORM,
+      PERMISSIONS.TICKET_CATEGORY_MANAGE,
       PERMISSIONS.EMPLOYEE_STATUS_CHANGE,
-    ].includes(p as any);
+    ];
+
+    return !excludedPermissions.includes(p);
   }),
 
   manager: [
-    // 🔹 Announcements
     PERMISSIONS.VIEW_ANNOUNCEMENTS,
-
-    // 🔹 Collective Agreements
     PERMISSIONS.VIEW_COLLECTIVE_AGREEMENTS,
-
-    // 🔹 Emergency Contacts
     PERMISSIONS.VIEW_EMERGENCY_CONTACTS,
 
-    // 🔹 Employees
+    PERMISSIONS.VIEW_EMPLOYEES,
     PERMISSIONS.CREATE_EMPLOYEE,
     PERMISSIONS.DELETE_EMPLOYEE,
     PERMISSIONS.EDIT_EMPLOYEE,
+    PERMISSIONS.EMPLOYEE_STATUS_CHANGE,
 
-    // 🔹 Events
-    PERMISSIONS.VIEW_EVENTS,
-
-    // 🔹 Event Minutes
-    PERMISSIONS.VIEW_EVENT_MINUTES,
-
-    // 🔹 FAQs
     PERMISSIONS.VIEW_FAQS,
 
-    // 🔹 HR Updates
-    PERMISSIONS.VIEW_HR_UPDATES,
-
-    // 🔹 Organizational Chart
-    PERMISSIONS.CREATE_ORG_CHART,
-    PERMISSIONS.DELETE_ORG_CHART,
-    PERMISSIONS.EDIT_ORG_CHART,
-    PERMISSIONS.VIEW_ORG_CHART,
-
-    // 🔹 Training Materials
-    PERMISSIONS.VIEW_PROGRAM_MANUALS,
     PERMISSIONS.TICKET_VIEW_SELF,
-    // 🔹 Forms
-    PERMISSIONS.VIEW_SUBMIT_FORM,
+    PERMISSIONS.TICKET_CREATE,
+    PERMISSIONS.VIEW_PROGRAM_MANUALS,
+    PERMISSIONS.CREATE_PROGRAM_MANUAL,
+    PERMISSIONS.EDIT_PROGRAM_MANUAL,
+    PERMISSIONS.DELETE_PROGRAM_MANUAL,
   ],
 
-  hr: [
-    // 🔹 Announcements
-    PERMISSIONS.CREATE_ANNOUNCEMENT,
-    PERMISSIONS.DELETE_ANNOUNCEMENT,
-    PERMISSIONS.EDIT_ANNOUNCEMENT,
+  staff: [
     PERMISSIONS.VIEW_ANNOUNCEMENTS,
-
-    // 🔹 Collective Agreements
     PERMISSIONS.VIEW_COLLECTIVE_AGREEMENTS,
-
-    // 🔹 Emergency Contacts
     PERMISSIONS.VIEW_EMERGENCY_CONTACTS,
-
-    // 🔹 Employees
-    PERMISSIONS.TICKET_VIEW_SELF,
-    // 🔹 Events
-    PERMISSIONS.VIEW_EVENTS,
-
-    // 🔹 Event Minutes
-    PERMISSIONS.VIEW_EVENT_MINUTES,
-
-    // 🔹 FAQs
+    PERMISSIONS.TASK_VIEW_SELF,
     PERMISSIONS.VIEW_FAQS,
-
-    // 🔹 HR Updates
-    PERMISSIONS.CREATE_HR_UPDATE,
-    PERMISSIONS.DELETE_HR_UPDATE,
-    PERMISSIONS.EDIT_HR_UPDATE,
-    PERMISSIONS.VIEW_HR_UPDATES,
-
-    // 🔹 Organizational Chart
-    PERMISSIONS.VIEW_ORG_CHART,
-
-    // 🔹 Training Materials
-    PERMISSIONS.VIEW_PROGRAM_MANUALS,
-
-    // 🔹 Forms
-    PERMISSIONS.VIEW_SUBMIT_FORM,
   ],
 
-  employee: [
-    // 🔹 Announcements
-    PERMISSIONS.VIEW_ANNOUNCEMENTS,
-
-    // 🔹 Collective Agreements
-    PERMISSIONS.VIEW_COLLECTIVE_AGREEMENTS,
-
-    // 🔹 Emergency Contacts
-    PERMISSIONS.VIEW_EMERGENCY_CONTACTS,
-
-    // 🔹 Employees
-    PERMISSIONS.TICKET_VIEW_SELF,
-    // 🔹 Events
-    PERMISSIONS.VIEW_EVENTS,
-
-    // 🔹 Event Minutes
-    PERMISSIONS.VIEW_EVENT_MINUTES,
-
-    // 🔹 FAQs
-    PERMISSIONS.VIEW_FAQS,
-
-    // 🔹 HR Updates
-    PERMISSIONS.VIEW_HR_UPDATES,
-
-    // 🔹 Organizational Chart
-    PERMISSIONS.VIEW_ORG_CHART,
-
-    // 🔹 Training Materials
-    PERMISSIONS.VIEW_PROGRAM_MANUALS,
-
-    // 🔹 Forms
-    PERMISSIONS.VIEW_SUBMIT_FORM,
-  ],
   volunteer: [
-    // 🔹 Announcements
     PERMISSIONS.VIEW_ANNOUNCEMENTS,
-
-    // 🔹 Collective Agreements
     PERMISSIONS.VIEW_COLLECTIVE_AGREEMENTS,
-
-    // 🔹 Emergency Contacts
     PERMISSIONS.VIEW_EMERGENCY_CONTACTS,
-    // 🔹 FAQs
     PERMISSIONS.VIEW_FAQS,
 
-    // 🔹 Training Materials
     PERMISSIONS.VIEW_PROGRAM_MANUALS,
     PERMISSIONS.TASK_VIEW_SELF,
     PERMISSIONS.TASK_SUBMIT,
