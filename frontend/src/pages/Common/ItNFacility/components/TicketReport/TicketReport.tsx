@@ -6,7 +6,7 @@ import {
 } from "../../../../../services/ticketApi";
 import TicketReportTable from "./TicketTable";
 import { TicketCountCard } from "../TicketCountCard";
-import useHasPermission from "../../../../../hooks/Auth";
+
 
 export type TicketStatus =
   | "Open"
