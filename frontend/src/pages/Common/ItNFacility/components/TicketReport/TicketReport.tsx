@@ -7,6 +7,7 @@ import {
 import TicketReportTable from "./TicketTable";
 import { TicketCountCard } from "../TicketCountCard";
 
+
 export type TicketStatus =
   | "Open"
   | "Approved"
