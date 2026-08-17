@@ -4,6 +4,11 @@ import type { ticketsReportFilters } from "./TicketReport";
 import CustomDatePicker from "../../../../../components/child/DatePicker";
 import { useAllEmployeesQuery } from "../../../../../services/EmployeeApi";
 import { useFetchLocationsQuery } from "../../../../../services/locationApi";
+import { useSelector } from "react-redux";
+import { selectAuth } from "../../../../../redux/AuthSlice";
+import useHasPermission from "../../../../../hooks/Auth";
+import { PERMISSIONS } from "../../../../../utills/auth/permissions";
+
 
 interface Props {
   filters: ticketsReportFilters;
@@ -16,7 +21,35 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
     useAllEmployeesQuery({ forDropdown: true });
   const { data: locationsData, isLoading: locationsLoading } =
     useFetchLocationsQuery({});
+  const { user } = useSelector(selectAuth);
+  const {hasPermission}=useHasPermission()
   const today = new Date();
+
+  const canViewAll = hasPermission({ action: PERMISSIONS.TICKET_REPORT_ALL });
+  const canViewSelfManaged = hasPermission({
+    action: PERMISSIONS.TICKET_REPORT_SELF_MANAGED,
+  });
+
+  // If user only has self-managed access (not "all"), restrict the location
+  // dropdown to locations where they're either the facility manager or
+  // listed among the managers.
+  const isSelfManagedOnly = canViewSelfManaged && !canViewAll;
+
+  const visibleLocations = React.useMemo(() => {
+    if (!locationsData?.data) return [];
+
+    if (!isSelfManagedOnly) {
+      return locationsData.data;
+    }
+
+    if (!user?._id) return [];
+
+    return locationsData.data.filter((loc) => {
+      const isFacilityManager = loc.facilityManager?._id === user._id;
+      const isManager = loc.managers?.some((m) => m._id === user._id);
+      return isFacilityManager || isManager;
+    });
+  }, [locationsData, isSelfManagedOnly, user?._id]);
 
   const formatDate = (date: Date | null) => {
     if (!date) return "";
@@ -172,7 +205,7 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
               {locationsLoading ? (
                 <option disabled>Loading...</option>
               ) : (
-                locationsData?.data.map((l) => (
+                visibleLocations.map((l) => (
                   <option key={l._id} value={l._id}>
                     {l.name}
                   </option>

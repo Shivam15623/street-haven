@@ -15,9 +15,10 @@ import { PERMISSIONS } from "../../../utills/auth/permissions";
 const HelpDesk = () => {
   const [searchParams] = useSearchParams();
   const { user } = useSelector(selectAuth);
-  const { hasPermission } = useHasPermission();
+  const { hasPermission, hasAnyPermission } = useHasPermission();
 
-  const isAdmin = user?.role === "super_admin" || user?.role === "volunteer_admin";
+  const isAdmin =
+    user?.role === "super_admin" || user?.role === "volunteer_admin";
 
   const canViewSelfTickets = hasPermission({
     action: PERMISSIONS.TICKET_VIEW_SELF,
@@ -64,13 +65,20 @@ const HelpDesk = () => {
               ]
             : []),
 
-          ...(isAdmin
+          ...(hasAnyPermission([
+            PERMISSIONS.TICKET_REPORT_ALL,
+            PERMISSIONS.TICKET_REPORT_SELF_MANAGED,
+          ])
             ? [
                 {
                   content: <TicketReport />,
                   key: "ticket_reports",
                   label: "Ticket Reports",
                 },
+              ]
+            : []),
+          ...(hasPermission({ action: PERMISSIONS.LOCATION_VIEW })
+            ? [
                 {
                   content: <LocationsTab />,
                   key: "locations",

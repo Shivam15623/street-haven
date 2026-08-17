@@ -68,6 +68,9 @@ export const PERMISSIONS = {
   TICKET_VIEW_SELF: "ticket_view_self",
   TICKET_CATEGORY_MANAGE:"ticket_category_manage",
   TICKET_CREATE:"ticket_create",
+  TICKET_REPORT_ALL:"ticket_report_all",
+  TICKET_REPORT_SELF_MANAGED:"ticket_report_self_managed",
+
   
 
 
@@ -84,4 +87,11 @@ export const PERMISSIONS = {
   TRAINING_CERTIFICATE_VIEW_ALL: "training_certificate_view_all",
   TRAINING_CERTIFICATE_SUBMIT: "training_certificate_submit",
   TRAINING_CERTIFICATE_APPROVE_REJECT: "training_certificate_approve_reject",
+
+
+
+  LOCATION_VIEW:"location_view",
+  LOCATION_CREATE:"location_create",
+  LOCATION_EDIT:"location_edit",
+  LOCATION_DELETE:"location_delete"
 };
