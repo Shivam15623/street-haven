@@ -4,13 +4,15 @@ export const ROLE_PERMISSIONS = {
   super_admin: Object.values(PERMISSIONS),
 
   volunteer_admin: Object.values(PERMISSIONS).filter((p) => {
-    return ![
+    const excludedPermissions: string[] = [
       PERMISSIONS.EDIT_EMPLOYEE,
       PERMISSIONS.DELETE_EMPLOYEE,
       PERMISSIONS.CREATE_EMPLOYEE,
       PERMISSIONS.TICKET_CATEGORY_MANAGE,
       PERMISSIONS.EMPLOYEE_STATUS_CHANGE,
-    ].includes(p);
+    ];
+
+    return !excludedPermissions.includes(p);
   }),
 
   manager: [
@@ -55,29 +57,19 @@ export const ROLE_PERMISSIONS = {
   ],
 
   staff: [
-    // 🔹 Announcements
     PERMISSIONS.VIEW_ANNOUNCEMENTS,
-    // 🔹 Collective Agreements
     PERMISSIONS.VIEW_COLLECTIVE_AGREEMENTS,
-    // 🔹 Emergency Contacts
     PERMISSIONS.VIEW_EMERGENCY_CONTACTS,
     PERMISSIONS.TASK_VIEW_SELF,
-    // 🔹 FAQs
     PERMISSIONS.VIEW_FAQS,
   ],
+
   volunteer: [
-    // 🔹 Announcements
     PERMISSIONS.VIEW_ANNOUNCEMENTS,
-
-    // 🔹 Collective Agreements
     PERMISSIONS.VIEW_COLLECTIVE_AGREEMENTS,
-
-    // 🔹 Emergency Contacts
     PERMISSIONS.VIEW_EMERGENCY_CONTACTS,
-    // 🔹 FAQs
     PERMISSIONS.VIEW_FAQS,
 
-    // 🔹 Training Materials
     PERMISSIONS.VIEW_PROGRAM_MANUALS,
     PERMISSIONS.TASK_VIEW_SELF,
     PERMISSIONS.TASK_SUBMIT,
