@@ -26,8 +26,6 @@ export const PERMISSIONS = {
   DELETE_PROGRAM_MANUAL: "delete_program_manual",
   VIEW_PROGRAM_MANUALS: "view_program_manuals",
 
-
-
   // -------------------------
   // COLLECTIVE AGREEMENT
   // -------------------------
@@ -35,8 +33,6 @@ export const PERMISSIONS = {
   EDIT_COLLECTIVE_AGREEMENT: "edit_collective_agreement",
   DELETE_COLLECTIVE_AGREEMENT: "delete_collective_agreement",
   VIEW_COLLECTIVE_AGREEMENTS: "view_collective_agreements",
-
- 
 
   // -------------------------
   // ANNOUNCEMENTS
@@ -62,17 +58,11 @@ export const PERMISSIONS = {
   DELETE_EMERGENCY_CONTACT: "delete_emergency_contact",
   VIEW_EMERGENCY_CONTACTS: "view_emergency_contacts",
 
-
-
-
   TICKET_VIEW_SELF: "ticket_view_self",
-  TICKET_CATEGORY_MANAGE:"ticket_category_manage",
-  TICKET_CREATE:"ticket_create",
-  TICKET_REPORT_ALL:"ticket_report_all",
-  TICKET_REPORT_SELF_MANAGED:"ticket_report_self_managed",
-
-  
-
+  TICKET_CATEGORY_MANAGE: "ticket_category_manage",
+  TICKET_CREATE: "ticket_create",
+  TICKET_REPORT_ALL: "ticket_report_all",
+  TICKET_REPORT_SELF_MANAGED: "ticket_report_self_managed",
 
   TASK_VIEW_SELF: "task_view_self",
   TASK_VIEW_ALL: "task_view_all",
@@ -88,10 +78,9 @@ export const PERMISSIONS = {
   TRAINING_CERTIFICATE_SUBMIT: "training_certificate_submit",
   TRAINING_CERTIFICATE_APPROVE_REJECT: "training_certificate_approve_reject",
 
-
-
-  LOCATION_VIEW:"location_view",
-  LOCATION_CREATE:"location_create",
-  LOCATION_EDIT:"location_edit",
-  LOCATION_DELETE:"location_delete"
-};
+  LOCATION_VIEW: "location_view",
+  LOCATION_CREATE: "location_create",
+  LOCATION_EDIT: "location_edit",
+  LOCATION_DELETE: "location_delete",
+} as const;
+export type AllPermissions = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
