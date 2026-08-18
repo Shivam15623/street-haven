@@ -120,7 +120,13 @@ export const AllRoutes: RouteObject[] = [
       {
         path: "agency_info",
         element: (
-          <RouteGuard isPublic={false}>
+          <RouteGuard
+            isPublic={false}
+            requirePermission={[
+              PERMISSIONS.VIEW_COLLECTIVE_AGREEMENTS,
+              PERMISSIONS.VIEW_ANNOUNCEMENTS,
+            ]}
+          >
             <LazyAgencyInfo />
           </RouteGuard>
         ),
@@ -129,7 +135,18 @@ export const AllRoutes: RouteObject[] = [
       {
         path: "it_facility",
         element: (
-          <RouteGuard isPublic={false}>
+          <RouteGuard
+            isPublic={false}
+            requirePermission={[
+              PERMISSIONS.TICKET_VIEW_SELF,
+              PERMISSIONS.TICKET_REPORT_ALL,
+              PERMISSIONS.TICKET_REPORT_SELF_MANAGED,
+              PERMISSIONS.VIEW_FAQS,
+              PERMISSIONS.VIEW_EMERGENCY_CONTACTS,
+              PERMISSIONS.TICKET_CREATE,
+              PERMISSIONS.LOCATION_VIEW,
+            ]}
+          >
             <LazyHelpDesk />
           </RouteGuard>
         ),

@@ -30,12 +30,6 @@ export const ROLE_PERMISSIONS = {
   }),
 
   manager: [
-    // 🔹 Announcements
-    PERMISSIONS.VIEW_ANNOUNCEMENTS,
-
-    // 🔹 Collective Agreements
-    PERMISSIONS.VIEW_COLLECTIVE_AGREEMENTS,
-
     // 🔹 Emergency Contacts
     PERMISSIONS.VIEW_EMERGENCY_CONTACTS,
     PERMISSIONS.CREATE_EMERGENCY_CONTACT,
@@ -72,13 +66,10 @@ export const ROLE_PERMISSIONS = {
   ],
 
   staff: [
-    // 🔹 Announcements
-    PERMISSIONS.VIEW_ANNOUNCEMENTS,
-    // 🔹 Collective Agreements
-    PERMISSIONS.VIEW_COLLECTIVE_AGREEMENTS,
     // 🔹 Emergency Contacts
     PERMISSIONS.VIEW_EMERGENCY_CONTACTS,
-    PERMISSIONS.TASK_VIEW_SELF,
+    PERMISSIONS.TICKET_CREATE,
+    PERMISSIONS.TICKET_VIEW_SELF,
     // 🔹 FAQs
     PERMISSIONS.VIEW_FAQS,
   ],
@@ -88,11 +79,6 @@ export const ROLE_PERMISSIONS = {
 
     // 🔹 Collective Agreements
     PERMISSIONS.VIEW_COLLECTIVE_AGREEMENTS,
-
-    // 🔹 Emergency Contacts
-    PERMISSIONS.VIEW_EMERGENCY_CONTACTS,
-    // 🔹 FAQs
-    PERMISSIONS.VIEW_FAQS,
 
     // 🔹 Training Materials
     PERMISSIONS.VIEW_PROGRAM_MANUALS,
