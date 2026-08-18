@@ -34,19 +34,30 @@ const menuItems = [
     path: "/volunteer-training",
     icon: ProgramIcon,
     permission: PERMISSIONS.VIEW_PROGRAM_MANUALS,
-    public: true,
+    
   },
   {
     label: "Facility",
     path: "/it_facility",
     icon: ItNFacility,
-    public: true, // everyone can see
+    permissions: [
+      PERMISSIONS.TICKET_VIEW_SELF,
+      PERMISSIONS.TICKET_REPORT_ALL,
+      PERMISSIONS.TICKET_REPORT_SELF_MANAGED,
+      PERMISSIONS.VIEW_FAQS,
+      PERMISSIONS.VIEW_EMERGENCY_CONTACTS,
+      PERMISSIONS.TICKET_CREATE,
+      PERMISSIONS.LOCATION_VIEW,
+    ],
   },
   {
     label: "Agency Information",
     path: "/agency_info",
     icon: AgencyInfo,
-    public: true, // available for all
+    permissions: [
+      PERMISSIONS.VIEW_COLLECTIVE_AGREEMENTS,
+      PERMISSIONS.VIEW_ANNOUNCEMENTS,
+    ],
   },
   {
     label: "Tasks",
