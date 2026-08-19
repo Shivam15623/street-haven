@@ -72,6 +72,7 @@ interface AllEmployeeQuery {
   order?: "asc" | "desc";
   forDropdown?: boolean;
   role?: Role[];
+  managedBy?: boolean;
 }
 export interface RoleInfo {
   _id: string;
@@ -90,10 +91,20 @@ const EmployeeApi = api.injectEndpoints({
         order = "desc",
         forDropdown = false,
         role,
+        managedBy = false,
       }) => ({
         url: "/employees/view",
         method: "GET",
-        params: { page, limit, search, sortBy, order, forDropdown, role },
+        params: {
+          page,
+          limit,
+          search,
+          sortBy,
+          order,
+          forDropdown,
+          role,
+          managedBy,
+        },
       }),
       keepUnusedDataFor: 300,
       providesTags: ["Employees"],
