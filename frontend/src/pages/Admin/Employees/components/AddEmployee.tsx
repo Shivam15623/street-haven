@@ -96,7 +96,7 @@ const AddEmployee = () => {
   const [showModal, setShowModal] = useState(false);
   const [addEmployee, { isLoading }] = useAddEmployeeMutation();
   const { data: employeeData, isLoading: isEmployeeLoading } =
-    useAllEmployeesQuery({ forDropdown: true }, { skip: !showModal });
+    useAllEmployeesQuery({ forDropdown: true,role:["manager","volunteer_admin","super_admin"] }, { skip: !showModal });
   const { data: locationsData, isLoading: locationsLoading } =
     useFetchLocationsQuery({}, { skip: !showModal });
   const handleAddEmployee = async (values: AddEmployeeValues) => {

@@ -146,6 +146,7 @@ const TaskFilterControls = ({ filters, setFilter }: Props) => {
               label="Assigned To"
               value={filters.assignedTo}
               role={["volunteer"]}
+              managedBy={true}
               onChange={(value) => setFilter("assignedTo", value)}
             />
           </div>

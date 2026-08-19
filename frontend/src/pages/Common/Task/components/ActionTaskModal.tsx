@@ -67,7 +67,7 @@ const ActionTaskModal: React.FC<ActionTaskModalProps> = ({
     isLoading: isEmployeeLoading,
     isError: isEmployeeError,
   } = useAllEmployeesQuery(
-    { forDropdown: true, role: ["volunteer"] },
+    { forDropdown: true, role: ["volunteer"],managedBy:true },
     { skip: !show },
   );
   const [createTask, { isLoading: isCreating }] = useCreateTaskMutation();
