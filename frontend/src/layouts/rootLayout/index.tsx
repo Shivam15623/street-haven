@@ -20,6 +20,8 @@ import { PERMISSIONS } from "../../utills/auth/permissions.ts";
 import useHasPermission from "../../hooks/Auth.ts";
 
 import Loader from "../../components/Loader.tsx";
+import { useSelector } from "react-redux";
+import { selectAuth } from "../../redux/AuthSlice.ts";
 
 const menuItems = [
   {
@@ -34,7 +36,6 @@ const menuItems = [
     path: "/volunteer-training",
     icon: ProgramIcon,
     permission: PERMISSIONS.VIEW_PROGRAM_MANUALS,
-    
   },
   {
     label: "Facility",
@@ -84,6 +85,7 @@ const RootLayout = () => {
   const location = useLocation(); // Hook to get the current route
   const [mobileMode, setMobileMode] = useState(false);
   const { hasPermission, hasAnyPermission } = useHasPermission();
+  const { user } = useSelector(selectAuth);
   const navigation = useNavigation();
   const isLoading = navigation.state === "loading";
   const filteredMenu = menuItems.filter((m) => {
@@ -214,7 +216,11 @@ const RootLayout = () => {
                 Street haven
               </h3>
               <span className="fw-normal text-xxs sm:text-xs text-street-base">
-                Employee Portal
+                {user?.role
+                  ?.split("_")
+                  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(" ")}{" "}
+                Portal
               </span>
             </div>
           </div>

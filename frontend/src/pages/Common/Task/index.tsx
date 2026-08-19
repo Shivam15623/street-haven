@@ -9,11 +9,12 @@ import "./task.css";
 import TaskDetailDrawer from "./components/TaskDetails";
 import { showError } from "../../../utills/toastutills";
 import { getErrorMessage } from "../../../utills/utills";
+import useHasPermission from "../../../hooks/Auth";
 
 const Tasks = () => {
   const { slug } = useParams<{ slug?: string }>();
   const navigate = useNavigate();
-
+  const { hasPermission } = useHasPermission();
   const [showModal, setShowModal] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
@@ -79,14 +80,16 @@ const Tasks = () => {
           </p>
         </div>
         <div className="d-flex justify-content-end mb-3">
-          <button
-            className="btn btn-street-primary text-sm d-flex flex-row align-items-center gap-2 justify-content-center radius-12"
-            style={{ minWidth: "43px", minHeight: "40px" }}
-            onClick={handleCreate}
-          >
-            <Icon icon="mdi:plus" />
-            Create Task
-          </button>
+          {hasPermission({ action: "task_create" }) && (
+            <button
+              className="btn btn-street-primary text-sm d-flex flex-row align-items-center gap-2 justify-content-center radius-12"
+              style={{ minWidth: "43px", minHeight: "40px" }}
+              onClick={handleCreate}
+            >
+              <Icon icon="mdi:plus" />
+              Create Task
+            </button>
+          )}
         </div>
       </div>
 

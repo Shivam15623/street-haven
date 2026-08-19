@@ -92,7 +92,7 @@ const TicketCategorySelect: React.FC<TicketCategorySelectProps> = ({
       >
         <Dropdown.Toggle
           variant="white"
-          className={`w-100 d-flex justify-content-between align-items-center text-street-base text-start border-1 ticket-category-select-trigger ${
+          className={`w-100 d-flex justify-content-between align-items-center text-street-base text-start text-sm border-1 ticket-category-select-trigger ${
             isInvalid ? "border-danger" : ""
           }`}
           disabled={categoryLoading || categoryError}

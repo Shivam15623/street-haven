@@ -7,7 +7,7 @@ import { ApiResponse } from "../utills/ApiResponse.js";
 import { uploadOnCloudinary } from "../utills/cloudinary.js";
 import VolunteerCertification from "../model/VolunteerCertification.js";
 import { io } from "../index.js";
-import User from "../model/user.js";
+import User, { ROLES } from "../model/user.js";
 import { createNotification } from "../helper/CreateNotoification.js";
 
 const emitNotification = (recipients, notification) => {
@@ -152,7 +152,33 @@ export const getAllCertifications = asyncHandler(async (req, res) => {
 
   const filter = {};
   if (status) filter.status = status;
-  if (volunteer) filter.volunteer = volunteer;
+
+  // Non-super-admins can only see certifications of volunteers they supervise
+  if (req.user.role !== ROLES.SUPER_ADMIN) {
+    const managedVolunteers = await User.find(
+      { superviserId: req.user._id },
+      "_id",
+    );
+    const managedIds = managedVolunteers.map((u) => u._id);
+
+    if (volunteer) {
+      // If a specific volunteer was requested, make sure it's one they manage
+      if (!managedIds.some((id) => id.equals(volunteer))) {
+        return res.status(200).json(
+          new ApiResponse(200, "Certifications fetched successfully", {
+            certifications: [],
+            pagination: { total: 0, page, limit, totalPages: 0 },
+          }),
+        );
+      }
+      filter.volunteer = volunteer;
+    } else {
+      filter.volunteer = { $in: managedIds };
+    }
+  } else if (volunteer) {
+    // Super admin can filter by any volunteer
+    filter.volunteer = volunteer;
+  }
 
   const [certifications, total] = await Promise.all([
     VolunteerCertification.find(filter)

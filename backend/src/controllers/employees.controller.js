@@ -16,7 +16,8 @@ export const AllEmployees = asyncHandler(async (req, res) => {
     sortBy = "createdAt",
     order = "asc",
     forDropdown = false,
-    role, // <-- New
+    managedBy = false, // <-- New
+    role,
   } = req.query;
 
   const query = {};
@@ -27,6 +28,13 @@ export const AllEmployees = asyncHandler(async (req, res) => {
       $in: Array.isArray(role) ? role : role.split(","),
     };
   }
+
+  // Managed-by filter — only show users supervised by req.user
+  const isManagedBy = String(managedBy).toLowerCase() === "true";
+  if (isManagedBy) {
+    query.superviserId = req.user._id;
+  }
+
   // Search
   if (search) {
     query.$or = [
@@ -105,7 +113,7 @@ export const AllEmployees = asyncHandler(async (req, res) => {
   ]);
 
   const totalEmployees = await User.countDocuments(query);
-  console.log("employees", employees);
+
   return res.status(200).json(
     new ApiResponse(200, "Employees fetched successfully", {
       employees,

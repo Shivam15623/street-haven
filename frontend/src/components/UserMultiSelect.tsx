@@ -16,6 +16,7 @@ interface UserMultiSelectProps {
   role?: Role[];
   isDisabled?: boolean;
   className?: string;
+  managedBy?:boolean;
 }
 
 const UserMultiSelect = ({
@@ -26,9 +27,11 @@ const UserMultiSelect = ({
   role,
   isDisabled = false,
   className = "",
+  managedBy=false
 }: UserMultiSelectProps) => {
   const { data, isLoading } = useAllEmployeesQuery({
     forDropdown: true,
+    managedBy,
     role,
   });
 
