@@ -39,6 +39,7 @@ export const createTicketCategory = asyncHandler(async (req, res) => {
   // Check duplicate name
   const existingCategory = await TicketCategory.findOne({
     name: trimmedName,
+    isActive: true,
   });
 
   if (existingCategory) {
@@ -47,6 +48,7 @@ export const createTicketCategory = asyncHandler(async (req, res) => {
 
   const category = await TicketCategory.create({
     name: trimmedName,
+    isSystem: false,
   });
 
   return res
@@ -103,6 +105,12 @@ export const deleteTicketCategory = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Ticket category not found");
   }
 
+  if (category.isSystem) {
+    throw new ApiError(
+      403,
+      "Ticket category is System Generated Can't delete it",
+    );
+  }
   if (!category.isActive) {
     throw new ApiError(400, "Ticket category is already inactive");
   }

@@ -14,6 +14,7 @@ import NotificationView from "./NotificationView";
 import { useNotificationReadBuffer } from "../hooks/useNotificationReader";
 import { getErrorMessage } from "../utills/utills";
 import { showError } from "../utills/toastutills";
+import { getUserNotificationPermission } from "../utills/notificationPermission";
 
 const NotificationDropdown = () => {
   const { socket } = useSocket();
@@ -36,8 +37,15 @@ const NotificationDropdown = () => {
   useEffect(() => {
     if (!socket || !user?._id) return;
 
+    const permissions = getUserNotificationPermission(user) ?? [];
+
     const joinRoom = () => {
       socket.emit("joinUserRoom", { userId: user._id });
+
+      // Join permission rooms so this socket receives permission-gated notifications
+      if (permissions.length > 0) {
+        socket.emit("joinPermissionRooms", { permissions });
+      }
     };
 
     // join immediately if already connected
@@ -53,10 +61,14 @@ const NotificationDropdown = () => {
 
     return () => {
       socket.emit("leaveUserRoom", { userId: user._id });
+      if (permissions.length > 0) {
+        socket.emit("leavePermissionRooms", { permissions });
+      }
       socket.off("connect", joinRoom);
       socket.off("newNotification");
     };
   }, [socket, user?._id]);
+
   useEffect(() => {
     const count = notifications.filter((notif) => !notif.readAt).length;
     setUnreadCount(count);

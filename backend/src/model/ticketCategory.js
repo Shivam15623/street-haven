@@ -8,7 +8,6 @@ const ticketCategorySchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      unique: true,
     },
 
     slug: {
@@ -23,6 +22,12 @@ const ticketCategorySchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+
+    // System categories cannot be deleted or deactivated
+    isSystem: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
@@ -30,6 +35,15 @@ const ticketCategorySchema = new mongoose.Schema(
 );
 
 const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 5);
+ticketCategorySchema.index(
+  { name: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      isActive: true,
+    },
+  },
+);
 ticketCategorySchema.pre("validate", async function (next) {
   if (!this.slug) {
     const baseSlug = slugify(this.name, {
@@ -37,10 +51,13 @@ ticketCategorySchema.pre("validate", async function (next) {
       strict: true,
       trim: true,
     });
+
     this.slug = `${baseSlug}-${nanoid()}`;
   }
+
   next();
 });
+
 const TicketCategory = mongoose.model("TicketCategory", ticketCategorySchema);
 
 export default TicketCategory;

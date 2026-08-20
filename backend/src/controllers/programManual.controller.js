@@ -8,6 +8,9 @@ import { createNotification } from "../helper/CreateNotoification.js";
 import { addActivityLog } from "../helper/addActivityLogs.js";
 
 import { deleteFromCloudinary } from "../utills/cloudinary.js";
+import { PERMISSIONS } from "../auth/permissions.js";
+import { emitNotification } from "../helper/emitNotification.js";
+import { uploadAttachment } from "./CollectiveAgreement.controller.js";
 
 export const AddProgramManual = asyncHandler(async (req, res) => {
   const { title, description, tags, type } = req.body;
@@ -50,12 +53,12 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
         title: "New Training Material Added",
         message: `${firstname} added a new Training Material: "${title}"`,
         link: `/volunteer-training?slug=${programmanual[0].slug}`,
+        requiredPermissions: [PERMISSIONS.VIEW_PROGRAM_MANUALS],
         createdBy: userId,
         isGlobal: true,
-        expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         meta: { programManualId: programmanual[0].slug },
       },
-
       session,
     );
     await addActivityLog(
@@ -81,7 +84,7 @@ export const AddProgramManual = asyncHandler(async (req, res) => {
 
     // Emit real-time notifications outside transaction
 
-    io.emit("newNotification", notification);
+    emitNotification(io, notification);
 
     return res
       .status(200)
@@ -172,13 +175,15 @@ export const EditProgramManual = asyncHandler(async (req, res) => {
       message: `The training material "${updatedManual.title}" has been updated. Please refer to the latest version.`,
       link: `/volunteer-training?slug=${updatedManual.slug}`,
       isGlobal: true,
+      requiredPermissions: [PERMISSIONS.VIEW_PROGRAM_MANUALS],
       createdBy: req.user?._id,
       meta: {
         manualId: updatedManual.slug,
         attachmentUpdated: true,
       },
     });
-    io.emit("newNotification", notification);
+
+    emitNotification(io, notification);
   }
 
   return res

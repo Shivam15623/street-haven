@@ -44,6 +44,15 @@ const NotificationSchema = new mongoose.Schema(
     link: { type: String },
     meta: { type: Object },
     isGlobal: { type: Boolean, default: false },
+    requiredPermissions: {
+      type: [String],
+      default: [],
+    },
+    permissionMatchType: {
+      type: String,
+      enum: ["any", "all"],
+      default: "any",
+    },
     expireAt: { type: Date },
 
     createdBy: {
