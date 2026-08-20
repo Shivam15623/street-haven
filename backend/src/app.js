@@ -65,6 +65,13 @@ import certificateRouter from "./routes/certifications.js"
 import tickCategoryRouter from './routes/ticketCategory.routes.js'
 
 app.use("/api/v1/activity-logs", activityLogRoutes);
+app.get("/api/v1/ping", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Server is alive",
+    timestamp: new Date().toISOString(),
+  });
+});
 app.use("/api/v1/auth", authLimiter, authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/program-manuals", programManualRouter);
@@ -80,6 +87,7 @@ app.use('/api/v1/task',taskRouter)
 app.use("/api/v1/announcement", announcementRoutes);
 app.use("/api/v1/certifications",certificateRouter)
 app.use("/api/v1/collective-agreements", collectiveAgreementRoutes);
+
 app.use(errorHandler);
 
 app.use("/public/attachments", express.static("public/attachments"));
