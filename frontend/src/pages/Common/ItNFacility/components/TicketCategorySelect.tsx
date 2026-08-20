@@ -9,6 +9,7 @@ import {
 import { showError, showSuccess } from "../../../../utills/toastutills";
 import { getErrorMessage } from "../../../../utills/utills";
 import useHasPermission from "../../../../hooks/Auth";
+import Badge from "../../../../components/child/Badge";
 
 interface TicketCategorySelectProps {
   name: string;
@@ -26,6 +27,7 @@ const TicketCategorySelect: React.FC<TicketCategorySelectProps> = ({
 }) => {
   const { hasPermission } = useHasPermission();
   const canManage = hasPermission({ action: "ticket_category_manage" });
+  const canAdd = hasPermission({ action: "ticket_category_add" });
 
   const {
     data: categoryData,
@@ -159,30 +161,43 @@ const TicketCategorySelect: React.FC<TicketCategorySelectProps> = ({
                     {cat.name}
                   </span>
 
-                  {canManage && (
-                    <span
-                      title="Delete category"
-                      onClick={(e) => handleDelete(e, cat._id)}
-                      className="d-flex align-items-center justify-content-center"
-                      style={{
-                        width: 22,
-                        height: 22,
-                        borderRadius: "50%",
-                        fontSize: "0.75rem",
-                        lineHeight: 1,
-                        color: "#b3261e",
-                        backgroundColor: isHovered
-                          ? "rgba(179, 38, 30, 0.08)"
-                          : "transparent",
-                        opacity: deletingId === cat._id ? 0.4 : 1,
-                        pointerEvents: deletingId === cat._id ? "none" : "auto",
-                        flexShrink: 0,
-                        marginLeft: 12,
-                      }}
-                    >
-                      ✕
-                    </span>
-                  )}
+                  {canManage &&
+                    (cat.isSystem ? (
+                      <Badge
+                        variant="warning-soft"
+                        shape="pill"
+                        small
+                        title="System category cannot be deleted"
+                        className="flex-shrink-0"
+                        style={{ marginLeft: 12 }}
+                      >
+                        System
+                      </Badge>
+                    ) : (
+                      <span
+                        title="Delete category"
+                        onClick={(e) => handleDelete(e, cat._id)}
+                        className="d-flex align-items-center justify-content-center"
+                        style={{
+                          width: 22,
+                          height: 22,
+                          borderRadius: "50%",
+                          fontSize: "0.75rem",
+                          lineHeight: 1,
+                          color: "#b3261e",
+                          backgroundColor: isHovered
+                            ? "rgba(179, 38, 30, 0.08)"
+                            : "transparent",
+                          opacity: deletingId === cat._id ? 0.4 : 1,
+                          pointerEvents:
+                            deletingId === cat._id ? "none" : "auto",
+                          flexShrink: 0,
+                          marginLeft: 12,
+                        }}
+                      >
+                        ✕
+                      </span>
+                    ))}
                 </div>
               );
             })}
@@ -197,7 +212,7 @@ const TicketCategorySelect: React.FC<TicketCategorySelectProps> = ({
             )}
           </div>
 
-          {canManage && (
+          {canAdd && (
             <div
               onClick={(e) => e.stopPropagation()}
               style={{

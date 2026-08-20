@@ -3,6 +3,7 @@ import Notification from "../model/notification.js";
 import UserNotification from "../model/notificationTrack.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
+import { ROLE_PERMISSIONS } from "../auth/rolePermissions.js";
 
 export const AllNotifications = asyncHandler(async (req, res) => {
   const userId = new mongoose.Types.ObjectId(req.user._id);
@@ -11,9 +12,11 @@ export const AllNotifications = asyncHandler(async (req, res) => {
   const skip = (page - 1) * limit;
 
   // --- Filters from query ---
-
   const typeFilter = req.query.type; // "global" | "personal" | undefined
   const readStatus = req.query.readStatus; // "read" | "unread" | "all"
+
+  // --- Resolve the logged-in user's permissions ---
+  const userPermissions = ROLE_PERMISSIONS[req.user.role] || [];
 
   // --- Lookup user tracker (read status) ---
   const lookupStage = {
@@ -64,12 +67,51 @@ export const AllNotifications = asyncHandler(async (req, res) => {
     },
   };
 
-  // --- Base condition: user can see global or personal notifications ---
+  // --- Base condition: user can see it (global OR personal recipient) ---
+  // AND permission gate is satisfied (no permissions required, or user has them)
+  // Factored as (A OR B) AND (C OR D) rather than flattened, to avoid an
+  // accidental OR between visibility and permission checks.
   const baseMatchStage = {
     $match: {
-      $or: [
-        { isGlobal: true },
-        { $expr: { $gt: [{ $size: "$userTracker" }, 0] } },
+      $and: [
+        {
+          $or: [
+            { isGlobal: true },
+            { $expr: { $gt: [{ $size: "$userTracker" }, 0] } },
+          ],
+        },
+        {
+          $or: [
+            { requiredPermissions: { $size: 0 } },
+            { requiredPermissions: { $exists: false } },
+            {
+              $expr: {
+                $cond: [
+                  { $eq: ["$permissionMatchType", "all"] },
+                  {
+                    $setIsSubset: [
+                      { $ifNull: ["$requiredPermissions", []] },
+                      userPermissions,
+                    ],
+                  },
+                  {
+                    $gt: [
+                      {
+                        $size: {
+                          $setIntersection: [
+                            { $ifNull: ["$requiredPermissions", []] },
+                            userPermissions,
+                          ],
+                        },
+                      },
+                      0,
+                    ],
+                  },
+                ],
+              },
+            },
+          ],
+        },
       ],
     },
   };
@@ -79,8 +121,8 @@ export const AllNotifications = asyncHandler(async (req, res) => {
     typeFilter === "global"
       ? { $match: { isGlobal: true } }
       : typeFilter === "personal"
-      ? { $match: { isGlobal: false } }
-      : null;
+        ? { $match: { isGlobal: false } }
+        : null;
 
   // --- Read status filter ---
   let readStatusStage = null;
@@ -93,7 +135,6 @@ export const AllNotifications = asyncHandler(async (req, res) => {
   if (typeFilterStage) pipeline.push(typeFilterStage);
   if (readStatusStage) pipeline.push(readStatusStage);
 
-  // Pagination and projection
   pipeline.push(
     { $sort: { createdAt: -1 } },
     { $skip: skip },
@@ -101,19 +142,23 @@ export const AllNotifications = asyncHandler(async (req, res) => {
     {
       $project: {
         _id: 1,
-        type: 1,
+        category: 1,
+        action: 1,
+        severity: 1,
         title: 1,
         message: 1,
         link: 1,
         meta: 1,
         isGlobal: 1,
+        requiredPermissions: 1,
+        permissionMatchType: 1,
         createdAt: 1,
         updatedAt: 1,
         expireAt: 1,
         isRead: 1,
         readAt: 1,
       },
-    }
+    },
   );
 
   // Count pipeline
@@ -130,7 +175,6 @@ export const AllNotifications = asyncHandler(async (req, res) => {
 
   const total = countResult.length > 0 ? countResult[0].total : 0;
 
-  // --- Respond ---
   res.status(200).json(
     new ApiResponse(200, "Notifications fetched successfully", {
       notifications,
@@ -140,10 +184,9 @@ export const AllNotifications = asyncHandler(async (req, res) => {
         limit,
         totalPages: Math.ceil(total / limit),
       },
-    })
+    }),
   );
 });
-
 export const MarkNotificationsAsRead = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { ids } = req.body; // array of notification IDs

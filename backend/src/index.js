@@ -39,6 +39,15 @@ io.on("connection", (socket) => {
     socket.data.rooms.add(room);
   });
 
+  socket.on("joinPermissionRooms", ({ permissions }) => {
+    if (!Array.isArray(permissions)) return;
+    permissions.forEach((p) => socket.join(`permission:${p}`));
+  });
+
+  socket.on("leavePermissionRooms", ({ permissions }) => {
+    if (!Array.isArray(permissions)) return;
+    permissions.forEach((p) => socket.leave(`permission:${p}`));
+  });
   socket.on("leaveRoom", ({ room, userId }) => {
     socket.leave(room);
     activeRoomUsers[room]?.delete(userId);

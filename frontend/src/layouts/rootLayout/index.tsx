@@ -107,7 +107,11 @@ const RootLayout = () => {
     // No public flag or permission
     return false;
   });
-
+  const canSearch = hasAnyPermission([
+    PERMISSIONS.VIEW_ANNOUNCEMENTS,
+    PERMISSIONS.VIEW_COLLECTIVE_AGREEMENTS,
+    PERMISSIONS.VIEW_PROGRAM_MANUALS,
+  ]);
   useEffect(() => {
     const handleDropdownClick = (event: Event) => {
       event.preventDefault();
@@ -269,14 +273,16 @@ const RootLayout = () => {
               >
                 <Icon icon="heroicons:bars-3-solid" className="icon" />
               </button>
-              <div className="d-none d-md-block">
-                <SearchContent
-                  mobileMode={mobileMode}
-                  onclose={() => setMobileMode(false)}
-                />
-              </div>
+              {canSearch && (
+                <div className="d-none d-md-block">
+                  <SearchContent
+                    mobileMode={mobileMode}
+                    onclose={() => setMobileMode(false)}
+                  />
+                </div>
+              )}
             </div>
-            {mobileMode && (
+            {canSearch && mobileMode && (
               <div className="d-block d-md-none w-75">
                 <SearchContent
                   mobileMode={mobileMode}
@@ -287,7 +293,7 @@ const RootLayout = () => {
 
             {!mobileMode && (
               <div className="d-flex flex-wrap align-items-center gap-3">
-                {!mobileMode && (
+                {!mobileMode && canSearch && (
                   <button
                     className="d-md-none btn btn-neutral-200  p-1 d-flex align-items-center rounded-circle "
                     onClick={() => setMobileMode(true)}

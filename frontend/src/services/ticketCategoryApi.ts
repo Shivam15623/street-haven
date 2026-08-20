@@ -6,6 +6,7 @@ export interface TicketCategory {
   _id: string;
   name: string;
   isActive: boolean;
+  isSystem:boolean;
   createdAt?: string;
   updatedAt?: string;
 }
