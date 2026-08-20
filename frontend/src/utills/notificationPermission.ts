@@ -1,18 +1,21 @@
 import type { User } from "../interfaces/AuthInterfaces";
 import { ROLE_PERMISSIONS } from "./auth/rolePermissions";
-import { PERMISSIONS } from "./auth/permissions"; // adjust import path as needed
+import { PERMISSIONS, type AllPermissions } from "./auth/permissions";
 
-// Permissions relevant to notification gating
-const NOTIFICATION_PERMISSIONS = [
+const NOTIFICATION_PERMISSIONS: AllPermissions[] = [
   PERMISSIONS.VIEW_ANNOUNCEMENTS,
   PERMISSIONS.VIEW_COLLECTIVE_AGREEMENTS,
   PERMISSIONS.VIEW_PROGRAM_MANUALS,
 ];
 
-export const getUserNotificationPermission = (user: User): string[] | null => {
-  const userPermissions = ROLE_PERMISSIONS[user.role];
+export const getUserNotificationPermission = (
+  user: User,
+): AllPermissions[] | null => {
+  const userPermissions: AllPermissions[] = ROLE_PERMISSIONS[user.role];
 
-  if (!userPermissions || userPermissions.length === 0) return null;
+  if (!userPermissions || userPermissions.length === 0) {
+    return null;
+  }
 
   const matched = NOTIFICATION_PERMISSIONS.filter((permission) =>
     userPermissions.includes(permission),
