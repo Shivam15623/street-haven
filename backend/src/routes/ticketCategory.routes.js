@@ -18,7 +18,7 @@ router
   .route("/")
   .get(getTicketCategories)
   .post(
-    authorizePermissions({ action: PERMISSIONS.TICKET_CATEGORY_MANAGE }),
+    authorizePermissions({ action: PERMISSIONS.TICKET_CATEGORY_ADD }),
     createTicketCategory,
   );
 

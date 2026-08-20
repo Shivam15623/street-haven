@@ -16,6 +16,8 @@ import UserNotification from "../model/notificationTrack.js";
  * @param {Array<{ userId: ObjectId }>} [options.recipients=[]]
  * @param {ObjectId} [options.createdBy]
  * @param {Date} [options.expireAt]
+ * @param {string[]} [options.requiredPermissions=[]]   // permissions that gate visibility
+ * @param {"any"|"all"} [options.permissionMatchType="any"] // "any" = OR, "all" = AND
  * @param {mongoose.ClientSession} [session]
  */
 
@@ -32,10 +34,20 @@ export const createNotification = async (options, session = null) => {
     recipients = [],
     createdBy,
     expireAt,
+    requiredPermissions = [],
+    permissionMatchType = "any",
   } = options;
 
   if (!category || !action || !title || !message) {
     throw new Error("category, action, title and message are required.");
+  }
+
+  if (!Array.isArray(requiredPermissions)) {
+    throw new Error("requiredPermissions must be an array of strings.");
+  }
+
+  if (!["any", "all"].includes(permissionMatchType)) {
+    throw new Error('permissionMatchType must be "any" or "all".');
   }
 
   /* ======================
@@ -60,10 +72,12 @@ export const createNotification = async (options, session = null) => {
         meta,
         isGlobal,
         expireAt: notificationExpireAt,
+        requiredPermissions,
+        permissionMatchType,
         createdBy,
       },
     ],
-    session ? { session } : {}
+    session ? { session } : {},
   );
 
   /* ======================
@@ -105,6 +119,8 @@ export const createNotification = async (options, session = null) => {
     createdBy: notification.createdBy,
     createdAt: notification.createdAt,
     updatedAt: notification.updatedAt,
+    requiredPermissions: notification.requiredPermissions,
+    permissionMatchType: notification.permissionMatchType,
     isGlobal,
     isRead: false,
     readAt: null,

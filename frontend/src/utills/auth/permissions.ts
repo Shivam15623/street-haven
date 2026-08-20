@@ -60,6 +60,7 @@ export const PERMISSIONS = {
 
   TICKET_VIEW_SELF: "ticket_view_self",
   TICKET_CATEGORY_MANAGE: "ticket_category_manage",
+  TICKET_CATEGORY_ADD: "ticket_category_add",
   TICKET_CREATE: "ticket_create",
   TICKET_REPORT_ALL: "ticket_report_all",
   TICKET_REPORT_SELF_MANAGED: "ticket_report_self_managed",

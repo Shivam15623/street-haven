@@ -8,6 +8,8 @@ import path from "path";
 import { createNotification } from "../helper/CreateNotoification.js";
 import { io } from "../index.js";
 import { addActivityLog } from "../helper/addActivityLogs.js";
+import { PERMISSIONS } from "../auth/permissions.js";
+import { emitNotification } from "../helper/emitNotification.js";
 
 // ----------------------------------------
 // Create Announcement
@@ -61,7 +63,7 @@ export const createAnnouncement = asyncHandler(async (req, res) => {
           attachment,
         },
       ],
-      { session }
+      { session },
     );
     const announcement = newAnnouncement[0];
     const notification = await createNotification(
@@ -73,6 +75,8 @@ export const createAnnouncement = asyncHandler(async (req, res) => {
         message: `The new Announcement "${title}" has been created by ${firstname} ${lastname}.`,
         link: `/agency_info?tab=announcements&item=${announcement.slug}`,
         isGlobal: true, // ✅ no per-user mappings
+        requiredPermissions: [PERMISSIONS.VIEW_ANNOUNCEMENTS],
+        permissionMatchType: "any",
         createdBy: userId,
         expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         meta: {
@@ -81,10 +85,10 @@ export const createAnnouncement = asyncHandler(async (req, res) => {
           tab: "announcements",
         },
       },
-      session
+      session,
     );
 
-    io.emit("newNotification", notification);
+    emitNotification(io, notification);
     await addActivityLog(
       {
         actionType: "ANNOUNCEMENT_CREATED",
@@ -99,7 +103,7 @@ export const createAnnouncement = asyncHandler(async (req, res) => {
           moduleName: "Announcement",
         },
       },
-      session // <-- pass session
+      session, // <-- pass session
     );
     await session.commitTransaction();
     session.endSession();
@@ -230,7 +234,7 @@ export const fetchAnnouncement = asyncHandler(async (req, res) => {
         limit: Number(limit),
         totalPages: Math.ceil(totalAnnouncements / Number(limit)),
       },
-    })
+    }),
   );
 });
 export const recentAnnouncementCount = asyncHandler(async (req, res) => {
@@ -247,6 +251,6 @@ export const recentAnnouncementCount = asyncHandler(async (req, res) => {
   return res
     .status(201)
     .json(
-      new ApiResponse(201, `Recent Announcements fetched Successfully`, count)
+      new ApiResponse(201, `Recent Announcements fetched Successfully`, count),
     );
 });

@@ -2,12 +2,17 @@ import CollectiveAgreement from "../model/Agreement.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
-import { deleteFromCloudinary, uploadOnCloudinary } from "../utills/cloudinary.js";
+import {
+  deleteFromCloudinary,
+  uploadOnCloudinary,
+} from "../utills/cloudinary.js";
 import mongoose from "mongoose";
 import { addActivityLog } from "../helper/addActivityLogs.js";
-
+import path from "path"
 import { io } from "../index.js";
 import { createNotification } from "../helper/CreateNotoification.js";
+import { PERMISSIONS } from "../auth/permissions.js";
+import { emitNotification } from "../helper/emitNotification.js";
 /** -----------------------------------------
  *  Common File-Type Detection Utility
  * ----------------------------------------- */
@@ -84,6 +89,8 @@ export const createCollectiveAgreement = asyncHandler(async (req, res) => {
         message: `A new collective agreement "${title}" has been published by ${firstname} ${lastname}.`,
         link: `/agency_info?tab=collective_agreement&item=${savedAgreement.slug}`,
         isGlobal: true, // ✅ no per-user mappings
+        requiredPermissions: [PERMISSIONS.VIEW_COLLECTIVE_AGREEMENTS],
+        permissionMatchType: "any",
         createdBy: userId,
         expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         meta: {
@@ -95,7 +102,7 @@ export const createCollectiveAgreement = asyncHandler(async (req, res) => {
       session,
     );
 
-    io.emit("newNotification", notification);
+    emitNotification(io, notification);
 
     // 🔥 Activity Log (inside same session)
     await addActivityLog(
@@ -264,11 +271,13 @@ export const editCollectiveAgreement = asyncHandler(async (req, res) => {
             changes,
           },
           isGlobal: true, // usually agreements are global
+          requiredPermissions: [PERMISSIONS.VIEW_COLLECTIVE_AGREEMENTS],
+          permissionMatchType: "any",
           createdBy: req.user?._id,
         },
         session,
       );
-      io.emit("newNotification", notification);
+      emitNotification(io, notification);
     }
 
     await session.commitTransaction();
