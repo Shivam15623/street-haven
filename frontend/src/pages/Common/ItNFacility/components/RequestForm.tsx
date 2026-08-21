@@ -148,11 +148,12 @@ const RequestForm: React.FC<RequestFormProps> = ({ onCancel }) => {
                             isInvalid={
                               touched.description && !!errors.description
                             }
-                            errorMessage={errors.description as string}
                           />
-                          <Form.Control.Feedback type="invalid">
-                            {errors.description}
-                          </Form.Control.Feedback>
+                          {touched.description && errors.description && (
+                            <div className="invalid-feedback d-block">
+                              {errors.description}
+                            </div>
+                          )}
                         </Form.Group>
                       </Col>
                     </Row>
@@ -219,9 +220,12 @@ const RequestForm: React.FC<RequestFormProps> = ({ onCancel }) => {
                               />
                             )}
                           </div>
-                          <Form.Control.Feedback type="invalid">
-                            {errors.location}
-                          </Form.Control.Feedback>
+                          {touched.location && errors.location && (
+                            <div className="invalid-feedback d-block">
+                              {errors.location}
+                            </div>
+                          )}
+
                           {locationError && (
                             <small className="text-danger">
                               Could not load locations. Please refresh the page.
