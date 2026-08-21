@@ -392,11 +392,12 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       onChange={(val) => setFieldValue("description", val)}
                       disabled={!hasCreatorPermissions}
                       isInvalid={touched.description && !!errors.description}
-                      errorMessage={errors.description as string}
                     />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.description}
-                    </Form.Control.Feedback>
+                    {touched.description && errors.description && (
+                      <div className="invalid-feedback d-block">
+                        {errors.description}
+                      </div>
+                    )}
                   </Col>
                 </Row>
 
@@ -527,9 +528,11 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       </div>
                     ) : null}
 
-                    <Form.Control.Feedback type="invalid">
-                      {errors.category}
-                    </Form.Control.Feedback>
+                    {touched.category && errors.category && (
+                      <div className="invalid-feedback d-block">
+                        {errors.category}
+                      </div>
+                    )}
                     {categoryError && (
                       <small className="text-danger">
                         Could not load categories. Please refresh the page.
@@ -571,9 +574,11 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       ))}
                     </Form.Select>
 
-                    <Form.Control.Feedback type="invalid">
-                      {errors.location}
-                    </Form.Control.Feedback>
+                    {touched.location && errors.location && (
+                      <div className="invalid-feedback d-block">
+                        {errors.location}
+                      </div>
+                    )}
                   </Col>
                 </Row>
                 {/* Attachment */}

@@ -254,7 +254,7 @@ const TicketCategorySelect: React.FC<TicketCategorySelectProps> = ({
       </Dropdown>
 
       {isInvalid && errorMessage && (
-        <div className="text-danger mt-1" style={{ fontSize: "0.875rem" }}>
+        <div className="invalid-feedback d-block">
           {errorMessage}
         </div>
       )}

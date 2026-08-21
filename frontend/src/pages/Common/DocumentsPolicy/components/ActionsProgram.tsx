@@ -203,8 +203,12 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
                 content={values.description}
                 onChange={(val) => setFieldValue("description", val)}
                 isInvalid={touched.description && !!errors.description}
-                errorMessage={errors.description as string}
               />
+              {touched.description && errors.description && (
+                <div className="invalid-feedback d-block">
+                  {errors.description}
+                </div>
+              )}
               <BootstrapForm.Control.Feedback type="invalid">
                 <ErrorMessage name="description" />
               </BootstrapForm.Control.Feedback>
