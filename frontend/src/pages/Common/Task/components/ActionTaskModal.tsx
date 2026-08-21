@@ -199,7 +199,7 @@ const ActionTaskModal: React.FC<ActionTaskModalProps> = ({
                 onChange={(val) => setFieldValue("description", val)}
                 disabled={isLoading}
                 isInvalid={touched.description && !!errors.description}
-                errorMessage={errors.description as string}
+               
               />
               <ErrorMessage
                 name="description"

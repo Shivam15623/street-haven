@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect, useId } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
-import { Form } from "react-bootstrap";
 import { createPortal } from "react-dom";
 
 interface QuillEditorProps {
@@ -12,7 +11,7 @@ interface QuillEditorProps {
   className?: string;
   disabled?: boolean;
   isInvalid?: boolean;
-  errorMessage?: string;
+
   features?: {
     emoji?: boolean;
     color?: boolean;
@@ -31,7 +30,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
   className = "",
   disabled = false,
   isInvalid = false,
-  errorMessage,
+
   features = {
     emoji: true,
     color: true,
@@ -271,12 +270,12 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
           />
         </div>
       </div>
-
+{/* 
       {isInvalid && errorMessage && (
         <Form.Control.Feedback type="invalid" className="d-block mt-1">
           {errorMessage}
         </Form.Control.Feedback>
-      )}
+      )} */}
     </div>
   );
 };
