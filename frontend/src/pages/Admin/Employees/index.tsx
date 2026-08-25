@@ -56,7 +56,7 @@ const Employees = () => {
         <div className="card-body p-16 p-sm-20 radius-12 p-md-24 d-flex flex-column gap-4 flex-sm-row justify-content-between align-items-sm-center">
           <div className="d-flex flex-column gap-2">
             <h3 className="text-xl mb-0 text-street-dark fw-semibold">
-              Employees
+              Users
             </h3>
             <p className="text-sm mb-0 text-street-base fw-normal">
               Manage your team members and their roles
@@ -84,6 +84,7 @@ const Employees = () => {
               limit={limit}
               sortBy={sortBy}
               order={order}
+              placeholder="Search Users"
               onPageChange={setPage}
               onSortChange={(col, dir) => {
                 setSortBy(col);

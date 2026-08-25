@@ -66,7 +66,7 @@ const TrainingCertificateTab = () => {
       <div className="card-body p-24 d-flex flex-column gap-24">
         <div>
           <h6 className="text-md fw-semibold text-neutral-900 mb-4">
-            Training Completion Certificates
+            Training Certifications
           </h6>
           <p className="text-sm text-neutral-500 mb-0">
             Upload proof of your completed training so we can verify it. You can
@@ -76,7 +76,7 @@ const TrainingCertificateTab = () => {
 
         {certifications.length > 0 && (
           <div className="d-flex flex-column gap-16">
-            {certifications.map((cert,index) => {
+            {certifications.map((cert, index) => {
               const status = STATUS_CONFIG[cert.status];
               const certNumber = certifications.length - index;
               return (

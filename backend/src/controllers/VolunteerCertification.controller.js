@@ -52,32 +52,52 @@ export const submitCertification = asyncHandler(async (req, res) => {
       await VolunteerCertification.create([payload], { session })
     )[0];
 
-    const admins = await User.find({ role: { $in: ["admin", "super_admin"] } })
+    const recipientIds = new Set();
+
+    // 1. Get the volunteer's manager/supervisor
+    const volunteer = await User.findById(volunteerId)
+      .select("superviserId")
+      .session(session);
+
+    if (!volunteer) {
+      throw new ApiError(404, "Volunteer not found");
+    }
+
+    if (volunteer.superviserId) {
+      recipientIds.add(volunteer.superviserId.toString());
+    }
+
+    // 2. Get all super admins
+    const superAdmins = await User.find({
+      role: ROLES.SUPER_ADMIN,
+    })
       .select("_id")
       .session(session);
 
-    if (admins.length) {
-      recipients = admins.map((a) => ({ userId: a._id }));
-
-      notification = await createNotification(
-        {
-          category: "certificate",
-          action: "created",
-          severity: "info",
-          title: "New Certificate Submitted",
-          message: `${req.user.firstname} ${req.user.lastname} submitted a training certificate for review.`,
-          link: `/certificates?status=pending`,
-          meta: {
-            certificationId: certification._id,
-            volunteerId,
-            event: "certification_submitted",
-          },
-          recipients,
-          createdBy: volunteerId,
+    superAdmins.forEach((admin) => {
+      recipientIds.add(admin._id.toString());
+    });
+    recipients = [...recipientIds].map((userId) => ({
+      userId,
+    }));
+    notification = await createNotification(
+      {
+        category: "certificate",
+        action: "created",
+        severity: "info",
+        title: "New Certificate Submitted",
+        message: `${req.user.firstname} ${req.user.lastname} submitted a training certificate for review.`,
+        link: `/certificates?status=pending`,
+        meta: {
+          certificationId: certification._id,
+          volunteerId,
+          event: "certification_submitted",
         },
-        session,
-      );
-    }
+        recipients,
+        createdBy: volunteerId,
+      },
+      session,
+    );
 
     await session.commitTransaction();
 
@@ -235,8 +255,9 @@ export const updateCertificationStatus = asyncHandler(async (req, res) => {
   try {
     session.startTransaction();
 
-    const certification =
-      await VolunteerCertification.findById(certificationId).session(session);
+    const certification = await VolunteerCertification.findById(certificationId)
+      .populate("volunteer", "firstname lastname")
+      .session(session);
     if (!certification) throw new ApiError(404, "Certification not found");
 
     if (certification.status !== "pending") {
@@ -257,7 +278,7 @@ export const updateCertificationStatus = asyncHandler(async (req, res) => {
     certification.remarks = remarks || "";
     await certification.save({ session });
 
-    recipients = [{ userId: certification.volunteer }];
+    recipients = [{ userId: certification.volunteer._id }];
 
     notification = await createNotification(
       {
@@ -304,7 +325,7 @@ export const updateCertificationStatus = asyncHandler(async (req, res) => {
             status === "approved"
               ? "Certificate Approved"
               : "Certificate Rejected",
-          message: `${req.user.firstname} ${req.user.lastname} ${status} a training certificate submitted by ${certification.volunteer}.`,
+          message: `${req.user.firstname} ${req.user.lastname} ${status} a training certificate submitted by ${certification.volunteer.firstname} ${certification.volunteer.lastname}.`,
           link: `/certificates?status=${status}`,
           meta: {
             certificationId: certification._id,
@@ -320,7 +341,9 @@ export const updateCertificationStatus = asyncHandler(async (req, res) => {
     await session.commitTransaction();
 
     emitNotification(recipients, notification);
-
+    if (superAdminNotification && superAdminRecipients.length) {
+      emitNotification(superAdminRecipients, superAdminNotification);
+    }
     return res
       .status(200)
       .json(

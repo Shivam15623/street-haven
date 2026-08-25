@@ -197,7 +197,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
       phoneNo: findUser.phoneNo,
       role: findUser.role,
       slug: findUser.slug,
-        status:finduser.status,
+      status: findUser.status,
       profilePic: findUser.profilePic,
       createdAt: findUser.createdAt,
       hireDate: findUser.hireDate,
@@ -276,7 +276,7 @@ export const silentAuth = asyncHandler(async (req, res) => {
     phoneNo: finduser.phoneNo,
     role: finduser.role,
     slug: finduser.slug,
-    status:finduser.status,
+    status: finduser.status,
     profilePic: finduser.profilePic,
     createdAt: finduser.createdAt,
     hireDate: finduser.hireDate,
@@ -329,9 +329,18 @@ export const totpGenerate = asyncHandler(async (req, res) => {
   const user = await User.findById(decoded.userId);
   if (!user) throw new ApiError(404, "User not found");
 
+  const issuer = "StreetHaven";
+  const accountName = `${user.firstname} ${user.lastname} (${user.email})`;
+
   const secret = speakeasy.generateSecret({
-    name: `StreetHaven (${user.email}) - ${user.slug}`,
+    length: 20,
   });
+
+  const otpauthUrl =
+    `otpauth://totp/${encodeURIComponent(issuer)}:` +
+    `${encodeURIComponent(accountName)}` +
+    `?secret=${secret.base32}` +
+    `&issuer=${encodeURIComponent(issuer)}`;
 
   user.totpSecret = secret.base32;
   user.isTOTPEnabled = false;
@@ -342,7 +351,7 @@ export const totpGenerate = asyncHandler(async (req, res) => {
     expiresIn: "10m",
   });
   const qrCode = await new Promise((resolve, reject) => {
-    qrcode.toDataURL(secret.otpauth_url, (err, url) => {
+    qrcode.toDataURL(otpauthUrl, (err, url) => {
       if (err) reject(err);
       else resolve(url);
     });
@@ -365,10 +374,7 @@ export const verifyTOTP = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Expired token");
   }
 
-  const user = await User.findById(decoded.userId).populate(
-    "role",
-    "roleName permissions _id",
-  );
+  const user = await User.findById(decoded.userId);
   if (!user) {
     throw new ApiError(404, "No such User Exists");
   }
@@ -397,7 +403,7 @@ export const verifyTOTP = asyncHandler(async (req, res) => {
     email: user.email,
     phoneNo: user.phoneNo,
     role: user.role,
-    status:user.status,
+    status: user.status,
     slug: user.slug,
     profilePic: user.profilePic,
     createdAt: user.createdAt,

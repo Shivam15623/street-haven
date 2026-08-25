@@ -35,7 +35,7 @@ const DeleteAgreement: React.FC<DeleteAgreementProps> = ({
   return (
     <ModalWrapper
       show={show}
-      title="Delete Agreement"
+      title="Delete Additional Documents"
       size="lg"
       headerClassName="text-xl p-0 pb-20 text-street-dark"
       className="p-20 p-sm-24 p-md-32 gap-16"

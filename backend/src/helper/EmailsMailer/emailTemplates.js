@@ -21,6 +21,71 @@ export const generateEmailTemplate = ({ type, data }) => {
           <p>Expires in 1 hour.</p>
         `,
       };
+
+    case "user_added":
+      return {
+        subject: "Your Account Has Been Created",
+        html: `
+      <h2>Welcome to the Platform</h2>
+
+      <p>Hello ${data.userName},</p>
+
+      <p>
+        An account has been created for you. You can use the following
+        credentials to log in.
+      </p>
+
+      <table style="border-collapse:collapse;">
+        <tr>
+          <td style="padding:6px 12px;">
+            <strong>Name</strong>
+          </td>
+          <td>${data.userName}</td>
+        </tr>
+
+        <tr>
+          <td style="padding:6px 12px;">
+            <strong>Email</strong>
+          </td>
+          <td>${data.email}</td>
+        </tr>
+
+        <tr>
+          <td style="padding:6px 12px;">
+            <strong>Temporary Password</strong>
+          </td>
+          <td>${data.password}</td>
+        </tr>
+
+        <tr>
+          <td style="padding:6px 12px;">
+            <strong>Role</strong>
+          </td>
+          <td>${data.role}</td>
+        </tr>
+      </table>
+
+      <p style="margin-top:24px;">
+        <a
+          href="${data.link}"
+          style="
+            background:#2563eb;
+            color:#fff;
+            padding:12px 18px;
+            text-decoration:none;
+            border-radius:6px;
+          "
+        >
+          Log In
+        </a>
+      </p>
+
+      <p>
+        For security reasons, we recommend changing your password after your
+        first login.
+      </p>
+    `,
+      };
     case "ticket_pending_manager":
       return {
         subject: `New Ticket Pending Approval - ${data.ticketTitle}`,

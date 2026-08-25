@@ -32,7 +32,7 @@ const editEmployeeSchema = yup.object({
     .string()
     .matches(
       /^\+1\s\(\d{3}\)\s\d{3}-\d{4}$/,
-      "Enter a valid Canadian phone number",
+      "Enter a valid phone number",
     )
     .required("Phone number is required"),
   profilePic: yup.mixed<File>().nullable(),
@@ -150,7 +150,7 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
 
       <ModalWrapper
         show={showModal}
-        title="Edit Employee Profile"
+        title="Edit User Profile"
         size="lg"
         headerClassName="text-xl p-0 pb-20 text-street-dark"
         className="p-20 gap-16"

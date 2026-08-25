@@ -31,7 +31,7 @@ const UserSelect = ({
   return (
     <div className={className}>
       {label && (
-        <label className="form-label text-xs fw-medium text-neutral-700 mb-6">
+        <label className="form-label  mb-6">
           {label}
         </label>
       )}

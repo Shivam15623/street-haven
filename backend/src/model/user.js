@@ -104,7 +104,7 @@ currentStint: {
     role: {
       type: String,
       enum: Object.values(ROLES),
-      default: ROLES.EMPLOYEE,
+      default: ROLES.STAFF,
     },
     phoneNo: {
       type: String,

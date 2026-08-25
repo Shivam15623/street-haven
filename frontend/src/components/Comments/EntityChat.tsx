@@ -634,7 +634,7 @@ const EntityChat = ({
 
           <div className="chat-message-box-action w-100 flex-row flex-nowrap gap-1 justify-content-between px-3 py-2">
             <div className="d-flex gap-2">
-              {task.status !== "under_review" && hasRole("volunteer") && (
+              {task.status !== "under_review"&&task.status!=="completed" && hasRole("volunteer") && (
                 <button
                   type="button"
                   disabled={isUpdatingStatus}

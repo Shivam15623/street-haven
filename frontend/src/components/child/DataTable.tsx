@@ -13,6 +13,7 @@ type DataTableProps<T> = {
   columns: Column<T>[];
   data: T[];
   total: number;
+  placeholder?: string;
   page: number;
   limit: number;
   onLimitChange: (limit: number) => void;
@@ -29,6 +30,7 @@ function DataTable<T extends object>({
   total,
   page,
   limit,
+  placeholder="Search Documents",
   onLimitChange,
   onPageChange,
   onSortChange,
@@ -56,7 +58,7 @@ function DataTable<T extends object>({
 
           <input
             className="bg-transparent border-0 text-sm text-street-base d-flex flex-grow-1 fw-semibold"
-            placeholder="Search Documents"
+            placeholder={placeholder}
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
           />

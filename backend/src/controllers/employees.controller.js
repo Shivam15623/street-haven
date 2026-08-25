@@ -8,6 +8,7 @@ import {
 import { ApiError } from "../utills/ApiError.js";
 import Location from "../model/location.js";
 import mongoose from "mongoose";
+import { sendNewUserCredentialsEmail } from "../helper/EmailsMailer/emailHandlers.js";
 export const AllEmployees = asyncHandler(async (req, res) => {
   const {
     page = 1,
@@ -45,6 +46,18 @@ export const AllEmployees = asyncHandler(async (req, res) => {
   }
 
   const isDropdown = String(forDropdown).toLowerCase() === "true";
+
+  // Only show super_admin users when this is the non-dropdown list
+  // AND the requester is themselves a super_admin. Otherwise exclude them.
+  const canSeeSuperAdmins = !isDropdown && req.user.role === ROLES.SUPER_ADMIN;
+  if (!canSeeSuperAdmins) {
+    if (query.role && query.role.$in) {
+      // Respect an explicit role filter, but strip super_admin out of it
+      query.role.$in = query.role.$in.filter((r) => r !== ROLES.SUPER_ADMIN);
+    } else {
+      query.role = { $ne: ROLES.SUPER_ADMIN };
+    }
+  }
 
   const selectFields = isDropdown
     ? "_id firstname lastname email role"
@@ -156,7 +169,7 @@ export const AddEmployee = asyncHandler(async (req, res) => {
         throw new ApiError(400, "User already exists with this phone number");
     }
 
-    const resolvedRole = role || ROLES.EMPLOYEE;
+    const resolvedRole = role || ROLES.STAFF;
 
     // Hire Date / Volunteer Start Date is the same field for all roles now
     if (!hireDate) {
@@ -261,6 +274,12 @@ export const AddEmployee = asyncHandler(async (req, res) => {
 
     await session.commitTransaction();
     session.endSession();
+    await sendNewUserCredentialsEmail({
+      email: newUser.email,
+      userName: `${newUser.firstname} ${newUser.lastname}`,
+      password, // plain password received from req.body
+      role: newUser.role,
+    });
 
     return res
       .status(201)
@@ -730,8 +749,7 @@ export const EmployeeActiveInactiveToggle = asyncHandler(async (req, res) => {
       user.volunteerStints.push({
         startAt: user.currentStint?.startAt || user.hireDate,
         endAt: now,
-        endedReason: "admin_deactivated"
-          
+        endedReason: "admin_deactivated",
       });
       user.currentStint = { startAt: undefined, endAt: undefined };
     }

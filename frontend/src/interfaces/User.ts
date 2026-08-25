@@ -25,6 +25,12 @@ interface UserProfile {
   updatedAt: string;
   title: string;
   hireDate: Date;
+  location:{
+    name:string;
+    _id:string;
+    slug:string;
+    isActive:boolean;
+  }[]|null
 }
 export interface changePasswordCredentials {
   currentPassword: string;

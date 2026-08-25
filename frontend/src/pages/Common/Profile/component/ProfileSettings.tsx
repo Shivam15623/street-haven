@@ -34,7 +34,7 @@ const ProfileSchema = Yup.object({
   workEmail: Yup.string(),
   workPhone: Yup.string().matches(
     /^(?:\+1\s?)?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
-    "Enter a valid 10-digit Canadian phone number"
+    "Enter a valid 10-digit phone number",
   ),
 });
 type ProfileValues = Yup.InferType<typeof ProfileSchema>;
@@ -42,6 +42,7 @@ const ProfileSettings: React.FC = () => {
   const { data: user, isLoading } = useFetchUserProfileQuery();
   const [updateUser, { isLoading: updating }] = useEditProfileMutation();
   const dispatch = useDispatch();
+
   const handleupdate = async (values: ProfileValues) => {
     try {
       const formdata = new FormData();
@@ -189,7 +190,27 @@ const ProfileSettings: React.FC = () => {
                   </div>
                 </Col>
               </Row>
-
+              {user?.data.role === ROLES.MANAGER &&
+                Array.isArray(user?.data.location) &&
+                user.data.location.length > 0 && (
+                  <Row className="mb-3 align-items-center">
+                    <Form.Label column sm={2}>
+                      Location{user.data.location.length > 1 ? "s" : ""}
+                    </Form.Label>
+                    <Col sm={10}>
+                      <Form.Control
+                        type="text"
+                        size="sm"
+                        name="location"
+                        value={user.data.location
+                          .map((loc: any) => loc.name)
+                          .join(", ")}
+                        disabled
+                        readOnly
+                      />
+                    </Col>
+                  </Row>
+                )}
               <Row className="mb-3 align-items-center">
                 <Form.Label column sm={2}>
                   Work Phone

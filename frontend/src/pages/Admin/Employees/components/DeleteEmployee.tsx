@@ -38,7 +38,7 @@ const DeleteEmployee: React.FC<DeleteEmployeeProps> = ({ employee }) => {
         className="btn btn-sm btn-street-delete d-flex flex-row align-items-center justify-content-center radius-12 p-0"
         style={{ width: "43px", height: "40px" }}
         onClick={() => setShowModal(true)}
-        title="Delete Employee"
+        title="Delete User"
       >
         <Icon icon="tabler:trash" className="text-xl" />
       </button>
@@ -46,7 +46,7 @@ const DeleteEmployee: React.FC<DeleteEmployeeProps> = ({ employee }) => {
       {/* Modal */}
       <ModalWrapper
         show={showModal}
-        title="Delete Employee"
+        title="Delete User"
         size="lg"
         headerClassName="text-xl p-0 pb-20 text-street-dark"
         className="p-20 p-sm-24 p-md-32 gap-16 gap-sm-20"

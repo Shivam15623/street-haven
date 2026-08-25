@@ -1,24 +1,30 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "@iconify/react";
-import { selectAuth } from "../../../redux/AuthSlice";
+import { selectAuth, setLoggedOut } from "../../../redux/AuthSlice";
 import { useLogoutMutation } from "../../../services/AuthApi";
+import { showError } from "../../../utills/toastutills";
+import { getErrorMessage } from "../../../utills/utills";
 
 const AccountInactive: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useSelector(selectAuth);
+    const dispatch = useDispatch();
+ const { user } = useSelector(selectAuth);
   const [logout, { isLoading }] = useLogoutMutation();
 
   const handleLogout = async () => {
     try {
       await logout().unwrap();
-    } catch {
-      // even if the API call fails, still clear local session and redirect
+    } catch (error) {
+      showError(getErrorMessage(error))
     } finally {
+      // Clear Redux auth state
+      dispatch(setLoggedOut());
+
+      // Redirect after state is cleared
       navigate("/login", { replace: true });
     }
   };
-
   return (
     <div
       className="d-flex align-items-center justify-content-center px-3"

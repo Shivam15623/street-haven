@@ -22,7 +22,7 @@ const Profile = () => {
       ? [
           {
             key: "training_certificate",
-            label: "Training Certificate",
+            label: "Training Certifications",
             content: <CertificatesTab />,
           },
         ]
