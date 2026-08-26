@@ -58,3 +58,34 @@ export const sendResetEmail = async ({ email }) => {
 
   return { success: true, message: "Reset email sent successfully." };
 };
+
+
+export const sendNewUserCredentialsEmail = async ({
+  email,
+  userName,
+  password,
+  role,
+}) => {
+  const loginLink = `${process.env.DOMAIN}/login`;
+
+  const emailContent = generateEmailTemplate({
+    type: "user_added",
+    data: {
+      userName,
+      email,
+      password,
+      role,
+      link: loginLink,
+    },
+  });
+
+  await sendEmail({
+    to: email,
+    ...emailContent,
+  });
+
+  return {
+    success: true,
+    message: "User credentials email sent successfully.",
+  };
+};

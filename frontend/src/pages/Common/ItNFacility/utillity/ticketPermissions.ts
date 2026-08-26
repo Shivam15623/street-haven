@@ -1,7 +1,12 @@
 import type { User } from "../../../../interfaces/AuthInterfaces";
 import type { TicketData } from "../../../../interfaces/Ticket";
 
-export type TicketRelationship = "creator" | "manager" | "assignee" | "volunteer_admin";
+export type TicketRelationship =
+  | "creator"
+  | "manager"
+  | "assignee"
+
+  | "super_admin";
 interface TicketContext {
   ticket: TicketData;
   currentUser?: User | null;
@@ -11,13 +16,26 @@ export const getUserRelationships = (
   currentUser?: User | null,
 ): Set<TicketRelationship> => {
   const relationships = new Set<TicketRelationship>();
+
   if (!currentUser) return relationships;
 
-  if (ticket.createdBy?._id === currentUser._id) relationships.add("creator");
-  if (ticket.assignedTo?._id === currentUser._id) relationships.add("assignee");
-  if (ticket.location?.managers?.includes(currentUser._id))
+  if (ticket.createdBy?._id === currentUser._id) {
+    relationships.add("creator");
+  }
+
+  if (ticket.assignedTo?._id === currentUser._id) {
+    relationships.add("assignee");
+  }
+
+  if (ticket.location?.managers?.includes(currentUser._id)) {
     relationships.add("manager");
-  if (currentUser.role === "volunteer_admin") relationships.add("volunteer_admin");
+  }
+
+
+
+  if (currentUser.role === "super_admin") {
+    relationships.add("super_admin");
+  }
 
   return relationships;
 };
@@ -57,12 +75,23 @@ const TICKET_ACTION_RULES: TicketActionRule[] = [
   {
     action: "chat",
     allowedStatuses: ALL_STATUSES,
-    requiredRelationships: ["creator", "manager", "assignee", "volunteer_admin"],
+    requiredRelationships: [
+      "creator",
+      "manager",
+      "assignee",
+  
+    ],
   },
   {
     action: "edit",
-    allowedStatuses: ["Open"],
-    requiredRelationships: ["creator", "manager", "assignee", "volunteer_admin"],
+    allowedStatuses: ALL_STATUSES,
+    requiredRelationships: [
+      "creator",
+      "manager",
+      "assignee",
+   
+      "super_admin",
+    ],
   },
   {
     action: "cancel",
@@ -72,14 +101,14 @@ const TICKET_ACTION_RULES: TicketActionRule[] = [
   {
     action: "approve",
     allowedStatuses: ["Open"],
-    requiredRelationships: ["manager"],
+    requiredRelationships: ["manager", "super_admin"],
     // prevent self-approval even if the manager also created it
     exclude: (ctx) => ctx.relationships.has("creator"),
   },
   {
     action: "reject",
     allowedStatuses: ["Open"],
-    requiredRelationships: ["manager"],
+    requiredRelationships: ["manager", "super_admin"],
     exclude: (ctx) => ctx.relationships.has("creator"),
   },
   {

@@ -28,7 +28,11 @@ export const getErrorMessage = (err: any): string => {
     const data = err.data;
     // Check if the response data has a 'message' field
     if (data.message && typeof data.message === "string") {
-      return data.message;
+      if (data.code === "VALIDATION_FAILED") {
+        return data.errors.join(", ");
+      } else {
+        return data.message;
+      }
     }
     // If no 'message' field, return a generic error message
     return "An error occurred while processing the request.";

@@ -340,6 +340,7 @@ export const approveTicket = asyncHandler(async (req, res) => {
     const { id: ticketId } = req.params;
     const { priority } = req.body;
     const userId = req.user._id.toString();
+    const isSuperAdmin=req.user.role==="super_admin"
 
     if (!priority)
       throw new ApiError(400, "Priority is required to approve a ticket");
@@ -359,10 +360,10 @@ export const approveTicket = asyncHandler(async (req, res) => {
       ticket.location,
       session,
     );
-    if (!isManager)
+    if (!isManager&&!isSuperAdmin)
       throw new ApiError(
         403,
-        "You are not a manager for this ticket's location",
+        "You are not Authorized",
       );
 
     const locationDoc = await Location.findById(ticket.location)
@@ -515,7 +516,7 @@ export const rejectTicket = asyncHandler(async (req, res) => {
     const { id: ticketId } = req.params;
     const { rejectionReason } = req.body;
     const userId = req.user._id.toString();
-
+const isSuperAdmin=req.user.role==="super_admin"
     if (!rejectionReason?.trim())
       throw new ApiError(400, "Rejection reason is required");
 
@@ -534,7 +535,7 @@ export const rejectTicket = asyncHandler(async (req, res) => {
       ticket.location,
       session,
     );
-    if (!isManager)
+    if (!isManager&&!isSuperAdmin)
       throw new ApiError(
         403,
         "You are not a manager for this ticket's location",
@@ -858,9 +859,14 @@ const CREATOR_FIELDS = new Set([
   "location",
   "photo", // implicit via req.file, not a body key, listed for clarity
 ]);
-const APPROVER_FIELDS = new Set(["priority", "assignedTo"]);
+const APPROVER_FIELDS = new Set(["priority", "assignedTo", "status"]);
 const ASSIGNEE_FIELDS = new Set(["assignedTo"]);
-
+const STATUS_EMAIL_TEMPLATE_MAP = {
+  Approved: "ticket_approved",
+  "In Progress": "ticket_in_progress",
+  Completed: "ticket_completed",
+  Rejected: "ticket_rejected",
+};
 export const editTicket = asyncHandler(async (req, res) => {
   const { id: ticketId } = req.params;
 
@@ -871,11 +877,12 @@ export const editTicket = asyncHandler(async (req, res) => {
     location: newLocationId,
     priority,
     assignedTo: newAssignedToId,
+    status: newStatus,
   } = req.body;
 
   const userId = req.user._id;
   const userIdStr = userId.toString();
-
+  const isSuperAdmin = req.user.role === "super_admin";
   const session = await mongoose.startSession();
 
   // Keep these outside transaction because we need them
@@ -905,7 +912,7 @@ export const editTicket = asyncHandler(async (req, res) => {
     const isApprover = ticket.approvedBy?.equals(userId) ?? false;
     const isAssignee = ticket.assignedTo?.equals(userId) ?? false;
 
-    if (!isCreator && !isApprover && !isAssignee) {
+    if (!isSuperAdmin && !isCreator && !isApprover && !isAssignee) {
       throw new ApiError(403, "You do not have permission to edit this ticket");
     }
 
@@ -920,7 +927,7 @@ export const editTicket = asyncHandler(async (req, res) => {
     if (uploadedFile) submittedFields.add("photo");
     if (priority !== undefined) submittedFields.add("priority");
     if (newAssignedToId !== undefined) submittedFields.add("assignedTo");
-
+    if (newStatus !== undefined) submittedFields.add("status");
     if (submittedFields.size === 0) {
       throw new ApiError(400, "No editable fields were provided");
     }
@@ -934,6 +941,7 @@ export const editTicket = asyncHandler(async (req, res) => {
     const wantsApproverFields = [...submittedFields].some((f) =>
       APPROVER_FIELDS.has(f),
     );
+    const wantsStatus = submittedFields.has("status");
 
     if (wantsCreatorFields) {
       if (!isCreator) {
@@ -949,23 +957,32 @@ export const editTicket = asyncHandler(async (req, res) => {
         );
       }
     }
-
+    const effectiveStatus = wantsStatus ? newStatus : ticket.status;
+    if (wantsStatus) {
+      if (!isApprover && !isSuperAdmin) {
+        throw new ApiError(
+          403,
+          "Only the approving manager or super admin can change status",
+        );
+      }
+      if (!Object.values(TICKET_STATUS).includes(newStatus)) {
+        throw new ApiError(400, "Invalid status value");
+      }
+    }
     if (wantsApproverFields) {
-      // priority and assignedTo can be touched by the approver, OR
-      // assignedTo alone can be touched by the current assignee (handoff).
       const wantsPriority = submittedFields.has("priority");
       const wantsAssignedTo = submittedFields.has("assignedTo");
 
-      if (wantsPriority && !isApprover) {
+      if (wantsPriority && !isApprover && !isSuperAdmin) {
         throw new ApiError(
           403,
-          "Only the approving manager can change priority",
+          "Only the approving manager or super admin can change priority",
         );
       }
-      if (wantsAssignedTo && !isApprover && !isAssignee) {
+      if (wantsAssignedTo && !isApprover && !isAssignee && !isSuperAdmin) {
         throw new ApiError(
           403,
-          "Only the approving manager or current assignee can reassign this ticket",
+          "Only the approving manager, current assignee, or super admin can reassign this ticket",
         );
       }
       if (
@@ -973,7 +990,7 @@ export const editTicket = asyncHandler(async (req, res) => {
           TICKET_STATUS.OPEN,
           TICKET_STATUS.CLOSED,
           TICKET_STATUS.REJECTED,
-        ].includes(ticket.status)
+        ].includes(effectiveStatus)
       ) {
         throw new ApiError(
           400,
@@ -983,6 +1000,9 @@ export const editTicket = asyncHandler(async (req, res) => {
         );
       }
     }
+
+    // Status: only the approving manager or super admin, regardless of
+    // what other fields were submitted alongside it.
 
     // -----------------------------------------
     // 4. Location-change bookkeeping (creator path only)
@@ -1059,6 +1079,20 @@ export const editTicket = asyncHandler(async (req, res) => {
         assignedAt: new Date(),
       });
       ticket.assignedTo = newAssignee._id;
+    }
+
+    const oldStatus = ticket.status;
+    const statusChanged = wantsStatus && newStatus !== oldStatus;
+    if (statusChanged) {
+      ticket.status = newStatus;
+      if (Array.isArray(ticket.statusHistory)) {
+        ticket.statusHistory.push({
+          fromStatus: oldStatus,
+          toStatus: newStatus,
+          changedBy: userId,
+          changedAt: new Date(),
+        });
+      }
     }
 
     await ticket.save({ session });
@@ -1184,7 +1218,60 @@ export const editTicket = asyncHandler(async (req, res) => {
     }
 
     // -----------------------------------------
-    // 8. Commit, then fire off emails/sockets after success
+    // 8. Status-change notifications (creator + assignee, if not the actor)
+    // -----------------------------------------
+    if (statusChanged) {
+      const statusRecipients = [
+        ticket.createdBy,
+        ticket.assignedTo,
+        ticket.approvedBy,
+      ]
+        .filter(Boolean)
+        .map((id) => id.toString())
+        .filter((id, idx, arr) => arr.indexOf(id) === idx) // dedupe
+        .filter((id) => id !== userIdStr); // don't notify the actor
+
+      if (statusRecipients.length) {
+        await notifyAndEmit(session, {
+          recipients: statusRecipients.map((uid) => ({ userId: uid })),
+          title: "Ticket Status Updated",
+          message: `Ticket "${ticket.req_title}" status changed from ${oldStatus} to ${newStatus}.`,
+          link: `/it_facility?tab=track_tickets&item=${ticket.slug}`,
+          createdBy: userId,
+          meta: {
+            ticketId: ticket.slug,
+            event: "ticket_status_changed",
+            fromStatus: oldStatus,
+            toStatus: newStatus,
+          },
+          emit: false,
+        });
+
+        const statusEmailTemplate = STATUS_EMAIL_TEMPLATE_MAP[newStatus];
+        if (statusEmailTemplate) {
+          const categoryForEmail =
+            newCategoryDoc ??
+            (await TicketCategory.findById(ticket.category)
+              .select("name")
+              .session(session));
+
+          emailEvents.push({
+            userIds: statusRecipients,
+            templateType: statusEmailTemplate,
+            dataBuilder: (user) => ({
+              recipientName: `${user.firstname} ${user.lastname}`,
+              ticketTitle: ticket.req_title,
+              category: categoryForEmail?.name ?? "-",
+              location: ticket.location?.name ?? "-",
+              link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&item=${ticket.slug}`,
+            }),
+          });
+        }
+      }
+    }
+
+    // -----------------------------------------
+    // 9. Commit, then fire off emails/sockets after success
     // -----------------------------------------
     await session.commitTransaction();
 
@@ -1808,4 +1895,138 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
 
   await workbook.xlsx.write(res);
   res.end();
+});
+
+/* ------------------------------------------------------------------
+   PATCH /api/tickets/:id/reopen
+   Allows a Closed, Rejected, or Completed ticket to be reopened.
+   Only the creator, the approving manager, or a super admin can do this.
+   Reopening always sends the ticket back to "Open" so it re-enters the
+   normal approval flow.
+-------------------------------------------------------------------*/
+const REOPENABLE_STATUSES = [
+  TICKET_STATUS.CLOSED,
+  TICKET_STATUS.REJECTED,
+  TICKET_STATUS.COMPLETED,
+];
+
+export const reopenTicket = asyncHandler(async (req, res) => {
+  const { id: ticketId } = req.params;
+
+  const userId = req.user._id;
+  const userIdStr = userId.toString();
+  const isSuperAdmin = req.user.role === "super_admin";
+  const session = await mongoose.startSession();
+
+  let emailEvents = [];
+
+  try {
+    session.startTransaction();
+
+    const ticket = await Ticket.findById(ticketId).session(session);
+    if (!ticket) {
+      throw new ApiError(404, "No such ticket found");
+    }
+
+    const isApprover = ticket.approvedBy?.equals(userId) ?? false;
+
+    if (!isSuperAdmin && !isApprover) {
+      throw new ApiError(
+        403,
+        "Only the creator, approving manager, or super admin can reopen this ticket",
+      );
+    }
+
+    if (!REOPENABLE_STATUSES.includes(ticket.status)) {
+      throw new ApiError(
+        400,
+        `Ticket cannot be reopened from its current status (${ticket.status})`,
+      );
+    }
+
+    const oldStatus = ticket.status;
+
+    ticket.status = TICKET_STATUS.OPEN;
+
+    if (Array.isArray(ticket.statusHistory)) {
+      ticket.statusHistory.push({
+        fromStatus: oldStatus,
+        toStatus: TICKET_STATUS.OPEN,
+        changedBy: userId,
+        changedAt: new Date(),
+      });
+    }
+
+    // Reopening resets prior approval/assignment decisions so it goes
+    // through the normal flow again. Adjust if you want to preserve these.
+
+    ticket.priorityLocked = false;
+
+    await ticket.save({ session });
+
+    // -----------------------------------------
+    // Notify: creator (if not the actor) + previous assignee (if any)
+    // -----------------------------------------
+    const recipients = [ticket.createdBy, ticket.assignedTo]
+      .filter(Boolean)
+      .map((id) => id.toString())
+      .filter((id, idx, arr) => arr.indexOf(id) === idx)
+      .filter((id) => id !== userIdStr);
+
+    if (recipients.length) {
+      await notifyAndEmit(session, {
+        recipients: recipients.map((uid) => ({ userId: uid })),
+        title: "Ticket Reopened",
+        message: `Ticket "${ticket.req_title}" has been reopened.`,
+        link: `/it_facility?tab=track_tickets&item=${ticket.slug}`,
+        createdBy: userId,
+        meta: {
+          ticketId: ticket.slug,
+          event: "ticket_reopened",
+          fromStatus: oldStatus,
+          toStatus: TICKET_STATUS.OPEN,
+        },
+        emit: false,
+      });
+
+      const categoryForEmail = await TicketCategory.findById(ticket.category)
+        .select("name")
+        .session(session);
+
+      emailEvents.push({
+        userIds: recipients,
+        templateType: "ticket_reopened",
+        dataBuilder: (user) => ({
+          recipientName: `${user.firstname} ${user.lastname}`,
+          ticketTitle: ticket.req_title,
+          category: categoryForEmail?.name ?? "-",
+          reason: null,
+          reopenedBy: req.user.firstname
+            ? `${req.user.firstname} ${req.user.lastname}`
+            : "Admin",
+          link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&item=${ticket.slug}`,
+        }),
+      });
+    }
+
+    await session.commitTransaction();
+
+    await Promise.all(
+      emailEvents.map((event) =>
+        notifyTicketEmail({
+          ...event,
+          session: undefined,
+        }),
+      ),
+    );
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Ticket reopened successfully", ticket));
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    await session.endSession();
+  }
 });

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { SocketContext } from "./SocketContext";
 import { io, type Socket } from "socket.io-client";
+import { useSelector } from "react-redux";
+import { selectAuth } from "../redux/AuthSlice";
 
 const SOCKET_URL = import.meta.env.VITE_Socket_URL;
 
@@ -9,11 +11,15 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [connected, setConnected] = useState(false);
+  const { accessToken } = useSelector(selectAuth);
 
   useEffect(() => {
     const newSocket = io(SOCKET_URL, {
       transports: ["websocket", "polling"], // polling as fallback
       withCredentials: true,
+      auth: {
+        token:accessToken,
+      },
     });
     setSocket(newSocket);
 

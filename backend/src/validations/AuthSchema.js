@@ -1,6 +1,6 @@
 import Joi from "joi";
 
-const ALLOWED_ROLES = [ "employee", "manager"];
+const ALLOWED_ROLES = ["employee", "manager"];
 export const registerUserSchema = Joi.object({
   firstName: Joi.string()
     .pattern(/^[A-Za-z\s]+$/)
@@ -35,18 +35,18 @@ export const registerUserSchema = Joi.object({
     }),
   phone: Joi.string()
     .pattern(
-      /^\+1\s?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/
+      /^\+1\s?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
     )
     .required()
     .messages({
-      "string.pattern.base": "Please enter a valid Canadian phone number",
+      "string.pattern.base": "Please enter a valid phone number",
       "string.empty": "Phone number is required",
       "any.required": "Phone number is required",
     }),
 
   password: Joi.string()
     .pattern(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&_])[A-Za-z\d@$!%*?#&_]{8,}$/
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&_])[A-Za-z\d@$!%*?#&_]{8,}$/,
     )
     .required()
     .messages({
@@ -76,7 +76,7 @@ export const resetPasswordSchema = Joi.object({
 
   newPassword: Joi.string()
     .pattern(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&_])[A-Za-z\d@$!%*?#&_]{8,}$/
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&_])[A-Za-z\d@$!%*?#&_]{8,}$/,
     )
     .required()
     .messages({

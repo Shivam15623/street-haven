@@ -1,10 +1,14 @@
 import React, { useMemo, useState } from "react";
 
 import TicketDetailDrawer from "./TicketDetailDrawer";
+import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import type { Column } from "../../../../../components/child/SimpleTable";
 import SimpleTable from "../../../../../components/child/SimpleTable";
 import type { BadgeVariant } from "../../../../../components/child/Badge";
 import Badge from "../../../../../components/child/Badge";
+import { useReopenTicketMutation } from "../../../../../services/ticketApi";
+import { showError, showSuccess } from "../../../../../utills/toastutills";
+import { getErrorMessage } from "../../../../../utills/utills";
 
 export interface TicketReport {
   id: string;
@@ -29,6 +33,10 @@ const statusVariant: Record<string, BadgeVariant> = {
   Rejected: "danger-soft",
   Closed: "secondary-soft",
 };
+
+// Keep in sync with backend REOPENABLE_STATUSES
+const REOPENABLE_STATUSES = ["Completed", "Rejected", "Closed"];
+
 interface Props {
   tickets: TicketReport[];
   page: number;
@@ -47,9 +55,33 @@ const TicketReportTable: React.FC<Props> = ({
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
+  const [reopenTargetId, setReopenTargetId] = useState<string | null>(null);
+  const [showReopenModal, setShowReopenModal] = useState(false);
+
+  const [reopenTicket, { isLoading: isReopening }] = useReopenTicketMutation();
+
   const handleView = (id: string) => {
     setSelectedTicketId(id);
     setOpen(true);
+  };
+
+  const handleReopenClick = (id: string) => {
+    setReopenTargetId(id);
+    setShowReopenModal(true);
+  };
+
+  const handleConfirmReopen = async () => {
+    if (!reopenTargetId) return;
+    try {
+      const res = await reopenTicket(reopenTargetId).unwrap();
+      if (res.success) {
+        showSuccess(res.message);
+        setShowReopenModal(false);
+        setReopenTargetId(null);
+      }
+    } catch (error) {
+      showError(getErrorMessage(error));
+    }
   };
 
   const columns: Column<TicketReport>[] = useMemo(
@@ -125,16 +157,26 @@ const TicketReportTable: React.FC<Props> = ({
       {
         header: "Action",
         accessor: (row) => (
-          <button
-            className="btn btn-street-primary btn-sm"
-            onClick={() => handleView(row.id)}
-          >
-            View
-          </button>
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-street-primary btn-sm"
+              onClick={() => handleView(row.id)}
+            >
+              View
+            </button>
+            {REOPENABLE_STATUSES.includes(row.status) && (
+              <button
+                className="btn btn-street-neutral btn-sm"
+                onClick={() => handleReopenClick(row.id)}
+              >
+                Reopen
+              </button>
+            )}
+          </div>
         ),
       },
     ],
-    [],
+    [page, limit],
   );
 
   return (
@@ -153,6 +195,45 @@ const TicketReportTable: React.FC<Props> = ({
         open={open}
         onClose={() => setOpen(false)}
       />
+
+      <ModalWrapper
+        show={showReopenModal}
+        onHide={() => {
+          if (!isReopening) {
+            setShowReopenModal(false);
+            setReopenTargetId(null);
+          }
+        }}
+        title="Reopen Ticket"
+        size="md"
+        isLoading={isReopening}
+        footer={
+          <div className="d-flex justify-content-end gap-2">
+            <button
+              className="btn btn-street-primary btn-sm"
+              onClick={handleConfirmReopen}
+              disabled={isReopening}
+            >
+              {isReopening ? "Reopening..." : "Reopen"}
+            </button>
+            <button
+              className="btn btn-street-neutral btn-sm"
+              onClick={() => {
+                setShowReopenModal(false);
+                setReopenTargetId(null);
+              }}
+              disabled={isReopening}
+            >
+              Cancel
+            </button>
+          </div>
+        }
+      >
+        <p className="mb-0">
+          Are you sure you want to reopen this ticket? It will move back to{" "}
+          <strong>Open</strong> status and re-enter the approval flow.
+        </p>
+      </ModalWrapper>
     </>
   );
 };

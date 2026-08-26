@@ -18,7 +18,7 @@ interface Props {
 const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
   const [dateError, setDateError] = React.useState("");
   const { data: employeeData, isLoading: isEmployeeLoading } =
-    useAllEmployeesQuery({ forDropdown: true });
+    useAllEmployeesQuery({ forDropdown: true ,role:["manager","staff","super_admin"]});
   const { data: locationsData, isLoading: locationsLoading } =
     useFetchLocationsQuery({});
   const { user } = useSelector(selectAuth);
@@ -299,7 +299,7 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
               {isEmployeeLoading ? (
                 <option disabled>Loading...</option>
               ) : (
-                employeeData?.data.employees.map((emp) => (
+                employeeData?.data.employees.filter((de)=>["super_admin","manager"].includes(de.role)).map((emp) => (
                   <option key={emp._id} value={emp._id}>
                     {emp.firstname} {emp.lastname}
                   </option>

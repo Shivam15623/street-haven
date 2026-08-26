@@ -132,7 +132,7 @@ const UserMultiSelect = ({
   return (
     <div className={className} ref={containerRef}>
       {label && (
-        <label className="form-label text-xs fw-medium text-neutral-700 mb-6">
+        <label className="form-label  mb-6">
           {label}
         </label>
       )}
@@ -144,17 +144,15 @@ const UserMultiSelect = ({
             isDisabled ? "disabled bg-neutral-100" : "cursor-pointer"
           }`}
           style={{
-            minHeight: "38px",
+            minHeight: "44px",
             height: "auto",
-            paddingTop: "4px",
-            paddingBottom: "4px",
           }}
           onClick={() => {
             if (!isDisabled) setIsOpen((prev) => !prev);
           }}
         >
           {selectedOptions.length === 0 && (
-            <span className="text-neutral-400 text-sm">{placeholder}</span>
+            <span className=" text-sm">{placeholder}</span>
           )}
 
           {selectedOptions.map((opt) => (

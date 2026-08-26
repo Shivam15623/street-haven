@@ -7,7 +7,11 @@ import Ticket from "../model/ticket.js";
 import Task from "../model/task.js";
 import { ApiError } from "../utills/ApiError.js";
 import { uploadOnCloudinary } from "../utills/cloudinary.js";
-import { io } from "../index.js";
+import { activeRoomUsers, io } from "../index.js";
+import { resolveRecipients } from "../utills/recipients.js";
+import mongoose from "mongoose";
+import { isUserViewing } from "../utills/presence.js";
+import { handleNewComment } from "../helper/commentNotification.js";
 
 const ENTITY_MODELS = {
   Ticket,
@@ -59,6 +63,8 @@ export const fetchCommentsForEntity = asyncHandler(
     );
   },
 );
+const pendingCommentBatches = new Map();
+// key: `${entityType}:${entityId}:${authorId}` -> { timer, count, lastCommentId }
 
 export const addCommentForEntity = asyncHandler(
   async (req, res, entityType) => {
@@ -73,27 +79,24 @@ export const addCommentForEntity = asyncHandler(
       );
     }
 
-    // Confirm the parent entity actually exists before attaching a comment to it
     const EntityModel = ENTITY_MODELS[entityType];
-    const entityExists = await EntityModel.exists({ _id: entityId });
-    if (!entityExists) {
+    const entity = await EntityModel.findById(entityId);
+    if (!entity) {
       throw new ApiError(404, `${entityType} not found`);
     }
 
+    // --- attachments ---
     let attachments = [];
     if (req.files?.length > 0) {
       const uploadPromises = req.files.map(async (file) => {
         const uploadedFile = await uploadOnCloudinary(file.path);
-
         if (!uploadedFile?.secure_url) {
           throw new ApiError(
             500,
             `Attachment upload failed for ${file.originalname}`,
           );
         }
-
         const ext = path.extname(file.originalname).toLowerCase();
-
         return {
           fileName: uploadedFile.original_filename,
           fileUrl: uploadedFile.secure_url,
@@ -101,7 +104,6 @@ export const addCommentForEntity = asyncHandler(
           type: detectFileType(ext),
         };
       });
-
       attachments = await Promise.all(uploadPromises);
     }
 
@@ -109,6 +111,7 @@ export const addCommentForEntity = asyncHandler(
     if (message) payload.message = message;
     if (attachments.length !== 0) payload.attachments = attachments;
 
+    // --- comment creation: no transaction needed for a single insert ---
     const comment = await Comment.create(payload);
 
     const populatedComment = await Comment.findById(comment._id).populate(
@@ -116,10 +119,11 @@ export const addCommentForEntity = asyncHandler(
       "firstname lastname email",
     );
 
-    // Namespace the socket room by entityType too, since a Ticket and a Task
-    // could theoretically share the same ObjectId string across collections
-    // in your AddComment / addCommentForEntity controller
-    io.to(`${entityType.toLowerCase()}:${entityId}`).emit("newComment", {
+    // --- emit the live comment to everyone viewing the entity room ---
+    // this happens regardless of notification outcome — the comment
+    // itself is already durable at this point
+    const room = `${entityType.toLowerCase()}:${entityId}`;
+    io.to(room).emit("newComment", {
       comment: populatedComment,
       clientId,
     });
@@ -129,5 +133,11 @@ export const addCommentForEntity = asyncHandler(
       .json(
         new ApiResponse(201, "Comment added successfully", populatedComment),
       );
+
+    // --- notification pipeline: fire-and-forget, AFTER the response ---
+    // deliberately outside the request/response critical path and outside
+    // any transaction — a notification failure must never affect whether
+    // the comment was saved or what the user sees back.
+    
   },
 );

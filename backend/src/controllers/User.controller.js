@@ -1,4 +1,5 @@
-import User from "../model/user.js";
+import Location from "../model/location.js";
+import User, { ROLES } from "../model/user.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
@@ -126,8 +127,17 @@ export const GetUserProfile = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User not found");
   }
 
+  let userObj = user.toObject();
+
+  // If the user is a manager, attach their location
+  if (user.role === ROLES.MANAGER) {
+    const location = await Location.find({ managers: user._id }).select(
+      "name slug isActive"
+    );
+    userObj.location = location || null;
+  }
+
   return res
     .status(200)
-    .json(new ApiResponse(200, "User profile fetched successfully", user));
+    .json(new ApiResponse(200, "User profile fetched successfully", userObj));
 });
-

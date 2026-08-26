@@ -129,7 +129,7 @@ const ActionsAgreement: React.FC<ActionsAgreementProps> = ({
   return (
     <ModalWrapper
       show={show}
-      title={isEdit ? "Edit Agreement" : "Add Agreement"}
+      title={isEdit ? "Edit Additional Documents" : "Add Additional Documents"}
       size="lg"
       headerClassName="text-xl p-0 pb-20 text-street-dark"
       className="p-20 p-sm-24 p-md-32 gap-16 gap-sm-20"

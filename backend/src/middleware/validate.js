@@ -56,13 +56,19 @@ export const validateRequest = (schema, property = "body") => {
 
       // Extract Joi error messages
       const messages = err.details?.map((e) => e.message) || [err.message];
-      next(new ApiError(400, "Validation failed", messages));
+      next(
+        new ApiError(
+          400,
+          "Validation failed",
+          messages,
+          "",
+          "VALIDATION_FAILED",
+        ),
+      );
     }
   };
 };
 export const validateAddComment = (req, res, next) => {
-
-
   const { error } = addCommentSchema.validate({
     message: req.body.message,
     filesCount: req.files?.length || 0,

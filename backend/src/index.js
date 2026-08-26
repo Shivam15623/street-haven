@@ -3,6 +3,7 @@ import ConnectDb from "./db/db.js";
 import { app } from "./app.js";
 import http from "http";
 import { Server } from "socket.io";
+import jwt from "jsonwebtoken";
 dotenv.config({
   path: "./.env",
 });
@@ -17,7 +18,20 @@ export const io = new Server(server, {
 });
 export const activeRoomUsers = {}; // renamed from activeTicketUsers
 
+io.use((socket, next) => {
+  try {
+    const token = socket.handshake.auth?.token;
+    if (!token) return next(new Error("No auth token"));
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    socket.data.userId = String(decoded._id); // stash for later use, incl. disconnect cleanup
+    next();
+  } catch (err) {
+    next(new Error("Invalid auth token"));
+  }
+});
+
 io.on("connection", (socket) => {
+  socket.join(`user_${socket.data.userId}`);
   socket.on("join-page-room", (room) => {
     socket.join(room);
   });

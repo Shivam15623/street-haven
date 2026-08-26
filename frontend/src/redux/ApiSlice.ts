@@ -109,6 +109,7 @@ export const api = createApi({
     "Task",
     "Certification",
     "TicketCategory",
+    "CommentNotification"
   ],
   endpoints: () => ({}),
 });

@@ -59,7 +59,7 @@ const AddEmployeeSchema = Yup.object({
     .required("Phone number is required")
     .matches(
       /^(?:\+1\s?)?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
-      "Enter a valid 10-digit Canadian phone number",
+      "Enter a valid 10-digit phone number",
     ),
   role: Yup.string()
     .oneOf(roleValues, "Invalid role selected")
@@ -117,11 +117,11 @@ const AddEmployee = () => {
         className="btn btn-street-primary d-flex text-sm flex-row w-100 align-items-center justify-content-center radius-12 gap-2"
         onClick={() => setShowModal(true)}
       >
-        <Icon icon="mdi:plus" className="text-sm sm:text-xl" /> Add Employee
+        <Icon icon="mdi:plus" className="text-sm sm:text-xl" /> Add User
       </button>
       <ModalWrapper
         show={showModal}
-        title="Add New Employee"
+        title="Add New User"
         size="lg"
         headerClassName="text-xl p-0 pb-20 text-street-dark"
         className="p-20 p-sm-24 p-md-32 gap-16 gap-sm-20"

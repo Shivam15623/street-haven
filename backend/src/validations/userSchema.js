@@ -17,7 +17,7 @@ export const editUserProfileSchema = Joi.object({
     )
 
     .messages({
-      "string.pattern.base": "Enter a valid 10-digit Canadian phone number",
+      "string.pattern.base": "Enter a valid 10-digit phone number",
       "string.empty": "Phone number is required",
       "any.required": "Phone number is required",
     }),

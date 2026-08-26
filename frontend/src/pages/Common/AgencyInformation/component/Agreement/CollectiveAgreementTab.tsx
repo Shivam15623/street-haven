@@ -30,7 +30,7 @@ const CollectiveAgreementTab: React.FC<AgentTabProp> = ({ isActive }) => {
   return (
     <div className="d-flex flex-column gap-24">
       <div className="d-flex flex-row justify-content-between align-items-center">
-        <h2 className="text-md sm:text-lg">Collective Agreement</h2>
+        <h2 className="text-md sm:text-lg">Additional Documents</h2>
 
         {hasPermission({ action: "create_collective_agreement" }) && (
           <button
@@ -39,7 +39,7 @@ const CollectiveAgreementTab: React.FC<AgentTabProp> = ({ isActive }) => {
             onClick={() => setOpen(true)}
           >
             {" "}
-            + Add Collective Agreement
+            + Add Additional Documents
           </button>
         )}
       </div>

@@ -24,6 +24,9 @@ const EmployeeDashboard = () => {
   const canViewTasks = hasPermission({
     action: PERMISSIONS.TASK_VIEW_SELF,
   });
+  const canViewAnnouncement = hasPermission({
+    action: PERMISSIONS.VIEW_ANNOUNCEMENTS,
+  });
   const { data: ticketData } = useFetchTicketsQuery({
     page: 1,
     priority: "All",
@@ -143,13 +146,15 @@ const EmployeeDashboard = () => {
             key="Assigned Tasks"
           />
         )}
-        <DashboardCard
-          icon="lucide:party-popper"
-          label="Announcements"
-          value={recentAnnouncement?.data ?? 0}
-          link={`/agency_info?tab=announcements`}
-          key={"Announcements"}
-        />
+        {canViewAnnouncement && (
+          <DashboardCard
+            icon="lucide:party-popper"
+            label="Announcements"
+            value={recentAnnouncement?.data ?? 0}
+            link={`/agency_info?tab=announcements`}
+            key={"Announcements"}
+          />
+        )}
       </Row>
       <Row className="g-4">
         <Col md={6}>

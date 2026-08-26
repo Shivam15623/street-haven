@@ -163,6 +163,7 @@ const ActionsLocation: React.FC<ActionsLocationProps> = ({
                 className="position-relative"
                 label="Managers"
                 role={["manager"]}
+                placeholder="Select Manager"
                 value={values.managerIds}
                 isDisabled={isLoading || isEditing}
                 onChange={(vals) => setFieldValue("managerIds", vals)}
@@ -185,6 +186,7 @@ const ActionsLocation: React.FC<ActionsLocationProps> = ({
                 className="position-relative"
                 label="Facility Manager"
                 role={["manager"]}
+                placeholder="Select Manager"
                 value={values.facilityManager ?? ""}
                 disabled={isLoading || isEditing}
                 onChange={(vals) => setFieldValue("facilityManager", vals)}

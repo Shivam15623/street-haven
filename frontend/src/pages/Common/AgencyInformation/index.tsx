@@ -36,10 +36,7 @@ const AgencyInfo = () => {
         <p className="fw-semibold text-xl xs:text-xxl text-street-dark">
           Agency Information
         </p>
-        <p className="fw-normal text-sm xs:text-md">
-          Access collective agreement, meeting minutes, and organizational
-          structure
-        </p>
+  
       </div>
       <StreetTab
         activeKey={active}
@@ -58,7 +55,7 @@ const AgencyInfo = () => {
          
           {
             key: "announcements",
-            label: "Announcement",
+            label: "Announcements",
             content: <AnnouncementTab isActive={active === "announcements"} />,
           },
         ]}

@@ -116,6 +116,7 @@ const TaskTable = ({
         data={data?.data.tasks ?? []}
         total={data?.data.total ?? 0}
         page={page}
+        placeholder="Search Tasks"
         limit={limit}
         sortBy={sortBy}
         order={sortOrder}

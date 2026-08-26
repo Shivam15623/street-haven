@@ -154,6 +154,13 @@ const ticketApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Ticket"],
     }),
+    reopenTicket: builder.mutation<ApiGeneralResponse, string>({
+      query: ( ticketId ) => ({
+        url: `/ticket/${ticketId}/reopen`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Ticket"],
+    }),
 
     cancelTicket: builder.mutation<ApiGeneralResponse, string>({
       query: (ticketId) => ({
@@ -212,6 +219,7 @@ const ticketApi = api.injectEndpoints({
           approvedBy,
         },
       }),
+      providesTags:["Ticket"]
     }),
     exportTicketReport: builder.mutation<
       Blob,
@@ -247,6 +255,7 @@ const ticketApi = api.injectEndpoints({
         },
         responseHandler: (response: Response) => response.blob(),
       }),
+
     }),
     getTicketDetail: builder.query<ApiResponse<TicketDetail>, { id: string }>({
       query: ({ id }) => ({
@@ -273,4 +282,5 @@ export const {
   useGetTicketDetailQuery,
   useLazyGetTicketDetailQuery,
   useExportTicketReportMutation,
+  useReopenTicketMutation
 } = ticketApi;
