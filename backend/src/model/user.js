@@ -1,4 +1,4 @@
-import mongoose,{Schema} from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import slugify from "slugify";
@@ -9,31 +9,27 @@ export const ROLES = {
   VOLUNTEER_ADMIN: "volunteer_admin",
   MANAGER: "manager",
   STAFF: "staff",
-  VOLUNTEER:"volunteer",
-
+  VOLUNTEER: "volunteer",
 };
 const volunteerStintSchema = new Schema(
-{
+  {
     startAt: {
-        type: Date,
-        required: true,
+      type: Date,
+      required: true,
     },
 
     endAt: {
-        type: Date,
-        default: null,
+      type: Date,
+      default: null,
     },
 
     endedReason: {
-        type: String,
-        enum: [
-            "left",
-            "admin_deactivated"
-        ],
-        default: null,
+      type: String,
+      enum: ["left", "admin_deactivated"],
+      default: null,
     },
-},
-{ _id: false }
+  },
+  { _id: false },
 );
 const UserSchema = new mongoose.Schema(
   {
@@ -49,21 +45,21 @@ const UserSchema = new mongoose.Schema(
       trim: true,
       match: [/^[A-Za-z ]+$/, "Last name must contain only letters"],
     },
-  status: {
-    type: String,
-    enum: ["active", "inactive"],
-    default: "active",
-},
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
+    },
 
-volunteerStints: {
-    type: [volunteerStintSchema],
-    default: [],
-},
+    volunteerStints: {
+      type: [volunteerStintSchema],
+      default: [],
+    },
 
-currentStint: {
-    startAt: Date,
-    endAt: Date,
-},
+    currentStint: {
+      startAt: Date,
+      endAt: Date,
+    },
     email: {
       type: String,
       required: true,
@@ -112,7 +108,7 @@ currentStint: {
       unique: true,
       match: [
         /^\+1\s?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
-        "Please enter a valid Canadian phone number (e.g. +1 (416) 555-1234)",
+        "Please enter a valid phone number (e.g. +1 (416) 555-1234)",
       ],
     },
 

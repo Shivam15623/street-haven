@@ -138,15 +138,6 @@ export const addCommentForEntity = asyncHandler(
     // deliberately outside the request/response critical path and outside
     // any transaction — a notification failure must never affect whether
     // the comment was saved or what the user sees back.
-    handleNewComment(entityType, entity, comment).catch((err) => {
-      // log and move on — CommentActivity/UserCommentNotification writes
-      // are idempotent upserts, so a retry (or even just the next comment
-      // on this entity) will self-heal any partial failure. Nothing here
-      // should ever be allowed to crash the request handler.
-      console.error(
-        `handleNewComment failed for ${entityType} ${entityId}, comment ${comment._id}:`,
-        err,
-      );
-    });
+    
   },
 );

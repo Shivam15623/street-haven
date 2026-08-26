@@ -12,6 +12,8 @@ import {
 import ModalWrapper from "../../../../components/child/ModalWrapper";
 import { useAllEmployeesQuery } from "../../../../services/EmployeeApi";
 import CustomDatePicker from "../../../../components/child/DatePicker";
+import useHasPermission from "../../../../hooks/Auth";
+import { ROLES } from "../../../../interfaces/AuthInterfaces";
 const QuillEditor = lazy(() => import("../../../../components/child/QuillEditor"));
 export interface AssignableUser {
   _id: string;
@@ -62,14 +64,16 @@ const ActionTaskModal: React.FC<ActionTaskModalProps> = ({
 
   onSuccess,
 }) => {
+  const {hasRole}=useHasPermission()
   const {
     data: employeeData,
     isLoading: isEmployeeLoading,
     isError: isEmployeeError,
   } = useAllEmployeesQuery(
-    { forDropdown: true, role: ["volunteer"],managedBy:true },
+    { forDropdown: true, role: ["volunteer"],managedBy:!hasRole(ROLES.SUPER_ADMIN) },
     { skip: !show },
   );
+  
   const [createTask, { isLoading: isCreating }] = useCreateTaskMutation();
   const [editTask, { isLoading: isEditing }] = useEditTaskMutation();
 

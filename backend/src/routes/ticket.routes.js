@@ -13,6 +13,7 @@ import {
   GetTicketDetail,
   GetTicketsReport,
   rejectTicket,
+  reopenTicket,
   startTicket,
 } from "../controllers/Ticket.controller.js";
 import { upload } from "../middleware/multer.js";
@@ -30,7 +31,12 @@ import { PERMISSIONS } from "../auth/permissions.js";
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
 router.use(checkActiveUser);
-router.get("/view", validateRequest(fetchTicketsSchema, "query"), authorizePermissions({ action: PERMISSIONS.TICKET_VIEW_SELF }), FetchTickets);
+router.get(
+  "/view",
+  validateRequest(fetchTicketsSchema, "query"),
+  authorizePermissions({ action: PERMISSIONS.TICKET_VIEW_SELF }),
+  FetchTickets,
+);
 router.post(
   "/create",
   upload.single("photo"),
@@ -78,6 +84,11 @@ router.patch(
   "/:id/cancel",
   validateRequest(idParamSchema, "params"),
   cancelTicket,
+);
+router.patch(
+  "/:id/reopen",
+  validateRequest(idParamSchema, "params"),
+  reopenTicket,
 );
 // ticket comments
 router.route("/:entityId/comments").get(FetchTicketComments);

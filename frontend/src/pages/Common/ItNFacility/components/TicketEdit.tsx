@@ -47,7 +47,7 @@ interface TicketCardProps {
 const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
   const [showModal, setShowModal] = useState(false);
   const { user } = useSelector(selectAuth);
-  const { hasPermission } = useHasPermission();
+  const { hasPermission, hasRole } = useHasPermission();
   const { data: locationsData, isLoading: locationsLoading } =
     useFetchLocationsQuery({}, { skip: !showModal });
   const {
@@ -69,6 +69,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
   const [editTicket, { isLoading }] = useEditTicketMutation();
   const hasCreatorPermissions = isRequester && ticket.status === "Open";
   // derive once, near hasCreatorPermissions
+  const isSuperAdmin = hasRole("super_admin");
   const canTouchApproverFields = [
     "Approved",
     "In Progress",
@@ -114,7 +115,8 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
       // compare against the populated location's _id, not the object itself
       if (values.location && values.location !== ticket.location?._id)
         formData.append("location", values.location);
-
+      if (values.status && values.status !== ticket.status)
+        formData.append("status", values.status);
       // BEFORE: formData.append("assignedId", values.assignedId)
       // Backend reads req.body.assignedTo — this key must match or the
       // reassignment silently gets dropped.
@@ -299,8 +301,9 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       value={values.assignedId}
                       onChange={handleChange}
                       disabled={
-                        (!isAssigned && !isApprovingManager) ||
-                        !canTouchApproverFields
+                        !isSuperAdmin &&
+                        ((!isAssigned && !isApprovingManager) ||
+                          !canTouchApproverFields)
                       }
                       isInvalid={touched.assignedId && !!errors.assignedId}
                     >
@@ -335,7 +338,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       size="sm"
                       name="status"
                       value={values.status}
-                      disabled
+                      disabled={!isApprovingManager && !isSuperAdmin}
                       onChange={handleChange}
                       isInvalid={touched.status && !!errors.status}
                     >
@@ -415,7 +418,10 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       name="priority"
                       size="sm"
                       value={values.priority}
-                      disabled={!isApprovingManager || !canTouchApproverFields}
+                      disabled={
+                        !isSuperAdmin &&
+                        (!isApprovingManager || !canTouchApproverFields)
+                      }
                       onChange={handleChange}
                       className="text-street-base"
                       isInvalid={touched.priority && !!errors.priority}

@@ -350,6 +350,173 @@ export const generateEmailTemplate = ({ type, data }) => {
       
     `,
       };
+    case "task_assigned":
+      return {
+        subject: `New Task Assigned - ${data.taskTitle}`,
+        html: `
+      <h2>New Task Assigned to You</h2>
+      <p>Hello ${data.recipientName},</p>
+      <p>You have been assigned a new task by ${data.assignedByName}.</p>
+      <table style="border-collapse:collapse;">
+        <tr><td style="padding:6px 12px;"><strong>Task</strong></td><td>${data.taskTitle}</td></tr>
+        <tr><td style="padding:6px 12px;"><strong>Due Date</strong></td><td>${data.dueDate || "Not set"}</td></tr>
+      </table>
+      <p style="margin-top:24px;">
+        <a href="${data.link}" style="background:#2563eb;color:#fff;padding:12px 18px;text-decoration:none;border-radius:6px;">
+          View Task
+        </a>
+      </p>
+    `,
+      };
+
+    case "task_reassigned":
+      return {
+        subject: `Task Reassigned - ${data.taskTitle}`,
+        html: `
+      <h2>Task Reassigned</h2>
+      <p>Hello ${data.recipientName},</p>
+      <p>"${data.taskTitle}" has been reassigned${data.stillAssignee ? " to you" : " to another volunteer"}.</p>
+      <p style="margin-top:24px;">
+        <a href="${data.link}" style="background:#2563eb;color:#fff;padding:12px 18px;text-decoration:none;border-radius:6px;">
+          View Task
+        </a>
+      </p>
+    `,
+      };
+
+    case "task_submitted_for_review":
+      return {
+        subject: `Task Submitted for Review - ${data.taskTitle}`,
+        html: `
+      <h2>Task Submitted for Review</h2>
+      <p>Hello ${data.recipientName},</p>
+      <p>"${data.taskTitle}" was submitted for review by ${data.submittedByName}.</p>
+      <p style="margin-top:24px;">
+        <a href="${data.link}" style="background:#0f766e;color:#fff;padding:12px 18px;text-decoration:none;border-radius:6px;">
+          Review Task
+        </a>
+      </p>
+    `,
+      };
+
+    case "task_approved":
+      return {
+        subject: `Task Approved - ${data.taskTitle}`,
+        html: `
+      <h2>Task Approved</h2>
+      <p>Hello ${data.recipientName},</p>
+      <p>"${data.taskTitle}" has been approved and marked complete.</p>
+      <p style="margin-top:24px;">
+        <a href="${data.link}" style="background:#16a34a;color:#fff;padding:12px 18px;text-decoration:none;border-radius:6px;">
+          View Task
+        </a>
+      </p>
+    `,
+      };
+
+    case "task_sent_back":
+      return {
+        subject: `Task Requires Changes - ${data.taskTitle}`,
+        html: `
+      <h2>Task Sent Back</h2>
+      <p>Hello ${data.recipientName},</p>
+      <p>"${data.taskTitle}" was sent back for changes.</p>
+      ${data.remark ? `<p><strong>Reason:</strong> ${data.remark}</p>` : ""}
+      <p style="margin-top:24px;">
+        <a href="${data.link}" style="background:#d97706;color:#fff;padding:12px 18px;text-decoration:none;border-radius:6px;">
+          View Task
+        </a>
+      </p>
+    `,
+      };
+
+    case "task_due_date_changed":
+      return {
+        subject: `Due Date Updated - ${data.taskTitle}`,
+        html: `
+      <h2>Due Date Updated</h2>
+      <p>Hello ${data.recipientName},</p>
+      <p>The due date for "${data.taskTitle}" changed from ${data.oldDate} to ${data.newDate}.</p>
+      <p style="margin-top:24px;">
+        <a href="${data.link}" style="background:#d97706;color:#fff;padding:12px 18px;text-decoration:none;border-radius:6px;">
+          View Task
+        </a>
+      </p>
+    `,
+      };
+
+    case "task_cancelled":
+      return {
+        subject: `Task Cancelled - ${data.taskTitle}`,
+        html: `
+      <h2>Task Cancelled</h2>
+      <p>Hello ${data.recipientName},</p>
+      <p>"${data.taskTitle}" has been cancelled.</p>
+    `,
+      };
+
+    case "task_due_tomorrow":
+      return {
+        subject: `Task Due Tomorrow - ${data.taskTitle}`,
+        html: `
+      <h2>Task Due Tomorrow</h2>
+      <p>Hello ${data.recipientName},</p>
+      <p>"${data.taskTitle}" is due tomorrow.</p>
+      <p style="margin-top:24px;">
+        <a href="${data.link}" style="background:#d97706;color:#fff;padding:12px 18px;text-decoration:none;border-radius:6px;">
+          View Task
+        </a>
+      </p>
+    `,
+      };
+
+    case "task_overdue":
+      return {
+        subject: `Task Overdue - ${data.taskTitle}`,
+        html: `
+      <h2>Task Overdue</h2>
+      <p>Hello ${data.recipientName},</p>
+      <p>"${data.taskTitle}" is overdue.</p>
+      <p style="margin-top:24px;">
+        <a href="${data.link}" style="background:#dc2626;color:#fff;padding:12px 18px;text-decoration:none;border-radius:6px;">
+          View Task
+        </a>
+      </p>
+    `,
+      };
+    case "task_updated":
+      return {
+        subject: `Task Updated - ${data.taskTitle}`,
+        html: `
+      <h2>Task Updated</h2>
+      <p>Hello ${data.recipientName},</p>
+      <p>"${data.taskTitle}" details have been updated.</p>
+      <p style="margin-top:24px;">
+        <a href="${data.link}" style="background:#2563eb;color:#fff;padding:12px 18px;text-decoration:none;border-radius:6px;">
+          View Task
+        </a>
+      </p>
+    `,
+      };
+    case "ticket_reopened":
+      return {
+        subject: `Ticket Reopened - ${data.ticketTitle}`,
+        html: `
+      <h2>Ticket Reopened</h2>
+      <p>Hello ${data.recipientName},</p>
+      <p>The following ticket has been reopened by ${data.reopenedBy}.</p>
+      <table style="border-collapse:collapse;">
+        <tr><td style="padding:6px 12px;"><strong>Ticket</strong></td><td>${data.ticketTitle}</td></tr>
+        <tr><td style="padding:6px 12px;"><strong>Category</strong></td><td>${data.category}</td></tr>
+        ${data.reason ? `<tr><td style="padding:6px 12px;"><strong>Reason</strong></td><td>${data.reason}</td></tr>` : ""}
+      </table>
+      <p style="margin-top:24px;">
+        <a href="${data.link}" style="background:#2563eb;color:#fff;padding:12px 18px;text-decoration:none;border-radius:6px;">
+          View Ticket
+        </a>
+      </p>
+    `,
+      };
     default:
       throw new Error("Invalid email type");
   }

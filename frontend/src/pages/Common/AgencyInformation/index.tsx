@@ -55,7 +55,7 @@ const AgencyInfo = () => {
          
           {
             key: "announcements",
-            label: "Announcement",
+            label: "Announcements",
             content: <AnnouncementTab isActive={active === "announcements"} />,
           },
         ]}
