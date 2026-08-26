@@ -444,7 +444,37 @@ export const generateEmailTemplate = ({ type, data }) => {
       </p>
     `,
       };
+    case "task_status_changed":
+      return {
+        subject: `Task Status Changed - ${data.taskTitle}`,
+        html: `
+      <h2>Task Status Changed</h2>
 
+      <p>Hello ${data.recipientName},</p>
+
+      <p>
+        The status of <strong>"${data.taskTitle}"</strong> has changed
+        from <strong>${data.oldStatus}</strong> to
+        <strong>${data.newStatus}</strong>.
+      </p>
+
+      <p style="margin-top:24px;">
+        <a
+          href="${data.link}"
+          style="
+            background:#2563eb;
+            color:#fff;
+            padding:12px 18px;
+            text-decoration:none;
+            border-radius:6px;
+            display:inline-block;
+          "
+        >
+          View Task
+        </a>
+      </p>
+    `,
+      };
     case "task_cancelled":
       return {
         subject: `Task Cancelled - ${data.taskTitle}`,

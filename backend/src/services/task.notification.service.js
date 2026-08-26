@@ -1,17 +1,50 @@
-import { io } from "../index.js";
-import { createNotification } from "../helper/CreateNotoification.js";
 import User from "../model/user.js";
+import { createNotification } from "../helper/CreateNotoification.js";
 import { notifyTaskEmail } from "../helper/notifyTaskEmail.js";
+import { io } from "../index.js";
 
-const CATEGORY = "task";
-
-const emitNotification = (recipients, notification) => {
-  console.log("Emitting notification to recipients:", recipients, notification);
-  for (const r of recipients) {
-    io.to(`user_${r.userId.toString()}`).emit("newNotification", notification);
+/**
+ * Emits a socket event to each recipient. Never throws — a disconnected
+ * client or socket error must never bubble up and affect anything else.
+ */
+export const emitSocketNotification = (recipients, notification) => {
+  for (const r of recipients || []) {
+    try {
+      io.to(`user_${r.userId.toString()}`).emit(
+        "newNotification",
+        notification,
+      );
+    } catch (err) {
+      console.error("[notifications] socket emit failed:", err);
+    }
   }
 };
 
+/**
+ * Fetch all super_admin ids, excluding whoever triggered the event.
+ */
+export const getSuperAdminRecipients = async (excludeUserId, session) => {
+  const superAdmins = await User.find({ role: "super_admin" })
+    .select("_id")
+    .session(session);
+
+  return superAdmins
+    .map((u) => u._id.toString())
+    .filter((id) => id !== excludeUserId?.toString())
+    .map((id) => ({ userId: id }));
+};
+
+const CATEGORY = "task";
+
+/**
+ * Creates the DB notification (part of the caller's transaction — this is
+ * correct, it should roll back with the task if the task write fails).
+ *
+ * Crucially, it does NOT emit the socket event or send the email here.
+ * Instead it pushes both onto `effects`, an array the caller owns. Nothing
+ * in this function can throw because of a down email/socket service, so it
+ * can never cause an unrelated transaction to abort.
+ */
 const notify = async ({
   action,
   severity = "info",
@@ -22,8 +55,10 @@ const notify = async ({
   link,
   meta,
   session,
+  effects,
+  email, // optional: { userIds, templateType, dataBuilder }
 }) => {
-  if (!recipients?.length) return;
+  if (!recipients?.length) return null;
 
   const notification = await createNotification(
     {
@@ -40,28 +75,18 @@ const notify = async ({
     session,
   );
 
-  emitNotification(recipients, notification);
+  if (effects) {
+    effects.push({ type: "socket", recipients, notification });
+    if (email?.userIds?.length) {
+      effects.push({ type: "email", ...email });
+    }
+  }
 
   return notification;
 };
 
-/**
- * Fetch all super_admin ids, excluding whoever triggered the event
- * (so a super_admin performing the action doesn't notify themselves).
- */
-const getSuperAdminRecipients = async (excludeUserId, session) => {
-  const superAdmins = await User.find({ role: "super_admin" })
-    .select("_id")
-    .session(session);
-
-  return superAdmins
-    .map((u) => u._id.toString())
-    .filter((id) => id !== excludeUserId?.toString())
-    .map((id) => ({ userId: id }));
-};
-
 export const TaskNotificationService = {
-  async taskAssigned(task, user, session) {
+  async taskAssigned(task, user, session, effects = []) {
     const assignee = await User.findById(task.assignedTo)
       .select("firstname lastname")
       .session(session);
@@ -76,18 +101,18 @@ export const TaskNotificationService = {
       link: `/tasks/${task.slug}`,
       meta: { taskId: task.slug },
       session,
-    });
-    await notifyTaskEmail({
-      userIds: [task.assignedTo],
-      templateType: "task_assigned",
-      dataBuilder: (recipient) => ({
-        recipientName: `${recipient.firstname} ${recipient.lastname}`,
-        taskTitle: task.title,
-        assignedByName: `${user.firstname} ${user.lastname}`,
-        dueDate: task.dueDate ? task.dueDate.toLocaleDateString() : null,
-        link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
-      }),
-      session,
+      effects,
+      email: {
+        userIds: [task.assignedTo],
+        templateType: "task_assigned",
+        dataBuilder: (recipient) => ({
+          recipientName: `${recipient.firstname} ${recipient.lastname}`,
+          taskTitle: task.title,
+          assignedByName: `${user.firstname} ${user.lastname}`,
+          dueDate: task.dueDate ? task.dueDate.toLocaleDateString() : null,
+          link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
+        }),
+      },
     });
 
     const superAdminRecipients = await getSuperAdminRecipients(
@@ -104,43 +129,78 @@ export const TaskNotificationService = {
       link: `/tasks/${task.slug}`,
       meta: { taskId: task.slug },
       session,
-    });
-    await notifyTaskEmail({
-      userIds: superAdminRecipients.map((r) => r.userId),
-      templateType: "task_assigned",
-      dataBuilder: (recipient) => ({
-        recipientName: `${recipient.firstname} ${recipient.lastname}`,
-        taskTitle: task.title,
-        assignedByName: `${user.firstName} ${user.lastName}`,
-        dueDate: task.dueDate ? task.dueDate.toLocaleDateString() : null,
-        link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
-      }),
-      session,
+      effects,
+      email: {
+        userIds: superAdminRecipients.map((r) => r.userId),
+        templateType: "task_assigned",
+        dataBuilder: (recipient) => ({
+          recipientName: `${recipient.firstname} ${recipient.lastname}`,
+          taskTitle: task.title,
+          assignedByName: `${user.firstname} ${user.lastname}`,
+          dueDate: task.dueDate ? task.dueDate.toLocaleDateString() : null,
+          link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
+        }),
+      },
     });
 
-    return assigneeNotification;
+    return { notification: assigneeNotification, effects };
   },
+  async statusChanged(
+    task,
+    oldStatus,
+    newStatus,
+    changedBy,
+    session,
+    effects = [],
+  ) {
+    const notification = await notify({
+      action: "status_changed",
+      severity: "info",
+      title: "Task Status Changed",
+      message: `"${task.title}" status changed from ${oldStatus} to ${newStatus} by ${changedBy.firstname} ${changedBy.lastname}.`,
+      recipients: [{ userId: task.assignedTo }],
+      createdBy: changedBy._id,
+      link: `/tasks/${task.slug}`,
+      meta: {
+        taskId: task.slug,
+        oldStatus,
+        newStatus,
+      },
+      session,
+      effects,
+      email: {
+        userIds: [task.assignedTo],
+        templateType: "task_status_changed",
+        dataBuilder: (recipient) => ({
+          recipientName: `${recipient.firstname} ${recipient.lastname}`,
+          taskTitle: task.title,
+          oldStatus,
+          newStatus,
+          link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
+        }),
+      },
+    });
 
-  /**
-   * Task reassigned
-   */
-  async taskReassigned(task, previousVolunteerId, session) {
-    if (previousVolunteerId?.toString() !== task.assignedTo?.toString()) {
-      if (previousVolunteerId) {
-        await notify({
-          action: "reassigned",
-          severity: "info",
-          title: "Task Reassigned",
-          message: `"${task.title}" has been reassigned to another volunteer.`,
-          recipients: [{ userId: previousVolunteerId }],
-          createdBy: task.assignedBy,
-          link: `/tasks/${task.slug}`,
-          meta: {
-            taskId: task.slug,
-          },
-          session,
-        });
-        await notifyTaskEmail({
+    return { notification, effects };
+  },
+  async taskReassigned(task, previousVolunteerId, session, effects = []) {
+    if (previousVolunteerId?.toString() === task.assignedTo?.toString()) {
+      return { effects };
+    }
+
+    if (previousVolunteerId) {
+      await notify({
+        action: "assigned",
+        severity: "info",
+        title: "Task Reassigned",
+        message: `"${task.title}" has been reassigned to another volunteer.`,
+        recipients: [{ userId: previousVolunteerId }],
+        createdBy: task.assignedBy,
+        link: `/tasks/${task.slug}`,
+        meta: { taskId: task.slug },
+        session,
+        effects,
+        email: {
           userIds: [previousVolunteerId],
           templateType: "task_reassigned",
           dataBuilder: (recipient) => ({
@@ -149,25 +209,23 @@ export const TaskNotificationService = {
             stillAssignee: false,
             link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
           }),
-          session,
-        });
-      }
+        },
+      });
+    }
 
-      if (task.assignedTo) {
-        await notify({
-          action: "assigned",
-          severity: "info",
-          title: "New Task Assigned",
-          message: `You have been assigned "${task.title}".`,
-          recipients: [{ userId: task.assignedTo }],
-          createdBy: task.assignedBy,
-          link: `/tasks/${task.slug}`,
-          meta: {
-            taskId: task.slug,
-          },
-          session,
-        });
-        await notifyTaskEmail({
+    if (task.assignedTo) {
+      await notify({
+        action: "assigned",
+        severity: "info",
+        title: "New Task Assigned",
+        message: `You have been assigned "${task.title}".`,
+        recipients: [{ userId: task.assignedTo }],
+        createdBy: task.assignedBy,
+        link: `/tasks/${task.slug}`,
+        meta: { taskId: task.slug },
+        session,
+        effects,
+        email: {
           userIds: [task.assignedTo],
           templateType: "task_reassigned",
           dataBuilder: (recipient) => ({
@@ -176,28 +234,26 @@ export const TaskNotificationService = {
             stillAssignee: true,
             link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
           }),
-          session,
-        });
-      }
-
-      const superAdminRecipients = await getSuperAdminRecipients(
-        task.assignedBy,
-        session,
-      );
-      await notify({
-        action: "reassigned",
-        severity: "info",
-        title: "Task Reassigned",
-        message: `"${task.title}" was reassigned.`,
-        recipients: superAdminRecipients,
-        createdBy: task.assignedBy,
-        link: `/tasks/${task.slug}`,
-        meta: {
-          taskId: task.slug,
         },
-        session,
       });
-      await notifyTaskEmail({
+    }
+
+    const superAdminRecipients = await getSuperAdminRecipients(
+      task.assignedBy,
+      session,
+    );
+    await notify({
+      action: "assigned",
+      severity: "info",
+      title: "Task Reassigned",
+      message: `"${task.title}" was reassigned.`,
+      recipients: superAdminRecipients,
+      createdBy: task.assignedBy,
+      link: `/tasks/${task.slug}`,
+      meta: { taskId: task.slug },
+      session,
+      effects,
+      email: {
         userIds: superAdminRecipients.map((r) => r.userId),
         templateType: "task_reassigned",
         dataBuilder: (recipient) => ({
@@ -206,15 +262,13 @@ export const TaskNotificationService = {
           stillAssignee: false,
           link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
         }),
-        session,
-      });
-    }
+      },
+    });
+
+    return { effects };
   },
 
-  /**
-   * Volunteer submits for review
-   */
-  async submittedForReview(task, session) {
+  async submittedForReview(task, session, effects = []) {
     const assignerNotification = await notify({
       action: "status_changed",
       severity: "info",
@@ -223,21 +277,19 @@ export const TaskNotificationService = {
       recipients: [{ userId: task.assignedBy }],
       createdBy: task.assignedTo,
       link: `/tasks/${task.slug}`,
-      meta: {
-        taskId: task.slug,
+      meta: { taskId: task.slug },
+      session,
+      effects,
+      email: {
+        userIds: [task.assignedBy],
+        templateType: "task_submitted_for_review",
+        dataBuilder: (recipient) => ({
+          recipientName: `${recipient.firstname} ${recipient.lastname}`,
+          taskTitle: task.title,
+          submittedByName: "the assigned volunteer",
+          link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
+        }),
       },
-      session,
-    });
-    await notifyTaskEmail({
-      userIds: [task.assignedBy],
-      templateType: "task_submitted_for_review",
-      dataBuilder: (recipient) => ({
-        recipientName: `${recipient.firstname} ${recipient.lastname}`,
-        taskTitle: task.title,
-        submittedByName: `${recipient.firstname} ${recipient.lastname}`, // consider passing volunteer separately
-        link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
-      }),
-      session,
     });
 
     const superAdminRecipients = await getSuperAdminRecipients(
@@ -252,30 +304,25 @@ export const TaskNotificationService = {
       recipients: superAdminRecipients,
       createdBy: task.assignedTo,
       link: `/tasks/${task.slug}`,
-      meta: {
-        taskId: task.slug,
+      meta: { taskId: task.slug },
+      session,
+      effects,
+      email: {
+        userIds: superAdminRecipients.map((r) => r.userId),
+        templateType: "task_submitted_for_review",
+        dataBuilder: (recipient) => ({
+          recipientName: `${recipient.firstname} ${recipient.lastname}`,
+          taskTitle: task.title,
+          submittedByName: "the assigned volunteer",
+          link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
+        }),
       },
-      session,
-    });
-    await notifyTaskEmail({
-      userIds: superAdminRecipients.map((r) => r.userId),
-      templateType: "task_submitted_for_review",
-      dataBuilder: (recipient) => ({
-        recipientName: `${recipient.firstname} ${recipient.lastname}`,
-        taskTitle: task.title,
-        submittedByName: "the assigned volunteer",
-        link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
-      }),
-      session,
     });
 
-    return assignerNotification;
+    return { notification: assignerNotification, effects };
   },
 
-  /**
-   * Admin approves task
-   */
-  async approved(task, adminId, session) {
+  async approved(task, adminId, session, effects = []) {
     const assigneeNotification = await notify({
       action: "status_changed",
       severity: "success",
@@ -284,10 +331,18 @@ export const TaskNotificationService = {
       recipients: [{ userId: task.assignedTo }],
       createdBy: adminId,
       link: `/tasks/${task.slug}`,
-      meta: {
-        taskId: task.slug,
-      },
+      meta: { taskId: task.slug },
       session,
+      effects,
+      email: {
+        userIds: [task.assignedTo],
+        templateType: "task_approved",
+        dataBuilder: (recipient) => ({
+          recipientName: `${recipient.firstname} ${recipient.lastname}`,
+          taskTitle: task.title,
+          link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
+        }),
+      },
     });
 
     const superAdminRecipients = await getSuperAdminRecipients(
@@ -302,63 +357,49 @@ export const TaskNotificationService = {
       recipients: superAdminRecipients,
       createdBy: adminId,
       link: `/tasks/${task.slug}`,
-      meta: {
-        taskId: task.slug,
+      meta: { taskId: task.slug },
+      session,
+      effects,
+      email: {
+        userIds: superAdminRecipients.map((r) => r.userId),
+        templateType: "task_approved",
+        dataBuilder: (recipient) => ({
+          recipientName: `${recipient.firstname} ${recipient.lastname}`,
+          taskTitle: task.title,
+          link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
+        }),
       },
-      session,
     });
-    await notifyTaskEmail({
-      userIds: [task.assignedTo],
-      templateType: "task_approved",
-      dataBuilder: (recipient) => ({
-        recipientName: `${recipient.firstname} ${recipient.lastname}`,
-        taskTitle: task.title,
-        link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
-      }),
-      session,
-    });
-    await notifyTaskEmail({
-      userIds: superAdminRecipients.map((r) => r.userId),
-      templateType: "task_approved",
-      dataBuilder: (recipient) => ({
-        recipientName: `${recipient.firstname} ${recipient.lastname}`,
-        taskTitle: task.title,
-        link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
-      }),
-      session,
-    });
-    return assigneeNotification;
+
+    return { notification: assigneeNotification, effects };
   },
 
-  /**
-   * Sent back for changes
-   */
-  async sentBack(task, adminId, remark, session) {
+  async sentBack(task, adminId, remark, session, effects = []) {
+    const message = remark
+      ? `"${task.title}" was sent back. Reason: ${remark}`
+      : `"${task.title}" was sent back for changes.`;
+
     const assigneeNotification = await notify({
       action: "status_changed",
       severity: "warning",
       title: "Task Requires Changes",
-      message: remark
-        ? `"${task.title}" was sent back. Reason: ${remark}`
-        : `"${task.title}" was sent back for changes.`,
+      message,
       recipients: [{ userId: task.assignedTo }],
       createdBy: adminId,
       link: `/tasks/${task.slug}`,
-      meta: {
-        taskId: task.slug,
+      meta: { taskId: task.slug },
+      session,
+      effects,
+      email: {
+        userIds: [task.assignedTo],
+        templateType: "task_sent_back",
+        dataBuilder: (recipient) => ({
+          recipientName: `${recipient.firstname} ${recipient.lastname}`,
+          taskTitle: task.title,
+          remark,
+          link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
+        }),
       },
-      session,
-    });
-    await notifyTaskEmail({
-      userIds: [task.assignedTo],
-      templateType: "task_sent_back",
-      dataBuilder: (recipient) => ({
-        recipientName: `${recipient.firstname} ${recipient.lastname}`,
-        taskTitle: task.title,
-        remark,
-        link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
-      }),
-      session,
     });
 
     const superAdminRecipients = await getSuperAdminRecipients(
@@ -369,70 +410,56 @@ export const TaskNotificationService = {
       action: "status_changed",
       severity: "warning",
       title: "Task Sent Back",
-      message: remark
-        ? `"${task.title}" was sent back. Reason: ${remark}`
-        : `"${task.title}" was sent back for changes.`,
+      message,
       recipients: superAdminRecipients,
       createdBy: adminId,
       link: `/tasks/${task.slug}`,
-      meta: {
-        taskId: task.slug,
+      meta: { taskId: task.slug },
+      session,
+      effects,
+      email: {
+        userIds: superAdminRecipients.map((r) => r.userId),
+        templateType: "task_sent_back",
+        dataBuilder: (recipient) => ({
+          recipientName: `${recipient.firstname} ${recipient.lastname}`,
+          taskTitle: task.title,
+          remark,
+          link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
+        }),
       },
-      session,
-    });
-    await notifyTaskEmail({
-      userIds: superAdminRecipients.map((r) => r.userId),
-      templateType: "task_sent_back",
-      dataBuilder: (recipient) => ({
-        recipientName: `${recipient.firstname} ${recipient.lastname}`,
-        taskTitle: task.title,
-        remark,
-        link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
-      }),
-      session,
     });
 
-    return assigneeNotification;
+    return { notification: assigneeNotification, effects };
   },
 
-  /**
-   * Due date changed
-   */
-  async dueDateChanged(task, oldDate, newDate, session) {
+  async dueDateChanged(task, oldDate, newDate, session, effects = []) {
     const notification = await notify({
       action: "updated",
       severity: "warning",
       title: "Due Date Updated",
-      message: `Due date changed from ${oldDate.toLocaleDateString()} to ${newDate.toLocaleDateString()}.`,
+      message: `Due date changed from ${oldDate.toLocaleDateString()} to ${new Date(newDate).toLocaleDateString()}.`,
       recipients: [{ userId: task.assignedTo }],
       createdBy: task.assignedBy,
       link: `/tasks/${task.slug}`,
-      meta: {
-        taskId: task.slug,
-        oldDate,
-        newDate,
+      meta: { taskId: task.slug, oldDate, newDate },
+      session,
+      effects,
+      email: {
+        userIds: [task.assignedTo],
+        templateType: "task_due_date_changed",
+        dataBuilder: (recipient) => ({
+          recipientName: `${recipient.firstname} ${recipient.lastname}`,
+          taskTitle: task.title,
+          oldDate: oldDate.toLocaleDateString(),
+          newDate: newDate.toLocaleDateString(),
+          link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
+        }),
       },
-      session,
     });
-    await notifyTaskEmail({
-      userIds: [task.assignedTo],
-      templateType: "task_due_date_changed",
-      dataBuilder: (recipient) => ({
-        recipientName: `${recipient.firstname} ${recipient.lastname}`,
-        taskTitle: task.title,
-        oldDate: oldDate.toLocaleDateString(),
-        newDate: newDate.toLocaleDateString(),
-        link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
-      }),
-      session,
-    });
-    return notification;
+    return { notification, effects };
   },
 
-  /**
-   * Title / description updated
-   */
-  async detailsUpdated(task, session) {
+  async detailsUpdated(task, session, effects = []) {
     const notification = await notify({
       action: "updated",
       severity: "info",
@@ -441,28 +468,23 @@ export const TaskNotificationService = {
       recipients: [{ userId: task.assignedTo }],
       createdBy: task.assignedBy,
       link: `/tasks/${task.slug}`,
-      meta: {
-        taskId: task.slug,
+      meta: { taskId: task.slug },
+      session,
+      effects,
+      email: {
+        userIds: [task.assignedTo],
+        templateType: "task_updated",
+        dataBuilder: (recipient) => ({
+          recipientName: `${recipient.firstname} ${recipient.lastname}`,
+          taskTitle: task.title,
+          link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
+        }),
       },
-      session,
     });
-    await notifyTaskEmail({
-      userIds: [task.assignedTo],
-      templateType: "task_updated",
-      dataBuilder: (recipient) => ({
-        recipientName: `${recipient.firstname} ${recipient.lastname}`,
-        taskTitle: task.title,
-        link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
-      }),
-      session,
-    });
-    return notification;
+    return { notification, effects };
   },
 
-  /**
-   * Task cancelled
-   */
-  async cancelled(task, adminId, session) {
+  async cancelled(task, adminId, session, effects = []) {
     const notification = await notify({
       action: "status_changed",
       severity: "error",
@@ -471,27 +493,22 @@ export const TaskNotificationService = {
       recipients: [{ userId: task.assignedTo }],
       createdBy: adminId,
       link: `/tasks/${task.slug}`,
-      meta: {
-        taskId: task.slug,
+      meta: { taskId: task.slug },
+      session,
+      effects,
+      email: {
+        userIds: [task.assignedTo],
+        templateType: "task_cancelled",
+        dataBuilder: (recipient) => ({
+          recipientName: `${recipient.firstname} ${recipient.lastname}`,
+          taskTitle: task.title,
+        }),
       },
-      session,
     });
-    await notifyTaskEmail({
-      userIds: [task.assignedTo],
-      templateType: "task_cancelled",
-      dataBuilder: (recipient) => ({
-        recipientName: `${recipient.firstname} ${recipient.lastname}`,
-        taskTitle: task.title,
-      }),
-      session,
-    });
-    return notification;
+    return { notification, effects };
   },
 
-  /**
-   * Due tomorrow
-   */
-  async dueTomorrow(task, session) {
+  async dueTomorrow(task, session, effects = []) {
     const notification = await notify({
       action: "status_changed",
       severity: "warning",
@@ -500,28 +517,23 @@ export const TaskNotificationService = {
       recipients: [{ userId: task.assignedTo }],
       createdBy: task.assignedBy,
       link: `/tasks/${task.slug}`,
-      meta: {
-        taskId: task.slug,
+      meta: { taskId: task.slug },
+      session,
+      effects,
+      email: {
+        userIds: [task.assignedTo],
+        templateType: "task_due_tomorrow",
+        dataBuilder: (recipient) => ({
+          recipientName: `${recipient.firstname} ${recipient.lastname}`,
+          taskTitle: task.title,
+          link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
+        }),
       },
-      session,
     });
-    await notifyTaskEmail({
-      userIds: [task.assignedTo],
-      templateType: "task_due_tomorrow",
-      dataBuilder: (recipient) => ({
-        recipientName: `${recipient.firstname} ${recipient.lastname}`,
-        taskTitle: task.title,
-        link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
-      }),
-      session,
-    });
-    return notification;
+    return { notification, effects };
   },
 
-  /**
-   * Overdue
-   */
-  async overdue(task, session) {
+  async overdue(task, session, effects = []) {
     const notification = await notify({
       action: "status_changed",
       severity: "error",
@@ -530,21 +542,56 @@ export const TaskNotificationService = {
       recipients: [{ userId: task.assignedTo }, { userId: task.assignedBy }],
       createdBy: task.assignedBy,
       link: `/tasks/${task.slug}`,
-      meta: {
-        taskId: task.slug,
+      meta: { taskId: task.slug },
+      session,
+      effects,
+      email: {
+        userIds: [task.assignedTo, task.assignedBy],
+        templateType: "task_overdue",
+        dataBuilder: (recipient) => ({
+          recipientName: `${recipient.firstname} ${recipient.lastname}`,
+          taskTitle: task.title,
+          link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
+        }),
       },
-      session,
     });
-    await notifyTaskEmail({
-      userIds: [task.assignedTo, task.assignedBy],
-      templateType: "task_overdue",
-      dataBuilder: (recipient) => ({
-        recipientName: `${recipient.firstname} ${recipient.lastname}`,
-        taskTitle: task.title,
-        link: `${process.env.CLIENT_URL}/tasks/${task.slug}`,
-      }),
-      session,
-    });
-    return notification;
+    return { notification, effects };
   },
+};
+
+/**
+ * Runs every queued side effect (socket emits + emails) ONCE the
+ * transaction that created the notifications has committed.
+ *
+ * Each effect is isolated: one failing email will never block another
+ * email, a socket emit, or (most importantly) the DB write that already
+ * succeeded. Call this with `.catch()` or without `await` from the
+ * controller so a slow email provider never delays the HTTP response.
+ */
+export const flushTaskEffects = async (effects = []) => {
+  const results = await Promise.allSettled(
+    effects.map((effect) => {
+      if (effect.type === "socket") {
+        emitSocketNotification(effect.recipients, effect.notification);
+        return Promise.resolve();
+      }
+      if (effect.type === "email") {
+        return notifyTaskEmail({
+          userIds: effect.userIds,
+          templateType: effect.templateType,
+          dataBuilder: effect.dataBuilder,
+        });
+      }
+      return Promise.resolve();
+    }),
+  );
+
+  results.forEach((r, i) => {
+    if (r.status === "rejected") {
+      console.error(
+        `[notifications] side effect #${i} (${effects[i]?.type}) failed:`,
+        r.reason,
+      );
+    }
+  });
 };
