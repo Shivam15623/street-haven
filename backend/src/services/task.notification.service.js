@@ -242,6 +242,7 @@ export const TaskNotificationService = {
       task.assignedBy,
       session,
     );
+    
     await notify({
       action: "assigned",
       severity: "info",
@@ -295,20 +296,23 @@ export const TaskNotificationService = {
     const superAdminRecipients = await getSuperAdminRecipients(
       task.assignedTo,
       session,
-    );
+    );// Don't notify the assignee again as a super admin
+const filteredSuperAdminRecipients = superAdminRecipients.filter(
+  (r) => r.userId.toString() !== task.assignedTo?.toString()
+);
     await notify({
       action: "status_changed",
       severity: "info",
       title: "Task Submitted for Review",
       message: `"${task.title}" was submitted for review.`,
-      recipients: superAdminRecipients,
+      recipients: filteredSuperAdminRecipients,
       createdBy: task.assignedTo,
       link: `/tasks/${task.slug}`,
       meta: { taskId: task.slug },
       session,
       effects,
       email: {
-        userIds: superAdminRecipients.map((r) => r.userId),
+        userIds: filteredSuperAdminRecipients.map((r) => r.userId),
         templateType: "task_submitted_for_review",
         dataBuilder: (recipient) => ({
           recipientName: `${recipient.firstname} ${recipient.lastname}`,
