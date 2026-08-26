@@ -16,23 +16,11 @@ import ExcelJS from "exceljs";
 import { createNotification } from "../helper/CreateNotoification.js";
 import { io } from "../index.js";
 import User from "../model/user.js";
-const emitNotification = (recipients, notification) => {
-  console.log("Emitting notification to recipients:", recipients, notification);
-  for (const r of recipients) {
-    io.to(`user_${r.userId.toString()}`).emit("newNotification", notification);
-  }
-};
-async function getSuperAdminIds(session, excludeUserId) {
-  const superAdmins = await User.find({ role: "super_admin" })
-    .select("_id")
-    .session(session);
-  return superAdmins
-    .map((u) => u._id.toString())
-    .filter((id) => id !== excludeUserId?.toString());
-}
+
+import { flushTaskEffects } from "../services/task.notification.service.js";
 export const createTask = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
-
+  const effects = [];
   try {
     session.startTransaction();
 
@@ -96,10 +84,15 @@ export const createTask = asyncHandler(async (req, res) => {
     }
     // Run after commit
     if (task.assignedTo) {
-      await TaskNotificationService.taskAssigned(task, req.user, session);
+      await TaskNotificationService.taskAssigned(
+        task,
+        req.user,
+        session,
+        effects,
+      );
     }
     await session.commitTransaction();
-    session.endSession();
+    await flushTaskEffects(effects);
 
     return res
       .status(200)
@@ -108,6 +101,8 @@ export const createTask = asyncHandler(async (req, res) => {
     await session.abortTransaction();
     session.endSession();
     throw error;
+  } finally {
+    await session.endSession();
   }
 });
 
@@ -122,12 +117,15 @@ export const editTask = asyncHandler(async (req, res) => {
   }
 
   const session = await mongoose.startSession();
-  let notifications = []; // { notification, recipients }[]
+
+  // Socket + email effects are queued here and flushed only after commit
+  const effects = [];
 
   try {
     session.startTransaction();
 
     const task = await Task.findById(taskId).session(session);
+
     if (!task) {
       throw new ApiError(404, "Task not found");
     }
@@ -137,27 +135,49 @@ export const editTask = asyncHandler(async (req, res) => {
       throw new ApiError(403, "You are not authorized to edit this task");
     }
 
-    const changes = { dueDate: false, assignedTo: false, status: false };
+    const changes = {
+      dueDate: false,
+      assignedTo: false,
+      status: false,
+    };
+
     const oldDueDate = task.dueDate;
     const oldAssignedTo = task.assignedTo;
     const oldStatus = task.status;
+
     const now = new Date();
 
-    if (title !== undefined) task.title = title;
-    if (description !== undefined) task.description = description;
+    // -----------------------------------------
+    // Basic details
+    // -----------------------------------------
 
-    // FIX: compare old value against the *incoming* dueDate, not the
-    // not-yet-updated task.dueDate (previous check always evaluated false).
+    if (title !== undefined) {
+      task.title = title;
+    }
+
+    if (description !== undefined) {
+      task.description = description;
+    }
+
+    // -----------------------------------------
+    // Due date
+    // -----------------------------------------
+
     if (dueDate !== undefined) {
       const newDueDate = dueDate ? new Date(dueDate) : null;
+
       const changed = oldDueDate?.getTime() !== newDueDate?.getTime();
+
       if (changed) {
         task.dueDate = newDueDate;
         changes.dueDate = true;
       }
     }
 
-    // Handle assignment changes
+    // -----------------------------------------
+    // Assignment
+    // -----------------------------------------
+
     if (
       assignedTo !== undefined &&
       assignedTo?.toString() !== oldAssignedTo?.toString()
@@ -173,6 +193,8 @@ export const editTask = asyncHandler(async (req, res) => {
           assignedAt: now,
         });
 
+        // If task was previously unassigned,
+        // assigning it also changes status to assigned.
         if (!oldAssignedTo) {
           task.statusHistory.push({
             fromStatus: task.status,
@@ -180,13 +202,17 @@ export const editTask = asyncHandler(async (req, res) => {
             changedBy: userId,
             changedAt: now,
           });
+
           task.status = "assigned";
           changes.status = true;
         }
       }
     }
 
-    // Handle explicit status changes (skip if assignment already set it above)
+    // -----------------------------------------
+    // Explicit status change
+    // -----------------------------------------
+
     if (status !== undefined && status !== task.status) {
       task.statusHistory.push({
         fromStatus: task.status,
@@ -194,148 +220,109 @@ export const editTask = asyncHandler(async (req, res) => {
         changedBy: userId,
         changedAt: now,
       });
+
       task.status = status;
       changes.status = true;
     }
 
+    // -----------------------------------------
+    // Save task
+    // -----------------------------------------
+
     await task.save({ session });
 
     // -----------------------------------------
-    // Notifications — only for fields that actually changed
+    // Notifications
     // -----------------------------------------
 
-    // Reassignment: notify the new assignee (skip if self-assigning)
-    if (changes.assignedTo && task.assignedTo) {
-      const recipientId = task.assignedTo.toString();
-      if (recipientId !== userId.toString()) {
-        const recipients = [{ userId: recipientId }];
-        const notification = await createNotification(
-          {
-            category: "task",
-            action: "assigned",
-            severity: "info",
-            title: "Task Assigned to You",
-            message: `"${task.title}" has been assigned to you.`,
-            link: `/tasks/${task._id}`,
-            meta: { taskId: task._id, event: "task_assigned" },
-            recipients,
-            createdBy: userId,
-          },
-          session,
-        );
-        notifications.push({ notification, recipients });
-      }
+    /*
+     * Assignment changed
+     *
+     * TaskNotificationService.taskReassigned()
+     * handles:
+     * - previous assignee
+     * - new assignee
+     * - super admins
+     * - socket effects
+     * - email effects
+     */
+    if (changes.assignedTo) {
+      await TaskNotificationService.taskReassigned(
+        task,
+        oldAssignedTo,
+        session,
+        effects,
+      );
     }
 
-    // Reassignment away: notify the *previous* assignee they've been unassigned/reassigned
-    if (changes.assignedTo && oldAssignedTo) {
-      const recipientId = oldAssignedTo.toString();
-      if (recipientId !== userId.toString()) {
-        const recipients = [{ userId: recipientId }];
-        const notification = await createNotification(
-          {
-            category: "task",
-            action: "updated",
-            severity: "info",
-            title: "Task Reassigned",
-            message: `"${task.title}" has been reassigned and is no longer assigned to you.`,
-            link: `/tasks/${task._id}`,
-            meta: { taskId: task._id, event: "task_unassigned" },
-            recipients,
-            createdBy: userId,
-          },
-          session,
-        );
-        notifications.push({ notification, recipients });
-      }
-    }
-
-    // Status change: notify current assignee (if they're not the one making the change)
+    /*
+     * Status changed
+     *
+     * Notify the current assignee.
+     *
+     * Don't notify if the person making the change
+     * is the assignee themselves.
+     */
     if (changes.status && task.assignedTo) {
       const recipientId = task.assignedTo.toString();
+
       if (recipientId !== userId.toString()) {
-        const recipients = [{ userId: recipientId }];
-        const notification = await createNotification(
-          {
-            category: "task",
-            action: "status_changed",
-            severity: "info",
-            title: "Task Status Updated",
-            message: `"${task.title}" status changed from ${oldStatus} to ${task.status}.`,
-            link: `/tasks/${task._id}`,
-            meta: {
-              taskId: task._id,
-              event: "task_status_changed",
-              fromStatus: oldStatus,
-              toStatus: task.status,
-            },
-            recipients,
-            createdBy: userId,
-          },
+        await TaskNotificationService.statusChanged(
+          task,
+          oldStatus,
+          status,
+          req.user,
           session,
+          effects,
         );
-        notifications.push({ notification, recipients });
       }
     }
 
-    // Due date change: notify current assignee
+    /*
+     * Due date changed
+     */
     if (changes.dueDate && task.assignedTo) {
       const recipientId = task.assignedTo.toString();
+
       if (recipientId !== userId.toString()) {
-        const recipients = [{ userId: recipientId }];
-        const notification = await createNotification(
-          {
-            category: "task",
-            action: "updated",
-            severity: "info",
-            title: "Task Due Date Changed",
-            message: task.dueDate
-              ? `Due date for "${task.title}" is now ${task.dueDate.toLocaleDateString()}.`
-              : `Due date for "${task.title}" has been removed.`,
-            link: `/tasks/${task._id}`,
-            meta: { taskId: task._id, event: "task_due_date_changed" },
-            recipients,
-            createdBy: userId,
-          },
+        await TaskNotificationService.dueDateChanged(
+          task,
+          oldDueDate,
+          dueDate,
+        
           session,
+          effects,
         );
-        notifications.push({ notification, recipients });
       }
     }
-    // Notify super_admin of any edit to this task, once, regardless of which fields changed
-    if (changes.assignedTo || changes.status || changes.dueDate) {
-      const superAdminIds = await getSuperAdminIds(session, userId);
-      if (superAdminIds.length) {
-        const recipients = superAdminIds.map((id) => ({ userId: id }));
-        const notification = await createNotification(
-          {
-            category: "task",
-            action: "updated",
-            severity: "info",
-            title: "Task Updated",
-            message: `"${task.title}" was updated by ${req.user.firstname} ${req.user.lastname}.`,
-            link: `/tasks/${task._id}`,
-            meta: { taskId: task._id, event: "task_updated" },
-            recipients,
-            createdBy: userId,
-          },
-          session,
-        );
-        notifications.push({ notification, recipients });
-      }
-    }
+
+    // -----------------------------------------
+    // Commit transaction
+    // -----------------------------------------
+
     await session.commitTransaction();
 
-    // Emit only after commit succeeds
-    for (const { notification, recipients } of notifications) {
-      emitNotification(recipients, notification);
-    }
+    /*
+     * IMPORTANT:
+     *
+     * DB notification records were created inside
+     * the transaction.
+     *
+     * Socket + email are executed only AFTER
+     * the transaction successfully commits.
+     */
+    flushTaskEffects(effects).catch((error) => {
+      console.error("[notifications] Failed to flush task effects:", error);
+    });
 
     return res
       .status(200)
       .json(new ApiResponse(200, "Task updated Successfully", task));
   } catch (error) {
-    await session.abortTransaction();
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+
     throw error;
   } finally {
     await session.endSession();
@@ -862,6 +849,7 @@ export const deleteTask = asyncHandler(async (req, res) => {
 });
 export const updateTaskStatus = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
+  const effects = [];
 
   try {
     await session.withTransaction(async () => {
@@ -930,20 +918,39 @@ export const updateTaskStatus = asyncHandler(async (req, res) => {
 
       await task.save({ session });
 
+      // Queue notification DB + side effects
       switch (status) {
         case "under_review":
-          await TaskNotificationService.submittedForReview(task, session);
+          await TaskNotificationService.submittedForReview(
+            task,
+            session,
+            effects,
+          );
           break;
 
         case "completed":
-          await TaskNotificationService.approved(task, userId, session);
+          await TaskNotificationService.approved(
+            task,
+            userId,
+            session,
+            effects,
+          );
           break;
 
         case "assigned":
-          await TaskNotificationService.sentBack(task, userId, remark, session);
+          await TaskNotificationService.sentBack(
+            task,
+            userId,
+            remark,
+            session,
+            effects,
+          );
           break;
       }
     });
+
+    // withTransaction has successfully committed here
+    await flushTaskEffects(effects);
 
     return res
       .status(200)
