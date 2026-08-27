@@ -5,6 +5,118 @@ import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import { ROLE_PERMISSIONS } from "../auth/rolePermissions.js";
 
+// ---------------------------------------------------------------------------
+// Shared visibility rule: "can this user see this notification at all?"
+// Used by BOTH AllNotifications (as an aggregation match stage) and
+// MarkNotificationsAsRead (as a plain query filter), so the two can never
+// drift apart.
+// ---------------------------------------------------------------------------
+
+/**
+ * Mongo match condition for "notification is visible to a user with the
+ * given permissions" — the permission-gate half only (global/personal
+ * visibility is handled separately since the two call sites determine it
+ * differently: one via a userTracker lookup array, one via recipients).
+ */
+function buildPermissionGateMatch(userPermissions) {
+  return {
+    $or: [
+      { requiredPermissions: { $size: 0 } },
+      { requiredPermissions: { $exists: false } },
+      {
+        $expr: {
+          $cond: [
+            { $eq: ["$permissionMatchType", "all"] },
+            {
+              $setIsSubset: [
+                { $ifNull: ["$requiredPermissions", []] },
+                userPermissions,
+              ],
+            },
+            {
+              $gt: [
+                {
+                  $size: {
+                    $setIntersection: [
+                      { $ifNull: ["$requiredPermissions", []] },
+                      userPermissions,
+                    ],
+                  },
+                },
+                0,
+              ],
+            },
+          ],
+        },
+      },
+    ],
+  };
+}
+
+/**
+ * Given a list of notification ids a user is claiming as "theirs to mark
+ * read", returns only the subset that are actually visible to them: either
+ * a personal recipient of it, or it's global AND the permission gate
+ * passes. Anything else (not found, gated by permissions they lack,
+ * personal-but-not-theirs) is silently dropped rather than erroring, since
+ * the caller just wants "mark whatever I'm allowed to mark".
+ */
+async function filterVisibleNotificationIds(ids, userId, userRole) {
+  const userPermissions = ROLE_PERMISSIONS[userRole] || [];
+
+  const objectIds = ids
+    .filter((id) => mongoose.Types.ObjectId.isValid(id))
+    .map((id) => new mongoose.Types.ObjectId(id));
+
+  if (!objectIds.length) return [];
+
+  // Personal targeting isn't stored on the Notification document itself —
+  // it lives in the separate UserNotification collection (one row per
+  // recipient, created by createNotification's bulk upsert). So "is this a
+  // personal notification addressed to me" has to be a $lookup against
+  // usernotifications, mirroring what AllNotifications already does,
+  // rather than a match on a `recipients` field that doesn't exist here.
+  const visible = await Notification.aggregate([
+    { $match: { _id: { $in: objectIds } } },
+    {
+      $lookup: {
+        from: "usernotifications",
+        let: { notifId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$notificationId", "$$notifId"] },
+                  { $eq: ["$userId", new mongoose.Types.ObjectId(userId)] },
+                ],
+              },
+            },
+          },
+          { $project: { _id: 1 } },
+        ],
+        as: "userTracker",
+      },
+    },
+    {
+      $match: {
+        $and: [
+          {
+            $or: [
+              { isGlobal: true },
+              { $expr: { $gt: [{ $size: "$userTracker" }, 0] } },
+            ],
+          },
+          buildPermissionGateMatch(userPermissions),
+        ],
+      },
+    },
+    { $project: { _id: 1 } },
+  ]);
+
+  return visible.map((n) => n._id.toString());
+}
+
 export const AllNotifications = asyncHandler(async (req, res) => {
   const userId = new mongoose.Types.ObjectId(req.user._id);
   const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -80,38 +192,7 @@ export const AllNotifications = asyncHandler(async (req, res) => {
             { $expr: { $gt: [{ $size: "$userTracker" }, 0] } },
           ],
         },
-        {
-          $or: [
-            { requiredPermissions: { $size: 0 } },
-            { requiredPermissions: { $exists: false } },
-            {
-              $expr: {
-                $cond: [
-                  { $eq: ["$permissionMatchType", "all"] },
-                  {
-                    $setIsSubset: [
-                      { $ifNull: ["$requiredPermissions", []] },
-                      userPermissions,
-                    ],
-                  },
-                  {
-                    $gt: [
-                      {
-                        $size: {
-                          $setIntersection: [
-                            { $ifNull: ["$requiredPermissions", []] },
-                            userPermissions,
-                          ],
-                        },
-                      },
-                      0,
-                    ],
-                  },
-                ],
-              },
-            },
-          ],
-        },
+        buildPermissionGateMatch(userPermissions),
       ],
     },
   };
@@ -187,6 +268,7 @@ export const AllNotifications = asyncHandler(async (req, res) => {
     }),
   );
 });
+
 export const MarkNotificationsAsRead = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { ids } = req.body; // array of notification IDs
@@ -197,11 +279,30 @@ export const MarkNotificationsAsRead = asyncHandler(async (req, res) => {
       .json(new ApiResponse(400, "No notification IDs provided"));
   }
 
+  // Previously this trusted the client-supplied ids outright and upserted a
+  // UserNotification tracker for every single one — including ids for
+  // notifications the user has no permission to see, notifications
+  // addressed to someone else, or ids that don't exist at all. That's both
+  // a data-integrity issue (orphan/incorrect tracker rows) and pointless
+  // writes. Now we re-check visibility with the same rule AllNotifications
+  // uses, and only create trackers for ids that pass.
+  const visibleIds = await filterVisibleNotificationIds(
+    ids,
+    userId,
+    req.user.role,
+  );
+
+  if (!visibleIds.length) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "No visible notifications to mark as read"));
+  }
+
   const now = new Date();
   const expireAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // +7 days
 
-  // Upsert UserNotification entries for all provided notification IDs
-  const bulkOps = ids.map((notificationId) => ({
+  // Upsert UserNotification entries only for ids the user can actually see
+  const bulkOps = visibleIds.map((notificationId) => ({
     updateOne: {
       filter: { userId, notificationId },
       update: {

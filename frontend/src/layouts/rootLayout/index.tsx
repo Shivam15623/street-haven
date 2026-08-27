@@ -67,8 +67,8 @@ const menuItems = [
     permissions: [PERMISSIONS.TASK_VIEW_SELF, PERMISSIONS.TASK_VIEW_ALL], // available for all
   },
   {
-    label: "Employees",
-    path: "/employees",
+    label: "Users",
+    path: "/users",
     icon: EmployeesIcon,
     permission: PERMISSIONS.VIEW_EMPLOYEES,
   },

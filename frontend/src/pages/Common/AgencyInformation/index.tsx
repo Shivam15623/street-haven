@@ -1,8 +1,6 @@
 import StreetTab from "../../../components/StreetTab";
 import CollectiveAgreementTab from "./component/Agreement/CollectiveAgreementTab";
 
-
-
 import { useNavigate, useSearchParams } from "react-router-dom";
 import AnnouncementTab from "./component/Announcements/AnnouncementTab";
 import { useEffect, useState } from "react";
@@ -10,7 +8,7 @@ import { useEffect, useState } from "react";
 const AgencyInfo = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const tabParam = searchParams.get("tab") ?? "collective_agreement";
+  const tabParam = searchParams.get("tab") ?? "additional_documents";
 
   const [active, setActive] = useState<string>(tabParam);
   useEffect(() => {
@@ -36,23 +34,21 @@ const AgencyInfo = () => {
         <p className="fw-semibold text-xl xs:text-xxl text-street-dark">
           Agency Information
         </p>
-  
       </div>
       <StreetTab
         activeKey={active}
         onTabChange={handletabClick}
         tabs={[
           {
-            key: "collective_agreement",
-            label: "Collective Agreement",
+            key: "additional_documents",
+            label: "Additional Documents",
             content: (
               <CollectiveAgreementTab
-                isActive={active === "collective_agreement"}
+                isActive={active === "additional_documents"}
               />
             ),
           },
-         
-         
+
           {
             key: "announcements",
             label: "Announcements",

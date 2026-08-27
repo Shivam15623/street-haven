@@ -867,426 +867,599 @@ const STATUS_EMAIL_TEMPLATE_MAP = {
   Completed: "ticket_completed",
   Rejected: "ticket_rejected",
 };
+/**
+ * editTicket — organized into small single-purpose helpers:
+ *
+ *   1. loadTicketAndUploadPhoto   - fetch ticket, handle optional photo upload
+ *   2. resolveCallerPermissions   - who is the caller relative to this ticket
+ *   3. collectSubmittedFields     - which fields were actually sent
+ *   4. assertFieldPermissions     - role/status checks per field group
+ *   5. resolveLocationChange /
+ *      resolveCategoryChange      - lookups needed before applying updates
+ *   6. applyTicketUpdates         - mutate the ticket document
+ *   7. buildRerouteNotifications /
+ *      buildReassignmentNotification /
+ *      buildStatusChangeNotification /
+ *      buildGenericEditNotification
+ *                                 - each returns a list of "notification jobs"
+ *   8. withSuperAdminCc           - adds super_admins to any job's recipients
+ *   9. dispatchNotificationJobs   - actually calls notifyAndEmit + queues email
+ *
+ * All notification-shaping logic is pure (returns plain job objects); only
+ * `dispatchNotificationJobs` touches notifyAndEmit/email queues, so the
+ * transaction-vs-post-commit boundary is easy to see in `editTicket` itself.
+ */
+
+const CREATOR_ONLY_MESSAGE =
+  "Only the creator can edit title, description, photo, or location";
+const STATUS_PERMISSION_MESSAGE =
+  "Only the approving manager or super admin can change status";
+
+// ---------------------------------------------------------------------------
+// 1. Ticket + photo
+// ---------------------------------------------------------------------------
+async function loadTicketAndUploadPhoto(ticketId, file, session) {
+  let uploadedFile;
+  if (file?.path) {
+    uploadedFile = await uploadOnCloudinary(file.path);
+    if (!uploadedFile?.secure_url) {
+      throw new ApiError(500, "Photo upload failed");
+    }
+  }
+
+  const ticket = await Ticket.findById(ticketId).session(session);
+  if (!ticket) {
+    throw new ApiError(404, "No such ticket found");
+  }
+
+  return { ticket, uploadedFile };
+}
+
+// ---------------------------------------------------------------------------
+// 2. Caller's relationship to the ticket
+// ---------------------------------------------------------------------------
+function resolveCallerPermissions(ticket, userId, isSuperAdmin) {
+  const isCreator = ticket.createdBy.equals(userId);
+  const isApprover = ticket.approvedBy?.equals(userId) ?? false;
+  const isAssignee = ticket.assignedTo?.equals(userId) ?? false;
+
+  if (!isSuperAdmin && !isCreator && !isApprover && !isAssignee) {
+    throw new ApiError(403, "You do not have permission to edit this ticket");
+  }
+
+  return { isCreator, isApprover, isAssignee };
+}
+
+// ---------------------------------------------------------------------------
+// 3. Which fields did the caller actually submit?
+// ---------------------------------------------------------------------------
+function collectSubmittedFields(body, uploadedFile) {
+  const { description, requestTitle, category, location, priority, assignedTo, status } = body;
+
+  const submittedFields = new Set();
+  if (description !== undefined) submittedFields.add("description");
+  if (requestTitle !== undefined) submittedFields.add("requestTitle");
+  if (category !== undefined) submittedFields.add("category");
+  if (location !== undefined) submittedFields.add("location");
+  if (uploadedFile) submittedFields.add("photo");
+  if (priority !== undefined) submittedFields.add("priority");
+  if (assignedTo !== undefined) submittedFields.add("assignedTo");
+  if (status !== undefined) submittedFields.add("status");
+
+  if (submittedFields.size === 0) {
+    throw new ApiError(400, "No editable fields were provided");
+  }
+
+  return submittedFields;
+}
+
+// ---------------------------------------------------------------------------
+// 4. Field-level permission + state checks
+// ---------------------------------------------------------------------------
+function assertFieldPermissions({
+  submittedFields,
+  ticket,
+  newStatus,
+  isCreator,
+  isApprover,
+  isAssignee,
+  isSuperAdmin,
+}) {
+  const wantsCreatorFields = [...submittedFields].some((f) => CREATOR_FIELDS.has(f));
+  const wantsApproverFields = [...submittedFields].some((f) => APPROVER_FIELDS.has(f));
+  const wantsStatus = submittedFields.has("status");
+
+  if (wantsCreatorFields) {
+    if (!isCreator) {
+      throw new ApiError(403, CREATOR_ONLY_MESSAGE);
+    }
+    if (ticket.status !== TICKET_STATUS.OPEN) {
+      throw new ApiError(
+        400,
+        "Ticket details can only be edited while it is Open (pending approval)",
+      );
+    }
+  }
+
+  if (wantsStatus) {
+    if (!isApprover && !isSuperAdmin) {
+      throw new ApiError(403, STATUS_PERMISSION_MESSAGE);
+    }
+    if (!Object.values(TICKET_STATUS).includes(newStatus)) {
+      throw new ApiError(400, "Invalid status value");
+    }
+  }
+
+  const effectiveStatus = wantsStatus ? newStatus : ticket.status;
+
+  if (wantsApproverFields) {
+    const wantsPriority = submittedFields.has("priority");
+    const wantsAssignedTo = submittedFields.has("assignedTo");
+
+    if (wantsPriority && !isApprover && !isSuperAdmin) {
+      throw new ApiError(403, "Only the approving manager or super admin can change priority");
+    }
+    if (wantsAssignedTo && !isApprover && !isAssignee && !isSuperAdmin) {
+      throw new ApiError(
+        403,
+        "Only the approving manager, current assignee, or super admin can reassign this ticket",
+      );
+    }
+    if ([TICKET_STATUS.OPEN, TICKET_STATUS.CLOSED, TICKET_STATUS.REJECTED].includes(effectiveStatus)) {
+      throw new ApiError(
+        400,
+        `Ticket must be Approved or later to change ${wantsPriority ? "priority" : "assignment"}, currently ${ticket.status}`,
+      );
+    }
+  }
+
+  return { wantsStatus, effectiveStatus };
+}
+
+// ---------------------------------------------------------------------------
+// 5. Lookups needed before mutating the ticket
+// ---------------------------------------------------------------------------
+async function resolveLocationChange(ticket, newLocationId, session) {
+  const oldLocationId = ticket.location?.toString();
+  const locationChanged = newLocationId && newLocationId.toString() !== oldLocationId;
+
+  if (!locationChanged) {
+    return { locationChanged: false, oldLocation: null, newLocation: null, oldManagerIds: [], newManagerIds: [] };
+  }
+
+  const [oldLocation, newLocation] = await Promise.all([
+    Location.findById(oldLocationId).select("_id name managers isActive").session(session),
+    Location.findById(newLocationId).select("_id name managers isActive").session(session),
+  ]);
+
+  if (!newLocation) throw new ApiError(404, "New location not found");
+  if (!newLocation.isActive) throw new ApiError(400, "Cannot move ticket to an inactive location");
+
+  return {
+    locationChanged: true,
+    oldLocation,
+    newLocation,
+    oldManagerIds: oldLocation?.managers?.map((id) => id.toString()) ?? [],
+    newManagerIds: newLocation.managers.map((id) => id.toString()),
+  };
+}
+
+async function resolveCategoryChange(category, session) {
+  if (category === undefined) return null;
+
+  const newCategoryDoc = await TicketCategory.findById(category).session(session);
+  if (!newCategoryDoc) throw new ApiError(404, "Selected category not found");
+  if (!newCategoryDoc.isActive) throw new ApiError(400, "Selected category is not active");
+
+  return newCategoryDoc;
+}
+
+async function resolveCategoryForEmail(ticket, newCategoryDoc, session) {
+  return (
+    newCategoryDoc ??
+    (await TicketCategory.findById(ticket.category).select("name").session(session))
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 6. Apply updates to the ticket document
+// ---------------------------------------------------------------------------
+async function applyTicketUpdates({
+  ticket,
+  body,
+  uploadedFile,
+  newCategoryDoc,
+  locationChange,
+  wantsStatus,
+  userId,
+  session,
+}) {
+  const { description, requestTitle, priority, assignedTo: newAssignedToId, status: newStatus } = body;
+
+  if (description !== undefined) ticket.description = description;
+  if (requestTitle !== undefined) ticket.req_title = requestTitle;
+  if (newCategoryDoc) ticket.category = newCategoryDoc._id;
+  if (locationChange.locationChanged) ticket.location = locationChange.newLocation._id;
+  if (uploadedFile) {
+    ticket.photo = {
+      fileName: uploadedFile.original_filename,
+      fileUrl: uploadedFile.secure_url,
+    };
+  }
+
+  if (priority !== undefined) {
+    ticket.priority = priority;
+    ticket.priorityLocked = true; // approver setting it explicitly locks it again
+  }
+
+  let newAssignee = null;
+  if (newAssignedToId !== undefined) {
+    newAssignee = await User.findById(newAssignedToId).session(session);
+    if (!newAssignee) throw new ApiError(404, "New assignee not found");
+
+    ticket.assignmentHistory.push({
+      assignedTo: newAssignee._id,
+      assignedBy: userId,
+      assignedAt: new Date(),
+    });
+    ticket.assignedTo = newAssignee._id;
+  }
+
+  const oldStatus = ticket.status;
+  const statusChanged = wantsStatus && newStatus !== oldStatus;
+  if (statusChanged) {
+    ticket.status = newStatus;
+    if (Array.isArray(ticket.statusHistory)) {
+      ticket.statusHistory.push({
+        fromStatus: oldStatus,
+        toStatus: newStatus,
+        changedBy: userId,
+        changedAt: new Date(),
+      });
+    }
+  }
+
+  await ticket.save({ session });
+
+  return { oldStatus, statusChanged, newAssignee };
+}
+
+// ---------------------------------------------------------------------------
+// 7. Notification job builders — each returns [] or a list of job objects:
+//    { recipients, title, message, link, createdBy, meta, email }
+//    Nothing here calls notifyAndEmit; that happens in dispatchNotificationJobs.
+// ---------------------------------------------------------------------------
+function buildRerouteNotifications({ ticket, locationChange, userId, req }) {
+  if (!locationChange.locationChanged) return [];
+
+  const { oldLocation, newLocation, oldManagerIds, newManagerIds } = locationChange;
+  const oldManagerSet = new Set(oldManagerIds);
+  const newManagerSet = new Set(newManagerIds);
+
+  const removedManagerIds = oldManagerIds.filter((id) => !newManagerSet.has(id));
+  const addedManagerIds = newManagerIds.filter((id) => !oldManagerSet.has(id));
+
+  const createdByName = req.user.firstname
+    ? `${req.user.firstname} ${req.user.lastname}`
+    : "Ticket Creator";
+
+  const jobs = [];
+
+  if (removedManagerIds.length) {
+    jobs.push({
+      recipients: removedManagerIds.map((mid) => ({ userId: mid })),
+      title: "Ticket Rerouted",
+      message: `Ticket ${ticket.displayId} has been moved from ${oldLocation.name} to ${newLocation.name} and is no longer pending your approval.`,
+      link: `/tickets/${ticket._id}`,
+      createdBy: userId,
+      meta: {
+        ticketId: ticket._id,
+        ticketNumber: ticket.ticketNumber,
+        event: "ticket_rerouted",
+        oldLocation: { id: oldLocation._id, name: oldLocation.name },
+        newLocation: { id: newLocation._id, name: newLocation.name },
+      },
+      email: {
+        userIds: removedManagerIds,
+        templateType: "ticket_rerouted_old_manager",
+        dataBuilder: (user) => ({
+          managerName: `${user.firstname} ${user.lastname}`,
+          ticketTitle: ticket.req_title,
+          oldLocation: oldLocation.name,
+          newLocation: newLocation.name,
+          createdBy: createdByName,
+          link: `${process.env.FRONTEND_URL}/tickets/${ticket._id}`,
+        }),
+      },
+    });
+  }
+
+  if (addedManagerIds.length) {
+    jobs.push({
+      recipients: addedManagerIds.map((mid) => ({ userId: mid })),
+      title: "Ticket Requires Approval",
+      message: `Ticket ${ticket.displayId} has been moved to ${newLocation.name} and is now awaiting your approval.`,
+      link: `/tickets/${ticket._id}`,
+      createdBy: userId,
+      meta: {
+        ticketId: ticket._id,
+        ticketNumber: ticket.ticketNumber,
+        event: "ticket_rerouted_to_manager",
+        location: { id: newLocation._id, name: newLocation.name },
+      },
+      email: {
+        userIds: addedManagerIds,
+        templateType: "ticket_pending_manager",
+        dataBuilder: (user) => ({
+          managerName: `${user.firstname} ${user.lastname}`,
+          ticketTitle: ticket.req_title,
+          category: ticket.category,
+          location: newLocation.name,
+          createdBy: createdByName,
+          link: `${process.env.FRONTEND_URL}/tickets/${ticket._id}`,
+        }),
+      },
+    });
+  }
+  // unchangedManagerIds intentionally get no email/notification.
+
+  return jobs;
+}
+
+function buildReassignmentNotification({ ticket, newAssignedToId, userIdStr, userId, categoryForEmail }) {
+  if (newAssignedToId === undefined) return [];
+
+  const recipientId = newAssignedToId.toString();
+  if (recipientId === userIdStr) return [];
+
+  return [
+    {
+      recipients: [{ userId: recipientId }],
+      title: "Ticket Reassigned to You",
+      message: `Ticket "${ticket.req_title}" has been reassigned to you.`,
+      link: `/it_facility?tab=track_tickets&item=${ticket.slug}`,
+      createdBy: userId,
+      meta: { ticketId: ticket.slug },
+      email: {
+        userIds: [recipientId],
+        templateType: "ticket_assigned",
+        dataBuilder: (user) => ({
+          recipientName: `${user.firstname} ${user.lastname}`,
+          ticketTitle: ticket.req_title,
+          category: categoryForEmail?.name ?? "-",
+          priority: ticket.priority || "-",
+          link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&item=${ticket.slug}`,
+        }),
+      },
+    },
+  ];
+}
+
+function buildStatusChangeNotification({
+  ticket,
+  statusChanged,
+  oldStatus,
+  newStatus,
+  userId,
+  userIdStr,
+  categoryForEmail,
+}) {
+  if (!statusChanged) return [];
+
+  const statusRecipients = [ticket.createdBy, ticket.assignedTo, ticket.approvedBy]
+    .filter(Boolean)
+    .map((id) => id.toString())
+    .filter((id, idx, arr) => arr.indexOf(id) === idx) // dedupe
+    .filter((id) => id !== userIdStr); // don't notify the actor
+
+  if (!statusRecipients.length) return [];
+
+  const job = {
+    recipients: statusRecipients.map((uid) => ({ userId: uid })),
+    title: "Ticket Status Updated",
+    message: `Ticket "${ticket.req_title}" status changed from ${oldStatus} to ${newStatus}.`,
+    link: `/it_facility?tab=track_tickets&item=${ticket.slug}`,
+    createdBy: userId,
+    meta: {
+      ticketId: ticket.slug,
+      event: "ticket_status_changed",
+      fromStatus: oldStatus,
+      toStatus: newStatus,
+    },
+  };
+
+  const statusEmailTemplate = STATUS_EMAIL_TEMPLATE_MAP[newStatus];
+  if (statusEmailTemplate) {
+    job.email = {
+      userIds: statusRecipients,
+      templateType: statusEmailTemplate,
+      dataBuilder: (user) => ({
+        recipientName: `${user.firstname} ${user.lastname}`,
+        ticketTitle: ticket.req_title,
+        category: categoryForEmail?.name ?? "-",
+        location: ticket.location?.name ?? "-",
+        link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&item=${ticket.slug}`,
+      }),
+    };
+  }
+
+  return [job];
+}
+
+/**
+ * Catch-all so super_admins hear about edits that don't otherwise generate
+ * any notification job above — e.g. the creator only changed the
+ * description/title/photo, or only priority changed with no reassignment
+ * or status change. Without this, those edits were previously silent to
+ * everyone, including super_admins.
+ */
+function buildGenericEditNotification({ ticket, submittedFields, hasOtherJobs, userId }) {
+  if (hasOtherJobs) return [];
+
+  const changedFieldList = [...submittedFields].join(", ");
+
+  return [
+    {
+      recipients: [], // filled in by withSuperAdminCc — this job exists purely for super_admin visibility
+      title: "Ticket Edited",
+      message: `Ticket "${ticket.req_title}" was edited (${changedFieldList}).`,
+      link: `/it_facility?tab=track_tickets&item=${ticket.slug}`,
+      createdBy: userId,
+      meta: { ticketId: ticket.slug, event: "ticket_edited", changedFields: [...submittedFields] },
+      superAdminOnly: true,
+    },
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// 8. Fold super_admins into every job's recipients (deduped, actor excluded)
+// ---------------------------------------------------------------------------
+async function withSuperAdminCc(jobs, { userId, session }) {
+  if (!jobs.length) return jobs;
+
+  const superAdmins = await User.find({ role: "super_admin" }).select("_id").session(session);
+  const superAdminIds = superAdmins
+    .map((u) => u._id.toString())
+    .filter((id) => id !== userId.toString());
+
+  return jobs.map((job) => {
+    const existingIds = new Set(job.recipients.map((r) => r.userId.toString()));
+    const ccIds = superAdminIds.filter((id) => !existingIds.has(id));
+    if (!ccIds.length) return job;
+
+    const mergedRecipients = [...job.recipients, ...ccIds.map((id) => ({ userId: id }))];
+    const mergedEmailUserIds = job.email
+      ? [...new Set([...job.email.userIds, ...ccIds])]
+      : undefined;
+
+    return {
+      ...job,
+      recipients: mergedRecipients,
+      email: job.email ? { ...job.email, userIds: mergedEmailUserIds } : job.email,
+    };
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 9. Execute jobs: DB notification + socket queued now, email queued for
+//    after commit (into the emailEvents array owned by the caller).
+// ---------------------------------------------------------------------------
+async function dispatchNotificationJobs(jobs, { session, emailEvents }) {
+  for (const job of jobs) {
+    if (!job.recipients.length) continue;
+
+    await notifyAndEmit(session, {
+      recipients: job.recipients,
+      title: job.title,
+      message: job.message,
+      link: job.link,
+      createdBy: job.createdBy,
+      meta: job.meta,
+      emit: false,
+    });
+
+    if (job.email) {
+      emailEvents.push(job.email);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Controller
+// ---------------------------------------------------------------------------
 export const editTicket = asyncHandler(async (req, res) => {
   const { id: ticketId } = req.params;
-
-  const {
-    description,
-    requestTitle,
-    category,
-    location: newLocationId,
-    priority,
-    assignedTo: newAssignedToId,
-    status: newStatus,
-  } = req.body;
-
   const userId = req.user._id;
   const userIdStr = userId.toString();
   const isSuperAdmin = req.user.role === "super_admin";
   const session = await mongoose.startSession();
 
-  // Keep these outside transaction because we need them
-  // after commit for email/socket side effects.
-  let emailEvents = [];
+  // Kept outside the transaction because emails fire only after commit.
+  const emailEvents = [];
 
   try {
     session.startTransaction();
 
-    let uploadedFile;
-    if (req.file?.path) {
-      uploadedFile = await uploadOnCloudinary(req.file.path);
-      if (!uploadedFile?.secure_url) {
-        throw new ApiError(500, "Photo upload failed");
-      }
-    }
+    const { ticket, uploadedFile } = await loadTicketAndUploadPhoto(ticketId, req.file, session);
 
-    const ticket = await Ticket.findById(ticketId).session(session);
-    if (!ticket) {
-      throw new ApiError(404, "No such ticket found");
-    }
-
-    // -----------------------------------------
-    // 1. Work out which role this user holds on THIS ticket
-    // -----------------------------------------
-    const isCreator = ticket.createdBy.equals(userId);
-    const isApprover = ticket.approvedBy?.equals(userId) ?? false;
-    const isAssignee = ticket.assignedTo?.equals(userId) ?? false;
-
-    if (!isSuperAdmin && !isCreator && !isApprover && !isAssignee) {
-      throw new ApiError(403, "You do not have permission to edit this ticket");
-    }
-
-    // -----------------------------------------
-    // 2. Figure out which fields were actually submitted
-    // -----------------------------------------
-    const submittedFields = new Set();
-    if (description !== undefined) submittedFields.add("description");
-    if (requestTitle !== undefined) submittedFields.add("requestTitle");
-    if (category !== undefined) submittedFields.add("category");
-    if (newLocationId !== undefined) submittedFields.add("location");
-    if (uploadedFile) submittedFields.add("photo");
-    if (priority !== undefined) submittedFields.add("priority");
-    if (newAssignedToId !== undefined) submittedFields.add("assignedTo");
-    if (newStatus !== undefined) submittedFields.add("status");
-    if (submittedFields.size === 0) {
-      throw new ApiError(400, "No editable fields were provided");
-    }
-
-    // -----------------------------------------
-    // 3. Validate each submitted field against the caller's role
-    // -----------------------------------------
-    const wantsCreatorFields = [...submittedFields].some((f) =>
-      CREATOR_FIELDS.has(f),
+    const { isCreator, isApprover, isAssignee } = resolveCallerPermissions(
+      ticket,
+      userId,
+      isSuperAdmin,
     );
-    const wantsApproverFields = [...submittedFields].some((f) =>
-      APPROVER_FIELDS.has(f),
-    );
-    const wantsStatus = submittedFields.has("status");
 
-    if (wantsCreatorFields) {
-      if (!isCreator) {
-        throw new ApiError(
-          403,
-          "Only the creator can edit title, description, photo, or location",
-        );
-      }
-      if (ticket.status !== TICKET_STATUS.OPEN) {
-        throw new ApiError(
-          400,
-          "Ticket details can only be edited while it is Open (pending approval)",
-        );
-      }
-    }
-    const effectiveStatus = wantsStatus ? newStatus : ticket.status;
-    if (wantsStatus) {
-      if (!isApprover && !isSuperAdmin) {
-        throw new ApiError(
-          403,
-          "Only the approving manager or super admin can change status",
-        );
-      }
-      if (!Object.values(TICKET_STATUS).includes(newStatus)) {
-        throw new ApiError(400, "Invalid status value");
-      }
-    }
-    if (wantsApproverFields) {
-      const wantsPriority = submittedFields.has("priority");
-      const wantsAssignedTo = submittedFields.has("assignedTo");
+    const submittedFields = collectSubmittedFields(req.body, uploadedFile);
 
-      if (wantsPriority && !isApprover && !isSuperAdmin) {
-        throw new ApiError(
-          403,
-          "Only the approving manager or super admin can change priority",
-        );
-      }
-      if (wantsAssignedTo && !isApprover && !isAssignee && !isSuperAdmin) {
-        throw new ApiError(
-          403,
-          "Only the approving manager, current assignee, or super admin can reassign this ticket",
-        );
-      }
-      if (
-        [
-          TICKET_STATUS.OPEN,
-          TICKET_STATUS.CLOSED,
-          TICKET_STATUS.REJECTED,
-        ].includes(effectiveStatus)
-      ) {
-        throw new ApiError(
-          400,
-          `Ticket must be Approved or later to change ${
-            wantsPriority ? "priority" : "assignment"
-          }, currently ${ticket.status}`,
-        );
-      }
-    }
+    const { wantsStatus } = assertFieldPermissions({
+      submittedFields,
+      ticket,
+      newStatus: req.body.status,
+      isCreator,
+      isApprover,
+      isAssignee,
+      isSuperAdmin,
+    });
 
-    // Status: only the approving manager or super admin, regardless of
-    // what other fields were submitted alongside it.
+    const locationChange = await resolveLocationChange(ticket, req.body.location, session);
+    const newCategoryDoc = await resolveCategoryChange(req.body.category, session);
 
-    // -----------------------------------------
-    // 4. Location-change bookkeeping (creator path only)
-    // -----------------------------------------
-    const oldLocationId = ticket.location?.toString();
-    const locationChanged =
-      newLocationId && newLocationId.toString() !== oldLocationId;
+    const { oldStatus, statusChanged, newAssignee } = await applyTicketUpdates({
+      ticket,
+      body: req.body,
+      uploadedFile,
+      newCategoryDoc,
+      locationChange,
+      wantsStatus,
+      userId,
+      session,
+    });
 
-    let oldLocation = null;
-    let newLocation = null;
-    let oldManagerIds = [];
-    let newManagerIds = [];
+    // ---- Build notification jobs (pure — no side effects yet) ----
+    const rerouteJobs = buildRerouteNotifications({ ticket, locationChange, userId, req });
 
-    if (locationChanged) {
-      [oldLocation, newLocation] = await Promise.all([
-        Location.findById(oldLocationId)
-          .select("_id name managers isActive")
-          .session(session),
-        Location.findById(newLocationId)
-          .select("_id name managers isActive")
-          .session(session),
-      ]);
+    const reassignmentCategoryForEmail =
+      req.body.assignedTo !== undefined
+        ? await resolveCategoryForEmail(ticket, newCategoryDoc, session)
+        : null;
+    const reassignmentJobs = buildReassignmentNotification({
+      ticket,
+      newAssignedToId: req.body.assignedTo,
+      userIdStr,
+      userId,
+      categoryForEmail: reassignmentCategoryForEmail,
+    });
 
-      if (!newLocation) {
-        throw new ApiError(404, "New location not found");
-      }
-      if (!newLocation.isActive) {
-        throw new ApiError(400, "Cannot move ticket to an inactive location");
-      }
+    const statusCategoryForEmail = statusChanged
+      ? await resolveCategoryForEmail(ticket, newCategoryDoc, session)
+      : null;
+    const statusJobs = buildStatusChangeNotification({
+      ticket,
+      statusChanged,
+      oldStatus,
+      newStatus: req.body.status,
+      userId,
+      userIdStr,
+      categoryForEmail: statusCategoryForEmail,
+    });
 
-      oldManagerIds = oldLocation?.managers?.map((id) => id.toString()) ?? [];
-      newManagerIds = newLocation.managers.map((id) => id.toString());
-    }
-    // -----------------------------------------
-    // 4b. Category-change validation (creator path only)
-    // -----------------------------------------
-    let newCategoryDoc = null;
-    if (category !== undefined) {
-      newCategoryDoc = await TicketCategory.findById(category).session(session);
-      if (!newCategoryDoc) {
-        throw new ApiError(404, "Selected category not found");
-      }
-      if (!newCategoryDoc.isActive) {
-        throw new ApiError(400, "Selected category is not active");
-      }
-    }
+    const hasOtherJobs = Boolean(rerouteJobs.length || reassignmentJobs.length || statusJobs.length);
+    const genericJobs = buildGenericEditNotification({
+      ticket,
+      submittedFields,
+      hasOtherJobs,
+      userId,
+    });
 
-    // -----------------------------------------
-    // 5. Apply field updates
-    // -----------------------------------------
-    if (description !== undefined) ticket.description = description;
-    if (requestTitle !== undefined) ticket.req_title = requestTitle;
-    if (category !== undefined) ticket.category = newCategoryDoc._id;
-    if (locationChanged) ticket.location = newLocation._id;
-    if (uploadedFile) {
-      ticket.photo = {
-        fileName: uploadedFile.original_filename,
-        fileUrl: uploadedFile.secure_url,
-      };
-    }
+    const allJobs = [...rerouteJobs, ...reassignmentJobs, ...statusJobs, ...genericJobs];
+    const jobsWithSuperAdminCc = await withSuperAdminCc(allJobs, { userId, session });
 
-    if (priority !== undefined) {
-      ticket.priority = priority;
-      ticket.priorityLocked = true; // approver setting it explicitly locks it again
-    }
+    await dispatchNotificationJobs(jobsWithSuperAdminCc, { session, emailEvents });
 
-    if (newAssignedToId !== undefined) {
-      const newAssignee = await User.findById(newAssignedToId).session(session);
-      if (!newAssignee) throw new ApiError(404, "New assignee not found");
-
-      ticket.assignmentHistory.push({
-        assignedTo: newAssignee._id,
-        assignedBy: userId,
-        assignedAt: new Date(),
-      });
-      ticket.assignedTo = newAssignee._id;
-    }
-
-    const oldStatus = ticket.status;
-    const statusChanged = wantsStatus && newStatus !== oldStatus;
-    if (statusChanged) {
-      ticket.status = newStatus;
-      if (Array.isArray(ticket.statusHistory)) {
-        ticket.statusHistory.push({
-          fromStatus: oldStatus,
-          toStatus: newStatus,
-          changedBy: userId,
-          changedAt: new Date(),
-        });
-      }
-    }
-
-    await ticket.save({ session });
-
-    // -----------------------------------------
-    // 6. Reroute notifications (only when creator changed location)
-    // -----------------------------------------
-    if (locationChanged) {
-      const oldManagerSet = new Set(oldManagerIds);
-      const newManagerSet = new Set(newManagerIds);
-
-      const removedManagerIds = oldManagerIds.filter(
-        (managerId) => !newManagerSet.has(managerId),
-      );
-      const addedManagerIds = newManagerIds.filter(
-        (managerId) => !oldManagerSet.has(managerId),
-      );
-
-      if (removedManagerIds.length) {
-        await notifyAndEmit(session, {
-          recipients: removedManagerIds.map((mid) => ({ userId: mid })),
-          title: "Ticket Rerouted",
-          message: `Ticket ${ticket.displayId} has been moved from ${oldLocation.name} to ${newLocation.name} and is no longer pending your approval.`,
-          link: `/tickets/${ticket._id}`,
-          createdBy: userId,
-          meta: {
-            ticketId: ticket._id,
-            ticketNumber: ticket.ticketNumber,
-            event: "ticket_rerouted",
-            oldLocation: { id: oldLocation._id, name: oldLocation.name },
-            newLocation: { id: newLocation._id, name: newLocation.name },
-          },
-          emit: false,
-        });
-
-        emailEvents.push({
-          userIds: removedManagerIds,
-          templateType: "ticket_rerouted_old_manager",
-          dataBuilder: (user) => ({
-            managerName: `${user.firstname} ${user.lastname}`,
-            ticketTitle: ticket.req_title,
-            oldLocation: oldLocation.name,
-            newLocation: newLocation.name,
-            createdBy: req.user.firstname
-              ? `${req.user.firstname} ${req.user.lastname}`
-              : "Ticket Creator",
-            link: `${process.env.FRONTEND_URL}/tickets/${ticket._id}`,
-          }),
-        });
-      }
-
-      if (addedManagerIds.length) {
-        await notifyAndEmit(session, {
-          recipients: addedManagerIds.map((mid) => ({ userId: mid })),
-          title: "Ticket Requires Approval",
-          message: `Ticket ${ticket.displayId} has been moved to ${newLocation.name} and is now awaiting your approval.`,
-          link: `/tickets/${ticket._id}`,
-          createdBy: userId,
-          meta: {
-            ticketId: ticket._id,
-            ticketNumber: ticket.ticketNumber,
-            event: "ticket_rerouted_to_manager",
-            location: { id: newLocation._id, name: newLocation.name },
-          },
-          emit: false,
-        });
-
-        emailEvents.push({
-          userIds: addedManagerIds,
-          templateType: "ticket_pending_manager",
-          dataBuilder: (user) => ({
-            managerName: `${user.firstname} ${user.lastname}`,
-            ticketTitle: ticket.req_title,
-            category: ticket.category,
-            location: newLocation.name,
-            createdBy: req.user.firstname
-              ? `${req.user.firstname} ${req.user.lastname}`
-              : "Ticket Creator",
-            link: `${process.env.FRONTEND_URL}/tickets/${ticket._id}`,
-          }),
-        });
-      }
-      // unchangedManagerIds intentionally get no email/notification.
-    }
-
-    // -----------------------------------------
-    // 7. Reassignment notification (approver or assignee handoff)
-    // -----------------------------------------
-    if (newAssignedToId !== undefined) {
-      const recipientId = newAssignedToId.toString();
-      if (recipientId !== userIdStr) {
-        await notifyAndEmit(session, {
-          recipients: [{ userId: recipientId }],
-          title: "Ticket Reassigned to You",
-          message: `Ticket "${ticket.req_title}" has been reassigned to you.`,
-          link: `/it_facility?tab=track_tickets&item=${ticket.slug}`,
-          createdBy: userId,
-          meta: { ticketId: ticket.slug },
-          emit: false,
-        });
-
-        // Resolve category name for the email — reuse newCategoryDoc if it was
-        // just changed in this request, otherwise look up the existing one.
-        const categoryForEmail =
-          newCategoryDoc ??
-          (await TicketCategory.findById(ticket.category)
-            .select("name")
-            .session(session));
-
-        // ...inside the emailEvents.push for reassignment:
-        emailEvents.push({
-          userIds: [recipientId],
-          templateType: "ticket_assigned",
-          dataBuilder: (user) => ({
-            recipientName: `${user.firstname} ${user.lastname}`,
-            ticketTitle: ticket.req_title,
-            category: categoryForEmail?.name ?? "-",
-            priority: ticket.priority || "-",
-            link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&item=${ticket.slug}`,
-          }),
-        });
-      }
-    }
-
-    // -----------------------------------------
-    // 8. Status-change notifications (creator + assignee, if not the actor)
-    // -----------------------------------------
-    if (statusChanged) {
-      const statusRecipients = [
-        ticket.createdBy,
-        ticket.assignedTo,
-        ticket.approvedBy,
-      ]
-        .filter(Boolean)
-        .map((id) => id.toString())
-        .filter((id, idx, arr) => arr.indexOf(id) === idx) // dedupe
-        .filter((id) => id !== userIdStr); // don't notify the actor
-
-      if (statusRecipients.length) {
-        await notifyAndEmit(session, {
-          recipients: statusRecipients.map((uid) => ({ userId: uid })),
-          title: "Ticket Status Updated",
-          message: `Ticket "${ticket.req_title}" status changed from ${oldStatus} to ${newStatus}.`,
-          link: `/it_facility?tab=track_tickets&item=${ticket.slug}`,
-          createdBy: userId,
-          meta: {
-            ticketId: ticket.slug,
-            event: "ticket_status_changed",
-            fromStatus: oldStatus,
-            toStatus: newStatus,
-          },
-          emit: false,
-        });
-
-        const statusEmailTemplate = STATUS_EMAIL_TEMPLATE_MAP[newStatus];
-        if (statusEmailTemplate) {
-          const categoryForEmail =
-            newCategoryDoc ??
-            (await TicketCategory.findById(ticket.category)
-              .select("name")
-              .session(session));
-
-          emailEvents.push({
-            userIds: statusRecipients,
-            templateType: statusEmailTemplate,
-            dataBuilder: (user) => ({
-              recipientName: `${user.firstname} ${user.lastname}`,
-              ticketTitle: ticket.req_title,
-              category: categoryForEmail?.name ?? "-",
-              location: ticket.location?.name ?? "-",
-              link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&item=${ticket.slug}`,
-            }),
-          });
-        }
-      }
-    }
-
-    // -----------------------------------------
-    // 9. Commit, then fire off emails/sockets after success
-    // -----------------------------------------
     await session.commitTransaction();
 
-    await Promise.all(
-      emailEvents.map((event) =>
-        notifyTicketEmail({
-          ...event,
-          session: undefined,
-        }),
-      ),
-    );
+    await Promise.all(emailEvents.map((event) => notifyTicketEmail({ ...event, session: undefined })));
 
-    return res
-      .status(200)
-      .json(new ApiResponse(200, "Ticket updated successfully", ticket));
+    return res.status(200).json(new ApiResponse(200, "Ticket updated successfully", ticket));
   } catch (error) {
     await session.abortTransaction();
     throw error;

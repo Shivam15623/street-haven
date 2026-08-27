@@ -8,7 +8,7 @@ import {
 } from "../utills/cloudinary.js";
 import mongoose from "mongoose";
 import { addActivityLog } from "../helper/addActivityLogs.js";
-import path from "path"
+import path from "path";
 import { io } from "../index.js";
 import { createNotification } from "../helper/CreateNotoification.js";
 import { PERMISSIONS } from "../auth/permissions.js";
@@ -83,11 +83,11 @@ export const createCollectiveAgreement = asyncHandler(async (req, res) => {
     const notification = await createNotification(
       {
         action: "created",
-        category: "collective_agreement",
+        category: "additional_documents",
         severity: "info",
         title: "New Collective Agreement Published",
         message: `A new collective agreement "${title}" has been published by ${firstname} ${lastname}.`,
-        link: `/agency_info?tab=collective_agreement&item=${savedAgreement.slug}`,
+        link: `/agency_info?tab=additional_documents&item=${savedAgreement.slug}`,
         isGlobal: true, // ✅ no per-user mappings
         requiredPermissions: [PERMISSIONS.VIEW_COLLECTIVE_AGREEMENTS],
         permissionMatchType: "any",
@@ -96,7 +96,7 @@ export const createCollectiveAgreement = asyncHandler(async (req, res) => {
         meta: {
           agreementId: savedAgreement.slug,
           page: "agency_info",
-          tab: "collective_agreement",
+          tab: "additional_documents",
         },
       },
       session,
@@ -260,12 +260,12 @@ export const editCollectiveAgreement = asyncHandler(async (req, res) => {
 
       const notification = await createNotification(
         {
-          category: "collective_agreement",
+          category: "additional_documents",
           action: "updated",
           severity: "warning",
           title: "Collective agreement updated",
           message: `The ${readableParts} for "${agreement.title}" has been updated. Please review the latest version.`,
-          link: `/agency_info?tab=collective_agreement&item=${agreement.slug}`,
+          link: `/agency_info?tab=additional_documents&item=${agreement.slug}`,
           meta: {
             agreementId: agreement.slug,
             changes,

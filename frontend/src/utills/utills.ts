@@ -23,20 +23,22 @@ export const getAxiosErrorMessage = (err: any): string => {
 };
 
 export const getErrorMessage = (err: any): string => {
-  // Check if it's an Axios error with a response
-  if (err && err.data) {
+  if (err?.data) {
     const data = err.data;
-    // Check if the response data has a 'message' field
-    if (data.message && typeof data.message === "string") {
-      if (data.code === "VALIDATION_FAILED") {
+
+    if (data.code === "VALIDATION_FAILED") {
+      if (Array.isArray(data.errors) && data.errors.length > 0) {
         return data.errors.join(", ");
-      } else {
-        return data.message;
       }
+
+      return data.message || "Validation failed";
     }
-    // If no 'message' field, return a generic error message
-    return "An error occurred while processing the request.";
+
+    if (typeof data.message === "string") {
+      return data.message;
+    }
   }
+
   return "An error occurred while processing the request.";
 };
 
