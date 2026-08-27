@@ -162,7 +162,7 @@ export const AllRoutes: RouteObject[] = [
       },
 
       {
-        path: "employees",
+        path: "users",
         element: (
           <RouteGuard
             isPublic={false}

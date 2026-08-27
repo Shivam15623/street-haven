@@ -13,7 +13,7 @@ export interface notificationData {
     | "announcement"
     | "event_minute"
     | "training_material"
-    | "collective_agreement"
+    | "additional_documents"
     | "hr_updates"
     | "system";
 

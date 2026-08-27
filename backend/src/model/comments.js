@@ -53,6 +53,18 @@ const commentSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  // NEW: reply support
+  parentCommentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Comment",
+    default: null,
+    index: true,
+  },
+
+  // NEW: mentions — store resolved user ids, not raw @text.
+  // Resolving server-side (not trusting client-parsed ids) prevents someone
+  // mentioning a user they can't actually see/message.
+  mentions: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   message: { type: String },
   attachments: [attachmentSchema],
   createdAt: { type: Date, default: Date.now },

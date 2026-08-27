@@ -118,7 +118,7 @@ const SearchContent: React.FC<SearchProps> = ({ mobileMode, onclose }) => {
   const goToAnnouncement = (slug: string) =>
     navigate(`/agency_info?tab=announcements&item=${slug}`);
   const goToAgreement = (slug: string) =>
-    navigate(`/agency_info?tab=collective_agreement&item=${slug}`);
+    navigate(`/agency_info?tab=additional_documents&item=${slug}`);
 
   return (
     <div

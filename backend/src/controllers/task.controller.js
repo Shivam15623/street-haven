@@ -289,7 +289,7 @@ export const editTask = asyncHandler(async (req, res) => {
           task,
           oldDueDate,
           dueDate,
-        
+
           session,
           effects,
         );
@@ -508,19 +508,23 @@ export const getAllTasks = asyncHandler(async (req, res) => {
   // ---------- base match (role scoping + explicit filters, NOT status) ----------
   const baseMatch = {};
 
-  if (role === "volunteer_admin" || role === "super_admin") {
+  if (role === "super_admin") {
+    // No restriction — super admin can see all tasks
+  } else if (role === "volunteer_admin") {
     baseMatch.assignedBy = new mongoose.Types.ObjectId(userId);
   } else {
     baseMatch.assignedTo = new mongoose.Types.ObjectId(userId);
   }
-
   const assignedToIds = toObjectIds(assignedTo);
-  if (role === "volunteer_admin" || role === "super_admin") {
-    if (assignedToIds?.length) baseMatch.assignedTo = { $in: assignedToIds };
+  if (assignedToIds?.length) {
+    baseMatch.assignedTo = { $in: assignedToIds };
   }
 
   const assignedByIds = toObjectIds(assignedBy);
-  if (assignedByIds?.length) baseMatch.assignedBy = { $in: assignedByIds };
+
+  if (assignedByIds?.length) {
+    baseMatch.assignedBy = { $in: assignedByIds };
+  }
 
   if (slug) {
     baseMatch.slug = slug; // exact match, bypasses text search
@@ -726,10 +730,15 @@ export const getTaskBySlug = asyncHandler(async (req, res) => {
 
   const match = { slug };
 
-  // same role-scoping as getAllTasks — a volunteer can only resolve their own tasks
-  if (role === "volunteer_admin" || role === "super_admin") {
+  // Role-based access
+  if (role === "super_admin") {
+    // Super admin can access any task.
+    // No additional restriction on match.
+  } else if (role === "volunteer_admin") {
+    // Volunteer admin can access tasks they assigned.
     match.assignedBy = new mongoose.Types.ObjectId(userId);
   } else {
+    // Normal volunteer/user can access tasks assigned to them.
     match.assignedTo = new mongoose.Types.ObjectId(userId);
   }
 
@@ -738,12 +747,16 @@ export const getTaskBySlug = asyncHandler(async (req, res) => {
 
   const [task] = await Task.aggregate([
     { $match: match },
+
     {
       $addFields: {
         dueStatus: {
           $switch: {
             branches: [
-              { case: { $eq: ["$dueDate", null] }, then: "noduedate" },
+              {
+                case: { $eq: ["$dueDate", null] },
+                then: "noduedate",
+              },
               {
                 case: {
                   $and: [
@@ -778,26 +791,57 @@ export const getTaskBySlug = asyncHandler(async (req, res) => {
         },
       },
     },
+
     {
       $lookup: {
         from: "users",
         localField: "assignedTo",
         foreignField: "_id",
         as: "assignedTo",
-        pipeline: [{ $project: { firstname: 1, lastname: 1, email: 1 } }],
+        pipeline: [
+          {
+            $project: {
+              firstname: 1,
+              lastname: 1,
+              email: 1,
+            },
+          },
+        ],
       },
     },
-    { $unwind: { path: "$assignedTo", preserveNullAndEmptyArrays: true } },
+
+    {
+      $unwind: {
+        path: "$assignedTo",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
     {
       $lookup: {
         from: "users",
         localField: "assignedBy",
         foreignField: "_id",
         as: "assignedBy",
-        pipeline: [{ $project: { firstname: 1, lastname: 1, email: 1 } }],
+        pipeline: [
+          {
+            $project: {
+              firstname: 1,
+              lastname: 1,
+              email: 1,
+            },
+          },
+        ],
       },
     },
-    { $unwind: { path: "$assignedBy", preserveNullAndEmptyArrays: true } },
+
+    {
+      $unwind: {
+        path: "$assignedBy",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
     {
       $project: {
         title: 1,
@@ -815,7 +859,6 @@ export const getTaskBySlug = asyncHandler(async (req, res) => {
   ]);
 
   if (!task) {
-    // deliberately vague: don't leak "exists but not yours" vs "doesn't exist"
     throw new ApiError(404, "Task not found");
   }
 
@@ -823,7 +866,6 @@ export const getTaskBySlug = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, "Task fetched successfully", task));
 });
-
 export const deleteTask = asyncHandler(async (req, res) => {
   const { taskId } = req.params;
   const { _id: userId } = req.user;
@@ -855,7 +897,7 @@ export const updateTaskStatus = asyncHandler(async (req, res) => {
     await session.withTransaction(async () => {
       const { taskId } = req.params;
       const { status, remark } = req.body;
-      const { _id: userId } = req.user;
+      const { _id: userId, role } = req.user;
 
       if (!mongoose.isValidObjectId(taskId)) {
         throw new ApiError(400, "Invalid task id");
@@ -871,7 +913,12 @@ export const updateTaskStatus = asyncHandler(async (req, res) => {
 
       switch (status) {
         case "under_review":
-          if (task.assignedTo.toString() !== userId.toString()) {
+          // Super admin can update any task.
+          // Otherwise only assigned volunteer can submit.
+          if (
+            role !== "super_admin" &&
+            task.assignedTo.toString() !== userId.toString()
+          ) {
             throw new ApiError(403, "Only assigned volunteer can submit task.");
           }
 
@@ -882,7 +929,12 @@ export const updateTaskStatus = asyncHandler(async (req, res) => {
           break;
 
         case "completed":
-          if (task.assignedBy.toString() !== userId.toString()) {
+          // Super admin can complete any task.
+          // Otherwise only task creator can complete.
+          if (
+            role !== "super_admin" &&
+            task.assignedBy.toString() !== userId.toString()
+          ) {
             throw new ApiError(403, "Only task creator can complete task.");
           }
 
@@ -893,7 +945,12 @@ export const updateTaskStatus = asyncHandler(async (req, res) => {
           break;
 
         case "assigned":
-          if (task.assignedBy.toString() !== userId.toString()) {
+          // Super admin can reassign/send back any task.
+          // Otherwise only task creator can do it.
+          if (
+            role !== "super_admin" &&
+            task.assignedBy.toString() !== userId.toString()
+          ) {
             throw new ApiError(403, "Only task creator can reassign.");
           }
 
@@ -918,7 +975,6 @@ export const updateTaskStatus = asyncHandler(async (req, res) => {
 
       await task.save({ session });
 
-      // Queue notification DB + side effects
       switch (status) {
         case "under_review":
           await TaskNotificationService.submittedForReview(
@@ -949,7 +1005,6 @@ export const updateTaskStatus = asyncHandler(async (req, res) => {
       }
     });
 
-    // withTransaction has successfully committed here
     await flushTaskEffects(effects);
 
     return res

@@ -9,6 +9,7 @@ import { ApiError } from "../utills/ApiError.js";
 import Location from "../model/location.js";
 import mongoose from "mongoose";
 import { sendNewUserCredentialsEmail } from "../helper/EmailsMailer/emailHandlers.js";
+import { flushEmployeeEffects, notifyEmployeeAdded, notifyEmployeeStatusChanged } from "../services/Employeenotificationservice.js";
 export const AllEmployees = asyncHandler(async (req, res) => {
   const {
     page = 1,
@@ -143,6 +144,9 @@ export const AddEmployee = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
+  // Kept outside the transaction: socket emits fire only after commit.
+  let effects = [];
+
   try {
     const {
       firstName,
@@ -272,8 +276,22 @@ export const AddEmployee = asyncHandler(async (req, res) => {
       );
     }
 
+    /* ======================
+       NOTIFY super_admins + the new employee's supervisor
+    ====================== */
+    ({ effects } = await notifyEmployeeAdded({
+      newUser,
+      superviser,
+      actorId: req.user?._id,
+      session,
+      effects,
+    }));
+
     await session.commitTransaction();
     session.endSession();
+
+    await flushEmployeeEffects(effects);
+
     await sendNewUserCredentialsEmail({
       email: newUser.email,
       userName: `${newUser.firstname} ${newUser.lastname}`,
@@ -550,6 +568,8 @@ export const EmployeeStatusChange = asyncHandler(async (req, res) => {
     throw new ApiError(400, `User is already ${status}`);
   }
 
+  const oldStatus = findUser.status;
+
   // --- Going INACTIVE ---
   if (status === "inactive") {
     if (findUser.role === "volunteer" && findUser.currentStint?.startAt) {
@@ -595,6 +615,20 @@ export const EmployeeStatusChange = asyncHandler(async (req, res) => {
   }
 
   await findUser.save();
+
+  // Not wrapped in a transaction in the original code, so this fires as a
+  // best-effort, fire-and-forget notification after the save succeeds
+  // rather than inside a session. If this route is ever wrapped in a
+  // transaction later, pass that session through here instead of `null`.
+  const { effects } = await notifyEmployeeStatusChanged({
+    user: findUser,
+    oldStatus,
+    newStatus: status,
+    actorId: req.user?._id,
+    session: null,
+    effects: [],
+  });
+  await flushEmployeeEffects(effects);
 
   return res
     .status(200)

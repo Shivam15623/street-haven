@@ -11,7 +11,7 @@ const NotificationSchema = new mongoose.Schema(
         "task",
         "event_minute",
         "training_material",
-        "collective_agreement",
+        "additional_documents",
         "hr_updates",
         "certificate",
         "system",
