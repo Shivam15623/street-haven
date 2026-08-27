@@ -2,7 +2,12 @@ import { useEffect, useRef, useState, useMemo, useCallback, lazy } from "react";
 
 import { Icon } from "@iconify/react/dist/iconify.js";
 import dayjs from "dayjs";
-import type { commentData, commentResponse } from "../../services/ticketApi";
+import {
+  useLazyFetchTicketMentionableUsersQuery,
+  type commentData,
+  type commentResponse,
+  type MentionableUser,
+} from "../../services/ticketApi";
 import type { FileItem, FileType } from "../../interfaces/fileinterface";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useSocket } from "../../hooks/useSocket";
@@ -90,7 +95,24 @@ const EntityComment = ({
     getComments,
     { data: commentData, isLoading, isFetching, isUninitialized },
   ] = useLazyViewComments();
+  const [mentionableUsers, setMentionableUsers] = useState<MentionableUser[]>(
+    [],
+  );
 
+  const [fetchMentionableUsers] = useLazyFetchTicketMentionableUsersQuery();
+
+  // Fetch once when the sheet opens (not per-keystroke)
+  const loadMentionableUsers = useCallback(async () => {
+    try {
+      const result = await fetchMentionableUsers({
+        ticketId: entityId,
+        q: "",
+      }).unwrap();
+      setMentionableUsers(result.data ?? result);
+    } catch (error) {
+      showError(getErrorMessage(error));
+    }
+  }, [fetchMentionableUsers, entityId]);
   const totalPages = commentData?.data?.paggination.totalPages || 1;
   const hasMore = page < totalPages;
 
@@ -188,6 +210,17 @@ const EntityComment = ({
       if (message) formdata.append("message", message);
       attachments.forEach((file) => formdata.append("files", file));
 
+      // Pull out every @mentioned user's id from the rendered HTML.
+      const mentionedUserIds = Array.from(
+        new DOMParser()
+          .parseFromString(message, "text/html")
+          .querySelectorAll(".mention[data-id]"),
+      ).map((el) => el.getAttribute("data-id")!);
+
+      if (mentionedUserIds.length) {
+        formdata.append("mentions", JSON.stringify(mentionedUserIds));
+      }
+
       if (user) {
         const optimisticComment: commentData = {
           _id: `${clientId}`,
@@ -257,6 +290,7 @@ const EntityComment = ({
           setComments([]);
           getComments({ page: 1, limit: COMMENTS_PER_PAGE });
         }
+        loadMentionableUsers();
       }}
       bodyclassName="p-0"
       trigger={
@@ -341,7 +375,12 @@ const EntityComment = ({
 
                         <div
                           className="prose Te py-2 chatpara"
-                          dangerouslySetInnerHTML={{ __html: msg.message }}
+                          dangerouslySetInnerHTML={{
+                            __html: msg.message.replace(
+                              /\sdata-id="[^"]*"/g,
+                              "",
+                            ),
+                          }}
                         />
 
                         <div className="px-2 d-flex align-items-center justify-content-end gap-1">
@@ -409,6 +448,7 @@ const EntityComment = ({
               <QuillEditor
                 content={message}
                 onChange={setMessage}
+                mentionableUsers={mentionableUsers}
                 features={{
                   align: false,
                   backgroundColor: false,
@@ -417,6 +457,7 @@ const EntityComment = ({
                   headings: true,
                   link: true,
                   lists: true,
+                  mentions: true,
                 }}
               />
             </div>

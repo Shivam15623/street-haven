@@ -28,6 +28,7 @@ import { upsertCategoryAssignment } from "../controllers/ticketCategoryAssignmen
 import { checkActiveUser } from "../middleware/checkActiveUsers.js";
 import { authorizePermissions } from "../middleware/AuthRole.js";
 import { PERMISSIONS } from "../auth/permissions.js";
+import { getTicketMentionableUsers } from "../controllers/comments.controller.js";
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
 router.use(checkActiveUser);
@@ -44,6 +45,7 @@ router.post(
   authorizePermissions({ action: PERMISSIONS.TICKET_CREATE }),
   createTicket,
 );
+
 router.get("/report", GetTicketsReport);
 router.get("/report/export", ExportTicketsReport);
 router.get("/report/:id", GetTicketDetail);
@@ -56,6 +58,7 @@ router
     editTicket,
   );
 // Ticket lifecycle
+router.get("/:slug/mentionable-users", getTicketMentionableUsers);
 router.patch(
   "/:id/approve",
   validateRequest(idParamSchema, "params"),

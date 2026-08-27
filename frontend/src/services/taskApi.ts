@@ -158,6 +158,13 @@ export interface GetTaskTimelineResponseData {
     nextCursor: string | null;
   };
 }
+interface MentionableUser {
+  _id: string;
+  firstname: string;
+  lastname: string;
+  slug: string;
+  role?: string;
+}
 export interface TaskDetail {
   _id: string;
   title: string;
@@ -324,6 +331,17 @@ export const taskApi = api.injectEndpoints({
           onProgress,
         }),
     }),
+    fetchTaskMentionableUsers: builder.query<
+      ApiResponse<MentionableUser[]>,
+      { taskId: string; q?: string }
+    >({
+      query: ({ taskId, q = "" }) => ({
+        url: `/task/${taskId}/mentionable-users`,
+        method: "GET",
+        params: { q },
+      }),
+      keepUnusedDataFor: 300,
+    }),
     viewTaskComments: builder.query<
       ApiResponse<GetTaskTimelineResponseData>,
       { taskId: string; limit: number; cursor?: string | null }
@@ -353,5 +371,5 @@ export const {
   useLazyViewTaskCommentsQuery,
   useLazyGetTaskDetailsQuery,
   useExportTaskReportMutation,
-  useGetTaskBySlugQuery
+  useGetTaskBySlugQuery,  useLazyFetchTaskMentionableUsersQuery,
 } = taskApi;

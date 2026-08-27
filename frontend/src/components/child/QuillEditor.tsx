@@ -1,8 +1,24 @@
-import React, { useState, useRef, useEffect, useId } from "react";
-import ReactQuill from "react-quill";
+import React, { useState, useRef, useEffect, useId, useMemo } from "react";
+
+import ReactQuill, { Quill } from "react-quill";
+
+import Mention from "quill-mention";
+
 import "react-quill/dist/quill.snow.css";
+import "quill-mention/dist/quill.mention.min.css";
 import EmojiPicker, { type EmojiClickData } from "emoji-picker-react";
 import { createPortal } from "react-dom";
+
+// Register mention AFTER importing Quill from ReactQuill
+Quill.register("modules/mention", Mention, true);
+
+interface MentionableUser {
+  _id: string;
+  firstname: string;
+  lastname: string;
+  slug: string;
+  role?: string;
+}
 
 interface QuillEditorProps {
   content?: string;
@@ -12,6 +28,9 @@ interface QuillEditorProps {
   disabled?: boolean;
   isInvalid?: boolean;
 
+  /** Enables @mention autocomplete scoped to this entity's access list. */
+  mentionableUsers?: MentionableUser[];
+
   features?: {
     emoji?: boolean;
     color?: boolean;
@@ -20,8 +39,16 @@ interface QuillEditorProps {
     backgroundColor?: boolean;
     headings?: boolean;
     lists?: boolean;
+    mentions?: boolean;
   };
 }
+
+/**
+ * Fetches ONLY the users who already have legitimate access to this
+ * task/ticket (assignee, assigner/creator, approver, location managers +
+ * facility manager, super_admins) — never the full user directory.
+ * Looked up by the entity's slug, matching the backend route.
+ */
 
 const QuillEditor: React.FC<QuillEditorProps> = ({
   content = "",
@@ -30,6 +57,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
   className = "",
   disabled = false,
   isInvalid = false,
+  mentionableUsers = [],
 
   features = {
     emoji: true,
@@ -39,13 +67,19 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
     backgroundColor: true,
     headings: true,
     lists: true,
+    mentions: true,
   },
 }) => {
   const [value, setValue] = useState(content);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
- 
+
   const quillRef = useRef<ReactQuill>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
+  const mentionableUsersRef = useRef<MentionableUser[]>([]);
+
+  useEffect(() => {
+    mentionableUsersRef.current = mentionableUsers;
+  }, [mentionableUsers]);
   const [editorHeight, setEditorHeight] = useState(100);
   const [emojiPosition, setEmojiPosition] = useState<{
     top: number;
@@ -79,10 +113,11 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
     };
   }, []);
 
-  const handleChange = (content: string) => {
-    setValue(content);
-    onChange?.(content);
+  const handleChange = (html: string) => {
+    setValue(html);
+    onChange?.(html);
   };
+
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (!(e.target as HTMLElement).closest(".EmojiPickerReact")) {
@@ -93,6 +128,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
     if (showEmojiPicker) document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [showEmojiPicker]);
+
   const handleEmojiClick = (emojiData: EmojiClickData) => {
     const emoji = emojiData.emoji;
     const editor = quillRef.current?.getEditor();
@@ -113,11 +149,8 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
 
     const rect = emojiButtonRef.current.getBoundingClientRect();
     const pickerHeight = 320;
-
     const spaceBelow = window.innerHeight - rect.bottom;
     const openUp = spaceBelow < pickerHeight;
-
- 
 
     setEmojiPosition({
       top: openUp ? rect.top - pickerHeight - 8 : rect.bottom + 8,
@@ -127,9 +160,49 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
     setShowEmojiPicker((prev) => !prev);
   };
 
-  const modules = {
-    toolbar: disabled ? false : { container: `#${toolbarId}` },
-  };
+  const mentionsEnabled =
+    Boolean(features.mentions) && mentionableUsers.length > 0;
+
+  // Debounced source fn is stable across renders as long as the entity
+  // (type/slug) doesn't change — recreated only then.
+
+  const modules = useMemo(() => {
+    return {
+      toolbar: disabled
+        ? false
+        : {
+            container: `#${toolbarId}`,
+          },
+
+      mention: {
+        mentionDenotationChars: ["@"],
+
+        source: (searchTerm: string, renderList: (items: any[]) => void) => {
+          const search = searchTerm.toLowerCase().trim();
+
+          const matches = mentionableUsersRef.current
+            .filter((user) => {
+              const fullName =
+                `${user.firstname} ${user.lastname}`.toLowerCase();
+
+              return (
+                fullName.includes(search) ||
+                user.firstname.toLowerCase().includes(search) ||
+                user.lastname.toLowerCase().includes(search)
+              );
+            })
+            .map((user) => ({
+              id: user._id,
+              value: `${user.firstname} ${user.lastname}`,
+              slug: user.slug,
+              role: user.role,
+            }));
+
+          renderList(matches);
+        },
+      },
+    };
+  }, [disabled, toolbarId]); // <-- remove mentionableUsers
 
   return (
     <div className={`w-100 ${className}`}>
@@ -218,6 +291,15 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
                 😊
               </button>
             )}
+
+            {mentionsEnabled && (
+              <span
+                className="text-muted small ms-1"
+                title="Type @ to mention someone with access to this thread"
+              >
+                @mention
+              </span>
+            )}
           </div>
         )}
 
@@ -241,14 +323,14 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
                 width={260}
               />
             </div>,
-            document.body
+            document.body,
           )}
 
         <div
           style={{
             flex: 1,
             overflowY: "hidden",
-            overflowX:"visible",
+            overflowX: "visible",
             cursor: disabled ? "not-allowed" : "text",
             borderBottomRightRadius: "inherit",
             borderBottomLeftRadius: "inherit",
@@ -270,12 +352,6 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
           />
         </div>
       </div>
-{/* 
-      {isInvalid && errorMessage && (
-        <Form.Control.Feedback type="invalid" className="d-block mt-1">
-          {errorMessage}
-        </Form.Control.Feedback>
-      )} */}
     </div>
   );
 };

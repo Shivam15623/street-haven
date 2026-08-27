@@ -236,7 +236,13 @@ interface EntityChatProps {
    *  so we know it's safe to fetch + join the socket room. Defaults to true. */
   active?: boolean;
 }
-
+interface MentionableUser {
+  _id: string;
+  firstname: string;
+  lastname: string;
+  slug: string;
+  role?: string;
+}
 const EntityChat = ({
   task,
   entityId,
@@ -250,13 +256,16 @@ const EntityChat = ({
   const { hasRole } = useHasPermission();
   const [cursor, setCursor] = useState<string | null>(null);
   const [timeline, setTimeline] = useState<TaskTimelineItem[]>([]);
+  const mentionableUsersRef = useRef<MentionableUser[]>([]);
 
   const [attachments, setAttachments] = useState<File[]>([]);
   const [message, setMessage] = useState("");
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerFiles, setViewerFiles] = useState<FileItem[]>([]);
   const [viewerIndex, setViewerIndex] = useState(0);
-
+  const [mentionableUsers, setMentionableUsers] = useState<MentionableUser[]>(
+    [],
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const initialScrollDoneRef = useRef(false);
@@ -293,7 +302,9 @@ const EntityChat = ({
     () => groupTimelineByDate(timeline),
     [timeline],
   );
-
+  useEffect(() => {
+    mentionableUsersRef.current = mentionableUsers;
+  }, [mentionableUsers]);
   // Initial fetch once "active" (replaces the old Sheet onOpen trigger)
   useEffect(() => {
     if (!active || !isUninitialized) return;
@@ -634,16 +645,19 @@ const EntityChat = ({
 
           <div className="chat-message-box-action w-100 flex-row flex-nowrap gap-1 justify-content-between px-3 py-2">
             <div className="d-flex gap-2">
-              {task.status !== "under_review"&&task.status!=="completed" && hasRole("volunteer") && (
-                <button
-                  type="button"
-                  disabled={isUpdatingStatus}
-                  className="btn btn-street-outline-primary d-flex align-items-center gap-1 text-sm"
-                  onClick={() => handleUpdateTaskStatus("under_review")}
-                >
-                  <Icon icon="mdi:check" className="text-xl" /> Send for Review
-                </button>
-              )}
+              {task.status !== "under_review" &&
+                task.status !== "completed" &&
+                hasRole("volunteer") && (
+                  <button
+                    type="button"
+                    disabled={isUpdatingStatus}
+                    className="btn btn-street-outline-primary d-flex align-items-center gap-1 text-sm"
+                    onClick={() => handleUpdateTaskStatus("under_review")}
+                  >
+                    <Icon icon="mdi:check" className="text-xl" /> Send for
+                    Review
+                  </button>
+                )}
               {hasRole(["volunteer_admin", "super_admin"]) &&
                 task.status === "under_review" && (
                   <>

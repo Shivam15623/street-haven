@@ -6,7 +6,13 @@ import type {
 } from "../interfaces/Ticket";
 import { api } from "../redux/ApiSlice";
 import { uploadWithProgress } from "../utills/uploadWithProgress";
-
+export interface MentionableUser {
+  _id: string;
+  firstname: string;
+  lastname: string;
+  slug: string;
+  role?: string;
+}
 export interface commentData {
   _id: string;
   attachments?: {
@@ -155,7 +161,7 @@ const ticketApi = api.injectEndpoints({
       invalidatesTags: ["Ticket"],
     }),
     reopenTicket: builder.mutation<ApiGeneralResponse, string>({
-      query: ( ticketId ) => ({
+      query: (ticketId) => ({
         url: `/ticket/${ticketId}/reopen`,
         method: "PATCH",
       }),
@@ -219,7 +225,7 @@ const ticketApi = api.injectEndpoints({
           approvedBy,
         },
       }),
-      providesTags:["Ticket"]
+      providesTags: ["Ticket"],
     }),
     exportTicketReport: builder.mutation<
       Blob,
@@ -255,7 +261,17 @@ const ticketApi = api.injectEndpoints({
         },
         responseHandler: (response: Response) => response.blob(),
       }),
-
+    }),
+    fetchTicketMentionableUsers: builder.query<
+      ApiResponse<MentionableUser[]>,
+      { ticketId: string; q?: string }
+    >({
+      query: ({ ticketId, q = "" }) => ({
+        url: `/ticket/${ticketId}/mentionable-users`,
+        method: "GET",
+        params: { q },
+      }),
+      keepUnusedDataFor: 300,
     }),
     getTicketDetail: builder.query<ApiResponse<TicketDetail>, { id: string }>({
       query: ({ id }) => ({
@@ -282,5 +298,6 @@ export const {
   useGetTicketDetailQuery,
   useLazyGetTicketDetailQuery,
   useExportTicketReportMutation,
-  useReopenTicketMutation
+  useLazyFetchTicketMentionableUsersQuery,
+  useReopenTicketMutation,
 } = ticketApi;

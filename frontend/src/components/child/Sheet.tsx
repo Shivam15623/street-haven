@@ -5,6 +5,7 @@ import React, {
   cloneElement,
   type ReactNode,
   type ReactElement,
+  useId,
 } from "react";
 import { Offcanvas, type OffcanvasProps } from "react-bootstrap";
 
@@ -45,8 +46,8 @@ export default function Sheet({
   closeButton = true,
   ...rest
 }: SheetProps) {
-  const autoId = `sheet-${Math.random().toString(36).slice(2, 9)}`;
-  const sheetId = id || autoId;
+  const autoId = useId(); // stable across renders, unique per instance
+  const sheetId = id || `sheet-${autoId}`;
   const isControlled = typeof show === "boolean";
   const [internalShow, setInternalShow] = useState(defaultShow);
 

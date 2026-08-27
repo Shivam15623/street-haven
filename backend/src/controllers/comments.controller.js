@@ -12,6 +12,8 @@ import { resolveRecipients } from "../utills/recipients.js";
 import mongoose from "mongoose";
 import { isUserViewing } from "../utills/presence.js";
 import { handleNewComment } from "../helper/commentNotification.js";
+import Location from "../model/location.js";
+import User from "../model/user.js";
 
 const ENTITY_MODELS = {
   Ticket,
@@ -141,3 +143,281 @@ export const addCommentForEntity = asyncHandler(
     
   },
 );
+
+
+export const getTaskMentionableUsers = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+  const { q = "" } = req.query;
+  const { _id: userId, role } = req.user;
+
+  if (!slug) {
+    throw new ApiError(400, "Task slug is required");
+  }
+
+  const task = await Task.findOne({ slug })
+    .select("assignedTo assignedBy")
+    .populate({
+      path: "assignedTo",
+      select: "_id firstname lastname slug role superviserId",
+    })
+    .lean();
+
+  if (!task) {
+    throw new ApiError(404, "Task not found");
+  }
+
+  // --------------------------------------------------
+  // Check access
+  // --------------------------------------------------
+  const currentUserId = userId.toString();
+
+  const isSuperAdmin = role === "super_admin";
+
+  const isAssignedTo =
+    task.assignedTo?._id?.toString() === currentUserId;
+
+  const isAssignedBy =
+    task.assignedBy?.toString() === currentUserId;
+
+  if (!isSuperAdmin && !isAssignedTo && !isAssignedBy) {
+    throw new ApiError(404, "Task not found");
+  }
+
+  // --------------------------------------------------
+  // Build mentionable IDs
+  // --------------------------------------------------
+  const userIds = new Set();
+
+  const addId = (id) => {
+    if (id) {
+      userIds.add(id.toString());
+    }
+  };
+
+  // Assigned volunteer
+  addId(task.assignedTo?._id);
+
+  // Person who assigned/created the task
+  addId(task.assignedBy);
+
+  // Supervisor of assigned volunteer
+  addId(task.assignedTo?.superviserId);
+
+  // --------------------------------------------------
+  // All active super admins
+  // --------------------------------------------------
+  const superAdmins = await User.find({
+    role: "super_admin",
+    status: "active",
+  })
+    .select("_id")
+    .lean();
+
+  superAdmins.forEach(({ _id }) => addId(_id));
+
+  // --------------------------------------------------
+  // Search
+  // --------------------------------------------------
+  const search = String(q).trim();
+
+  const searchFilter = search
+    ? {
+        $or: [
+          { firstname: { $regex: search, $options: "i" } },
+          { lastname: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+        ],
+      }
+    : {};
+
+  // --------------------------------------------------
+  // Final users
+  // --------------------------------------------------
+  const users = await User.find({
+    _id: {
+      $in: [...userIds].map(
+        (id) => new mongoose.Types.ObjectId(id),
+      ),
+    },
+    status: "active",
+    ...searchFilter,
+  })
+    .select("_id firstname lastname slug role")
+    .sort({
+      firstname: 1,
+      lastname: 1,
+    })
+    .limit(20)
+    .lean();
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      "Mentionable users fetched successfully",
+      users,
+    ),
+  );
+});
+
+export const getTicketMentionableUsers = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+  const { q = "" } = req.query;
+  const { _id: userId, role } = req.user;
+
+  if (!slug) {
+    throw new ApiError(400, "Ticket slug is required");
+  }
+
+  const ticket = await Ticket.findOne({ _id:slug })
+    .select(
+      "location assignedTo createdBy approvedBy assignmentHistory",
+    )
+    .lean();
+
+  if (!ticket) {
+    throw new ApiError(404, "Ticket not found");
+  }
+
+  // --------------------------------------------------
+  // Get location
+  // --------------------------------------------------
+  const location = await Location.findById(ticket.location)
+    .select("managers facilityManager")
+    .lean();
+
+  if (!location) {
+    throw new ApiError(404, "Ticket location not found");
+  }
+
+  // --------------------------------------------------
+  // Latest assignment
+  // --------------------------------------------------
+  const latestAssignment =
+    ticket.assignmentHistory?.length > 0
+      ? ticket.assignmentHistory[ticket.assignmentHistory.length - 1]
+      : null;
+
+  const latestAssignedBy = latestAssignment?.assignedBy || null;
+
+  // --------------------------------------------------
+  // Check whether current user can access this ticket
+  // --------------------------------------------------
+  const currentUserId = userId.toString();
+
+  const isSuperAdmin = role === "super_admin";
+
+  const isCreatedBy =
+    ticket.createdBy?.toString() === currentUserId;
+
+  const isAssignedTo =
+    ticket.assignedTo?.toString() === currentUserId;
+
+  const isApprovedBy =
+    ticket.approvedBy?.toString() === currentUserId;
+
+  const isAssignedBy =
+    latestAssignedBy?.toString() === currentUserId;
+
+  const isLocationManager = location.managers?.some(
+    (managerId) => managerId.toString() === currentUserId,
+  );
+
+  const isFacilityManager =
+    location.facilityManager?.toString() === currentUserId;
+
+  if (
+    !isSuperAdmin &&
+    !isCreatedBy &&
+    !isAssignedTo &&
+    !isApprovedBy &&
+    !isAssignedBy &&
+    !isLocationManager &&
+    !isFacilityManager
+  ) {
+    throw new ApiError(404, "Ticket not found");
+  }
+
+  // --------------------------------------------------
+  // Build mentionable user IDs
+  // --------------------------------------------------
+  const userIds = new Set();
+
+  const addId = (id) => {
+    if (id) {
+      userIds.add(id.toString());
+    }
+  };
+
+  // Ticket creator
+  addId(ticket.createdBy);
+
+  // Current assignee
+  addId(ticket.assignedTo);
+
+  // Approver
+  addId(ticket.approvedBy);
+
+  // Person who made the latest assignment
+  addId(latestAssignedBy);
+
+  // Location managers
+  location.managers?.forEach(addId);
+
+  // Facility manager
+  addId(location.facilityManager);
+
+  // --------------------------------------------------
+  // Always include all super admins
+  // --------------------------------------------------
+  const superAdmins = await User.find({
+    role: "super_admin",
+    status: "active",
+  })
+    .select("_id")
+    .lean();
+
+  superAdmins.forEach(({ _id }) => addId(_id));
+
+  // --------------------------------------------------
+  // Search
+  // --------------------------------------------------
+  const search = String(q).trim();
+
+  const searchFilter = search
+    ? {
+        $or: [
+          { firstname: { $regex: search, $options: "i" } },
+          { lastname: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } },
+        ],
+      }
+    : {};
+
+  // --------------------------------------------------
+  // Fetch final mentionable users
+  // --------------------------------------------------
+  const users = await User.find({
+    _id: {
+      $in: [...userIds].map(
+        (id) => new mongoose.Types.ObjectId(id),
+      ),
+    },
+    status: "active",
+    ...searchFilter,
+  })
+    .select("_id firstname lastname slug role")
+    .sort({
+      firstname: 1,
+      lastname: 1,
+    })
+    .limit(20)
+    .lean();
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      "Mentionable users fetched successfully",
+      users,
+    ),
+  );
+});
