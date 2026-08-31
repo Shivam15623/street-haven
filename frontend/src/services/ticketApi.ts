@@ -15,6 +15,18 @@ export interface MentionableUser {
 }
 export interface commentData {
   _id: string;
+
+  message: string;
+
+  createdAt: string;
+
+  userId: {
+    _id: string;
+    firstname: string;
+    lastname: string;
+    email: string;
+  };
+
   attachments?: {
     _id: string;
     size: number;
@@ -22,14 +34,22 @@ export interface commentData {
     fileUrl: string;
     type: FileType;
   }[];
-  message: string;
-  userId: {
+
+  mentions?: {
+    _id: string;
     firstname: string;
     lastname: string;
+  }[];
+
+  parentCommentId?: {
     _id: string;
-    email: string;
-  };
-  createdAt: string;
+    message: string;
+    userId: {
+      _id: string;
+      firstname: string;
+      lastname: string;
+    };
+  } | null;
 }
 export type commentResponse = ApiResponse<{
   comments: commentData[];

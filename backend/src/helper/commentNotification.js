@@ -18,7 +18,7 @@ import { resolveRecipients } from "../utills/recipients.js";
 import { getViewers } from "../utills/presence.js";
 import { io } from "../index.js";
 import CommentActivity from "../model/CommentActivity.js";
-import UserEntityCommentState from "../model/userEntityCommentState.js";
+import UserEntityCommentState from "../model/EntityMemberShip.js";
 import User from "../model/user.js";
 
 const WINDOW_MS = 10 * 60 * 1000; // a burst stays "open" while comments keep arriving inside this gap

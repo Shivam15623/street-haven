@@ -15888,6 +15888,13 @@ td.fc-header-center {
 .chat-single-message .chat-message-content .chat-time {
   font-size: 0.6rem;
 }
+.chat-highlight-flash {
+  animation: chat-flash 1.2s ease-out;
+}
+@keyframes chat-flash {
+  0% { background-color: rgba(255, 217, 102, 0.6); }
+  100% { background-color: transparent; }
+}
 
 .chat-message-box {
   display: flex;
@@ -15914,7 +15921,196 @@ td.fc-header-center {
 [data-theme="dark"] .chat-message-box {
   background-color: #1e242c;
 }
+/* Base styles for the quote container */
+.reply-quote {
+  width: 100%;
+  max-width: 100%;
+  text-align: left;
+  display: block;
+  margin-bottom: 8px; /* Adds space between the quote and the new message */
+}
 
+.reply-quote-inner {
+  border-radius: 4px;
+  padding: 8px 10px;
+  transition: background-color 0.15s ease;
+}
+
+.reply-quote-user {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.reply-quote-message {
+  font-size: 12px;
+  line-height: 1.4;
+  /* Truncate to 2 lines instead of 1 for better context */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal; 
+}
+
+/* =========================================
+   RIGHT BUBBLE (Sent by User - Blue Background) 
+   ========================================= */
+.chat-single-message.right .reply-quote-inner {
+  border-left: 3px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.15); /* Light overlay */
+}
+
+.chat-single-message.right .reply-quote:hover .reply-quote-inner {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.chat-single-message.right .reply-quote-user,
+.chat-single-message.right .reply-quote-user svg {
+  color: #ffffff; /* Pure white for high contrast */
+}
+
+.chat-single-message.right .reply-quote-message {
+  color: rgba(255, 255, 255, 0.85); /* Slightly dimmed white */
+}
+
+/* =========================================
+   LEFT BUBBLE (Received - Light/Gray Background) 
+   ========================================= */
+.chat-single-message.left .reply-quote-inner {
+  border-left: 3px solid var(--street-primary-base);
+  background: rgba(0, 0, 0, 0.05); /* Dark overlay */
+}
+
+.chat-single-message.left .reply-quote:hover .reply-quote-inner {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.chat-single-message.left .reply-quote-user,
+.chat-single-message.left .reply-quote-user svg {
+  color: var(--street-primary-base);
+}
+
+.chat-single-message.left .reply-quote-message {
+  color: var(--street-gray-base);
+}
+
+/* =========================================
+   DARK MODE OVERRIDES (For the Left Bubble)
+   ========================================= */
+[data-theme="dark"] .chat-single-message.left .reply-quote-inner {
+  background: rgba(255, 255, 255, 0.08); /* Lighten it up against dark mode cards */
+}
+
+[data-theme="dark"] .chat-single-message.left .reply-quote:hover .reply-quote-inner {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .chat-single-message.left .reply-quote-message {
+  color: var(--street-text-base);
+}
+/* =========================================
+   REPLY TRIGGER BUTTON (Under Messages)
+   ========================================= */
+.reply-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px !important;
+  font-weight: 500;
+  opacity: 0.75;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+.reply-trigger:hover {
+  opacity: 1;
+  text-decoration: none !important;
+}
+
+/* Color adaptions for right vs left bubbles */
+.chat-single-message.right .reply-trigger {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.chat-single-message.right .reply-trigger:hover {
+  color: #ffffff !important;
+}
+
+.chat-single-message.left .reply-trigger {
+  color: var(--street-gray-base) !important;
+}
+
+.chat-single-message.left .reply-trigger:hover {
+  color: var(--street-primary-base) !important;
+}
+
+/* =========================================
+   REPLY PREVIEW BANNER (Above Composer)
+   ========================================= */
+.reply-preview-bar {
+  background-color: var(--street-bg-f4);
+  border-top: 1px solid var(--street-calendar-border);
+  border-left: 4px solid var(--street-primary-base);
+  padding: 8px 14px;
+  animation: slideUp 0.15s ease-out;
+}
+
+[data-theme="dark"] .reply-preview-bar {
+  background-color: var(--street-secondary);
+}
+
+.reply-preview-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--street-primary-base);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+[data-theme="dark"] .reply-preview-title {
+  color: var(--street-text-primary);
+}
+
+.reply-preview-text {
+  font-size: 12px;
+  color: var(--street-gray-base);
+  line-height: 1.3;
+}
+
+[data-theme="dark"] .reply-preview-text {
+  color: var(--street-text-base);
+}
+
+.reply-cancel-btn {
+  color: var(--street-gray-base-50);
+  border-radius: 50%;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.reply-cancel-btn:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+  color: var(--street-dark);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(5px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
 .list-style {
   list-style: outside;
   list-style-position: inside;

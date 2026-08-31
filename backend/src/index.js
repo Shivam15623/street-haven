@@ -4,6 +4,7 @@ import { app } from "./app.js";
 import http from "http";
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
+import { clearScrollState, setScrollState } from "./utills/presence.js";
 dotenv.config({
   path: "./.env",
 });
@@ -62,12 +63,16 @@ io.on("connection", (socket) => {
     if (!Array.isArray(permissions)) return;
     permissions.forEach((p) => socket.leave(`permission:${p}`));
   });
+
+  // UPDATE existing leaveRoom handler — add scroll-state cleanup:
   socket.on("leaveRoom", ({ room, userId }) => {
     socket.leave(room);
     activeRoomUsers[room]?.delete(userId);
     socket.data.rooms?.delete(room);
-  });
 
+    const [entityType, entityId] = room.split(":");
+    clearScrollState(entityType, entityId, userId); // ADDED
+  });
   socket.on("joinUserRoom", ({ userId }) => {
     socket.join(`user_${userId}`);
     logUserRooms();
@@ -76,6 +81,16 @@ io.on("connection", (socket) => {
     socket.leave(`user_${userId}`);
     logUserRooms();
   });
+  // ── ADD to index.js ──
+  // (shown as a diff-style snippet against your existing file, not a
+  // full replacement — merge these into your current socket.on blocks)
+
+  // NEW handler — client emits this on scroll-stop, debounced ~1-2s.
+  // Payload: { room: "ticket:123", scrollState: "bottom" | "up" }
+  socket.on("scroll_state", ({ room, scrollState }) => {
+    const [entityType, entityId] = room.split(":");
+    setScrollState(entityType, entityId, socket.data.userId, scrollState);
+  });
 
   socket.on("disconnect", () => {
     // clean up every room this socket had joined, using the userId we stashed on connect
@@ -83,6 +98,8 @@ io.on("connection", (socket) => {
       socket.data.rooms.forEach((room) => {
         activeRoomUsers[room]?.delete(socket.data.userId);
       });
+      const [entityType, entityId] = room.split(":"); // ADDED
+      clearScrollState(entityType, entityId, socket.data.userId); // ADDED
     }
   });
 });

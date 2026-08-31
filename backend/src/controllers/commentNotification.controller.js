@@ -8,7 +8,7 @@
 // for the same entity.
 
 import mongoose from "mongoose";
-import UserEntityCommentState from "../model/userEntityCommentState.js";
+import UserEntityCommentState from "../model/EntityMemberShip.js";
 import CommentActivity from "../model/CommentActivity.js";
 import { buildActivitySummaries } from "../helper/commentNotification.js";
 import { ApiResponse } from "../utills/ApiResponse.js";

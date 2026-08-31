@@ -1,5 +1,6 @@
 // controllers/comment.controller.js
 import path from "path";
+import mongoose from "mongoose";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import Comment from "../model/comments.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
@@ -7,13 +8,12 @@ import Ticket from "../model/ticket.js";
 import Task from "../model/task.js";
 import { ApiError } from "../utills/ApiError.js";
 import { uploadOnCloudinary } from "../utills/cloudinary.js";
-import { activeRoomUsers, io } from "../index.js";
-import { resolveRecipients } from "../utills/recipients.js";
-import mongoose from "mongoose";
-import { isUserViewing } from "../utills/presence.js";
-import { handleNewComment } from "../helper/commentNotification.js";
-import Location from "../model/location.js";
+import { io } from "../index.js";
 import User from "../model/user.js";
+
+import { handleNewComment } from "../helper/commentNotification.js";
+import { getEntityAccessUserIds, getTaskAccessUserIds, getTicketAccessUserIds } from "../helper/mentionAccess.js";
+import EntityMembership from "../model/EntityMemberShip.js";
 
 const ENTITY_MODELS = {
   Ticket,
@@ -34,11 +34,48 @@ const typeMap = {
 const detectFileType = (ext) =>
   Object.keys(typeMap).find((key) => typeMap[key].includes(ext)) || "other";
 
+/**
+ * Loads a Task/Ticket by its Mongo _id WITH whatever population each
+ * entity's access-list resolver needs, so getEntityAccessUserIds can run
+ * without a second query. Kept in one place since both
+ * fetchCommentsForEntity and addCommentForEntity need it.
+ */
+const loadEntityForAccessCheck = async (entityType, entityId) => {
+  const EntityModel = ENTITY_MODELS[entityType];
+  if (!EntityModel) throw new ApiError(400, "Invalid entity type");
+
+  if (entityType === "Task") {
+    return EntityModel.findById(entityId)
+      .select("assignedTo assignedBy slug")
+      .populate({ path: "assignedTo", select: "_id superviserId" })
+      .lean();
+  }
+
+  // Ticket
+  return EntityModel.findById(entityId)
+    .select("location createdBy assignedTo approvedBy assignmentHistory slug")
+    .lean();
+};
+
 // --- Shared core logic ---
 
 export const fetchCommentsForEntity = asyncHandler(
   async (req, res, entityType) => {
     const { entityId } = req.params;
+    const userId = req.user._id.toString();
+    const isSuperAdmin = req.user.role === "super_admin";
+
+    const entity = await loadEntityForAccessCheck(entityType, entityId);
+    if (!entity) throw new ApiError(404, `${entityType} not found`);
+
+    // Same visibility rule as commenting/mentioning — someone who can't
+    // see this entity shouldn't be able to read its comment thread either.
+    if (!isSuperAdmin) {
+      const accessUserIds = await getEntityAccessUserIds(entityType, entity);
+      if (!accessUserIds.has(userId)) {
+        throw new ApiError(404, `${entityType} not found`);
+      }
+    }
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -46,6 +83,12 @@ export const fetchCommentsForEntity = asyncHandler(
 
     const comments = await Comment.find({ entityType, entityId })
       .populate("userId", "firstname lastname email")
+      .populate("mentions", "firstname lastname")
+      .populate({
+        path: "parentCommentId",
+        select: "message userId",
+        populate: { path: "userId", select: "firstname lastname" },
+      })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -65,14 +108,14 @@ export const fetchCommentsForEntity = asyncHandler(
     );
   },
 );
-const pendingCommentBatches = new Map();
-// key: `${entityType}:${entityId}:${authorId}` -> { timer, count, lastCommentId }
 
 export const addCommentForEntity = asyncHandler(
   async (req, res, entityType) => {
     const { entityId } = req.params;
     const userId = req.user._id;
-    const { message, clientId } = req.body;
+    const userIdStr = userId.toString();
+    const isSuperAdmin = req.user.role === "super_admin";
+    const { message, clientId, parentCommentId } = req.body;
 
     if (!message && (!req.files || req.files.length === 0)) {
       throw new ApiError(
@@ -81,10 +124,68 @@ export const addCommentForEntity = asyncHandler(
       );
     }
 
-    const EntityModel = ENTITY_MODELS[entityType];
-    const entity = await EntityModel.findById(entityId);
+    const entity = await loadEntityForAccessCheck(entityType, entityId);
     if (!entity) {
       throw new ApiError(404, `${entityType} not found`);
+    }
+
+    // --------------------------------------------------
+    // Access gate: previously MISSING — any authenticated user could
+    // comment on any entity. Now uses the exact same rule as the
+    // mentionable-users endpoints (assignee/creator/approver/managers/
+    // super_admin), so "who can see this thread" and "who can post in it"
+    // can never drift apart.
+    // --------------------------------------------------
+    const accessUserIds = await getEntityAccessUserIds(entityType, entity);
+    if (!isSuperAdmin && !accessUserIds.has(userIdStr)) {
+      throw new ApiError(403, "You do not have access to this thread");
+    }
+
+    // --------------------------------------------------
+    // Reply validation: if a parent is given, it must exist and belong
+    // to THIS entity — otherwise someone could reply-link a comment from
+    // an entity they have no access to, leaking its author/snippet.
+    // --------------------------------------------------
+    let parentComment = null;
+    if (parentCommentId) {
+      if (!mongoose.Types.ObjectId.isValid(parentCommentId)) {
+        throw new ApiError(400, "Invalid parentCommentId");
+      }
+      parentComment = await Comment.findOne({
+        _id: parentCommentId,
+        entityType,
+        entityId,
+      }).populate("userId", "firstname lastname email");
+
+      if (!parentComment) {
+        throw new ApiError(404, "Parent comment not found on this thread");
+      }
+    }
+
+    // --------------------------------------------------
+    // Mentions: never trust the client's ids outright — intersect with
+    // the real access set computed above. Anything outside it (typo'd id,
+    // tampered request, stale id from someone removed from the thread) is
+    // silently dropped rather than erroring, so a bad mention never blocks
+    // an otherwise-valid comment from posting.
+    // --------------------------------------------------
+    let trustedMentionIds = [];
+    if (req.body.mentions) {
+      let rawMentions;
+      try {
+        rawMentions = JSON.parse(req.body.mentions);
+      } catch {
+        throw new ApiError(400, "Invalid mentions payload");
+      }
+      if (!Array.isArray(rawMentions)) {
+        throw new ApiError(400, "mentions must be an array");
+      }
+
+      trustedMentionIds = [
+        ...new Set(
+          rawMentions.filter((id) => mongoose.Types.ObjectId.isValid(id)),
+        ),
+      ].filter((id) => accessUserIds.has(id) && id !== userIdStr);
     }
 
     // --- attachments ---
@@ -112,15 +213,24 @@ export const addCommentForEntity = asyncHandler(
     const payload = { entityType, entityId, userId };
     if (message) payload.message = message;
     if (attachments.length !== 0) payload.attachments = attachments;
+    if (parentComment) payload.parentCommentId = parentComment._id;
+    if (trustedMentionIds.length) payload.mentions = trustedMentionIds;
 
     // --- comment creation: no transaction needed for a single insert ---
     const comment = await Comment.create(payload);
 
-    const populatedComment = await Comment.findById(comment._id).populate(
-      "userId",
-      "firstname lastname email",
-    );
-
+    const populatedComment = await Comment.findById(comment._id)
+      .populate("userId", "firstname lastname email")
+      .populate("mentions", "firstname lastname")
+      .populate({
+        path: "parentCommentId",
+        select: "message userId",
+        populate: { path: "userId", select: "firstname lastname" },
+      });
+ await EntityMembership.updateOne(
+    { entityType, entityId, userId: req.user._id },
+    { lastSeenCommentId: comment._id, lastSeenAt: new Date() }
+  );
     // --- emit the live comment to everyone viewing the entity room ---
     // this happens regardless of notification outcome — the comment
     // itself is already durable at this point
@@ -137,13 +247,32 @@ export const addCommentForEntity = asyncHandler(
       );
 
     // --- notification pipeline: fire-and-forget, AFTER the response ---
-    // deliberately outside the request/response critical path and outside
-    // any transaction — a notification failure must never affect whether
-    // the comment was saved or what the user sees back.
+    // deliberately outside the request/response critical path — a
+    // notification failure must never affect whether the comment was
+    // saved or what the user sees back.
     
   },
 );
 
+// --------------------------------------------------------------------
+// Mentionable-users endpoints — now thin wrappers around the shared
+// access-list resolver, so this list can never drift from the actual
+// commenting-permission check above.
+// --------------------------------------------------------------------
+
+const MENTIONABLE_USERS_LIMIT = 20;
+
+const searchFilterFor = (q) => {
+  const search = String(q || "").trim();
+  if (!search) return {};
+  return {
+    $or: [
+      { firstname: { $regex: search, $options: "i" } },
+      { lastname: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+    ],
+  };
+};
 
 export const getTaskMentionableUsers = asyncHandler(async (req, res) => {
   const { slug } = req.params;
@@ -166,97 +295,26 @@ export const getTaskMentionableUsers = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Task not found");
   }
 
-  // --------------------------------------------------
-  // Check access
-  // --------------------------------------------------
-  const currentUserId = userId.toString();
-
+  const userIds = await getTaskAccessUserIds(task);
   const isSuperAdmin = role === "super_admin";
 
-  const isAssignedTo =
-    task.assignedTo?._id?.toString() === currentUserId;
-
-  const isAssignedBy =
-    task.assignedBy?.toString() === currentUserId;
-
-  if (!isSuperAdmin && !isAssignedTo && !isAssignedBy) {
+  if (!isSuperAdmin && !userIds.has(userId.toString())) {
     throw new ApiError(404, "Task not found");
   }
 
-  // --------------------------------------------------
-  // Build mentionable IDs
-  // --------------------------------------------------
-  const userIds = new Set();
-
-  const addId = (id) => {
-    if (id) {
-      userIds.add(id.toString());
-    }
-  };
-
-  // Assigned volunteer
-  addId(task.assignedTo?._id);
-
-  // Person who assigned/created the task
-  addId(task.assignedBy);
-
-  // Supervisor of assigned volunteer
-  addId(task.assignedTo?.superviserId);
-
-  // --------------------------------------------------
-  // All active super admins
-  // --------------------------------------------------
-  const superAdmins = await User.find({
-    role: "super_admin",
-    status: "active",
-  })
-    .select("_id")
-    .lean();
-
-  superAdmins.forEach(({ _id }) => addId(_id));
-
-  // --------------------------------------------------
-  // Search
-  // --------------------------------------------------
-  const search = String(q).trim();
-
-  const searchFilter = search
-    ? {
-        $or: [
-          { firstname: { $regex: search, $options: "i" } },
-          { lastname: { $regex: search, $options: "i" } },
-          { email: { $regex: search, $options: "i" } },
-        ],
-      }
-    : {};
-
-  // --------------------------------------------------
-  // Final users
-  // --------------------------------------------------
   const users = await User.find({
-    _id: {
-      $in: [...userIds].map(
-        (id) => new mongoose.Types.ObjectId(id),
-      ),
-    },
+    _id: { $in: [...userIds].map((id) => new mongoose.Types.ObjectId(id)) },
     status: "active",
-    ...searchFilter,
+    ...searchFilterFor(q),
   })
     .select("_id firstname lastname slug role")
-    .sort({
-      firstname: 1,
-      lastname: 1,
-    })
-    .limit(20)
+    .sort({ firstname: 1, lastname: 1 })
+    .limit(MENTIONABLE_USERS_LIMIT)
     .lean();
 
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      "Mentionable users fetched successfully",
-      users,
-    ),
-  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Mentionable users fetched successfully", users));
 });
 
 export const getTicketMentionableUsers = asyncHandler(async (req, res) => {
@@ -268,156 +326,34 @@ export const getTicketMentionableUsers = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Ticket slug is required");
   }
 
-  const ticket = await Ticket.findOne({ _id:slug })
-    .select(
-      "location assignedTo createdBy approvedBy assignmentHistory",
-    )
+  // FIXED: was `{ _id: slug }` — filtering the primary key by a slug
+  // string, which never matches. Ticket lookup must go through `slug`.
+  const ticket = await Ticket.findOne({ slug })
+    .select("location assignedTo createdBy approvedBy assignmentHistory")
     .lean();
 
   if (!ticket) {
     throw new ApiError(404, "Ticket not found");
   }
 
-  // --------------------------------------------------
-  // Get location
-  // --------------------------------------------------
-  const location = await Location.findById(ticket.location)
-    .select("managers facilityManager")
-    .lean();
-
-  if (!location) {
-    throw new ApiError(404, "Ticket location not found");
-  }
-
-  // --------------------------------------------------
-  // Latest assignment
-  // --------------------------------------------------
-  const latestAssignment =
-    ticket.assignmentHistory?.length > 0
-      ? ticket.assignmentHistory[ticket.assignmentHistory.length - 1]
-      : null;
-
-  const latestAssignedBy = latestAssignment?.assignedBy || null;
-
-  // --------------------------------------------------
-  // Check whether current user can access this ticket
-  // --------------------------------------------------
-  const currentUserId = userId.toString();
-
+  const userIds = await getTicketAccessUserIds(ticket);
   const isSuperAdmin = role === "super_admin";
 
-  const isCreatedBy =
-    ticket.createdBy?.toString() === currentUserId;
-
-  const isAssignedTo =
-    ticket.assignedTo?.toString() === currentUserId;
-
-  const isApprovedBy =
-    ticket.approvedBy?.toString() === currentUserId;
-
-  const isAssignedBy =
-    latestAssignedBy?.toString() === currentUserId;
-
-  const isLocationManager = location.managers?.some(
-    (managerId) => managerId.toString() === currentUserId,
-  );
-
-  const isFacilityManager =
-    location.facilityManager?.toString() === currentUserId;
-
-  if (
-    !isSuperAdmin &&
-    !isCreatedBy &&
-    !isAssignedTo &&
-    !isApprovedBy &&
-    !isAssignedBy &&
-    !isLocationManager &&
-    !isFacilityManager
-  ) {
+  if (!isSuperAdmin && !userIds.has(userId.toString())) {
     throw new ApiError(404, "Ticket not found");
   }
 
-  // --------------------------------------------------
-  // Build mentionable user IDs
-  // --------------------------------------------------
-  const userIds = new Set();
-
-  const addId = (id) => {
-    if (id) {
-      userIds.add(id.toString());
-    }
-  };
-
-  // Ticket creator
-  addId(ticket.createdBy);
-
-  // Current assignee
-  addId(ticket.assignedTo);
-
-  // Approver
-  addId(ticket.approvedBy);
-
-  // Person who made the latest assignment
-  addId(latestAssignedBy);
-
-  // Location managers
-  location.managers?.forEach(addId);
-
-  // Facility manager
-  addId(location.facilityManager);
-
-  // --------------------------------------------------
-  // Always include all super admins
-  // --------------------------------------------------
-  const superAdmins = await User.find({
-    role: "super_admin",
-    status: "active",
-  })
-    .select("_id")
-    .lean();
-
-  superAdmins.forEach(({ _id }) => addId(_id));
-
-  // --------------------------------------------------
-  // Search
-  // --------------------------------------------------
-  const search = String(q).trim();
-
-  const searchFilter = search
-    ? {
-        $or: [
-          { firstname: { $regex: search, $options: "i" } },
-          { lastname: { $regex: search, $options: "i" } },
-          { email: { $regex: search, $options: "i" } },
-        ],
-      }
-    : {};
-
-  // --------------------------------------------------
-  // Fetch final mentionable users
-  // --------------------------------------------------
   const users = await User.find({
-    _id: {
-      $in: [...userIds].map(
-        (id) => new mongoose.Types.ObjectId(id),
-      ),
-    },
+    _id: { $in: [...userIds].map((id) => new mongoose.Types.ObjectId(id)) },
     status: "active",
-    ...searchFilter,
+    ...searchFilterFor(q),
   })
     .select("_id firstname lastname slug role")
-    .sort({
-      firstname: 1,
-      lastname: 1,
-    })
-    .limit(20)
+    .sort({ firstname: 1, lastname: 1 })
+    .limit(MENTIONABLE_USERS_LIMIT)
     .lean();
 
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      "Mentionable users fetched successfully",
-      users,
-    ),
-  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Mentionable users fetched successfully", users));
 });

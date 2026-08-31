@@ -3,7 +3,7 @@ import DOMPurify from "dompurify";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import dayjs from "dayjs";
 import {
-  useLazyFetchTicketMentionableUsersQuery,
+  useLazyFetchMentionableUsersQuery,
   type commentData,
   type commentResponse,
   type MentionableUser,
@@ -47,6 +47,15 @@ const SANITIZE_CONFIG = {
   ADD_ATTR: ["data-id", "data-denotation-char", "data-value", "class"],
 };
 
+/** Plain-text preview of a comment, for the reply-quote UI. Strips any
+ *  HTML (mentions, formatting) down to readable text and truncates. */
+const getPlainTextPreview = (html: string, maxLen = 80) => {
+  const text =
+    new DOMParser().parseFromString(html, "text/html").body.textContent ?? "";
+  const trimmed = text.trim().replace(/\s+/g, " ");
+  return trimmed.length > maxLen ? `${trimmed.slice(0, maxLen)}…` : trimmed;
+};
+
 // Main Component
 type UseLazyViewCommentsHook = () => readonly [
   (args: { page: number; limit: number }) => any,
@@ -66,18 +75,12 @@ type UseAddCommentHook = () => readonly [
     isLoading: boolean;
   },
 ];
-const getPlainTextPreview = (html: string, maxLen = 80) => {
-  const text =
-    new DOMParser().parseFromString(html, "text/html").body.textContent ?? "";
-  const trimmed = text.trim().replace(/\s+/g, " ");
-  return trimmed.length > maxLen ? `${trimmed.slice(0, maxLen)}…` : trimmed;
-};
 
 interface EntityCommentProps {
-  entityId: string; // ticketId or taskId
+  entityId: string; // ticketId or taskId (Mongo _id) — comments/sockets
+  entitySlug: string; // task.slug / ticket.slug — mentionable-users lookup
   socketRoomPrefix: "ticket" | "task"; // used to namespace socket rooms
   title: string;
-  entitySlug: string;
   useLazyViewComments: UseLazyViewCommentsHook;
   useAddComment: UseAddCommentHook;
   triggerIcon?: string;
@@ -85,8 +88,8 @@ interface EntityCommentProps {
 
 const EntityComment = ({
   entityId,
-  socketRoomPrefix,
   entitySlug,
+  socketRoomPrefix,
   title,
   useLazyViewComments,
   useAddComment,
@@ -103,7 +106,12 @@ const EntityComment = ({
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerFiles, setViewerFiles] = useState<FileItem[]>([]);
   const [viewerIndex, setViewerIndex] = useState(0);
+
+  // --- Reply state ---
+  // The comment currently being replied to (or null). Shown as a quoted
+  // preview bar above the composer; sent as parentCommentId on submit.
   const [replyingTo, setReplyingTo] = useState<commentData | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -114,35 +122,28 @@ const EntityComment = ({
   const [mentionableUsers, setMentionableUsers] = useState<MentionableUser[]>(
     [],
   );
-  const commentsById = useMemo(() => {
-    const map = new Map<string, commentData>();
-    comments.forEach((c) => map.set(c._id, c));
-    return map;
-  }, [comments]);
-  const [fetchMentionableUsers] = useLazyFetchTicketMentionableUsersQuery();
 
-  // Fetch once when the sheet opens (not per-keystroke)
+  const [fetchMentionableUsers] = useLazyFetchMentionableUsersQuery();
+
+  // Fetch once when the sheet opens (not per-keystroke). Uses entitySlug +
+  // entity type — matches GET /tasks/:slug/mentionable-users and
+  // GET /tickets/:slug/mentionable-users on the backend.
   const loadMentionableUsers = useCallback(async () => {
     try {
       const result = await fetchMentionableUsers({
-        ticketId: entitySlug,
+        entityType: socketRoomPrefix,
+        slug: entitySlug,
         q: "",
       }).unwrap();
       setMentionableUsers(result.data ?? result);
     } catch (error) {
       showError(getErrorMessage(error));
     }
-  }, [fetchMentionableUsers, entityId]);
+  }, [fetchMentionableUsers, socketRoomPrefix, entitySlug]);
+
   const totalPages = commentData?.data?.paggination.totalPages || 1;
   const hasMore = page < totalPages;
-  // Called from the "Reply" affordance on a message bubble.
-  const handleStartReply = useCallback((comment: commentData) => {
-    setReplyingTo(comment);
-  }, []);
 
-  const handleCancelReply = useCallback(() => {
-    setReplyingTo(null);
-  }, []);
   const handleLoadMore = useCallback(() => {
     if (isFetching || !hasMore) return;
     const nextPage = page + 1;
@@ -163,6 +164,14 @@ const EntityComment = ({
     () => groupCommentsByDate(comments),
     [comments],
   );
+
+  // Quick lookup so a reply header can find its parent's live data (in
+  // case it scrolled in later / was updated) without a re-render cost.
+  const commentsById = useMemo(() => {
+    const map = new Map<string, commentData>();
+    comments.forEach((c) => map.set(c._id, c));
+    return map;
+  }, [comments]);
 
   useEffect(() => {
     if (!commentData?.data?.comments) return;
@@ -226,6 +235,15 @@ const EntityComment = ({
   }, []);
 
   const handleFileSelect = () => fileInputRef.current?.click();
+
+  // Called from the "Reply" affordance on a message bubble.
+  const handleStartReply = useCallback((comment: commentData) => {
+    setReplyingTo(comment);
+  }, []);
+
+  const handleCancelReply = useCallback(() => {
+    setReplyingTo(null);
+  }, []);
 
   const handleMessageSend = async () => {
     if (!message.trim() && attachments.length === 0) return;
@@ -322,6 +340,10 @@ const EntityComment = ({
     },
     [],
   );
+
+  // Scrolls to and briefly highlights the original comment when a quoted
+  // reply header is clicked. Purely a nicety — safe no-op if not found
+  // (e.g. it hasn't loaded / paged in yet).
   const scrollToComment = useCallback((commentId: string) => {
     const el = containerRef.current?.querySelector(
       `[data-comment-id="${commentId}"]`,
@@ -331,6 +353,7 @@ const EntityComment = ({
     el.classList.add("chat-highlight-flash");
     setTimeout(() => el.classList.remove("chat-highlight-flash"), 1200);
   }, []);
+
   return (
     <Sheet
       title={title}
@@ -430,27 +453,25 @@ const EntityComment = ({
                             <button
                               type="button"
                               onClick={() => scrollToComment(parent._id)}
-                              className="reply-quote btn p-0 text-start d-block mb-2 text-decoration-none"
+                              className="reply-quote btn btn-link p-0 text-start d-block mb-1 text-decoration-none"
                             >
-                              <div className="reply-quote-inner">
-                                <div className="reply-quote-user">
-                                  <Icon icon="mdi:reply" width={13} />
-                                  <span>
-                                    {parent.userId.firstname}{" "}
-                                    {parent.userId.lastname}
-                                  </span>
-                                </div>
-                                <div className="reply-quote-message">
+                              <div className="border-start border-2 ps-2 text-muted small">
+                                <span className="fw-semibold">
+                                  {parent.userId.firstname}{" "}
+                                  {parent.userId.lastname}
+                                </span>{" "}
+                                <span
+                                  className="text-truncate d-inline-block align-bottom"
+                                  style={{ maxWidth: 220 }}
+                                >
                                   {parent.message
-                                    ? getPlainTextPreview(
-                                        parent.message,
-                                        80,
-                                      ) /* Increased preview length slightly */
+                                    ? getPlainTextPreview(parent.message, 60)
                                     : "Attachment"}
-                                </div>
+                                </span>
                               </div>
                             </button>
                           )}
+
                           {msg.attachments && msg.attachments?.length > 0 && (
                             <div className="space-y-2 gap-2 d-flex flex-column">
                               {msg.attachments.map((attachment, attIdx) => (
@@ -483,10 +504,10 @@ const EntityComment = ({
                             <button
                               type="button"
                               onClick={() => handleStartReply(msg)}
-                              className="btn p-0 reply-trigger"
+                              className="btn btn-sm btn-link p-0 text-muted text-decoration-none reply-trigger"
+                              style={{ fontSize: 11 }}
                             >
-                              <Icon icon="mdi:reply" width={13} />
-                              <span>Reply</span>
+                              <Icon icon="mdi:reply" width={12} /> Reply
                             </button>
                             <span className="chat-time text-xxs">
                               {dayjs(msg.createdAt).format("hh:mm A")}
@@ -540,19 +561,17 @@ const EntityComment = ({
             </div>
           </div>
         )}
+
         {/* Reply preview bar — shown above the composer while replyingTo
             is set. Dismissible without sending. */}
         {replyingTo && (
-          <div className="reply-preview-bar d-flex align-items-center justify-content-between gap-3">
-            <div className="flex-grow-1 min-w-0">
-              <div className="reply-preview-title">
-                <Icon icon="mdi:reply" width={14} />
-                <span>
-                  Replying to {replyingTo.userId.firstname}{" "}
-                  {replyingTo.userId.lastname}
-                </span>
-              </div>
-              <div className="reply-preview-text text-truncate">
+          <div className="px-3 py-2 border-top bg-light d-flex align-items-start justify-content-between gap-2">
+            <div className="border-start border-2 border-primary ps-2 small text-muted flex-grow-1 text-truncate">
+              Replying to{" "}
+              <span className="fw-semibold">
+                {replyingTo.userId.firstname} {replyingTo.userId.lastname}
+              </span>
+              <div className="text-truncate">
                 {replyingTo.message
                   ? getPlainTextPreview(replyingTo.message, 100)
                   : "Attachment"}
@@ -560,7 +579,7 @@ const EntityComment = ({
             </div>
             <button
               type="button"
-              className="btn btn-link reply-cancel-btn border-0 p-1"
+              className="btn btn-sm btn-light p-1"
               onClick={handleCancelReply}
               aria-label="Cancel reply"
             >
@@ -568,6 +587,7 @@ const EntityComment = ({
             </button>
           </div>
         )}
+
         <form
           className="chat-message-box p-0 rounded-0"
           onSubmit={(e) => {

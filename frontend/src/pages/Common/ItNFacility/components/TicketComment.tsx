@@ -29,6 +29,7 @@ const TicketComment = ({ ticket }: { ticket: TicketData }) => {
   return (
     <EntityComment
       entityId={ticket._id}
+      entitySlug={ticket.slug}
       socketRoomPrefix="ticket"
       title="Ticket Comments"
       useLazyViewComments={useLazyViewComments}
