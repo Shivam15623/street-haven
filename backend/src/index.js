@@ -97,9 +97,9 @@ io.on("connection", (socket) => {
     if (socket.data.rooms) {
       socket.data.rooms.forEach((room) => {
         activeRoomUsers[room]?.delete(socket.data.userId);
+        const [entityType, entityId] = room.split(":"); // ADDED
+        clearScrollState(entityType, entityId, socket.data.userId); // ADDED
       });
-      const [entityType, entityId] = room.split(":"); // ADDED
-      clearScrollState(entityType, entityId, socket.data.userId); // ADDED
     }
   });
 });

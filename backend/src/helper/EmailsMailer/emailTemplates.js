@@ -547,6 +547,48 @@ export const generateEmailTemplate = ({ type, data }) => {
       </p>
     `,
       };
+    case "comment_mention":
+      return {
+        subject: `${data.mentionedByName} mentioned you in ${data.entityLabel}`,
+        html: `
+      <h2>You Were Mentioned</h2>
+
+      <p>Hello ${data.recipientName},</p>
+
+      <p>
+        <strong>${data.mentionedByName}</strong> mentioned you in a comment
+        on the following ${data.entityLabel}.
+      </p>
+
+      <table style="border-collapse:collapse;">
+        <tr>
+          <td style="padding:6px 12px;"><strong>${data.entityLabel}</strong></td>
+          <td>${data.entityTitle}</td>
+        </tr>
+        ${
+          data.location
+            ? `
+        <tr>
+          <td style="padding:6px 12px;"><strong>Location</strong></td>
+          <td>${data.location}</td>
+        </tr>`
+            : ""
+        }
+      </table>
+
+      <div style="margin:20px 0; padding:14px 18px; background:#f8f5ff; border-left:4px solid #7c3aed; border-radius:4px;">
+        <p style="margin:0; color:#4b5563; font-style:italic;">
+          "${data.commentSnippet}"
+        </p>
+      </div>
+
+      <p style="margin-top:24px;">
+        <a href="${data.link}" style="background:#7c3aed;color:#fff;padding:12px 18px;text-decoration:none;border-radius:6px;display:inline-block;">
+          View Comment
+        </a>
+      </p>
+    `,
+      };
     default:
       throw new Error("Invalid email type");
   }

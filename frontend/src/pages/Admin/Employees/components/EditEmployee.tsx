@@ -82,7 +82,7 @@ const EditEmployee: React.FC<EditEmployeeProps> = ({
       { forDropdown: true,role:["manager","volunteer_admin","super_admin"]  },
       { skip: !showModal, refetchOnMountOrArgChange: false },
     );
-  console.log("data", employeeData, initialValues);
+
   const handleSave = async (values: EditEmployeeValues) => {
     try {
       const formData = new FormData();

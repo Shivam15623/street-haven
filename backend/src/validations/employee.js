@@ -22,7 +22,7 @@ export const viewEmployees = Joi.object({
       Joi.string()
         .trim()
         .custom((value, helpers) => {
-          console.log(value);
+
           const roles = value.split(",");
           console.log(roles, Array.isArray(roles));
 

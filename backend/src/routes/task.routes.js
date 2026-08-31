@@ -18,7 +18,7 @@ import { upload } from "../middleware/multer.js";
 import { checkActiveUser } from "../middleware/checkActiveUsers.js";
 import { authorizePermissions } from "../middleware/AuthRole.js";
 import { PERMISSIONS } from "../auth/permissions.js";
-import { getTaskMentionableUsers } from "../controllers/comments.controller.js";
+import { getTaskMentionableUsers, updateReadCursor } from "../controllers/comments.controller.js";
 
 const router = Router();
 
@@ -53,4 +53,6 @@ router.get(
 );
 router.get("/:entityId/comments", GetTaskTimeline);
 router.post("/:entityId/comments", upload.array("files"), AddTaskComment);
+
+router.post("/:entityId/read-cursor", updateReadCursor);
 export default router;

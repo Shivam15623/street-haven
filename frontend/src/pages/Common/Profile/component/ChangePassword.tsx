@@ -27,7 +27,7 @@ const ChangePassword = () => {
   ) => {
     try {
       const res = await changepassword(values).unwrap();
-      console.log(res)
+
       if (res.success) {
         showSuccess(res.message);
         resetForm(); // ✅ Reset form after success

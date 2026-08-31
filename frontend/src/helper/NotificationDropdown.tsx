@@ -3,6 +3,7 @@ import { Dropdown, Spinner } from "react-bootstrap";
 import { Icon } from "@iconify/react";
 import {
   useFetchNotifyQuery,
+  useFetchUnreadCountQuery,
   useMarkNotificationsAsReadMutation,
   type notificationData,
 } from "../services/notificationApi";
@@ -20,19 +21,23 @@ const NotificationDropdown = () => {
   const { socket } = useSocket();
   const [notifications, setNotifications] = useState<notificationData[]>([]);
   const { user } = useSelector(selectAuth);
+  const { data, isLoading } = useFetchNotifyQuery({ limit: 20 });
+  const { data: unreadData } = useFetchUnreadCountQuery();
   const [unreadCount, setUnreadCount] = useState<number>(0);
-  const { data, isLoading } = useFetchNotifyQuery({
-    page: 1,
-    limit: 10,
-    readStatus: "all",
-    type: undefined,
-  });
   const { add, flush } = useNotificationReadBuffer();
   const [markRead] = useMarkNotificationsAsReadMutation();
 
   useEffect(() => {
     setNotifications(data?.data.notifications ?? []);
   }, [data?.data.notifications]);
+
+  // server-computed unread count is the source of truth on load; local
+  // deltas from socket pushes / optimistic mark-read adjust it after
+  useEffect(() => {
+    if (unreadData?.data.count !== undefined) {
+      setUnreadCount(unreadData.data.count);
+    }
+  }, [unreadData?.data.count]);
 
   useEffect(() => {
     if (!socket || !user?._id) return;
@@ -41,20 +46,16 @@ const NotificationDropdown = () => {
 
     const joinRoom = () => {
       socket.emit("joinUserRoom", { userId: user._id });
-
-      // Join permission rooms so this socket receives permission-gated notifications
       if (permissions.length > 0) {
         socket.emit("joinPermissionRooms", { permissions });
       }
     };
 
-    // join immediately if already connected
     if (socket.connected) joinRoom();
-
-    // AND rejoin every time the underlying connection re-establishes
     socket.on("connect", joinRoom);
 
-    socket.on("newNotification", (notification: notificationData) => {
+    // single event for both sources — discriminate via payload.source
+    socket.on("notification:new", (notification: notificationData) => {
       setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((prev) => prev + 1);
     });
@@ -65,14 +66,9 @@ const NotificationDropdown = () => {
         socket.emit("leavePermissionRooms", { permissions });
       }
       socket.off("connect", joinRoom);
-      socket.off("newNotification");
+      socket.off("notification:new");
     };
   }, [socket, user?._id]);
-
-  useEffect(() => {
-    const count = notifications.filter((notif) => !notif.readAt).length;
-    setUnreadCount(count);
-  }, [notifications]);
 
   return (
     <Dropdown
@@ -85,14 +81,14 @@ const NotificationDropdown = () => {
           try {
             await markRead(ids).unwrap();
 
-            // optimistic UI update
             setNotifications((prev) =>
               prev.map((n) =>
                 ids.includes(n._id)
-                  ? { ...n, readAt: new Date().toISOString() }
+                  ? { ...n, isRead: true, readAt: new Date().toISOString() }
                   : n,
               ),
             );
+            setUnreadCount((prev) => Math.max(0, prev - ids.length));
           } catch (err) {
             showError(getErrorMessage(err));
           }

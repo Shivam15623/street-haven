@@ -1,77 +1,72 @@
 import type { ApiResponse } from "../interfaces/Response";
 import { api } from "../redux/ApiSlice";
-export interface notificationData {
-  createdAt: string;
-  createdBy: string;
-  link: string;
-  message: string;
-  meta: any;
-  title: string;
-  category:
-    | "ticket"
-    | "event"
-    | "announcement"
-    | "event_minute"
-    | "training_material"
-    | "additional_documents"
-    | "hr_updates"
-    | "system";
 
-  action:
-    | "created"
-    | "updated"
-    | "commented"
-    | "assigned"
-    | "status_changed"
-    | "deleted"
-    | "registered"
-    | "unregistered";
-
-  severity: "info" | "success" | "warning" | "error";
-
-  updatedAt: string;
+// Common fields present on every notification regardless of source.
+interface BaseNotification {
   _id: string;
-  readAt: string | null;
+  source: "system" | "comment";
+  title: string | null;
+  message: string;
+  severity: "info" | "success" | "warning" | "error";
+  link: string | null;
   isRead: boolean;
-  isGlobal: boolean;
-  expireAt: string;
+  readAt: string | null;
+  createdAt: string;
+  sortDate: string;
 }
+
+// system: generic Notification-backed rows
+interface SystemNotification extends BaseNotification {
+  source: "system";
+}
+
+// comment: UserCommentNotification-backed rows — carry the extra
+// entity/grouping fields the generic ones don't have.
+interface CommentNotification extends BaseNotification {
+  source: "comment";
+  entityType: "Ticket" | "Task";
+  entityId: string;
+  commentId: string | null;
+  notifType: "mention" | "reply" | "assignment" | "activity" | "other";
+  priority: "high" | "normal" | "low";
+  commentCount: number;
+}
+
+export type notificationData = SystemNotification | CommentNotification;
+
 export interface ActivityLogData {
   _id: string;
   actionType: string;
-
   performedBy: {
     id: string | null;
     name: string | null;
     type: "system" | "user";
   };
-
   message: string;
-
-  meta: Record<string, any>; // 👈 dynamic metadata (ANY object)
-
+  meta: Record<string, any>;
   createdAt: string;
   updatedAt: string;
   expiresAt?: string;
-
   __v?: number;
+}
+
+interface AllNotificationsQuery {
+  page?: number;
+  limit?: number;
+  type?: "global" | "personal";
+  readStatus?: "read" | "unread" | "all";
 }
 
 type NotificationResponse = ApiResponse<{
   notifications: notificationData[];
   pagination: {
+    page: number;
+    limit: number;
     total: number;
     totalPages: number;
-    limit: number;
-    page: number;
   };
 }>;
-interface AllNotificationsQuery {
-  page?: number;
-  limit?: number;
-  type: "global" | "personal" | undefined;
-  readStatus: "read" | "unread" | "all";
-}
+
 interface ActivityLogQuery {
   page?: number;
   limit?: number;
@@ -80,21 +75,30 @@ interface ActivityLogQuery {
   order?: "asc" | "desc";
   type?: "system" | "user" | "all";
 }
+
 const notificationApi = api.injectEndpoints({
   endpoints: (builder) => ({
     fetchNotify: builder.query<NotificationResponse, AllNotificationsQuery>({
-      query: ({
-        limit = 10,
-        page = 1,
-        type = undefined,
-        readStatus = "all",
-      }) => ({
+      query: ({ page = 1, limit = 20, type, readStatus = "all" }) => ({
         url: "/notifications/view",
         method: "GET",
-        params: { limit, page, readStatus, type },
+        params: {
+          page,
+          limit,
+          ...(type ? { type } : {}),
+          readStatus,
+        },
       }),
       providesTags: ["Notification"],
     }),
+    fetchUnreadCount: builder.query<ApiResponse<{ count: number }>, void>({
+      query: () => ({
+        url: "/notifications/unread-count",
+        method: "GET",
+      }),
+      providesTags: ["Notification"],
+    }),
+    // ids can be mixed system + comment ids in one call — backend splits them
     markNotificationsAsRead: builder.mutation<void, string[]>({
       query: (ids) => ({
         url: "/notifications/mark-read",
@@ -133,6 +137,7 @@ const notificationApi = api.injectEndpoints({
 
 export const {
   useFetchNotifyQuery,
+  useFetchUnreadCountQuery,
   useMarkNotificationsAsReadMutation,
   useFetchActivityLogsQuery,
 } = notificationApi;

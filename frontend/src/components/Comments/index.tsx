@@ -20,6 +20,7 @@ import { showError } from "../../utills/toastutills";
 import { getErrorMessage } from "../../utills/utills";
 import Sheet from "../child/Sheet";
 import { AttachmentPreview } from "./AttachmentPreview";
+import { useReadCursor } from "../../hooks/useReadCursor";
 const QuillEditor = lazy(() => import("../child/QuillEditor"));
 dayjs.extend(relativeTime);
 
@@ -94,7 +95,8 @@ const EntityComment = ({
 }: EntityCommentProps) => {
   const { socket } = useSocket();
   const { user } = useSelector(selectAuth);
-
+const entityType = socketRoomPrefix === "task" ? "task" : "ticket";
+const { markSeen } = useReadCursor(entityType, entityId);
   const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
   const [comments, setComments] = useState<commentData[]>([]);
@@ -164,15 +166,24 @@ const EntityComment = ({
     [comments],
   );
 
-  useEffect(() => {
-    if (!commentData?.data?.comments) return;
-    const newComments = [...commentData.data.comments].reverse();
-    setComments((prev) => {
-      const merged = [...newComments, ...prev];
-      return Array.from(new Map(merged.map((c) => [c._id, c])).values());
-    });
-    if (page > 1) restoreScrollPosition();
-  }, [commentData, page, restoreScrollPosition]);
+ useEffect(() => {
+  if (!commentData?.data?.comments) return;
+  const newComments = [...commentData.data.comments].reverse();
+  setComments((prev) => {
+    const merged = [...newComments, ...prev];
+    return Array.from(new Map(merged.map((c) => [c._id, c])).values());
+  });
+  if (page > 1) {
+    restoreScrollPosition();
+  } else {
+    // initial load — the user is landing at the bottom of the thread,
+    // so the latest real comment counts as seen
+    const latestComment = [...newComments]
+      .reverse()
+      .find((c) => !c._id.includes("-")); // skip any optimistic ids that slipped in
+    if (latestComment) markSeen(latestComment._id);
+  }
+}, [commentData, page, restoreScrollPosition, markSeen]);
 
   useEffect(() => {
     if (!socket || !open) return;

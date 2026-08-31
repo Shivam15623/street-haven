@@ -659,6 +659,7 @@ export const getAllTasks = asyncHandler(async (req, res) => {
       assignedBy: 1,
       createdAt: 1,
       updatedAt: 1,
+      slug: 1,
     },
   };
 
@@ -1119,6 +1120,14 @@ export const GetTaskTimeline = asyncHandler(async (req, res) => {
 
   const commentsRaw = await Comment.find(commentFilter)
     .populate("userId", "firstname lastname email")
+    .populate("mentions", "firstname lastname")
+    // parentCommentId populate: only need enough to render the quoted
+    // preview client-side — full message + author, not the whole doc.
+    .populate({
+      path: "parentCommentId",
+      select: "message userId",
+      populate: { path: "userId", select: "firstname lastname" },
+    })
     .sort({ createdAt: -1, _id: -1 })
     .limit(limit + 1);
 
@@ -1136,6 +1145,26 @@ export const GetTaskTimeline = asyncHandler(async (req, res) => {
           email: c.userId.email,
         }
       : null,
+    mentions: (c.mentions || []).map((m) => ({
+      _id: m._id,
+      firstname: m.firstname,
+      lastname: m.lastname,
+    })),
+    // parentCommentId may be null (not a reply), or a populated doc, or
+    // a dangling ref if the parent was later deleted — guard for that
+    // last case so the client doesn't crash on c.parentCommentId.userId
+    parentCommentId:
+      c.parentCommentId && c.parentCommentId.userId
+        ? {
+            _id: c.parentCommentId._id,
+            message: c.parentCommentId.message,
+            userId: {
+              _id: c.parentCommentId.userId._id,
+              firstname: c.parentCommentId.userId.firstname,
+              lastname: c.parentCommentId.userId.lastname,
+            },
+          }
+        : null,
     createdAt: c.createdAt,
   }));
 
@@ -1156,6 +1185,7 @@ export const GetTaskTimeline = asyncHandler(async (req, res) => {
     }),
   );
 });
+
 /* ------------------------------------------------------------------
    GET /api/tickets/report/export
    Same filter, no pagination — streams an .xlsx file.

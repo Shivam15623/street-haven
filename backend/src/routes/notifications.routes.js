@@ -1,13 +1,12 @@
 import { Router } from "express";
 import passport from "passport";
-import { AllNotifications, MarkNotificationsAsRead } from "../controllers/notification.controller.js";
+
 import { checkActiveUser } from "../middleware/checkActiveUsers.js";
-import { fetchCommentNotifications, markCommentNotificationsAsRead } from "../controllers/commentNotification.controller.js";
+import { fetchUnifiedNotifications, markUnifiedNotificationsRead } from "../controllers/notification.controller.js";
+
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
 router.use(checkActiveUser);
-router.route("/view").get(AllNotifications);
-router.route("/mark-read").post(MarkNotificationsAsRead);
-router.get("/comment-notifications", fetchCommentNotifications);
-router.post("/comment-notifications/mark-read",markCommentNotificationsAsRead);
+router.route("/view").get(fetchUnifiedNotifications);
+router.route("/mark-read").post(markUnifiedNotificationsRead);
 export default router;

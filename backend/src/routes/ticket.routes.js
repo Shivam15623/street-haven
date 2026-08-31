@@ -28,7 +28,10 @@ import { upsertCategoryAssignment } from "../controllers/ticketCategoryAssignmen
 import { checkActiveUser } from "../middleware/checkActiveUsers.js";
 import { authorizePermissions } from "../middleware/AuthRole.js";
 import { PERMISSIONS } from "../auth/permissions.js";
-import { getTicketMentionableUsers } from "../controllers/comments.controller.js";
+import {
+  getTicketMentionableUsers,
+  updateReadCursor,
+} from "../controllers/comments.controller.js";
 const router = Router();
 router.use(passport.authenticate("jwt", { session: false }));
 router.use(checkActiveUser);
@@ -98,6 +101,11 @@ router.route("/:entityId/comments").get(FetchTicketComments);
 router
   .route("/:entityId/comments")
   .post(upload.array("files", 7), validateAddComment, AddTicketComment);
+// routes/comment.routes.js — add this route
+router.post(
+  "/:entityId/read-cursor",
+  updateReadCursor,
+);
 router.route("/category-assignment").post(upsertCategoryAssignment);
 
 export default router;

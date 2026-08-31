@@ -12,8 +12,14 @@ import { io } from "../index.js";
 import User from "../model/user.js";
 
 import { handleNewComment } from "../helper/commentNotification.js";
-import { getEntityAccessUserIds, getTaskAccessUserIds, getTicketAccessUserIds } from "../helper/mentionAccess.js";
+import {
+  getEntityAccessUserIds,
+  getTaskAccessUserIds,
+  getTicketAccessUserIds,
+} from "../helper/mentionAccess.js";
 import EntityMembership from "../model/EntityMemberShip.js";
+import UserCommentNotification from "../model/UserCommentNotification.js";
+import { fanOutComment } from "../helper/fanoutComments.js";
 
 const ENTITY_MODELS = {
   Ticket,
@@ -227,10 +233,10 @@ export const addCommentForEntity = asyncHandler(
         select: "message userId",
         populate: { path: "userId", select: "firstname lastname" },
       });
- await EntityMembership.updateOne(
-    { entityType, entityId, userId: req.user._id },
-    { lastSeenCommentId: comment._id, lastSeenAt: new Date() }
-  );
+    await EntityMembership.updateOne(
+      { entityType, entityId, userId: req.user._id },
+      { lastSeenCommentId: comment._id, lastSeenAt: new Date() },
+    );
     // --- emit the live comment to everyone viewing the entity room ---
     // this happens regardless of notification outcome — the comment
     // itself is already durable at this point
@@ -245,12 +251,13 @@ export const addCommentForEntity = asyncHandler(
       .json(
         new ApiResponse(201, "Comment added successfully", populatedComment),
       );
-
+    fanOutComment(comment).catch((err) =>
+      console.error("fanoutcomment failed", err),
+    );
     // --- notification pipeline: fire-and-forget, AFTER the response ---
     // deliberately outside the request/response critical path — a
     // notification failure must never affect whether the comment was
     // saved or what the user sees back.
-    
   },
 );
 
@@ -314,7 +321,9 @@ export const getTaskMentionableUsers = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, "Mentionable users fetched successfully", users));
+    .json(
+      new ApiResponse(200, "Mentionable users fetched successfully", users),
+    );
 });
 
 export const getTicketMentionableUsers = asyncHandler(async (req, res) => {
@@ -355,5 +364,165 @@ export const getTicketMentionableUsers = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, "Mentionable users fetched successfully", users));
+    .json(
+      new ApiResponse(200, "Mentionable users fetched successfully", users),
+    );
 });
+
+/**
+ * POST /api/:entityType/:entityId/read-cursor
+ * body: { lastSeenCommentId }
+ *
+ * Called by the client whenever a comment has ACTUALLY been rendered on
+ * screen (IntersectionObserver "visible" signal), never on page-open
+ * alone (case #9, #10). Debounce this client-side — don't fire per
+ * scroll tick, fire on scroll-stop / visibility-change (~500ms-1s).
+ *
+ * This is intentionally the ONLY place lastSeenCommentId advances.
+ * Dismissing a notification does NOT call this (case #35, #17).
+ */
+export const updateReadCursor = asyncHandler(async (req, res) => {
+  const { entityType, entityId } = req.params;
+  const { lastSeenCommentId } = req.body;
+  const userId = req.user._id;
+
+  if (!["Ticket", "Task"].includes(entityType)) {
+    throw new ApiError(400, "Invalid entity type");
+  }
+  if (!mongoose.Types.ObjectId.isValid(lastSeenCommentId)) {
+    throw new ApiError(400, "Invalid lastSeenCommentId");
+  }
+
+  const newCursor = new mongoose.Types.ObjectId(lastSeenCommentId);
+
+  // The comment being marked-seen must actually belong to this entity —
+  // otherwise a client bug/tamper could set the cursor to an unrelated
+  // comment id and desync unread math.
+  const commentExists = await Comment.exists({
+    _id: newCursor,
+    entityType,
+    entityId,
+  });
+  if (!commentExists) {
+    throw new ApiError(404, "Comment not found on this thread");
+  }
+
+  // Membership must exist and be active — someone whose access was
+  // revoked shouldn't be able to move their own cursor (case #29).
+  const membership = await EntityMembership.findOne({
+    entityType,
+    entityId,
+    userId,
+    removedAt: null,
+  });
+  if (!membership) {
+    throw new ApiError(404, `${entityType} not found`);
+  }
+
+  // Cursor only ever moves FORWARD. A stale/out-of-order client request
+  // (e.g. two tabs, one behind) must never rewind an already-advanced
+  // cursor. ObjectId comparison works here (see earlier discussion on
+  // BSON timestamp ordering) — safe for single-instance write patterns.
+  if (
+    membership.lastSeenCommentId &&
+    newCursor.toString() <= membership.lastSeenCommentId.toString() &&
+    newCursor.getTimestamp().getTime() <=
+      membership.lastSeenCommentId.getTimestamp().getTime()
+  ) {
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, "Cursor already up to date", { advanced: false }),
+      );
+  }
+
+  await EntityMembership.updateOne(
+    { _id: membership._id },
+    { $set: { lastSeenCommentId: newCursor, lastSeenAt: new Date() } },
+  );
+
+  // fire-and-forget: recompute the user's activity notification for this
+  // entity against what's ACTUALLY still unseen, so a stale "20 comments"
+  // notification shrinks/resolves the moment the user catches up in the
+  // thread itself — even if they never touch the notification center.
+  reconcileActivityNotification(userId, entityType, entityId, newCursor).catch(
+    (err) => console.error("reconcileActivityNotification failed", err),
+  );
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Read cursor updated", { advanced: true }));
+});
+
+/**
+ * Recalculates (or resolves) the user's open activity notification for
+ * this entity based on what's genuinely unseen after their cursor moved.
+ * Mention/reply notifications are NOT touched here — those resolve only
+ * via explicit notification-center actions (case #9's high-priority
+ * notifications shouldn't silently vanish just because the thread was
+ * scrolled past; the user should consciously ack them). If you want
+ * mentions/replies to also auto-resolve once their target comment has
+ * been scrolled past, that's a deliberate product choice to add later —
+ * left out here on purpose.
+ */
+async function reconcileActivityNotification(
+  userId,
+  entityType,
+  entityId,
+  newCursor,
+) {
+  const openNotif = await UserCommentNotification.findOne({
+    userId,
+    entityType,
+    entityId,
+    type: "activity",
+    isRead: false,
+  });
+  if (!openNotif) return; // nothing to reconcile
+
+  const remaining = await Comment.find(
+    { entityType, entityId, _id: { $gt: newCursor } },
+    { userId: 1 },
+  ).lean();
+
+  if (remaining.length === 0) {
+    await UserCommentNotification.updateOne(
+      { _id: openNotif._id },
+      {
+        $set: {
+          isRead: true,
+          readAt: new Date(),
+          expireAt: computeExpireAt("activity"),
+        },
+      },
+    );
+    return;
+  }
+
+  const distinctActorIds = [
+    ...new Set(remaining.map((c) => c.userId.toString())),
+  ];
+
+  await UserCommentNotification.updateOne(
+    { _id: openNotif._id },
+    {
+      $set: {
+        commentCount: remaining.length,
+        actorIds: distinctActorIds.slice(-5),
+        uniqueActorCount: distinctActorIds.length,
+        commentId: remaining.at(-1)._id,
+      },
+    },
+  );
+}
+
+function computeExpireAt(type) {
+  const TTL_DAYS = {
+    activity: 14,
+    mention: 45,
+    reply: 45,
+    assignment: 45,
+    other: 30,
+  };
+  return new Date(Date.now() + (TTL_DAYS[type] ?? 30) * 86400000);
+}
