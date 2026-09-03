@@ -1,102 +1,221 @@
-import { Suspense } from "react";
 import {
   LazyProgramManuals,
   LazyEmployeedashboard,
-  LazyEmployeeRoot,
-  LazyEvents,
   LazyForgotPassword,
-  LazyFormReports,
   LazyHelpDesk,
-  LazyLoader,
   LazyLogin,
   LazyProfile,
-  LazySignUp,
   LazyAgencyInfo,
   LazyResetPassword,
-  LazyAdminRoot,
-  LazyAdminDashboard,
+  LazyEmployees,
+  LazyVerifyTotp,
+  LazyGenereateTotp,
+  LazyRootLayout,
+  LazyTasks,
+  LazyAdminCertificationsPage,
+  LazyInActiveUser,
+  LazyUnauthorized,
+  LazyPhotoViewer,
 } from "../Lazy Components";
 import { Navigate, type RouteObject } from "react-router-dom";
 import RouteGuard from "../Routeguard";
-
+import { Suspense } from "react";
+import Loader from "../components/Loader";
+import { PERMISSIONS } from "../utills/auth/permissions";
 const withSuspense = (Component: React.ReactElement) => (
-  <Suspense fallback={<LazyLoader />}>{Component}</Suspense>
+  <Suspense fallback={<Loader />}>{Component}</Suspense>
 );
 
 export const AllRoutes: RouteObject[] = [
   { path: "", element: <Navigate to="/login" replace /> },
+
   {
     path: "login",
     element: withSuspense(
       <RouteGuard isPublic={true}>
         <LazyLogin />
-      </RouteGuard>
+      </RouteGuard>,
     ),
   },
   {
-    path: "signup",
-    element: withSuspense(
-      <RouteGuard isPublic={true}>
-        <LazySignUp />
-      </RouteGuard>
-    ),
+    path: "photo-viewer",
+    element: withSuspense(<LazyPhotoViewer />),
   },
+
   {
     path: "forgot-password",
     element: withSuspense(
       <RouteGuard isPublic={true}>
         <LazyForgotPassword />
-      </RouteGuard>
+      </RouteGuard>,
     ),
   },
+
   {
     path: "reset-password",
     element: withSuspense(
       <RouteGuard isPublic={true}>
         <LazyResetPassword />
-      </RouteGuard>
+      </RouteGuard>,
+    ),
+  },
+
+  {
+    path: "connect-Authenticator",
+    element: withSuspense(
+      <RouteGuard isPublic={true}>
+        <LazyGenereateTotp />
+      </RouteGuard>,
+    ),
+  },
+
+  {
+    path: "otp-verify",
+    element: withSuspense(
+      <RouteGuard isPublic={true}>
+        <LazyVerifyTotp />
+      </RouteGuard>,
     ),
   },
   {
-    path: "/employee",
+    path: "/account-inactive",
     element: withSuspense(
-      <RouteGuard requireRole="employee">
-        <LazyEmployeeRoot />
-      </RouteGuard>
+      <RouteGuard isPublic={true}>
+        <LazyInActiveUser />
+      </RouteGuard>,
     ),
-    children: [
-      { index: true, element: withSuspense(<LazyEmployeedashboard />) },
-      // { path: "announcement", element: withSuspense(<LazyAnnouncements />) },
-      {
-        path: "programs&manuals",
-        element: withSuspense(<LazyProgramManuals />),
-      },
-      { path: "events", element: withSuspense(<LazyEvents />) },
-      { path: "agency_info", element: withSuspense(<LazyAgencyInfo />) },
-      // { path: "tickets", element: withSuspense(<LazyTickets />) },
-      { path: "it_facility", element: withSuspense(<LazyHelpDesk />) },
-      { path: "forms", element: withSuspense(<LazyFormReports />) },
-      { path: "profile", element: withSuspense(<LazyProfile />) },
-    ],
   },
   {
-    path: "/admin",
+    path: "/unauthorized",
     element: withSuspense(
-      <RouteGuard requireRole="admin">
-        <LazyAdminRoot />
-      </RouteGuard>
+      <RouteGuard isPublic={true}>
+        <LazyUnauthorized />
+      </RouteGuard>,
+    ),
+  },
+  {
+    path: "/",
+    element: withSuspense(
+      <RouteGuard isPublic={false}>
+        <LazyRootLayout />
+      </RouteGuard>,
     ),
     children: [
-      { index: true, element: withSuspense(<LazyAdminDashboard />) },
       {
-        path: "programs&manuals",
-        element: withSuspense(<LazyProgramManuals />),
+        index: true,
+        element: (
+          <RouteGuard isPublic={false}>
+            <LazyEmployeedashboard />
+          </RouteGuard>
+        ),
       },
-      { path: "events", element: withSuspense(<LazyEvents />) },
-      { path: "agency_info", element: withSuspense(<LazyAgencyInfo />) },
-      { path: "it_facility", element: withSuspense(<LazyHelpDesk />) },
-      { path: "forms", element: withSuspense(<LazyFormReports />) },
-      { path: "profile", element: withSuspense(<LazyProfile />) },
+
+      {
+        path: "volunteer-training",
+        element: (
+          <RouteGuard
+            isPublic={false}
+            requirePermission={[PERMISSIONS.VIEW_PROGRAM_MANUALS]}
+          >
+            <LazyProgramManuals />
+          </RouteGuard>
+        ),
+      },
+
+      {
+        path: "agency_info",
+        element: (
+          <RouteGuard
+            isPublic={false}
+            requirePermission={[
+              PERMISSIONS.VIEW_COLLECTIVE_AGREEMENTS,
+              PERMISSIONS.VIEW_ANNOUNCEMENTS,
+            ]}
+          >
+            <LazyAgencyInfo />
+          </RouteGuard>
+        ),
+      },
+
+      {
+        path: "it_facility",
+        element: (
+          <RouteGuard
+            isPublic={false}
+            requirePermission={[
+              PERMISSIONS.TICKET_VIEW_SELF,
+              PERMISSIONS.TICKET_REPORT_ALL,
+              PERMISSIONS.TICKET_REPORT_SELF_MANAGED,
+              PERMISSIONS.VIEW_FAQS,
+              PERMISSIONS.VIEW_EMERGENCY_CONTACTS,
+              PERMISSIONS.TICKET_CREATE,
+              PERMISSIONS.LOCATION_VIEW,
+            ]}
+          >
+            <LazyHelpDesk />
+          </RouteGuard>
+        ),
+      },
+
+      {
+        path: "profile",
+        element: (
+          <RouteGuard isPublic={false}>
+            <LazyProfile />
+          </RouteGuard>
+        ),
+      },
+
+      {
+        path: "users",
+        element: (
+          <RouteGuard
+            isPublic={false}
+            requirePermission={[PERMISSIONS.VIEW_EMPLOYEES]}
+          >
+            <LazyEmployees />
+          </RouteGuard>
+        ),
+      },
+      {
+        path: "tasks",
+        element: (
+          <RouteGuard
+            isPublic={false}
+            requirePermission={[
+              PERMISSIONS.TASK_VIEW_ALL,
+              PERMISSIONS.TASK_VIEW_SELF,
+            ]}
+          >
+            <LazyTasks />
+          </RouteGuard>
+        ),
+      },
+      {
+        path: "tasks/:slug",
+        element: (
+          <RouteGuard
+            isPublic={false}
+            requirePermission={[
+              PERMISSIONS.TASK_VIEW_ALL,
+              PERMISSIONS.TASK_VIEW_SELF,
+            ]}
+          >
+            <LazyTasks />
+          </RouteGuard>
+        ),
+      },
+      {
+        path: "certificates",
+        element: (
+          <RouteGuard
+            isPublic={false}
+            requirePermission={[PERMISSIONS.TRAINING_CERTIFICATE_VIEW_ALL]}
+          >
+            <LazyAdminCertificationsPage />
+          </RouteGuard>
+        ),
+      },
     ],
   },
 ];

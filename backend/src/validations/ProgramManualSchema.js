@@ -1,68 +1,75 @@
-import * as yup from "yup";
+import Joi from "joi";
 
-// CREATE Program Manual Schema
-export const createProgramManualSchema = yup.object({
-  title: yup
-    .string()
-    .trim()
-    .min(3, "Title must be at least 3 characters")
-    .max(150, "Title must be at most 150 characters")
-    .required("Title is required"),
+export const createProgramManualSchema = Joi.object({
+  title: Joi.string().trim().min(3).max(150).required().messages({
+    "string.min": "Title must be at least 3 characters",
+    "string.max": "Title must be at most 150 characters",
+    "any.required": "Title is required",
+  }),
 
-  description: yup
-    .string()
-    .trim()
-    .min(10, "Description must be at least 10 characters")
-    .max(500, "Description must be at most 500 characters")
-    .required("Description is required"),
+  description: Joi.string().trim().min(10).required().messages({
+    "string.min": "Description must be at least 10 characters",
 
-  tags: yup
-    .array()
-    .of(
-      yup
-        .string()
-        .trim()
-        .max(50, "Each tag must be at most 50 characters")
+    "any.required": "Description is required",
+  }),
+
+  tags: Joi.array()
+    .items(
+      Joi.string().trim().max(50).messages({
+        "string.max": "Each tag must be at most 50 characters",
+      })
     )
-    .min(1, "At least one tag is required")
-    .required("Tags are required"),
+    .min(1)
+    .required()
+    .messages({
+      "array.min": "At least one tag is required",
+      "any.required": "Tags are required",
+    }),
 
-  type: yup
-    .string()
+  type: Joi.string()
     .trim()
-    .oneOf(["guide", "policy", "procedure", "other"], "Invalid type") // adjust as per your categories
-    .required("Type is required"),
+    .valid("Orientation", "Safety", "Policies", "Training", "Forms", "Other")
+    .required()
+    .messages({
+      "any.only": "Invalid type",
+      "any.required": "Type is required",
+    }),
 });
 
-// EDIT Program Manual Schema
-export const editProgramManualSchema = yup.object({
-  title: yup
-    .string()
-    .trim()
-    .min(3, "Title must be at least 3 characters")
-    .max(150, "Title must be at most 150 characters")
-    .optional(),
+export const editProgramManualSchema = Joi.object({
+  title: Joi.string().trim().min(3).max(150).optional().messages({
+    "string.min": "Title must be at least 3 characters",
+    "string.max": "Title must be at most 150 characters",
+  }),
 
-  description: yup
-    .string()
-    .trim()
-    .min(10, "Description must be at least 10 characters")
-    .max(500, "Description must be at most 500 characters")
-    .optional(),
+  description: Joi.string().trim().min(10).optional().messages({
+    "string.min": "Description must be at least 10 characters",
+  }),
 
-  tags: yup
-    .array()
-    .of(
-      yup
-        .string()
-        .trim()
-        .max(50, "Each tag must be at most 50 characters")
+  tags: Joi.array()
+    .items(
+      Joi.string().trim().max(50).messages({
+        "string.max": "Each tag must be at most 50 characters",
+      })
     )
     .optional(),
 
-  type: yup
-    .string()
+  type: Joi.string()
     .trim()
-    .oneOf(["guide", "policy", "procedure", "other"], "Invalid type")
+    .valid("Orientation", "Safety", "Policies", "Training", "Forms", "Other")
+    .optional()
+    .messages({
+      "any.only": "Invalid type",
+    }),
+});
+
+export const fetchProgramMannuals = Joi.object({
+  page: Joi.number().optional(),
+  limit: Joi.number().optional(),
+  search: Joi.string().allow("").optional(),
+  type: Joi.string().optional(),
+  slug: Joi.string().optional(),
+  order: Joi.string()
+    .valid("desc", "asc") // allowed roles
     .optional(),
 });

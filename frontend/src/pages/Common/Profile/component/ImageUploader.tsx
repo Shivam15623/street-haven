@@ -4,7 +4,7 @@ import Cropper, { type Area, type Point } from "react-easy-crop";
 import { Button, Form } from "react-bootstrap";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
 import { useEditProfileMutation } from "../../../../services/UserApi";
-import { showSuccess } from "../../../../utills/toastutills";
+import { showSuccess, showWarning } from "../../../../utills/toastutills";
 import { useDispatch } from "react-redux";
 import { UpdateUserDetails } from "../../../../redux/AuthSlice";
 
@@ -20,14 +20,22 @@ const ImageUploader = () => {
 
   // 📌 Select image
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImageSrc(reader.result as string);
-        setShowModal(true); // open modal
-      };
-      reader.readAsDataURL(e.target.files[0]);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ["image/jpeg", "image/png", "image/webp"];
+
+    if (!validTypes.includes(file.type)) {
+      showWarning("Please upload JPG, PNG, or WEBP images only");
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageSrc(reader.result as string);
+      setShowModal(true);
+    };
+    reader.readAsDataURL(file);
   };
 
   // 📌 Track crop
@@ -77,7 +85,7 @@ const ImageUploader = () => {
       const res = await editAvatar(formData).unwrap();
       if (res.success) {
         showSuccess(res.message || "Profile image updated successfully!");
-        console.log("bacardi", res.data);
+
         const payload = {
           profilePic: res.data.profilePic,
         };
@@ -102,7 +110,7 @@ const ImageUploader = () => {
       <input
         id="fileInput"
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         style={{ display: "none" }}
         onChange={handleFileChange}
       />
@@ -114,9 +122,9 @@ const ImageUploader = () => {
         title="Crop your image"
         size="lg"
         footer={
-          <>
+          <div className="d-flex justify-content-end gap-3">
             <Button
-              className="btn-street-neutral btn-street-lg"
+              className="btn-street-neutral btn-street-lg d-none d-sm-flex"
               onClick={() => setShowModal(false)}
               disabled={isLoading}
             >
@@ -129,7 +137,7 @@ const ImageUploader = () => {
             >
               {isLoading ? "Saving..." : "Save"}
             </Button>
-          </>
+          </div>
         }
       >
         {imageSrc && (

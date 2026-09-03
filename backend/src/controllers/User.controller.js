@@ -1,8 +1,10 @@
-import User from "../model/user.js";
+import Location from "../model/location.js";
+import User, { ROLES } from "../model/user.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
-import { uploadOnCloudinary } from "../utills/cloudinary.js";
+import { uploadOnCloudinary,deleteFromCloudinary } from "../utills/cloudinary.js";
+
 
 export const editUserDetails = asyncHandler(async (req, res) => {
   const { _id: userId } = req.user;
@@ -11,7 +13,7 @@ export const editUserDetails = asyncHandler(async (req, res) => {
     throw new ApiError(404, "No such user found");
   }
 
-  const { firstname, lastname, email, phoneNo } = req.body;
+  const { firstname, lastname, phoneNo } = req.body;
   const updates = {};
 
   // If profile picture is uploaded → skip equality check and update
@@ -27,16 +29,15 @@ export const editUserDetails = asyncHandler(async (req, res) => {
 
     // ✅ Upload new profile pic
     const uploadedPic = await uploadOnCloudinary(req.file.path);
-    if (!uploadedPic.url) {
+    if (!uploadedPic.secure_url) {
       throw new ApiError(500, "Error while uploading profile picture");
     }
-    updates.profilePic = uploadedPic.url;
+    updates.profilePic = uploadedPic.secure_url;
   } else {
     // Only check equality when NO profile picture update
     const isSame =
       (firstname ? firstname === findUser.firstname : true) &&
       (lastname ? lastname === findUser.lastname : true) &&
-      (email ? email === findUser.email : true) &&
       (phoneNo ? phoneNo === findUser.phoneNo : true);
 
     if (isSame) {
@@ -52,7 +53,6 @@ export const editUserDetails = asyncHandler(async (req, res) => {
   if (firstname && firstname !== findUser.firstname)
     updates.firstname = firstname;
   if (lastname && lastname !== findUser.lastname) updates.lastname = lastname;
-  if (email && email !== findUser.email) updates.email = email;
   if (phoneNo && phoneNo !== findUser.phoneNo) updates.phoneNo = phoneNo;
 
   const updatedUser = await User.findByIdAndUpdate(userId, updates, {
@@ -127,7 +127,17 @@ export const GetUserProfile = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User not found");
   }
 
+  let userObj = user.toObject();
+
+  // If the user is a manager, attach their location
+  if (user.role === ROLES.MANAGER) {
+    const location = await Location.find({ managers: user._id }).select(
+      "name slug isActive"
+    );
+    userObj.location = location || null;
+  }
+
   return res
     .status(200)
-    .json(new ApiResponse(200, "User profile fetched successfully", user));
+    .json(new ApiResponse(200, "User profile fetched successfully", userObj));
 });

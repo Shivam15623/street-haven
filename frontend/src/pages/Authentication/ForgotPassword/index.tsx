@@ -1,13 +1,13 @@
-import React from "react";
 import AuthWrapper from "../../../components/Authentication/AuthWrapper";
 import AuthFormWrapper from "../../../components/Authentication/AuthFormWrapper";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Button, Col, Form, Row } from "react-bootstrap";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import { useForgotPasswordMutation } from "../../../services/AuthApi";
-import { showSuccess } from "../../../utills/toastutills";
+import { showError, showSuccess } from "../../../utills/toastutills";
+import { getErrorMessage } from "../../../utills/utills";
 interface ForgotValues {
   email: string;
 }
@@ -17,15 +17,17 @@ const forgotPasswordSchema = Yup.object({
     .email("Invalid email address"),
 });
 const ForgotPassword = () => {
+  const navigate = useNavigate();
   const [forgotPassword, { isLoading }] = useForgotPasswordMutation();
   const forgotpassword = async (values: ForgotValues) => {
     try {
       const res = await forgotPassword({ email: values.email }).unwrap();
       if (res?.success) {
         showSuccess(res.message);
+        setTimeout(() => navigate("/login"), 800);
       }
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      showError(getErrorMessage(err));
     }
   };
   return (
@@ -46,6 +48,7 @@ const ForgotPassword = () => {
             }}
             validationSchema={forgotPasswordSchema}
             onSubmit={forgotpassword}
+            disabled={isLoading} // disable input while loading
           >
             {({
               handleSubmit,
@@ -79,9 +82,10 @@ const ForgotPassword = () => {
                           value={values.email}
                           onChange={handleChange}
                           onBlur={handleBlur}
+                          disabled={isLoading} // disable input while loading
                           className=" h-50-px "
                           style={{
-                            backgroundColor: "#F2F0EC",
+                            backgroundColor: "var(--street-auth-input)",
                             borderColor: "#E2E8F0",
                             borderRadius: "15px",
                           }}
@@ -96,9 +100,11 @@ const ForgotPassword = () => {
                 </div>
                 <Button
                   type="submit"
-                  className="btn btn-street-primary text-xs btn-sm px-12 py-11 w-100 text-white fw-medium radius-12 "
+                  className="btn btn-street-primary text-xs btn-sm px-12 py-11 w-100 text-white fw-medium radius-12"
+                  disabled={isLoading} // disable while loading
                 >
-                  Sign In
+                  {isLoading ? "Submitting..." : "Submit"}{" "}
+                  {/* show loading text */}
                 </Button>
               </Form>
             )}
@@ -106,7 +112,7 @@ const ForgotPassword = () => {
           <p className="text-center">
             {" "}
             <Link
-              to={"/Signup"}
+              to={"/login"}
               className="text-primary-600  text-sm fw-normal mt-3 "
               style={{ color: "#0160A6" }}
             >

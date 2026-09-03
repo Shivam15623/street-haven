@@ -17,18 +17,21 @@ export interface IncidentReportQuery {
 }
 
 export interface IncidentReportData {
+  _id: string;
   dateOfIncident: string;
   location: string;
   description: string;
   witnesses: string[];
   actionsTaken: string;
-  reporterName: string;
+
   submittedBy: {
     _id: string;
     firstname: string;
     lastname: string;
     email: string;
   };
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 export interface StaffFeedBackCredentials {
   date: string; // yyyy-mm-dd
@@ -40,13 +43,14 @@ export interface StaffFeedBackCredentials {
   reporterName?: string;
 }
 export interface StaffFeedbackData {
+  _id:string;
   date: string;
   location: string;
   description: string;
   category: "Other" | "Safety" | "Behavior" | "Equipment";
   witnesses: string[];
   actionsTaken: string;
-  reporterName: string;
+
   submittedBy: {
     _id: string;
     firstname: string;

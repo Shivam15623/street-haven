@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { useDeleteManualsMutation } from "../../../../services/ProgramManualApi";
-import { showSuccess } from "../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../utills/toastutills";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
 import { Icon } from "@iconify/react/dist/iconify.js";
-
+import type { FileType } from "../../../../interfaces/fileinterface";
+import { getErrorMessage } from "../../../../utills/utills";
+import DOMPurify from "dompurify";
 type DeleteMannualsProps = {
   id: string;
   title: string;
@@ -12,7 +14,7 @@ type DeleteMannualsProps = {
     fileName: string;
     fileUrl: string;
     size: number; // bytes
-    totalPages: number;
+    fileType: FileType;
   };
 };
 
@@ -34,7 +36,7 @@ const DeleteMannuals: React.FC<DeleteMannualsProps> = ({
         setShowModal(false);
       }
     } catch (error) {
-      console.error("Failed to delete Program Manual:", error);
+      showError(getErrorMessage(error));
     }
   };
 
@@ -48,24 +50,24 @@ const DeleteMannuals: React.FC<DeleteMannualsProps> = ({
       </button>
       <ModalWrapper
         show={showModal}
-        title="Delete Program Manual"
-        size="md"
+        title="Delete Training Material"
+        size="lg"
         headerClassName="text-xl p-0 pb-20 text-street-dark"
         className="p-20 p-sm-24 p-md-32 gap-16"
         bodyClassName="p-0 d-flex flex-column gap-16"
         footerClassName="pt-16 px-0 pb-0"
         onHide={() => setShowModal(false)}
         footer={
-          <div className="d-flex gap-2 justify-content-end">
+          <div className="d-flex justify-content-end gap-3">
             <button
-              className="btn btn-danger btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+              className="btn btn-street-delete btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
               onClick={handleDelete}
               disabled={isLoading}
             >
               {isLoading ? "Deleting..." : "Delete"}
             </button>
             <button
-              className="btn btn-street-neutral btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+              className="btn btn-street-neutral btn-street-lg radius-12 d-none d-sm-flex align-items-center text-sm justify-content-center"
               onClick={() => setShowModal(false)}
             >
               Cancel
@@ -75,16 +77,26 @@ const DeleteMannuals: React.FC<DeleteMannualsProps> = ({
       >
         <div className="text-street-dark text-sm d-flex flex-column gap-2">
           <p>
-            Are you sure you want to delete this program manual? This action
+            Are you sure you want to delete this training material? This action
             cannot be undone.
           </p>
-          <div className="border rounded p-2 bg-light">
+          <div
+            className="border rounded p-3 "
+            style={{
+              backgroundColor: "var(--street-bg-f4)",
+            }}
+          >
             <p className="fw-bold">{title}</p>
-            <p className="mb-1">{description}</p>
+            <div
+              className="parse Te"
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(description),
+              }}
+            />
             <p className="mb-0">
               <span className="fw-semibold">File:</span> {attachment?.fileName}{" "}
               ({(attachment?.size / 1024 / 1024).toFixed(2)} MB,{" "}
-              {attachment?.totalPages} pages)
+              {attachment?.fileType} type)
             </p>
           </div>
         </div>

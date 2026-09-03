@@ -15,5 +15,23 @@
   color: #ffff;
 }
 .org-node {
-  border: 1.5px solid rgba(1, 96, 166, 0.5);
+  background: var(--street-card);
+  border: 2px solid var(--street-border-base-50);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.org-node:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(1, 96, 166, 0.15);
+  border-color: var(--street-primary-base);
+}
+.org-label {
+  color: #555555;
+}
+[data-theme="dark"] .org-label {
+  color: #aeb0b2;
+}
+[data-theme="dark"] .org-sub {
+  color: #f2f0ec;
+  font-style: normal;
 }

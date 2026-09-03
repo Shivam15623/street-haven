@@ -1,0 +1,106 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staff Feedback Form</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #000; background: #fff;padding: 40px 20px; }
+      .page-container { width: 100%; max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+      .form-wrapper { background: #fff; border: 3px solid #000; }
+      .header { border-bottom: 3px solid #000; padding: 24px 40px; display: flex; align-items: center; gap: 32px; }
+      .logo-section { flex-shrink: 0; }
+      .logo { display: block; width: 120px; height: auto; }
+      .header-text { flex: 1; text-align: left; }
+      .organization-name { font-size: 11px; font-weight: bold; letter-spacing: 2px; margin: 0 0 8px 0; text-transform: uppercase; }
+      .header h1 { margin: 0; font-size: 24px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
+
+      .form-content { padding: 32px 40px; }
+      .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 20px; }
+      .field-group { margin-bottom: 20px; page-break-inside: avoid; break-inside: avoid; }
+      .field-label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+      .input-field, .textarea-box { width: 100%; border: 2px solid #000; padding: 10px; font-size: 13px; font-family: inherit; color: #000; background: #fff; }
+      .input-field:focus, .textarea-box:focus { outline: none; border: 3px solid #000; }
+      .textarea-box {  line-height: normal; }
+      .textarea-large { min-height: 150px; }
+.text-content {
+  white-space: pre-wrap;  
+  word-wrap: break-word;
+  min-height: 120px;       
+}
+      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+      th { background-color: #f2f2f2; font-weight: bold; }
+      tr:nth-child(even) td { background-color: #f9f9f9; }
+
+      @media print {
+        .page-container { padding: 0; }
+        .form-wrapper { border: 2px solid #000; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-container">
+      <div class="form-wrapper">
+        <header class="header">
+          <div class="logo-section">
+            <img class="logo" src="{{companyLogo}}" alt="Company Logo" />
+          </div>
+          <div class="header-text">
+            <div class="organization-name">STREET HAVEN</div>
+            <h1>Staff Feedback Form</h1>
+          </div>
+        </header>
+
+        <main class="form-content">
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Date of Incident</label>
+              <input type="text" class="input-field" value="{{date}}" readonly />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Time of Incident</label>
+              <input type="text" class="input-field" value="{{time}}" readonly />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Location</label>
+              <input type="text" class="input-field" value="{{location}}" readonly />
+            </div>
+            <div class="field-group">
+              <label class="field-label">Category</label>
+              <input type="text" class="input-field" value="{{category}}" readonly />
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Detailed Description</label>
+           <div class="textarea-box textarea-large text-content">
+  {{description}}
+</div>
+
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Witnesses</label>
+            <input type="text" class="input-field" value="{{#each witnesses}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}" readonly />
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Actions Taken</label>
+             <div class="textarea-box text-content">
+    {{actionsTaken}}
+  </div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Reporter Name</label>
+            <input type="text" class="input-field" value="{{reporterName}}" readonly />
+          </div>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

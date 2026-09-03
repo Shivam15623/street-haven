@@ -3,6 +3,7 @@ import type { ApiResponse } from "./Response";
 export interface hrUpdatesQuery {
   page?: number;
   limit?: number;
+  slug?:string;
   search?: string;
   sortBy?: string;
   order?: "asc" | "desc";
@@ -21,8 +22,9 @@ export interface hrUpdateData {
     fileName: string;
     fileUrl: string;
     size: number; // Cloudinary gives bytes
-    totalPages: number; // null if not a PDF
+
   };
+  slug:string;
   createdAt: string;
   updatedAt: string;
 }

@@ -1,17 +1,24 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import React, { useEffect, useRef, useState } from "react";
 import { Form } from "react-bootstrap";
-import { useField, useFormikContext } from "formik";
-import { Link } from "react-router-dom";
+import { useFormikContext } from "formik";
 
 interface ImageUploadProps {
   name: string; // Formik field name
   label?: string;
 }
-
+interface ImageUploadFormValues {
+  [key: string]: File | null;
+}
 const ImageUpload: React.FC<ImageUploadProps> = ({ name, label }) => {
-  const { setFieldValue, touched, errors } = useFormikContext<any>();
-  const [field] = useField<File | null>(name);
+  const { values, setFieldValue, touched, errors } =
+    useFormikContext<ImageUploadFormValues>();
+
+  useEffect(() => {
+    if (!values[name]) {
+      setImagePreview(null);
+    }
+  }, [values[name]]);
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -55,8 +62,10 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ name, label }) => {
   }, [imagePreview]);
 
   return (
-    <Form.Group controlId={name}>
-      {label && <Form.Label className="fw-medium mb-10 text-street-dark">{label}</Form.Label>}
+    <Form.Group controlId={name} className="d-flex flex-column gap-8">
+      {label && (
+        <Form.Label className="fw-medium text-street-dark">{label}</Form.Label>
+      )}
 
       <div className="upload-image-wrapper d-flex align-items-center gap-3">
         {imagePreview ? (
@@ -86,7 +95,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ name, label }) => {
                 ? "bg-neutral-200 border-primary"
                 : "bg-hover-neutral-200"
             }`}
-            htmlFor={name}
             onDragOver={(e) => {
               e.preventDefault();
               setIsDragging(true);
@@ -98,17 +106,23 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ name, label }) => {
             onDrop={handleDrop}
           >
             {isDragging ? (
-              <p className="fw-normal text-sm img-upload-text">Drop file here</p>
+              <p className="fw-normal text-sm img-upload-text">
+                Drop file here
+              </p>
             ) : (
               <p className="fw-normal text-sm img-upload-text">
                 Drag & drop or{" "}
-                <Link to="#" className="text-street-primary">
+                <span
+                  className="text-street-primary cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent label click
+                    fileInputRef.current?.click();
+                  }}
+                >
                   browse
-                </Link>
+                </span>
               </p>
             )}
-
-           
           </label>
         )}
 

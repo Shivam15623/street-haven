@@ -1,3 +1,4 @@
+import type { FileType } from "./fileinterface";
 import type { ApiResponse } from "./Response";
 
 export interface ProgrammMannualsCredentials {
@@ -13,10 +14,10 @@ export interface ProgramMannualData {
   tags: string[];
   type: string;
   attachment: {
-    fileName: string,
-    fileUrl: string,
-    size: number, // Cloudinary gives bytes
-    totalPages: number , // null if not a PDF
+    fileName: string;
+    fileUrl: string;
+    size: number; // Cloudinary gives bytes
+    fileType: FileType; // null if not a PDF
   };
   createdAt: string;
   updatedAt: string;
@@ -35,9 +36,11 @@ export interface ProgramManualsQuery {
   page?: number;
   limit?: number;
   search?: string;
+  slug?: string;
   type?: string;
   sortBy?: string;
   order?: "asc" | "desc";
 }
 
-export type ProgrammMannualsResponse = ApiResponse<ProgrammMannualsResponseData>;
+export type ProgrammMannualsResponse =
+  ApiResponse<ProgrammMannualsResponseData>;

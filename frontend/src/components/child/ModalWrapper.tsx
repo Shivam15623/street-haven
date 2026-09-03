@@ -8,7 +8,7 @@ export interface ModalWrapperProps {
   title?: string;
   subtitle?: string;
   children: React.ReactNode;
-  size?: "sm"|"md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl";
   footer?: React.ReactNode;
   backdrop?: boolean | "static";
   keyboard?: boolean;
@@ -17,6 +17,8 @@ export interface ModalWrapperProps {
   headerClassName?: string;
   bodyClassName?: string;
   footerClassName?: string;
+  isLoading?: boolean;
+  ModalLoader?: React.ReactNode;
 }
 
 const ModalWrapper: React.FC<ModalWrapperProps> = ({
@@ -34,53 +36,87 @@ const ModalWrapper: React.FC<ModalWrapperProps> = ({
   headerClassName,
   bodyClassName,
   footerClassName,
+  isLoading,
+  ModalLoader,
 }) => {
+  // react-bootstrap's Modal has no "md" size — its default (no size prop) IS medium.
+  // So we only forward the size prop when it's not "md".
+  const bsSize = size === "md" ? undefined : size;
+
+  // don't let the modal be dismissed mid-submit (backdrop click / Esc)
+  const effectiveBackdrop = isLoading ? "static" : backdrop;
+  const effectiveKeyboard = isLoading ? false : keyboard;
+
   return (
     <Modal
       show={show}
       onHide={onHide}
-      size={size}
+      size={bsSize}
       aria-labelledby="modal-wrapper-title"
+      className="overflow-hidden"
       centered={centered}
-      backdrop={backdrop}
-      keyboard={keyboard}
-      contentClassName={className}
+      backdrop={effectiveBackdrop}
+      keyboard={effectiveKeyboard}
+      contentClassName="overflow"
+      enforceFocus={false}
     >
-      {title && (
-        <Modal.Header closeButton={false} className={headerClassName}>
-          <div className="d-flex flex-column gap-1 gap-sm-8 gap-md-10 flex-grow-1">
-            <Modal.Title
-              id="modal-wrapper-title"
-              className="text-md sm:text-xl mb-0 text-street-dark fw-semibold"
-            >
-              {title}
-            </Modal.Title>
-            {subtitle && (
-              <p className="text-xxs sm:text-xs fw-normal text-street-dark m-0">
-                {subtitle}
-              </p>
-            )}
+      <div
+        className={`position-relative d-flex flex-column ${className ?? ""}`}
+      >
+        {isLoading && ModalLoader}
+        {title && (
+          <Modal.Header closeButton={false} className={headerClassName}>
+            <div className="d-flex flex-column gap-1 gap-sm-8 gap-md-10 flex-grow-1">
+              <Modal.Title
+                id="modal-wrapper-title"
+                className="text-md sm:text-xl mb-0 text-street-dark fw-semibold"
+              >
+                {title}
+              </Modal.Title>
+              {subtitle && (
+                <p className="text-xxs sm:text-xs fw-normal text-street-dark m-0">
+                  {subtitle}
+                </p>
+              )}
+            </div>
+
+            {/* Custom Close Button */}
+            <Icon
+              icon="mdi:close"
+              className={`text-lg sm:text-xxl ${
+                isLoading ? "opacity-50 pe-none" : "cursor-pointer"
+              }`}
+              onClick={isLoading ? undefined : onHide}
+              role="button"
+              aria-label="Close"
+            />
+          </Modal.Header>
+        )}
+
+        <Modal.Body className={bodyClassName}>
+          {" "}
+          <div
+            style={{
+              maxHeight: "60vh",
+              overflowY: "auto",
+              overflowX: "hidden",
+              scrollbarWidth: "thin",
+            }}
+          >
+            <div className="py-16">{children}</div>
           </div>
+        </Modal.Body>
 
-          {/* Custom Close Button */}
-          
-         
-            <Icon icon="mdi:close" className="text-lg sm:text-xxl" onClick={onHide} />
-         
-        </Modal.Header>
-      )}
-
-      <Modal.Body className={bodyClassName}>{children}</Modal.Body>
-
-      {footer !== undefined ? (
-        <Modal.Footer className={footerClassName}>{footer}</Modal.Footer>
-      ) : (
-        <Modal.Footer className={footerClassName}>
-          <Button variant="secondary" onClick={onHide}>
-            Close
-          </Button>
-        </Modal.Footer>
-      )}
+        {footer !== undefined ? (
+          <Modal.Footer className={footerClassName}>{footer}</Modal.Footer>
+        ) : (
+          <Modal.Footer className={footerClassName}>
+            <Button variant="secondary" onClick={onHide} disabled={isLoading}>
+              Close
+            </Button>
+          </Modal.Footer>
+        )}
+      </div>
     </Modal>
   );
 };

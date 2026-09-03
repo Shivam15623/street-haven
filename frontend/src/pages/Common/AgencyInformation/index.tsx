@@ -1,11 +1,32 @@
-import React from "react";
 import StreetTab from "../../../components/StreetTab";
-import CollectiveAgreementTab from "./component/CollectiveAgreementTab";
-import OrganizationalChartTab from "./component/OrganizationalChartTab";
-import TownhallMinutesTab from "./component/TownhallMinutesTab";
-import "@assets/css/PageCss/orgchart.css";
-import HrUpdatesTab from "./component/HrUpdatesTab";
+import CollectiveAgreementTab from "./component/Agreement/CollectiveAgreementTab";
+
+import { useNavigate, useSearchParams } from "react-router-dom";
+import AnnouncementTab from "./component/Announcements/AnnouncementTab";
+import { useEffect, useState } from "react";
+
 const AgencyInfo = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const tabParam = searchParams.get("tab") ?? "additional_documents";
+
+  const [active, setActive] = useState<string>(tabParam);
+  useEffect(() => {
+    if (active !== tabParam) {
+      setActive(tabParam);
+    }
+  }, [tabParam]);
+  const handletabClick = (key: string) => {
+    if (key === active) {
+      return;
+    }
+    setActive(key);
+    const params = new URLSearchParams(location.search);
+    params.delete("tab");
+
+    navigate(`${location.pathname}`, { replace: true });
+  };
+
   return (
     <div className="d-flex flex-column gap-4">
       {" "}
@@ -13,32 +34,26 @@ const AgencyInfo = () => {
         <p className="fw-semibold text-xl xs:text-xxl text-street-dark">
           Agency Information
         </p>
-        <p className="fw-normal text-sm xs:text-md">
-          Access collective agreement, meeting minutes, and organizational
-          structure
-        </p>
       </div>
       <StreetTab
+        activeKey={active}
+        onTabChange={handletabClick}
         tabs={[
           {
-            key: "collective_agreement",
-            label: "Collective Agreement",
-            content: <CollectiveAgreementTab />,
+            key: "additional_documents",
+            label: "Additional Documents",
+            content: (
+              <CollectiveAgreementTab
+                isActive={active === "additional_documents"}
+              />
+            ),
           },
+
           {
-            key: "townhall_minutes",
-            label: "Townhall Minutes",
-            content: <TownhallMinutesTab />,
+            key: "announcements",
+            label: "Announcements",
+            content: <AnnouncementTab isActive={active === "announcements"} />,
           },
-          {
-            key: "organizational_chart",
-            label: "Organizational Chart",
-            content: <OrganizationalChartTab />,
-          },{
-            key:"hr_updates",
-            label:"HR updates",
-            content:<HrUpdatesTab/>
-          }
         ]}
       />
     </div>

@@ -1,72 +1,115 @@
-
+import React from "react";
 import { Icon } from "@iconify/react";
 import CardlistWrapper from "./CardListWrapper";
 
-const events = [
-  {
-    id: 1,
-    title: "All-Staff Meeting",
-    date: "Friday, Dec 15",
-    time: "2:00 PM",
-    location: "Main Conference Room",
-  },
-  {
-    id: 2,
-    title: "Holiday Celebration",
-    date: "Monday, Dec 18",
-    time: "6:00 PM",
-    location: "Cafeteria",
-  },
-  {
-    id: 3,
-    title: "Quarterly Review",
-    date: "Wednesday, Dec 20",
-    time: "10:00 AM",
-    location: "Zoom Online",
-  },
-];
+import type { EventUpcomingData } from "../../../../interfaces/EventInterfaces";
+import dayjs from "dayjs";
 
-const UpcomingEvents = () => {
+// ✅ import your modal component
+
+interface UpcomingEventCardProps {
+  events: EventUpcomingData[];
+  loading: boolean;
+}
+
+const UpcomingEvents: React.FC<UpcomingEventCardProps> = ({
+  events,
+  loading,
+}) => {
+  // 🔹 Modal state
+
   return (
-    <CardlistWrapper title="Upcoming Events">
-      <div className="d-flex flex-column gap-3">
-        {events.map((event) => (
-          <div
-            key={event.id}
-            className="d-flex flex-column justify-content-center px-8 py-10 px-sm-16 py-sm-20 border-0-5 border-sh-base rounded-2"
-           
-          >
-            <div className="d-flex flex-column gap-2">
-              {/* Title */}
-              <p className="mb-0 text-street-dark text-xs xs:text-sm fw-semibold">
-                {event.title}
-              </p>
+    <>
+      <CardlistWrapper title="Upcoming Events" viewAllLink={`/events`}>
+        <div className="d-flex flex-column gap-3">
+          {loading &&
+            Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="d-flex flex-column justify-content-center px-8 py-10 px-sm-16 py-sm-20 border-0-5 rounded-2 placeholder-glow"
+                style={{
+                  borderColor: "#AAAAAA",
+                  minHeight: "100px",
+                }}
+              >
+                <div className="d-flex flex-column gap-2">
+                  <p className="mb-0 text-xs xs:text-sm fw-semibold">
+                    <span className="placeholder col-6"></span>
+                  </p>
+                  <p className="d-flex flex-row gap-2 mb-0">
+                    <span className="text-xs d-flex flex-row align-items-center gap-1">
+                      <span className="placeholder col-4"></span>
+                    </span>
+                    <span className="text-xs d-flex flex-row align-items-center gap-1">
+                      <span className="placeholder col-3"></span>
+                      <span className="placeholder col-2"></span>
+                    </span>
+                  </p>
+                  <p className="mb-0 text-xs d-flex flex-row align-items-center gap-1">
+                    <span className="placeholder col-5"></span>
+                  </p>
+                </div>
+              </div>
+            ))}
 
-              {/* Date & Time */}
-              <p className="d-flex flex-row text-street-base gap-2 mb-0">
-                <span className="mb-0 text-xs d-flex flex-row align-items-center gap-1">
-                  <Icon
-                    icon="lucide:calendar"
-                    className="text-street-primary"
-                  />
-                  {event.date}
-                </span>
-                <span className="mb-0 text-xs  d-flex flex-row align-items-center gap-1">
-                  <Icon icon="lucide:clock" className="text-street-primary" />
-                  {event.time}
-                </span>
-              </p>
+          {!loading && events.length === 0 ? (
+            <div>No Upcoming Events</div>
+          ) : (
+            events.map((event) => (
+              <div
+                key={event._id}
+                className="cursor-pointer d-flex flex-column justify-content-center px-8 py-10 px-sm-16 py-sm-20 border-0-5 rounded-2 hover:bg-light"
+                style={{
+                  borderColor: "#AAAAAA",
+                }}
+              >
+                <div className="d-flex flex-column gap-2">
+                  {/* Title */}
+                  <p className="mb-0 text-street-dark text-xs xs:text-sm fw-semibold">
+                    {event.title}
+                  </p>
 
-              {/* Location */}
-              <p className="mb-0 text-xs text-street-base d-flex flex-row align-items-center gap-1">
-                <Icon icon="lucide:map-pin" className="text-street-primary" />
-                {event.location}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </CardlistWrapper>
+                  {/* Date & Time */}
+                  <p className="d-flex flex-row text-street-base gap-2 mb-0">
+                    <span className="mb-0 text-xs d-flex flex-row align-items-center gap-1">
+                      <Icon
+                        icon="uis:calender"
+                        className="text-street-primary"
+                      />
+                      {dayjs(event.eventDate).format("MM/DD/YYYY")}
+                    </span>
+                    <span className="mb-0 text-xs d-flex flex-row align-items-center gap-1">
+                      <Icon
+                        icon="tabler:clock-filled"
+                        className="text-street-primary"
+                      />
+                      {dayjs(event.startTime).format("hh:mm A")} -
+                      {dayjs(event.endTime).format("hh:mm A")}
+                    </span>
+                  </p>
+
+                  {/* Location */}
+                  <a
+                    href={event.location.location_url}
+                    target="_blank"
+                    onClick={(e) => e.stopPropagation()} // prevent modal trigger when clicking link
+                    className="mb-0 text-xs d-block text-street-base d-flex flex-row align-items-center gap-1"
+                  >
+                    <Icon
+                      icon="icomoon-free:location"
+                      className="text-street-primary"
+                    />
+                    {event.location.location_name}
+                  </a>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </CardlistWrapper>
+
+      {/* 🔹 Event Details Modal */}
+    </>
   );
 };
 

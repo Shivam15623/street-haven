@@ -4,6 +4,7 @@ import type {
 } from "../interfaces/programMannuals";
 import type { ApiGeneralResponse } from "../interfaces/Response";
 import { api } from "../redux/ApiSlice";
+import { uploadWithProgress } from "../utills/uploadWithProgress";
 
 const programManualsApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -12,41 +13,52 @@ const programManualsApi = api.injectEndpoints({
         page = 1,
         limit = 10,
         search = "",
+        slug = "",
         type,
         sortBy = "createdAt",
         order = "desc",
       }) => ({
         url: "/program-manuals/view",
         method: "GET",
-        params: { page, limit, search, type, sortBy, order },
+        params: { page, limit, search, type, slug, sortBy, order },
       }),
-      providesTags:["Manual"]
+      keepUnusedDataFor: 300,
+      providesTags: ["Manual"],
     }),
-    createManuals: builder.mutation<ApiGeneralResponse, FormData>({
-      query: (credentials) => ({
-        url: "/program-manuals/create",
-        method: "POST",
-        body: credentials,
-      }),
-      invalidatesTags:["Manual"]
+    createManuals: builder.mutation({
+      queryFn: ({ data, onProgress }) =>
+        uploadWithProgress(
+          "/program-manuals/create",
+          "POST"
+        )({
+          data,
+          onProgress,
+        }),
+
+      invalidatesTags: ["Manual"],
     }),
+
     editManuals: builder.mutation<
       ApiGeneralResponse,
-      { id: string; data: FormData }
+      { id: string; data: FormData; onProgress?: (p: number) => void }
     >({
-      query: ({ id, data }) => ({
-        url: `/program-manuals/edit/${id}`,
-        method: "PATCH",
-        body: data,
-      }),
-      invalidatesTags:["Manual"]
+      queryFn: ({ id, data, onProgress }) =>
+        uploadWithProgress(
+          `/program-manuals/edit/${id}`,
+          "PATCH"
+        )({
+          data,
+          onProgress,
+        }),
+      invalidatesTags: ["Manual"],
     }),
+
     deleteManuals: builder.mutation({
       query: (id: string) => ({
         url: `/program-manuals/delete/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags:["Manual"]
+      invalidatesTags: ["Manual"],
     }),
   }),
 });

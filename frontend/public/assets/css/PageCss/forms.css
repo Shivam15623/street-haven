@@ -37,6 +37,15 @@
 [data-theme="dark"] .form-sub-toggle {
   background-color: rgba(15, 28, 42, 1);
 }
+.formTab{
+  width: fit-content;
+}
+@media (max-width: 576px) {
+  .formTab{
+    width: 50%;
+  }
+  
+}
 .report-form-card:hover .card-body {
   border: 1px solid var(--street-primary-base);
 }
@@ -45,4 +54,40 @@
   height: 93px;
   object-fit: contain;
   opacity: 1;
+}
+
+/* Custom styles for WSIB Header */
+
+.wsib-header-card {
+  background-color: #fff;
+  /* Optional: Add a top border color to match brand */
+  border-top: 4px solid #0056b3 !important; 
+}
+
+/* Logo Sizing */
+.wsib-logo {
+  max-width: 200px; /* Good size for Laptop */
+  height: auto;
+}
+
+/* Responsive Separators */
+@media (min-width: 992px) { /* LG Breakpoint */
+  
+  /* Vertical divider between Title and Address */
+  .border-end-lg {
+    border-right: 1px solid #dee2e6;
+    padding-right: 2rem; 
+  }
+  
+  /* Make the logo column stay tight to the left */
+  .wsib-logo {
+    max-width: 240px;
+  }
+}
+
+/* Small separator for address columns on mobile */
+@media (max-width: 576px) {
+  .border-end-sm {
+    border-right: 1px solid #dee2e6;
+  }
 }

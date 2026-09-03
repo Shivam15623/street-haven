@@ -1,101 +1,86 @@
-import { useEffect, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { useSelector } from "react-redux";
-import { useLocation, useNavigate } from "react-router-dom";
-
+import { Navigate, useLocation } from "react-router-dom";
 import { selectAuth } from "../redux/AuthSlice";
+
+import type { AllPermissions } from "../utills/auth/permissions";
+import useHasPermission from "../hooks/Auth";
 
 interface RouteGuardProps {
   children: ReactNode;
-  requireRole?: "admin" | "employee";
-  requireAnyRole?: ("admin" | "employee")[];
   isPublic?: boolean;
+  requireRole?: string[];
+  requirePermission?: AllPermissions[];
+  permissionMode?: "any" | "all"; // default "any"
 }
 
 const RouteGuard: React.FC<RouteGuardProps> = ({
   children,
-  requireRole,
-  requireAnyRole,
   isPublic = false,
+  requireRole = [],
+  requirePermission = [],
+  permissionMode = "any",
 }) => {
-  const navigate = useNavigate();
   const location = useLocation();
-  const { isLoggedIn, user } = useSelector(selectAuth);
+  const { isLoggedIn, user, authStatus } = useSelector(selectAuth);
+  const { hasAnyPermission, hasAllPermissions } = useHasPermission();
 
-  const role = user?.role;
-
-  // 🧠 1. Prevent rendering too early
-  const isUserReady = isLoggedIn !== undefined && user !== undefined;
-
-  useEffect(() => {
-    if (!isUserReady) return;
-
-    // 🏠 Special handling for root "/"
-    if (location.pathname === "/") {
-      console.log("rop")
-      if (!isLoggedIn) {
-        navigate("/login", { replace: true });
-      } else if (role) {
-        const redirectPath = role === "admin" ? "/admin" : "/employee";
-        navigate(redirectPath, { replace: true });
-      }
-      return; // stop further checks
-    }
-
-    // 🌐 Public routes
-    if (isPublic && isLoggedIn && role) {
-      const redirectPath = role === "admin" ? "/admin" : "/employee";
-      navigate(redirectPath, { replace: true });
-    }
-
-    // 🔒 Protected routes
-    if (!isPublic) {
-      if (!isLoggedIn || !user) {
-        navigate("/login", {
-          state: { from: location.pathname },
-          replace: true,
-        });
-        return;
-      }
-
-      if (requireRole && role !== requireRole) {
-        navigate("/unauthorized", { replace: true });
-        return;
-      }
-
-      if (requireAnyRole && (!role || !requireAnyRole.includes(role))) {
-        navigate("/unauthorized", { replace: true });
-        return;
-      }
-    }
-  }, [
-    isLoggedIn,
-    user,
-    role,
-    isPublic,
-    requireRole,
-    requireAnyRole,
-    location.pathname,
-    navigate,
-    isUserReady,
-  ]);
-
-  // ⛔ 3. Wait until auth state is known
-  if (!isUserReady) {
+  // ⏳ Auth hydration phase (redux-persist)
+  if (isLoggedIn === undefined) {
     return (
-      <div className="h-screen flex items-center justify-center bg-white text-gray-700">
-        Checking authentication...
+      <div className="flex h-screen items-center justify-center">
+        Loading...
       </div>
     );
   }
 
-  const allowAccess =
-    isPublic ||
-    (isLoggedIn &&
-      user &&
-      (!requireRole || role === requireRole) &&
-      (!requireAnyRole || (role && requireAnyRole.includes(role))));
+  // 🔐 Protected route → not logged in
+  if (!isPublic && !isLoggedIn) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
 
-  return allowAccess ? <>{children}</> : null;
+  // 🚫 Public route → already logged in
+  if (isPublic && isLoggedIn) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (authStatus === "unknown") {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
+
+  if (authStatus === "inactive") {
+    if (location.pathname !== "/account-inactive") {
+      return <Navigate to="/account-inactive" replace />;
+    }
+    return <>{children}</>;
+  }
+
+  // 🧑‍⚖️ Role-based access (ONLY if logged in)
+  if (
+    isLoggedIn &&
+    requireRole.length > 0 &&
+    (!user || !requireRole.includes(user.role))
+  ) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  // 🔑 Permission-based access (ONLY if logged in)
+  if (isLoggedIn && requirePermission.length > 0) {
+    const allowed =
+      permissionMode === "all"
+        ? hasAllPermissions(requirePermission)
+        : hasAnyPermission(requirePermission);
+
+    if (!allowed) {
+      return <Navigate to="/unauthorized" replace />;
+    }
+  }
+
+  return <>{children}</>;
 };
 
 export default RouteGuard;

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { lazy, useState } from "react";
 import { Formik, FieldArray, ErrorMessage } from "formik";
 import {
   useCreateManualsMutation,
@@ -8,15 +8,33 @@ import ModalWrapper from "../../../../components/child/ModalWrapper";
 import * as Yup from "yup";
 import { Form as BootstrapForm } from "react-bootstrap";
 import Badge from "../../../../components/child/Badge";
-import { showSuccess } from "../../../../utills/toastutills";
-import PdfField from "../../../../components/child/PdfField";
+import { showError, showSuccess } from "../../../../utills/toastutills";
 import type { Document } from "./DocumentCard";
-
+import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
+import FileField from "../../../../components/child/FileField";
+import {
+  getErrorMessage,
+  getPlainTextFromHTML,
+} from "../../../../utills/utills";
+const QuillEditor = lazy(
+  () => import("../../../../components/child/QuillEditor"),
+);
 // 🔹 Schema generator (avoids duplication)
-const programManualSchema = (isEdit: boolean) =>
+const programManualSchema = () =>
   Yup.object().shape({
-    title: Yup.string().required("Title is required"),
-    description: Yup.string().required("Description is required"),
+    title: Yup.string()
+      .required("Title is required")
+      .min(3, "Title must be at least 3 characters"),
+    description: Yup.string()
+      .required("Description is required")
+      .test(
+        "min-text-length",
+        "Description must be at least 10 characters",
+        (value) => {
+          const plainText = getPlainTextFromHTML(value || "");
+          return plainText.length >= 10;
+        },
+      ),
     tags: Yup.array()
       .of(Yup.string())
       .min(1, "At least one tag is required")
@@ -24,17 +42,21 @@ const programManualSchema = (isEdit: boolean) =>
     type: Yup.string().required("Type is required"),
     attachment: Yup.mixed<File>()
       .nullable()
-      .test("fileType", "Only PDF files are allowed", (value) => {
-        if (!value) return isEdit; // required in create, optional in edit
-        return value instanceof File && value.type === "application/pdf";
-      })
       .test("fileSize", "File size must be less than 16MB", (value) => {
         if (!value) return true;
         return value.size <= 16 * 1024 * 1024;
       }),
   });
+type ProgramManualFormValues = {
+  title: string;
+  description: string;
+  type: string;
+  tags: string[];
+  attachment: File | null;
+  newTag: string;
+};
 // 🔹 Helper: build FormData
-const buildFormData = (values) => {
+const buildFormData = (values: ProgramManualFormValues) => {
   const formData = new FormData();
   formData.append("title", values.title);
   formData.append("description", values.description);
@@ -61,7 +83,7 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
 
   const [createManual, { isLoading }] = useCreateManualsMutation();
   const [editManual, { isLoading: isEditing }] = useEditManualsMutation();
-
+  const [progress, setProgress] = useState(0);
   // 🔹 Initial values
   const initialValues = {
     title: document?.title || "",
@@ -75,28 +97,36 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
   // 🔹 Save handler (unified)
   const handleSave = async (
     values: typeof initialValues,
-    { resetForm }: { resetForm: () => void }
+    { resetForm }: { resetForm: () => void },
   ) => {
     try {
       const formData = buildFormData(values);
       const res = isEdit
-        ? await editManual({ id: document!._id, data: formData }).unwrap()
-        : await createManual(formData).unwrap();
+        ? await editManual({
+            id: document!._id,
+            data: formData,
+            onProgress: (p: number) => setProgress(p),
+          }).unwrap()
+        : await createManual({
+            data: formData,
+            onProgress: (p: number) => setProgress(p),
+          }).unwrap();
 
       if (res.success) {
         showSuccess(res.message);
+        setProgress(0);
         resetForm();
         onSuccess?.();
         onHide();
       }
     } catch (error) {
-      console.error(error);
+      showError(getErrorMessage(error));
     }
   };
 
   return (
     <ModalWrapper
-      title={isEdit ? "Edit Program Manual" : "Add Program Manual"}
+      title={isEdit ? "Edit Training Material" : "Add Training Material"}
       size="lg"
       show={show}
       headerClassName="text-xl p-0 pb-20 text-street-dark"
@@ -104,8 +134,18 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
       bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
       footerClassName="pt-16 pt-sm-20 px-0 pb-0"
       onHide={onHide}
+      ModalLoader={
+        <FormSubmissionLoader
+          isLoading={isLoading || isEditing}
+          variant="progress" // spinner | dots | pulse | progress
+          message="Saving changes..."
+          subMessage="Please wait"
+          progress={progress} // only for progress variant
+        />
+      }
+      isLoading={isLoading || isEditing}
       footer={
-        <div className="d-flex gap-2 justify-content-end">
+        <div className="d-flex justify-content-end gap-3">
           <button
             type="submit"
             form="program-manual-form"
@@ -117,11 +157,11 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
                 ? "Saving..."
                 : "Adding..."
               : isEdit
-              ? "Save Changes"
-              : "Add Manual"}
+                ? "Save Changes"
+                : "Add Manual"}
           </button>
           <button
-            className="btn btn-street-neutral btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+            className="btn btn-street-neutral btn-street-lg radius-12 d-none d-sm-flex align-items-center text-sm justify-content-center"
             onClick={onHide}
           >
             Cancel
@@ -131,18 +171,19 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
     >
       <Formik
         initialValues={initialValues}
-        validationSchema={programManualSchema(isEdit)}
+        validationSchema={programManualSchema()}
         onSubmit={handleSave}
       >
         {({ values, setFieldValue, handleSubmit, errors, touched }) => (
           <BootstrapForm
             noValidate
             id="program-manual-form"
+            className="d-flex flex-column gap-2"
             onSubmit={handleSubmit}
           >
             {/* Title */}
-            <BootstrapForm.Group className="mb-3">
-              <BootstrapForm.Label className="mb-2">Title</BootstrapForm.Label>
+            <BootstrapForm.Group className="d-flex flex-column gap-8">
+              <BootstrapForm.Label>Title</BootstrapForm.Label>
               <BootstrapForm.Control
                 type="text"
                 placeholder="Enter title"
@@ -156,37 +197,42 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
             </BootstrapForm.Group>
 
             {/* Description */}
-            <BootstrapForm.Group className="mb-3">
-              <BootstrapForm.Label className="mb-2">
-                Description
-              </BootstrapForm.Label>
-              <BootstrapForm.Control
-                as="textarea"
-                rows={3}
-                placeholder="Enter description"
-                value={values.description}
-                isInvalid={!!errors.description && touched.description}
-                onChange={(e) => setFieldValue("description", e.target.value)}
+            <BootstrapForm.Group className="d-flex flex-column gap-8">
+              <BootstrapForm.Label>Description</BootstrapForm.Label>
+              <QuillEditor
+                content={values.description}
+                onChange={(val) => setFieldValue("description", val)}
+                isInvalid={touched.description && !!errors.description}
               />
+              {touched.description && errors.description && (
+                <div className="invalid-feedback d-block">
+                  {errors.description}
+                </div>
+              )}
               <BootstrapForm.Control.Feedback type="invalid">
                 <ErrorMessage name="description" />
               </BootstrapForm.Control.Feedback>
             </BootstrapForm.Group>
 
             {/* Type */}
-            <BootstrapForm.Group className="mb-3">
-              <BootstrapForm.Label className="mb-2">Type</BootstrapForm.Label>
+            <BootstrapForm.Group className="d-flex flex-column gap-8">
+              <BootstrapForm.Label>Type</BootstrapForm.Label>
               <BootstrapForm.Select
                 value={values.type}
                 isInvalid={!!errors.type && touched.type}
                 onChange={(e) => setFieldValue("type", e.target.value)}
               >
                 <option value="">Select Type</option>
-                <option value="HR">HR</option>
-                <option value="Technical">Technical</option>
-                <option value="Finance">Finance</option>
-                <option value="Operations">Operations</option>
-                <option value="Other">Other</option>
+                {[
+                  "Orientation",
+                  "Safety",
+                  "Policies",
+                  "Training",
+                  "Forms",
+                  "Other",
+                ].map((m) => {
+                  return <option value={m}>{m}</option>;
+                })}
               </BootstrapForm.Select>
               <BootstrapForm.Control.Feedback type="invalid">
                 <ErrorMessage name="type" />
@@ -194,8 +240,8 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
             </BootstrapForm.Group>
 
             {/* Tags */}
-            <BootstrapForm.Group className="mb-3">
-              <BootstrapForm.Label className="mb-2">Tags</BootstrapForm.Label>
+            <BootstrapForm.Group className="d-flex flex-column gap-8">
+              <BootstrapForm.Label>Tags</BootstrapForm.Label>
               <FieldArray name="tags">
                 {({ push, remove }) => (
                   <>
@@ -221,6 +267,18 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
                           }
                         }}
                       />
+                      <button
+                        className="btn-street-primary radius-8 px-3 text-lg"
+                        type="button"
+                        onClick={() => {
+                          if (values.newTag && values.tags.length < 3) {
+                            push(values.newTag);
+                            setFieldValue("newTag", "");
+                          }
+                        }}
+                      >
+                        +
+                      </button>
                     </div>
                     <div className="d-flex gap-2 flex-wrap mb-2">
                       {values.tags.map((tag, index) => (
@@ -248,8 +306,8 @@ const ActionsProgram: React.FC<ActionsProgramProps> = ({
             </BootstrapForm.Group>
 
             {/* PDF Upload / Existing PDF */}
-            <PdfField
-              existingPdf={
+            <FileField
+              existingFile={
                 isEdit && document?.attachment
                   ? {
                       fileName: document.attachment.fileName,

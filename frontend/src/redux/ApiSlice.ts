@@ -1,9 +1,7 @@
-
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react"; // ✅ use /react here
 import { setLoggedIn, setLoggedOut } from "./AuthSlice";
 import type { RootState } from "./store";
-import type { LoginResponseData } from "../interfaces/AuthInterfaces";
-
+import type { LoginVerifyTotpResponseData } from "../interfaces/AuthInterfaces";
 
 const environment = import.meta.env;
 
@@ -14,10 +12,23 @@ const baseQuery = fetchBaseQuery({
     const token = (getState() as RootState).auth.accessToken;
 
     if (token) {
-      headers.set("Accept", "application/json");
       headers.set("authorization", `Bearer ${token}`);
     }
     return headers;
+  },
+
+  responseHandler: async (response) => {
+    const contentType = response.headers.get("content-type");
+
+    if (contentType?.includes("application/pdf")) {
+      return await response.blob(); // 👈 IMPORTANT
+    }
+
+    if (contentType?.includes("application/json")) {
+      return await response.json();
+    }
+
+    return await response.text();
   },
 });
 
@@ -28,12 +39,34 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
     const refreshResult = await baseQuery(
       { url: "/auth/refresh", method: "POST" },
       api,
-      extraOptions
+      extraOptions,
     );
 
     if (refreshResult?.data) {
-      const { accessToken, user } = refreshResult.data as LoginResponseData;
-      api.dispatch(setLoggedIn({ accessToken, UserData: user }));
+      const { accessToken, user } =
+        refreshResult.data as LoginVerifyTotpResponseData;
+
+      const payload = {
+        _id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phoneNo: user.phoneNo,
+        profilePic: user.profilePic,
+        role: user.role,
+        slug: user.slug,
+        status: user.status,
+        createdAt: user.createdAt,
+        title: user.title || "",
+        hireDate: new Date(user.hireDate).toISOString(),
+        customPermissions: user.customPermissions || [],
+      };
+      api.dispatch(
+        setLoggedIn({
+          accessToken,
+          UserData: payload,
+        }),
+      );
 
       result = await baseQuery(args, api, extraOptions);
     } else {
@@ -47,8 +80,37 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 // ✅ Create the API with endpoints directly
 export const api = createApi({
   reducerPath: "api",
+  refetchOnFocus: false,
+  refetchOnReconnect: false,
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Event","Ticket","Manual","Meetings","HrUpdates","StaffFeedBack","IncidentReport","Profile"],
+  tagTypes: [
+    "Event",
+    "Ticket",
+    "Manual",
+    "Meetings",
+    "HrUpdates",
+    "StaffFeedBack",
+    "IncidentReport",
+    "Profile",
+    "FAQ",
+    "EmergencyContact",
+    "Employees",
+    "OrgNode",
+    "Notification",
+    "Announcement",
+    "Agreement",
+    "client-incident",
+    "client-feedback",
+    "employee-incident",
+    "payment-requistion",
+    "functional-abilty",
+    "media-consent",
+    "Locations",
+    "Task",
+    "Certification",
+    "TicketCategory",
+    "CommentNotification"
+  ],
   endpoints: () => ({}),
 });
 

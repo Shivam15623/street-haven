@@ -1,16 +1,17 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import { Form, Button, Row, Col, Spinner } from "react-bootstrap";
-import { useDispatch } from "react-redux";
-import { setLoggedIn } from "../../../../redux/AuthSlice";
 import { useLoginMutation } from "../../../../services/AuthApi";
-import { showSuccess } from "../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../utills/toastutills";
 import PasswordInput from "../../../../components/Authentication/PasswordInput";
+import { getErrorMessage } from "../../../../utills/utills";
+import { useDispatch } from "react-redux";
+import { setAccountInactive } from "../../../../redux/AuthSlice";
+import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 interface LoginValues {
   email: string;
-
   password: string;
 }
 const loginSchema = Yup.object({
@@ -23,32 +24,47 @@ const loginSchema = Yup.object({
 const LoginForm: React.FC = () => {
   const [login, { isLoading }] = useLoginMutation();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const handleLogin = async (values: LoginValues) => {
     try {
       const response = await login(values).unwrap();
       if (response.success) {
-        const { accessToken, user } = response.data;
-        const payload = {
-          _id: user._id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          phoneNo: user.phoneNo,
-          profile: user.profilePic,
-          role: user.role,
-          slug: user.slug,
-        };
+        if (response.data.status === "TOTP_REQUIRED") {
+          navigate("/otp-verify", {
+            state: {
+              tempToken: response.data.tempToken,
+              email: values.email,
+            },
+          });
+          return;
+        } else if (response.data.status === "TOTP_SETUP_REQUIRED") {
+          navigate("/connect-Authenticator", {
+            state: {
+              tempToken: response.data.tempToken,
+              email: values.email,
+            },
+          });
+          return;
+        }
 
-        dispatch(
-          setLoggedIn({
-            accessToken: accessToken,
-            UserData: payload,
-          })
-        );
         showSuccess(response.message);
       }
     } catch (error) {
-      console.error("Signup failed:", error);
+      const response = error as FetchBaseQueryError;
+
+      if (
+        "data" in response &&
+        response.data &&
+        typeof response.data === "object" &&
+        "code" in response.data &&
+        response.data.code === "ACCOUNT_INACTIVE"
+      ) {
+        dispatch(setAccountInactive());
+        navigate("/account-inactive");
+        return;
+      }
+
+      showError(getErrorMessage(error));
     }
   };
   return (
@@ -95,7 +111,7 @@ const LoginForm: React.FC = () => {
                       onBlur={handleBlur}
                       className=" h-50-px "
                       style={{
-                        backgroundColor: "#F2F0EC",
+                        backgroundColor: "var(--street-auth-input)",
                         borderColor: "#E2E8F0",
                         borderRadius: "15px",
                       }}
@@ -123,7 +139,7 @@ const LoginForm: React.FC = () => {
                       onChange={handleChange}
                       onBlur={handleBlur}
                       style={{
-                        backgroundColor: "#F2F0EC",
+                        backgroundColor: "var(--street-auth-input)",
                         borderColor: "#E2E8F0",
                         borderRadius: "15px",
                         paddingRight: "2.5rem",
@@ -137,7 +153,6 @@ const LoginForm: React.FC = () => {
                   <Link
                     to={"/forgot-password"}
                     className=" text-sm fw-normal link-street-primary"
-                  
                   >
                     Forgot Password?
                   </Link>
@@ -172,10 +187,7 @@ const LoginForm: React.FC = () => {
         )}
       </Formik>
       <p className="text-center  text-sm  text-street-base mb-0 ">
-        Don’t have an account?{" "}
-        <Link to="/Signup" className="text-sm fw-semibold link-street-base">
-          Sign Up
-        </Link>
+        Don’t have an account? Contact Administration{" "}
       </p>
     </div>
   );

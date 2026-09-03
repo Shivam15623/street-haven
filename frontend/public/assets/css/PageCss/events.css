@@ -51,20 +51,28 @@
 .bg-event-details {
   background-color: var(--street-bg-f4);
 }
-[data-theme="dark"] .bg-event-details{
+[data-theme="dark"] .bg-event-details {
   background-color: rgba(4, 19, 29, 1);
 }
-.event-card .event-icon{
+.event-card .event-icon {
   background-color: var(--street-primary-base-10);
-  color:var(--street-primary-base)
+  color: var(--street-primary-base);
 }
-[data-theme="dark"] .event-card .event-icon{
-   background-color: rgba(36, 47, 59, 1);
-  color:white;
+[data-theme="dark"] .event-card .event-icon {
+  background-color: rgba(36, 47, 59, 1);
+  color: white;
 }
-.event-view-toggle{
+.event-view-toggle {
   background-color: #f4f4f4;
 }
 [data-theme="dark"] .event-view-toggle {
-  background-color: rgba(15, 28, 42, 1);
+  background-color: #0f1c2a;
+}
+.eventTtab {
+  width: fit-content;
+}
+@media (max-width: 576px) {
+  .eventTtab {
+    width: 50%;
+  }
 }

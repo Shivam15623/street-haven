@@ -1,0 +1,217 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payment Requisition Form - Street Haven</title>
+    <style>
+      * { box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+      body { box-sizing: border-box; margin: 0; padding: 40px 20px; background:
+      white; font-family: "Arial", "Helvetica", sans-serif; width: 100%;
+      min-height: 100%; color: #000000; } html { height: 100%; width: 100%; }
+      .page-container { width: 100%; max-width: 900px; margin: 0 auto; padding:
+      40px 20px; } .form-wrapper { background: white; border: 3px solid #000000;
+      padding: 0; } .header { border-bottom: 3px solid #000000; padding: 24px
+      40px; display: flex; align-items: center; gap: 32px; } .logo-section {
+      flex-shrink: 0; } .logo { display: block; } .header-text { flex: 1;
+      text-align: left; } .organization-name { font-size: 11px; font-weight:
+      bold; letter-spacing: 2px; margin: 0 0 8px 0; text-transform: uppercase; }
+      .header h1 { margin: 0 0 12px 0; font-size: 24px; font-weight: bold;
+      letter-spacing: 1px; text-transform: uppercase; border-bottom: 2px solid
+      #000000; padding-bottom: 12px; } .header p { margin: 12px 0 0 0;
+      font-size: 12px; line-height: 1.5; font-style: italic; } .form-content {
+      padding: 32px 40px; } .section { margin-bottom: 28px; border-bottom: 1px
+      solid #000000; padding-bottom: 20px; page-break-inside: avoid;
+      break-inside: avoid; } .section:last-of-type { border-bottom: none; }
+      .section-title { font-size: 14px; font-weight: bold; margin: 0 0 16px 0;
+      text-transform: uppercase; letter-spacing: 0.5px; } .subsection-label {
+      font-size: 12px; font-weight: bold; margin: 0 0 12px 0; text-decoration:
+      underline; } .field-group { margin-bottom: 16px; } .field-label { display:
+      inline-block; font-size: 11px; font-weight: bold; margin-bottom: 4px;
+      text-transform: uppercase; letter-spacing: 0.3px; } .underline-field {
+      border: none; border-bottom: 1px solid #000000; background: transparent;
+      width: 100%; padding: 6px 2px; font-size: 12px; font-family: inherit;
+      color: #000000; } .underline-field:focus { outline: none; border-bottom:
+      2px solid #000000; } .inline-field { display: flex; align-items: baseline;
+      gap: 8px; margin-bottom: 10px; } .inline-label { font-size: 11px;
+      font-weight: bold; white-space: nowrap; } .inline-input { flex: 1; border:
+      none; border-bottom: 1px solid #000000; background: transparent; padding:
+      4px 2px; font-size: 12px; } .inline-input:focus { outline: none;
+      border-bottom: 2px solid #000000; } .two-column { display: grid;
+      grid-template-columns: 1fr 1fr; gap: 24px; } /* New Table Styling matching
+      the aesthetic */ .expense-table { width: 100%; border-collapse: collapse;
+      margin-bottom: 16px; font-size: 12px; } .expense-table th, .expense-table
+      td { border: 1px solid #000; padding: 8px; text-align: left; }
+      .expense-table th { background: #f0f0f0; font-weight: bold;
+      text-transform: uppercase; font-size: 11px; } .expense-table input {
+      width: 100%; border: none; background: transparent; outline: none;
+      font-size: 12px; } .footer-text { text-align: center; font-size: 10px;
+      line-height: 1.4; margin-top: 20px; color: #333; } @media print {
+      .page-container { padding: 0; } .form-wrapper { border: 2px solid #000000;
+      } button { display: none; } }
+    </style>
+    <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+  </head>
+  <body>
+    <div class="page-container">
+      <div class="form-wrapper">
+        <header class="header">
+          <div class="logo-section">
+            <img class="logo" width="120" height="90" src="{{companyLogo}}" />
+          </div>
+          <div class="header-text">
+            <div class="organization-name">STREET HAVEN</div>
+            <h1>PAYMENT REQUISITION FORM</h1>
+            <p>*** Please attach receipt/invoice ***</p>
+          </div>
+        </header>
+        <main class="form-content">
+          <section class="section">
+            <h2 class="section-title">1. Payment Details</h2>
+
+            <div class="two-column">
+              <div class="inline-field">
+                <span class="inline-label">Amount:</span>
+                <input
+                  class="inline-input"
+                  type="text"
+                  value="{{totalAmount}} $"
+                />
+              </div>
+              <div class="inline-field">
+                <span class="inline-label">Payee Name:</span>
+                <input class="inline-input" type="text" value="{{payeeName}}" />
+              </div>
+            </div>
+
+          </section>
+
+          <section class="section">
+            <h2 class="section-title">2. Expense Breakdown</h2>
+
+            <table class="expense-table">
+              <thead>
+                <tr>
+                  <th style="width: 30%">Purchase Date</th>
+                  <th style="width: 30%">Nature of Purchase</th>
+                  <th style="width: 20%">Program</th>
+                  <th style="width: 15%">Expense Code</th>
+                  <th style="width: 15%">Net Amount</th>
+                  <th style="width: 10%">HST</th>
+                  <th style="width: 10%">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each paymentDetails}}
+                  <tr>
+                    <td>{{formatDate purchaseDate}}</td>
+                    <td>{{purchaseNature}}</td>
+                    <td>{{program}}</td>
+                    <td>{{expenseCode}}</td>
+                    <td>{{netAmount}}</td>
+                    <td>{{hst}}</td>
+                    <td>{{totalAmount}}</td>
+                  </tr>
+                {{/each}}
+                <tr>
+                  <td
+                    colspan="5"
+                    style="
+                      text-align: right;
+                      font-weight: bold;
+                      border-right: none;
+                    "
+                  >
+                    TOTAL
+                  </td>
+                  <td   colspan="2" style="border-left: 2px solid #000">
+                    {{totalAmount}}
+                    $
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section class="section" style="border-bottom: none">
+            <h2 class="section-title">3. Approvals</h2>
+
+            <div class="field-group" style="margin-bottom: 24px">
+              <div class="two-column">
+                <div>
+                  <div class="inline-field">
+                    <span class="inline-label">Requested By:</span>
+                    <input
+                      class="inline-input"
+                      type="text"
+                      value="{{requestedBy}}"
+                    />
+                  </div>
+                  <div class="inline-field">
+                    <span class="inline-label">Signature:</span>
+                    <input class="inline-input" type="text" />
+                  </div>
+                </div>
+                <div style="display: flex; align-items: flex-end">
+                  <div class="inline-field" style="width: 100%">
+                    <span class="inline-label">Date:</span>
+                    <input
+                      class="inline-input"
+                      type="text"
+                      value="{{formatDate requestedDate}}"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="two-column">
+                <div>
+                  <div class="inline-field">
+                    <span class="inline-label">Approved By:</span>
+                    <input
+                      class="inline-input"
+                      type="text"
+                      value="{{approvedBy}}"
+                    />
+                  </div>
+                  <div class="inline-field">
+                    <span class="inline-label">Signature:</span>
+                    <input class="inline-input" type="text" />
+                  </div>
+                </div>
+                <div style="display: flex; align-items: flex-end">
+                  <div class="inline-field" style="width: 100%">
+                    <span class="inline-label">Date:</span>
+                    <input
+                      class="inline-input"
+                      type="text"
+                      value="{{formatDate approvedDate}}"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <footer
+            style="
+              margin-top: 30px;
+              border-top: 2px solid #000;
+              padding-top: 15px;
+            "
+          >
+            <div class="footer-text">
+              87 Pembroke Street, Toronto, Ontario M5A 2N9 | TEL: 416.967.6060 |
+              FAX: 416.924.6900
+              <br />
+              www.streethaven.com
+              <br />
+              CHARITABLE REGISTRATION: 12953-5175-RR0001
+            </div>
+          </footer>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

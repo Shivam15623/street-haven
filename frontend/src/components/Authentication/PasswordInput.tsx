@@ -22,7 +22,6 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
   value,
   onChange,
   onBlur,
-  isInvalid,
   disabled,
   error,
   size,
@@ -33,24 +32,27 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
 
   return (
     <div className="position-relative">
-      <Form.Control
-        type={showPassword ? "text" : "password"}
-        name={name}
-        placeholder={placeholder}
-        disabled={disabled}
-        value={value}
-        onChange={onChange}
-        onBlur={onBlur}
-        size={size}
-        isInvalid={isInvalid}
-        className={className} // ✅ allow extra classes
-        style={{
-          ...style, // ✅ merge custom styles
-        }}
-      />
-      {!error && (
+      <div className="position-relative">
+        <Form.Control
+          type={showPassword ? "text" : "password"}
+          name={name}
+          placeholder={placeholder}
+          disabled={disabled}
+          value={value}
+          onChange={onChange}
+          onBlur={onBlur}
+          size={size}
+          isInvalid={!!error}
+          autoComplete="off"
+          className={`nullInvalid-password-input ${className}`}
+          style={{
+            paddingRight: "2.5rem", // space for the eye icon
+            ...style,
+          }}
+        />
+
         <span
-          className="position-absolute top-50 text-street-base text-lg end-0 translate-middle-y pe-3"
+          className="position-absolute top-50 end-0 translate-middle-y pe-3 cursor-pointer"
           onClick={() => setShowPassword((prev) => !prev)}
         >
           {showPassword ? (
@@ -59,10 +61,15 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
             <Icon icon="bi:eye" className="text-xl" />
           )}
         </span>
-      )}
+      </div>
 
+      {/* Feedback below input, separate from input+icon wrapper */}
       {error && (
-        <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>
+        <div className="mt-1">
+          <Form.Control.Feedback type="invalid" style={{ display: "block" }}>
+            {error}
+          </Form.Control.Feedback>
+        </div>
       )}
     </div>
   );

@@ -1,97 +1,153 @@
-import { getPdfPageCount } from "../helper/pdfpagecount.js";
+import mongoose from "mongoose";
+import { io } from "../index.js";
 import ProgramManual from "../model/programManuals.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
-import { uploadOnCloudinary } from "../utills/cloudinary.js";
+import { createNotification } from "../helper/CreateNotoification.js";
+import { addActivityLog } from "../helper/addActivityLogs.js";
+
+import { deleteFromCloudinary } from "../utills/cloudinary.js";
+import { PERMISSIONS } from "../auth/permissions.js";
+import { emitNotification } from "../helper/emitNotification.js";
+import { uploadAttachment } from "./CollectiveAgreement.controller.js";
+
 export const AddProgramManual = asyncHandler(async (req, res) => {
   const { title, description, tags, type } = req.body;
-  const { _id: userId } = req.user;
-  const atttchmentpath = req?.file?.path;
-  if (!atttchmentpath) {
-    throw new ApiError(400, "attachment file is missing");
-  }
-  const totalPages = await getPdfPageCount(atttchmentpath);
+  const { _id: userId, firstname, lastname } = req.user;
+  const attachmentpath = req?.file?.path; // Fix typo
 
-  const uploadedFile = await uploadOnCloudinary(atttchmentpath);
+  if (!attachmentpath) throw new ApiError(400, "Attachment file is missing");
 
-  if (!uploadedFile?.url) {
-    throw new ApiError(500, "attachment upload failed");
-  }
+  const attachmentData = await uploadAttachment(attachmentpath);
 
-  const attachmentData = {
-    fileName: uploadedFile.original_filename || "manual",
-    fileUrl: uploadedFile.url,
-    size: uploadedFile.bytes, // Cloudinary gives bytes
-    totalPages: totalPages,
-  };
-  const programmanual = await ProgramManual.create({
-    title: title,
-    description: description,
-    tags: tags,
-    type: type,
-    createdBy: userId,
-    attachment: attachmentData,
-  });
-  if (!programmanual) {
-    throw new ApiError(500, "server Error");
+  // Phase 2: Minimal transaction - DB only
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+    // Create Training Material within the session
+    const programmanual = await ProgramManual.create(
+      [
+        {
+          title,
+          description,
+          tags,
+          type,
+          createdBy: userId,
+          attachment: attachmentData,
+        },
+      ],
+      { session },
+    );
+
+    if (!programmanual || programmanual.length === 0) {
+      throw new ApiError(500, "Server Error");
+    }
+
+    // Create Notification within the session
+    const notification = await createNotification(
+      {
+        action: "created",
+        category: "training_material",
+        severity: "info",
+        title: "New Training Material Added",
+        message: `${firstname} added a new Training Material: "${title}"`,
+        link: `/volunteer-training?slug=${programmanual[0].slug}`,
+        requiredPermissions: [PERMISSIONS.VIEW_PROGRAM_MANUALS],
+        createdBy: userId,
+        isGlobal: true,
+        expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        meta: { programManualId: programmanual[0].slug },
+      },
+      session,
+    );
+    await addActivityLog(
+      {
+        actionType: "TRAINING_MATERIAL_CREATED",
+        performedBy: {
+          id: req.user?._id,
+          name: `${firstname} ${lastname}`,
+          type: "user",
+        },
+        message: `A new training material has been created: ${title}`,
+
+        meta: {
+          recordId: programmanual._id,
+          moduleName: "ProgramManual",
+        },
+      },
+      session, // <-- pass session
+    );
+    // Commit transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    // Emit real-time notifications outside transaction
+
+    emitNotification(io, notification);
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          201,
+          "Training Material added and notifications sent successfully",
+        ),
+      );
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  } finally {
+    session.endSession();
   }
-  return res
-    .status(200)
-    .json(new ApiResponse(201, "program Mannual Added Successfully "));
 });
-// 📌 Edit Program Manual
+
+// 📌 Edit Training Material
 export const EditProgramManual = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { title, description, tags, type } = req.body;
-  console.log("called", title, description, tags, type);
 
   const programManual = await ProgramManual.findById(id);
   if (!programManual) {
-    throw new ApiError(404, "Program Manual not found");
+    throw new ApiError(404, "Training Material not found");
   }
 
   const updates = {};
+  let attachmentChanged = false;
 
-  // Only update fields that are different
   if (title && title !== programManual.title) {
     updates.title = title;
   }
+
   if (description && description !== programManual.description) {
     updates.description = description;
   }
+
   if (tags && JSON.stringify(tags) !== JSON.stringify(programManual.tags)) {
     updates.tags = tags;
   }
+
   if (type && type !== programManual.type) {
     updates.type = type;
   }
 
-  // If a new file is uploaded
+  /* ======================
+     ATTACHMENT UPDATE
+     (NOTIFY USERS)
+  ====================== */
   if (req?.file?.path) {
-    const totalPages = await getPdfPageCount(req.file.path);
-    const uploadedFile = await uploadOnCloudinary(req.file.path);
+    const attachmentData = await uploadAttachment(req.file.path);
 
-    if (!uploadedFile?.url) {
-      throw new ApiError(500, "Attachment upload failed");
-    }
-
-    const attachmentData = {
-      fileName: uploadedFile.original_filename || "manual",
-      fileUrl: uploadedFile.url,
-      size: uploadedFile.bytes,
-      totalPages,
-    };
-
-    // Only update if different (by URL or size or filename etc.)
     const currentAttachment = programManual.attachment || {};
+
     if (
       attachmentData.fileUrl !== currentAttachment.fileUrl ||
       attachmentData.fileName !== currentAttachment.fileName ||
-      attachmentData.size !== currentAttachment.size ||
-      attachmentData.totalPages !== currentAttachment.totalPages
+      attachmentData.size !== currentAttachment.size
     ) {
       updates.attachment = attachmentData;
+      attachmentChanged = true;
     }
   }
 
@@ -106,41 +162,65 @@ export const EditProgramManual = asyncHandler(async (req, res) => {
     runValidators: true,
   });
 
+  /* ======================
+     NOTIFICATION
+     (ONLY FOR ATTACHMENT)
+  ====================== */
+  if (attachmentChanged) {
+    const notification = await createNotification({
+      category: "training_material",
+      action: "updated",
+      severity: "info",
+      title: "Program manual updated",
+      message: `The training material "${updatedManual.title}" has been updated. Please refer to the latest version.`,
+      link: `/volunteer-training?slug=${updatedManual.slug}`,
+      isGlobal: true,
+      requiredPermissions: [PERMISSIONS.VIEW_PROGRAM_MANUALS],
+      createdBy: req.user?._id,
+      meta: {
+        manualId: updatedManual.slug,
+        attachmentUpdated: true,
+      },
+    });
+
+    emitNotification(io, notification);
+  }
+
   return res
     .status(200)
-    .json(
-      new ApiResponse(200, updatedManual, "Program Manual updated successfully")
-    );
+    .json(new ApiResponse(200, "Training Material updated successfully"));
 });
 
-// 📌 Delete Program Manual
-// 📌 Delete Program Manual
 export const DeleteProgramManual = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   const programManual = await ProgramManual.findById(id);
   if (!programManual) {
-    throw new ApiError(404, "Program Manual not found");
+    throw new ApiError(404, "Training Material not found");
   }
 
-  // ✅ Safely check for attachment + fileUrl
+  // ✅ Safely delete attachment from Cloudinary
   const fileUrl = programManual?.attachment?.fileUrl;
   if (fileUrl) {
     try {
       await deleteFromCloudinary(fileUrl);
     } catch (err) {
       console.error("Error deleting from Cloudinary:", err.message);
-      // ❓ Choice: abort vs continue
-      // If you want to block deletion when Cloudinary fails, uncomment below:
-      // throw new ApiError(500, "Failed to delete file from Cloudinary");
+      // Do NOT block DB delete (correct decision 👍)
     }
   }
 
+  // ✅ Delete from DB
   await ProgramManual.findByIdAndDelete(id);
+
+  // 🔥 REAL-TIME UPDATE (THIS IS THE FIX)
+  io.emit("program-manual-deleted", {
+    manualId: id,
+  });
 
   return res
     .status(200)
-    .json(new ApiResponse(200, "Program Manual deleted successfully"));
+    .json(new ApiResponse(200, "Training Material deleted successfully"));
 });
 
 export const GetProgramManuals = asyncHandler(async (req, res) => {
@@ -149,6 +229,7 @@ export const GetProgramManuals = asyncHandler(async (req, res) => {
     limit = 10,
     search = "",
     type,
+    slug = "",
     sortBy = "createdAt",
     order = "desc",
   } = req.query;
@@ -156,11 +237,14 @@ export const GetProgramManuals = asyncHandler(async (req, res) => {
   const query = {};
 
   // If search query exists → search in title, description, and tags
-  if (search) {
+  if (slug) {
+    query.slug = slug; // exact match
+  } else if (search) {
     query.$or = [
       { title: { $regex: search, $options: "i" } },
       { description: { $regex: search, $options: "i" } },
       { tags: { $regex: search, $options: "i" } },
+      { type: { $regex: search, $options: "i" } },
     ];
   }
 
@@ -178,7 +262,7 @@ export const GetProgramManuals = asyncHandler(async (req, res) => {
   const totalCount = await ProgramManual.countDocuments(query);
 
   return res.status(200).json(
-    new ApiResponse(200, "Program Manuals fetched successfully", {
+    new ApiResponse(200, "Training Materials fetched successfully", {
       manuals,
       paggination: {
         total: totalCount,
@@ -186,6 +270,6 @@ export const GetProgramManuals = asyncHandler(async (req, res) => {
         limit: Number(limit),
         totalPages: Math.ceil(totalCount / limit),
       },
-    })
+    }),
   );
 });

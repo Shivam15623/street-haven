@@ -1,10 +1,12 @@
 import mongoose from "mongoose";
+import { customAlphabet } from "nanoid";
+import slugify from "slugify";
 
 const attachmentSchema = new mongoose.Schema({
   fileName: { type: String, required: true },
   fileUrl: { type: String, required: true },
   size: { type: Number, required: true }, // in KB/MB
-  totalPages: { type: Number },
+  fileType: { type: String, required: true },
 });
 
 const programManualSchema = new mongoose.Schema(
@@ -14,6 +16,11 @@ const programManualSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    slug: {
+      type: String,
+      unique: true, // ensures unique in DB
+      index: true,
+    },
     description: {
       type: String,
       trim: true,
@@ -22,7 +29,7 @@ const programManualSchema = new mongoose.Schema(
     type: {
       type: String,
       trim: true,
-      enum: ["HR", "Technical", "Finance", "Operations", "Other"], // customizable
+      enum: ["Orientation", "Safety", "Policies", "Training", "Forms", "Other"], // customizable
     },
     tags: [
       {
@@ -36,8 +43,21 @@ const programManualSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
-
+const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 5);
+programManualSchema.pre("save", function (next) {
+  if (!this.slug || this.isNew) {
+    // Use slugify to convert title to URL-friendly string
+    const baseSlug = slugify(this.title, {
+      lower: true,
+      strict: true,
+      trim: true,
+    });
+    // Append Nano ID to ensure uniqueness
+    this.slug = `${baseSlug}-${nanoid()}`;
+  }
+  next();
+});
 const ProgramManual = mongoose.model("ProgramManual", programManualSchema);
 export default ProgramManual;

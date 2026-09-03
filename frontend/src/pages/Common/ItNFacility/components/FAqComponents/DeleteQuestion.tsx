@@ -1,0 +1,81 @@
+import React, { useState } from "react";
+
+import { Icon } from "@iconify/react/dist/iconify.js";
+import ModalWrapper from "../../../../../components/child/ModalWrapper";
+import { useDeleteQuestionMutation } from "../../../../../services/FAQapi";
+import { showError, showSuccess } from "../../../../../utills/toastutills";
+import { getErrorMessage } from "../../../../../utills/utills";
+
+interface DeleteQuestionProps {
+  cid: string;
+  qid: string;
+  question: string;
+}
+
+const DeleteQuestion: React.FC<DeleteQuestionProps> = ({
+  cid,
+  qid,
+  question,
+}) => {
+  const [showModal, setShowModal] = useState(false);
+  const [deleteQuestion, { isLoading }] = useDeleteQuestionMutation();
+
+  const handleDelete = async () => {
+    try {
+      const res = await deleteQuestion({ cid, qid }).unwrap();
+      if (res.success) {
+        setShowModal(false);
+        showSuccess("Question deleted successfully");
+      }
+    } catch (error) {
+      showError(getErrorMessage(error));
+    }
+  };
+
+  return (
+    <>
+      <Icon
+        icon="material-symbols:delete-outline"
+        className="icon-street-delete cursor-pointer"
+        width={18}
+        height={18}
+        onClick={() => setShowModal(true)}
+      />
+
+      <ModalWrapper
+        show={showModal}
+        size="lg"
+        onHide={() => setShowModal(false)}
+        title="Delete Question"
+        headerClassName="text-xl p-0 pb-20 text-street-dark"
+        bodyClassName="p-0 d-flex flex-column gap-16 gap-sm-20"
+        className="p-20 p-sm-24 p-md-32 gap-16 gap-sm-20"
+        footerClassName="pt-16 pt-sm-20 px-0 pb-0"
+        footer={
+           <div className="d-flex justify-content-end gap-3">
+            <button
+              className="btn btn-street-delete btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
+              onClick={handleDelete}
+              disabled={isLoading}
+            >
+              {isLoading ? "Deleting..." : "Delete"}
+            </button>
+            <button
+              className="btn btn-street-neutral btn-street-lg radius-12 d-none d-sm-flex align-items-center text-sm justify-content-center"
+              onClick={() => setShowModal(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        }
+      >
+        <p>
+          Are you sure you want to delete the question "
+          <strong>{question}</strong>"? This action cannot be undone.
+        </p>
+      </ModalWrapper>
+    </>
+  );
+};
+
+export default DeleteQuestion;

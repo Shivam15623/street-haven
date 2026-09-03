@@ -1,11 +1,10 @@
-import React from "react";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import { Form, Col, Row } from "react-bootstrap";
-import { Link } from "react-router-dom";
 import PasswordInput from "../../../../components/Authentication/PasswordInput";
 import { useChangePasswordMutation } from "../../../../services/UserApi";
-import { showSuccess } from "../../../../utills/toastutills";
+import { showError, showSuccess } from "../../../../utills/toastutills";
+import { getErrorMessage } from "../../../../utills/utills";
 
 const ChangePasswordSchema = Yup.object({
   currentPassword: Yup.string().required("Current password is required"),
@@ -13,7 +12,7 @@ const ChangePasswordSchema = Yup.object({
     .min(6, "Password must be at least 6 characters")
     .required("New password is required"),
   confirmPassword: Yup.string()
-    .oneOf([Yup.ref("newPassword"), null], "Passwords must match")
+    .oneOf([Yup.ref("newPassword")], "Passwords must match")
     .required("Confirm password is required"),
 });
 
@@ -28,12 +27,15 @@ const ChangePassword = () => {
   ) => {
     try {
       const res = await changepassword(values).unwrap();
+      console.log(res)
       if (res.success) {
         showSuccess(res.message);
         resetForm(); // ✅ Reset form after success
       }
     } catch (error) {
-      console.error("Failed to change password:", error);
+      console.log(error)
+      showError(getErrorMessage(error));
+
       // Optionally show error toast here
     }
   };
@@ -41,7 +43,9 @@ const ChangePassword = () => {
   return (
     <div className="card">
       <div className="card-body p-16 radius-8 p-md-24 d-flex flex-column gap-20">
-        <h3 className="text-street-dark text-xl fw-semibold">Change Password</h3>
+        <h3 className="text-street-dark text-xl fw-semibold">
+          Change Password
+        </h3>
 
         <Formik
           initialValues={{
@@ -54,10 +58,14 @@ const ChangePassword = () => {
             handleChangePassword(values, resetForm)
           }
         >
-          {({ handleSubmit, handleChange, values, errors, touched, resetForm }) => (
+          {({ handleSubmit, handleChange, values, errors, touched }) => (
             <Form noValidate onSubmit={handleSubmit}>
               {/* Current Password */}
-              <Form.Group as={Row} className="mb-3 align-items-center" controlId="currentPassword">
+              <Form.Group
+                as={Row}
+                className="mb-3 align-items-center"
+                controlId="currentPassword"
+              >
                 <Form.Label column sm={2}>
                   Current Password
                 </Form.Label>
@@ -68,18 +76,23 @@ const ChangePassword = () => {
                     value={values.currentPassword}
                     onChange={handleChange}
                     placeholder="Enter Current Password"
-                    isInvalid={touched.currentPassword && !!errors.currentPassword}
+                    isInvalid={
+                      touched.currentPassword && !!errors.currentPassword
+                    }
                     error={errors.currentPassword}
                   />
-                  <Link className="text-sm fw-normal link-street-primary" to="/forgot-password">
-                    Forgot Password?
-                  </Link>
                 </Col>
               </Form.Group>
 
               {/* New Password */}
-              <Form.Group as={Row} className="mb-3 align-items-center" controlId="newPassword">
-                <Form.Label column sm={2}>New Password</Form.Label>
+              <Form.Group
+                as={Row}
+                className="mb-3 align-items-center"
+                controlId="newPassword"
+              >
+                <Form.Label column sm={2}>
+                  New Password
+                </Form.Label>
                 <Col sm={10}>
                   <PasswordInput
                     size="sm"
@@ -94,8 +107,14 @@ const ChangePassword = () => {
               </Form.Group>
 
               {/* Confirm Password */}
-              <Form.Group as={Row} className="mb-3 align-items-center" controlId="confirmPassword">
-                <Form.Label column sm={2}>Confirm Password</Form.Label>
+              <Form.Group
+                as={Row}
+                className="mb-3 align-items-center"
+                controlId="confirmPassword"
+              >
+                <Form.Label column sm={2}>
+                  Confirm Password
+                </Form.Label>
                 <Col sm={10}>
                   <PasswordInput
                     size="sm"
@@ -103,7 +122,9 @@ const ChangePassword = () => {
                     value={values.confirmPassword}
                     onChange={handleChange}
                     placeholder="Confirm New Password"
-                    isInvalid={touched.confirmPassword && !!errors.confirmPassword}
+                    isInvalid={
+                      touched.confirmPassword && !!errors.confirmPassword
+                    }
                     error={errors.confirmPassword}
                   />
                 </Col>
@@ -117,13 +138,6 @@ const ChangePassword = () => {
                   disabled={isLoading}
                 >
                   {isLoading ? "Submitting..." : "Submit"}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-street-neutral d-flex flex-row align-items-center justify-content-center radius-12 w-144-px h-40-px px-8"
-                  onClick={() => resetForm()} // ✅ Reset form on Cancel
-                >
-                  Cancel
                 </button>
               </div>
             </Form>

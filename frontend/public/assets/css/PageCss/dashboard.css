@@ -7,7 +7,7 @@
   height: 100%;
   min-height: 100px;
   background-color: #eef8ff;
-  box-shadow: 0px 3px 16px 0px #8E86AB0D;
+  box-shadow: 0px 4px 21px 0px #00000014;
 
   border-radius: 12px;
   transition: all 0.3s ease;
@@ -15,7 +15,20 @@
 [data-theme="dark"] .card-box {
   background-color: var(--street-card);
 }
+/* Hover for light theme */
+.card-box:hover {
+  background-color: #d9efff; /* lighter blue */
+}
 
+/* Hover for dark theme */
+[data-theme="dark"] .card-box:hover {
+  background-color: rgba(
+    25,
+    40,
+    60,
+    1
+  ); /* slightly lighter than --street-card */
+}
 /* Responsive paddings */
 @media (min-width: 576px) {
   .card-box {
@@ -78,7 +91,7 @@
 
 /* Right Icon box */
 .card-box-icon {
-  padding: 8px;
+  padding: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -88,19 +101,16 @@
   background: #d1e6f4;
 }
 [data-theme="dark"] .card-box-icon {
-  background: #082a49;
+  background: #242f3b;
 }
 @media (min-width: 576px) {
   .card-box-icon {
-    padding: 10px;
     width: 48px;
     height: 48px;
   }
 }
 @media (min-width: 768px) {
   .card-box-icon {
-    padding: 16px;
-
     width: 56px;
     height: 56px;
   }
@@ -108,7 +118,7 @@
 
 .card-box-icon .icon {
   color: var(--street-primary-base);
-  font-size: 1.25rem;
+  font-size: 26px;
 }
 [data-theme="dark"] .card-box-icon .icon,
 [data-theme="dark"] .card-box-value,
@@ -117,19 +127,39 @@
 }
 @media (min-width: 576px) {
   .card-box-icon .icon {
-    font-size: 1.5rem;
+    font-size: 30px;
   }
 }
 @media (min-width: 768px) {
   .card-box-icon .icon {
-    font-size: 2.125rem;
+    font-size: 34px;
   }
 }
 .link-card {
   background: var(--street-primary-base);
 }
-.link-card:hover{
+.link-card:hover {
   border-color: rgba(1, 76, 132, 1); /* a darker hover shade of #0160a6 */
   color: #fff;
   background-color: rgba(1, 76, 132, 1);
+}
+
+.skeleton-value {
+  width: 60px;
+  height: 28px;
+  margin-bottom: 6px;
+}
+
+.skeleton-label {
+  width: 90px;
+  height: 14px;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }

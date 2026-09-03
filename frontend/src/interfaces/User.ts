@@ -1,3 +1,4 @@
+import type { Role } from "./AuthInterfaces";
 import type { ApiResponse } from "./Response";
 
 interface EditUserData {
@@ -6,7 +7,7 @@ interface EditUserData {
   lastname: string;
   email: string;
   phoneNo: string;
-  role: "admin" | "employee";
+  role: Role;
   profilePic?: string;
   slug: string;
 }
@@ -16,11 +17,20 @@ interface UserProfile {
   lastname: string;
   email: string;
   phoneNo: string;
-  role: "admin" | "employee";
+  role: Role;
   profilePic?: string;
+  status: "inactive" | "active";
   slug: string;
   createdAt: string;
   updatedAt: string;
+  title: string;
+  hireDate: Date;
+  location:{
+    name:string;
+    _id:string;
+    slug:string;
+    isActive:boolean;
+  }[]|null
 }
 export interface changePasswordCredentials {
   currentPassword: string;

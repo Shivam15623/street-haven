@@ -1,79 +1,144 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Row } from "react-bootstrap";
 import DocumentCard from "./components/DocumentCard";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import "@assets/css/PageCss/program.css";
 import { useFetchManualsQuery } from "../../../services/ProgramManualApi";
 import ActionsProgram from "./components/ActionsProgram";
+import { useSearchParams } from "react-router-dom";
+import { useDebounce } from "../../../hooks/useDebounce";
+import StreetPaggination from "../../../components/child/StreetPaggination";
 import useHasPermission from "../../../hooks/Auth";
-import { Link } from "react-router-dom";
+import DocumentCardSkeleton from "./components/DocumentCardSkelaton";
+import { useSocket } from "../../../hooks/useSocket";
 
 const ProgramManuals = () => {
+  const { socket } = useSocket();
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 1000);
   const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
-  const [type, setType] = useState<string | undefined>(undefined);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const slugParam = searchParams.get("slug") ?? "";
   const pageSize = 10;
 
-  const { isAdmin } = useHasPermission();
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) {
+      params.delete("slug"); // remove slug
+    }
+    setSearchParams(params);
+  };
+  const { hasPermission } = useHasPermission();
 
   // Fetch manuals using RTK Query
-  const { data, isLoading } = useFetchManualsQuery({
+  const { data, isLoading, refetch } = useFetchManualsQuery({
     page,
     limit: pageSize,
-    search,
-    type,
+    search: debouncedSearch,
+    slug: slugParam,
+    type: undefined,
     sortBy: "createdAt",
     order: "desc",
   });
 
-  const totalPages = data
-    ? Math.ceil(data.data.paggination.totalPages / pageSize)
-    : 0;
+  const totalPages = data ? Math.ceil(data.data.paggination.totalPages) : 0;
 
-  const goToPage = (pageNumber: number) => {
-    if (pageNumber >= 1 && pageNumber <= totalPages) setPage(pageNumber);
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.emit("join-page-room", "program_manual_viewers");
+
+    const handleManualDeleted = ({ manualId }: { manualId: string }) => {
+      const exists = data?.data.manuals.some(
+        (manual) => manual._id === manualId,
+      );
+
+      // 🔥 Only refetch if it exists in current list
+      if (exists) {
+        refetch();
+      }
+    };
+
+    socket.on("program-manual-deleted", handleManualDeleted);
+
+    return () => {
+      socket.emit("leave-page-room", "program_manual_viewers");
+      socket.off("program-manual-deleted", handleManualDeleted);
+    };
+  }, [socket, data, refetch]);
 
   return (
     <div className="d-flex flex-column gap-4">
-      <div className="d-flex flex-row justify-content-between align-items-center">
+      <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-4 ">
         {" "}
         <div className="d-flex flex-column gap-2">
+          {" "}
           <p className="fw-semibold text-xl xs:text-xxl text-street-dark">
-            Program Manuals
-          </p>
+            {" "}
+            Volunteer Training{" "}
+          </p>{" "}
           <p className="fw-normal text-sm xs:text-md">
-            Access training materials and program documentation
-          </p>
+            {" "}
+            Access training materials, training materials, and helpful
+            resources{" "}
+          </p>{" "}
         </div>
-        {isAdmin && (
+        {hasPermission({ action: "create_program_manual" }) && (
           <button
-            className="btn btn-street-lg btn-street-primary d-flex align-items-center justify-content-center"
+            className="btn  flex-grow-1 flex-sm-grow-0 btn-street-primary radius-12 text-sm d-flex align-items-center justify-content-center"
             onClick={() => setShowModal(true)}
           >
-            Add Manual
+            Add Material
           </button>
         )}
       </div>
 
       {/* Search Input */}
-      <div className="px-20 py-16 program-input radius-12 d-flex flex-row align-items-center gap-8">
+      <div className="px-20 py-16 program-input radius-12 d-flex search-Content  flex-row align-items-center w-100 gap-8 max-w-700-px z-1 position-relative">
         <Icon icon="proicons:search" className="text-xl opacity-50" />
+
         <input
           className="bg-transparent border-0 text-sm text-street-base d-flex flex-grow-1 fw-semibold"
           placeholder="Search Documents"
           value={search}
           onChange={(e) => {
-            setSearch(e.target.value);
+            handleSearchChange(e.target.value);
             setPage(1); // Reset to first page on search
           }}
         />
+
+        {search && (
+          <button
+            type="button"
+            className="  text-xl text-street-dark opacity-50 hover:opacity-100"
+            onClick={() => {
+              handleSearchChange("");
+              setSearch(""); // clear state
+              setPage(1); // reset page if needed
+            }}
+          >
+            <Icon
+              icon="ion:close-circle"
+              className="text-xl opacity-50 contentIcon "
+            />
+          </button>
+        )}
       </div>
 
       {/* Display manuals */}
       <Row className="gy-4">
-        {isLoading && <p>Loading...</p>}
+        {isLoading &&
+          Array.from({ length: 8 }).map((_, idx) => (
+            <DocumentCardSkeleton key={idx} />
+          ))}
         {!isLoading && data?.data.manuals.length === 0 && (
           <p>No manuals found.</p>
         )}
@@ -82,68 +147,17 @@ const ProgramManuals = () => {
             <DocumentCard key={manual._id} Pdocument={manual} />
           ))}
       </Row>
-      <ActionsProgram onHide={() => setShowModal(false)} show={showModal} />
+      {hasPermission({ action: "create_program_manual" }) && (
+        <ActionsProgram onHide={() => setShowModal(false)} show={showModal} />
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <ul className="pagination d-flex flex-wrap align-items-center gap-2 justify-content-center">
-          {/* First page */}
-          <li className="page-item">
-            <Link className="page-link" to="#" onClick={() => goToPage(1)}>
-              <Icon icon="ep:d-arrow-left" className="text-xl" />
-            </Link>
-          </li>
-
-          {/* Previous page */}
-          <li className="page-item">
-            <Link
-              className="page-link"
-              to="#"
-              onClick={() => goToPage(page - 1)}
-            >
-              <Icon icon="iconamoon:arrow-left-2-light" className="text-xxl" />
-            </Link>
-          </li>
-
-          {/* Page numbers */}
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <li key={p} className="page-item">
-              <Link
-                className={`page-link ${
-                  page === p
-                    ? "bg-primary-600 text-white"
-                    : "bg-primary-50 text-secondary-light"
-                }`}
-                to="#"
-                onClick={() => goToPage(p)}
-              >
-                {p}
-              </Link>
-            </li>
-          ))}
-
-          {/* Next page */}
-          <li className="page-item">
-            <Link
-              className="page-link"
-              to="#"
-              onClick={() => goToPage(page + 1)}
-            >
-              <Icon icon="iconamoon:arrow-right-2-light" className="text-xxl" />
-            </Link>
-          </li>
-
-          {/* Last page */}
-          <li className="page-item">
-            <Link
-              className="page-link"
-              to="#"
-              onClick={() => goToPage(totalPages)}
-            >
-              <Icon icon="ep:d-arrow-right" className="text-xl" />
-            </Link>
-          </li>
-        </ul>
+        <StreetPaggination
+          page={page}
+          totalPages={totalPages}
+          handlePageChange={handlePageChange}
+        />
       )}
     </div>
   );

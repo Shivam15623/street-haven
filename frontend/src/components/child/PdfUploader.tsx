@@ -1,6 +1,5 @@
 import React, { useRef, useState } from "react";
 import { Form as BootstrapForm } from "react-bootstrap";
-import { Link } from "react-router-dom";
 import { useField, useFormikContext } from "formik";
 
 interface PDFUploadProps {
@@ -8,8 +7,13 @@ interface PDFUploadProps {
   label?: string;
 }
 
+interface PDFUploadFormValues {
+  [key: string]: File | null;
+}
+
 const PdfUploader: React.FC<PDFUploadProps> = ({ name, label }) => {
-  const { setFieldValue, touched, errors } = useFormikContext<any>();
+  const { setFieldValue, touched, errors } =
+    useFormikContext<PDFUploadFormValues>();
   const [field] = useField<File | null>(name);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -34,18 +38,23 @@ const PdfUploader: React.FC<PDFUploadProps> = ({ name, label }) => {
     }
   };
 
+  const clearFile = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering label click
+    setFieldValue(name, null);
+  };
+
   return (
-    <BootstrapForm.Group controlId={name} className="mb-4">
+    <BootstrapForm.Group controlId={name} className="d-flex flex-column gap-8">
       {label && (
         <BootstrapForm.Label className="fw-medium mb-2 text-street-dark">
           {label}
         </BootstrapForm.Label>
       )}
+
       <label
         className={`upload-file h-80-px w-100 border input-form-light radius-8 overflow-hidden border-dashed bg-neutral-50 d-flex align-items-center flex-column justify-content-center gap-1 ${
           isDragging ? "bg-neutral-200 border-primary" : "bg-hover-neutral-200"
         }`}
-        htmlFor={name}
         onDragOver={(e) => {
           e.preventDefault();
           setIsDragging(true);
@@ -55,20 +64,35 @@ const PdfUploader: React.FC<PDFUploadProps> = ({ name, label }) => {
           setIsDragging(false);
         }}
         onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
       >
         {field.value ? (
-          <p className="fw-normal text-sm img-upload-text">
-            Selected file:
-            <span className="text-street-primary"> {field.value.name}</span>
+          <p className="fw-normal text-sm img-upload-text d-flex align-items-center justify-content-between w-100 px-2">
+            <span className="text-truncate" style={{ maxWidth: "120px" }}>
+              Selected file: {field.value.name}
+            </span>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-danger ms-2"
+              onClick={clearFile}
+            >
+              ×
+            </button>
           </p>
         ) : isDragging ? (
           <p className="fw-normal text-sm img-upload-text">Drop file here</p>
         ) : (
           <p className="fw-normal text-sm img-upload-text">
             Drag & drop or{" "}
-            <Link to="#" className="text-street-primary">
+            <span
+              className="text-street-primary cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                fileInputRef.current?.click();
+              }}
+            >
               browse
-            </Link>
+            </span>
           </p>
         )}
       </label>

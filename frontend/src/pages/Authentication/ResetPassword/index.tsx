@@ -9,6 +9,7 @@ import AuthFormWrapper from "../../../components/Authentication/AuthFormWrapper"
 import AuthWrapper from "../../../components/Authentication/AuthWrapper";
 import { showError, showSuccess } from "../../../utills/toastutills";
 import PasswordInput from "../../../components/Authentication/PasswordInput";
+import { getErrorMessage } from "../../../utills/utills";
 
 // ✅ Validation Schema
 const resetPasswordSchema = Yup.object({
@@ -20,7 +21,7 @@ const resetPasswordSchema = Yup.object({
     .matches(/\d/, "Must contain at least one number")
     .matches(/[@$!%*?&#]/, "Must contain at least one special character"),
   confirmPassword: Yup.string()
-    .oneOf([Yup.ref("newPassword"), null], "Passwords must match")
+    .oneOf([Yup.ref("newPassword")], "Passwords must match")
     .required("Confirm Password is required"),
 });
 type ResetPasswordValues = Yup.InferType<typeof resetPasswordSchema>;
@@ -36,7 +37,8 @@ const ResetPassword: React.FC = () => {
       if (token) {
         const response = await resetPassword({
           token,
-          newpassword: values.newPassword,
+          newPassword: values.newPassword,
+          confirmPassword: values.confirmPassword,
         }).unwrap();
 
         if (response?.success) {
@@ -47,7 +49,7 @@ const ResetPassword: React.FC = () => {
         showError("invaid session");
       }
     } catch (error) {
-      console.error(error);
+      showError(getErrorMessage(error));
     }
   };
 
@@ -102,7 +104,7 @@ const ResetPassword: React.FC = () => {
                           onChange={handleChange}
                           onBlur={handleBlur}
                           style={{
-                            backgroundColor: "#F2F0EC",
+                            backgroundColor: "var(--street-auth-input)",
                             borderColor: "#E2E8F0",
                             borderRadius: "15px",
                             paddingRight: "2.5rem",
@@ -134,7 +136,7 @@ const ResetPassword: React.FC = () => {
                           onBlur={handleBlur}
                           className="auth-input"
                           style={{
-                            backgroundColor: "#F2F0EC",
+                            backgroundColor: "var(--street-auth-input)",
                             borderColor: "#E2E8F0",
                             borderRadius: "15px",
                             paddingRight: "2.5rem",

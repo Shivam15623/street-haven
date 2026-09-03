@@ -1,9 +1,7 @@
 import React from "react";
 
 export const LazyLoader = React.lazy(() => import("../components/Loader"));
-export const LazySignUp = React.lazy(
-  () => import("../pages/Authentication/SignUp")
-);
+
 export const LazyLogin = React.lazy(
   () => import("../pages/Authentication/Login")
 );
@@ -13,12 +11,21 @@ export const LazyForgotPassword = React.lazy(
 export const LazyResetPassword = React.lazy(
   () => import("../pages/Authentication/ResetPassword")
 );
-export const LazyEmployeeRoot = React.lazy(() => import("../layouts/employee"));
-export const LazyAdminRoot = React.lazy(() => import("../layouts/admin"));
+export const LazyGenereateTotp = React.lazy(
+  () => import("../pages/Authentication/GenerateTotp")
+);
+export const LazyVerifyTotp = React.lazy(
+  () => import("../pages/Authentication/VerifyTotp")
+);
+export const LazyRootLayout = React.lazy(
+  () => import("../layouts/rootLayout")
+);
+export const LazyInActiveUser=React.lazy(()=> import("../pages/Authentication/Forbidden"))
+export const LazyUnauthorized=React.lazy(()=>import("../pages/Authentication/Unauthorized"))
 export const LazyEmployeedashboard = React.lazy(
   () => import("../pages/Employee/Dashboard")
 );
-export const LazyAdminDashboard=React.lazy(
+export const LazyAdminDashboard = React.lazy(
   () => import("../pages/Admin/Dashboard")
 );
 
@@ -27,13 +34,16 @@ export const LazyProgramManuals = React.lazy(
 );
 
 export const LazyHelpDesk = React.lazy(
-  () => import("../pages/Common/HelpDesk")
+  () => import("../pages/Common/ItNFacility")
 );
-export const LazyFormReports = React.lazy(
-  () => import("../pages/Common/FormsNreports")
-);
+
 export const LazyAgencyInfo = React.lazy(
   () => import("../pages/Common/AgencyInformation")
 );
-export const LazyEvents = React.lazy(() => import("../pages/Common/Events"));
+export const LazyEmployees = React.lazy(
+  () => import("../pages/Admin/Employees")
+);
+export const LazyPhotoViewer = React.lazy(() => import("../pages/Common/ImageViewer"));
+export const LazyTasks=React.lazy(()=>import("../pages/Common/Task"))
 export const LazyProfile = React.lazy(() => import("../pages/Common/Profile"));
+export const LazyAdminCertificationsPage=React.lazy(()=>import("../pages/Common/AdminCertificationsPage"))

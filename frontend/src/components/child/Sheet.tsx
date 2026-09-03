@@ -1,29 +1,41 @@
-import React, { useState, useEffect, useCallback, cloneElement } from "react";
-import Offcanvas from "react-bootstrap/Offcanvas";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  cloneElement,
+  type ReactNode,
+  type ReactElement,
+  useId,
+} from "react";
+import { Offcanvas, type OffcanvasProps } from "react-bootstrap";
+
 import Button from "react-bootstrap/Button";
 
-/**
- * Props (common):
- * - id?: string
- * - title?: node
- * - show?: boolean            // controlled
- * - defaultShow?: boolean     // uncontrolled
- * - onClose?: () => void
- * - onOpen?: () => void
- * - placement?: 'start'|'end'|'top'|'bottom'
- * - trigger?: ReactElement    // custom trigger element (will receive onClick)
- * - footer?: ReactNode | (helpers) => ReactNode
- * - size?: number | string    // number -> px, string ending with % -> width %, else passed as-is
- * - className?: string
- * - children: ReactNode
- * - ...rest forwarded to Offcanvas
- */
+interface SheetProps
+  extends Omit<OffcanvasProps, "show" | "onHide" | "placement"> {
+  id?: string;
+  title?: ReactNode;
+  show?: boolean; // controlled
+  defaultShow?: boolean; // uncontrolled
+  onClose?: () => void;
+  onOpen?: () => void;
+  placement?: "start" | "end" | "top" | "bottom";
+  trigger?: ReactElement<{ onClick?: (e: React.MouseEvent) => void }>; // custom trigger element (will receive onClick)
+  footer?: ReactNode | ((helpers: { close: () => void }) => ReactNode);
+  size?: number | string; // number -> px, string ending with % -> width %, else passed as-is
+  className?: string;
+  bodyclassName?: string;
+  closeButton?: boolean;
+  children: ReactNode;
+}
+
 export default function Sheet({
   id,
   title,
   children,
   show,
   defaultShow = false,
+  bodyclassName,
   onClose,
   onOpen,
   placement = "end",
@@ -33,9 +45,9 @@ export default function Sheet({
   className = "",
   closeButton = true,
   ...rest
-}) {
-  const autoId = `sheet-${Math.random().toString(36).slice(2, 9)}`;
-  const sheetId = id || autoId;
+}: SheetProps) {
+  const autoId = useId(); // stable across renders, unique per instance
+  const sheetId = id || `sheet-${autoId}`;
   const isControlled = typeof show === "boolean";
   const [internalShow, setInternalShow] = useState(defaultShow);
 
@@ -46,22 +58,21 @@ export default function Sheet({
         "[Sheet] You provided `show` prop but did not provide `onClose`. The component is controlled — pass onClose to toggle visibility."
       );
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // run only once
+  }, [isControlled, onClose]);
 
   const visible = isControlled ? show : internalShow;
 
   const handleClose = useCallback(() => {
     if (!isControlled) setInternalShow(false);
-    if (typeof onClose === "function") onClose();
+    onClose?.();
   }, [isControlled, onClose]);
 
   const handleOpen = useCallback(() => {
     if (!isControlled) setInternalShow(true);
-    if (typeof onOpen === "function") onOpen();
+    onOpen?.();
   }, [isControlled, onOpen]);
 
-  // compute simple width override if size provided (keeps component compact)
+  // compute simple width override if size provided
   const dialogStyle =
     typeof size === "number"
       ? { width: `${size}px` }
@@ -69,10 +80,10 @@ export default function Sheet({
       ? { width: size }
       : undefined;
 
-  // render custom trigger if provided, else default small button only in uncontrolled mode
+  // render custom trigger if provided, else default button only in uncontrolled mode
   const triggerNode = trigger ? (
     cloneElement(trigger, {
-      onClick: (e) => {
+      onClick: (e: React.MouseEvent) => {
         trigger.props?.onClick?.(e);
         handleOpen();
       },
@@ -88,8 +99,6 @@ export default function Sheet({
       {triggerNode}
 
       <Offcanvas
-       
-        // backdrop={false}
         id={sheetId}
         show={visible}
         onHide={handleClose}
@@ -97,17 +106,27 @@ export default function Sheet({
         aria-labelledby={`${sheetId}-label`}
         className={className}
         style={dialogStyle}
-        {...rest} // pass-through for responsive, scroll, backdrop, etc.
+        {...rest}
       >
-        <Offcanvas.Header closeButton={closeButton}>
+        <Offcanvas.Header
+          closeButton={closeButton}
+          color="white"
+          className="bg-street-primary text-white"
+        >
           <Offcanvas.Title id={`${sheetId}-label`}>{title}</Offcanvas.Title>
         </Offcanvas.Header>
 
-        <Offcanvas.Body>{children}</Offcanvas.Body>
+        <Offcanvas.Body
+          style={{
+            background: "var(--street-bg-f2)",
+          }}
+          className={bodyclassName}
+        >
+          {children}
+        </Offcanvas.Body>
 
         {footer && (
-          // footer can be node or function receiving helpers (close)
-          <div className="offcanvas-footer p-3 border-top">
+          <div style={{ background: "var(--street-bg-f4)",}} className="offcanvas-footer p-3 border-top">
             {typeof footer === "function"
               ? footer({ close: handleClose })
               : footer}

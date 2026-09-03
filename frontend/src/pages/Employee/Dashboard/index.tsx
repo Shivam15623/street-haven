@@ -1,36 +1,79 @@
 import { Col, Row } from "react-bootstrap";
 import DashboardCard from "./components/DashboardCard";
-import UpcomingEvents from "./components/UpcomingEvents";
+
 import RecentActivity from "./components/RecentActivity";
 import "@assets/css/PageCss/dashboard.css";
 import dayjs from "dayjs";
+import { useSelector } from "react-redux";
+import { selectAuth } from "../../../redux/AuthSlice";
 
+import { useFetchTicketsQuery } from "../../../services/ticketApi";
+import { useRecentAnnouncementcountQuery } from "../../../services/AnnouncementApi";
+import { useGetAllTasksQuery } from "../../../services/taskApi";
+import { PERMISSIONS } from "../../../utills/auth/permissions";
+import useHasPermission from "../../../hooks/Auth";
 
 const EmployeeDashboard = () => {
   const today = dayjs().format("dddd, MMMM D, YYYY");
-  
+  const { user } = useSelector(selectAuth);
+  const { hasPermission } = useHasPermission();
+
+  const canViewTickets = hasPermission({
+    action: PERMISSIONS.TICKET_VIEW_SELF,
+  });
+  const canViewTasks = hasPermission({
+    action: PERMISSIONS.TASK_VIEW_SELF,
+  });
+  const canViewAnnouncement = hasPermission({
+    action: PERMISSIONS.VIEW_ANNOUNCEMENTS,
+  });
+  const { data: ticketData } = useFetchTicketsQuery({
+    page: 1,
+    priority: "All",
+    status: "Open",
+    limit: 100,
+    order: "desc",
+    search: "",
+  });
+  const { data: taskData } = useGetAllTasksQuery({
+    page: 1,
+
+    status: "assigned",
+    limit: 100,
+
+    search: "",
+  });
+
+  const { data: recentAnnouncement } = useRecentAnnouncementcountQuery();
+
   return (
     <div className="d-flex flex-column gap-4 ">
-      <div className="d-flex flex-row justify-content-between">
+      <div className="d-flex flex-column flex-sm-row justify-content-between gap-2">
         <div className="d-flex flex-column gap-1 gap-sm-2">
-          <div className="fw-semibold text-lg xs:text-xl sm:text-xxl text-street-dark">
-            Welcome Back,Jane!
+          <div
+            className="fw-semibold text-2xl sm:text-xxl text-street-dark"
+            style={{ lineHeight: "normal" }}
+          >
+            Welcome Back,{user?.firstName}!
           </div>
-          <div className="text-street-base text-xs xs:text-sm sm:text-md fw-normal">
+          <div
+            className="text-street-base text-sm sm:text-md fw-normal"
+            style={{ lineHeight: "normal" }}
+          >
             Here's what's happening at Street Haven today.
           </div>
         </div>
-        <div className="d-flex flex-column justify-content-sm-end justify-content-end gap-1 gap-sm-2 ">
-          <div className="text-street-base text-xs xs:text-sm sm:text-md fw-normal text-end">
+        <div className="d-flex flex-sm-column flex-row justify-content-sm-end justify-content-start gap-1 gap-sm-2 ">
+          <div className="text-street-base text-sm sm:text-md fw-normal text-end">
             Today
           </div>
-          <div className="fw-semibold text-sm xs:text-md sm:text-lg text-end text-street-dark">
+          <div className="fw-semibold text-md sm:text-lg text-end text-street-dark">
             {today}
           </div>
         </div>
       </div>
-      <Row className=" g-2 g-md-4">
-        <Col xs={6} sm={6} md={4}>
+      {/* <Row className=" g-2 g-md-4">
+        <Col xs={6} sm={6} md={3}>
           <div
             onClick={() =>
               window.open(
@@ -43,7 +86,7 @@ const EmployeeDashboard = () => {
             Staff Portal
           </div>
         </Col>
-        <Col xs={6} sm={6} md={4}>
+        <Col xs={6} sm={6} md={3}>
           <div
             onClick={() =>
               window.open(
@@ -56,7 +99,7 @@ const EmployeeDashboard = () => {
             SH Webmail
           </div>
         </Col>
-        <Col xs={12} sm={12} md={4}>
+        <Col xs={6} sm={6} md={3}>
           <div
             onClick={() =>
               window.open(
@@ -69,42 +112,56 @@ const EmployeeDashboard = () => {
             Staff Schedules
           </div>
         </Col>
-      </Row>
+        <Col xs={6} sm={6} md={3}>
+          <div
+            // onClick={() =>
+            //   window.open(
+            //     "https://streethaven.sharepoint.com/sites/StreetHaven/Staff%20Schedules/Forms/AllItems.aspx",
+            //     "_blank"
+            //   )
+            // }
+            className="link-card h-80-px cursor-pointer h-sm-100-px h-md-144-px w-100 radius-12 p-md-24 d-flex fw-bold text-md sm:text-lg md:text-xl flex-row justify-content-center align-items-center bg-street-primary text-white"
+          >
+            CMS
+          </div>
+        </Col>
+      </Row> */}
 
       <Row className=" g-2 g-md-3 g-lg-4">
-        <DashboardCard
-          icon="lucide:calendar"
-          label="Events"
-          value={4}
-          key={"Events"}
-        />
-        <DashboardCard
-          icon="heroicons:document"
-          label="Recent Documents"
-          value={12}
-          key={"Recent Documents"}
-        />
-        <DashboardCard
-          icon="iconamoon:ticket-light"
-          label="Open Tickets"
-          value={8}
-          key={"Open Tickets"}
-        />
-        <DashboardCard
-          icon="lucide:party-popper"
-          label="Celebrations"
-          value={3}
-          key={"Celebrations"}
-        />
+        {canViewTickets && (
+          <DashboardCard
+            icon="iconamoon:ticket-light"
+            label="Open Tickets"
+            link="/it_facility?tab=track_tickets&status=Open"
+            value={ticketData?.data.counts.open ?? 0}
+            key="Open Tickets"
+          />
+        )}
+        {canViewTasks && (
+          <DashboardCard
+            icon="mdi:clipboard-text-outline"
+            label="Assigned Tasks"
+            link="/tasks"
+            value={taskData?.data?.counts.assigned ?? 0}
+            key="Assigned Tasks"
+          />
+        )}
+        {canViewAnnouncement && (
+          <DashboardCard
+            icon="lucide:party-popper"
+            label="Announcements"
+            value={recentAnnouncement?.data ?? 0}
+            link={`/agency_info?tab=announcements`}
+            key={"Announcements"}
+          />
+        )}
       </Row>
       <Row className="g-4">
         <Col md={6}>
           {" "}
           <RecentActivity />
         </Col>
-        <Col md={6}>
-          <UpcomingEvents />
-        </Col>
+        <Col md={6}></Col>
       </Row>
     </div>
   );

@@ -1,72 +1,88 @@
-import * as yup from "yup";
+import Joi from "joi";
 
-export const editMeetingMinutesSchema = yup.object({
-  title: yup
-    .string()
-    .trim()
-    .min(3, "Title must be at least 3 characters")
-    .max(150, "Title must be at most 150 characters")
-    .optional(),
+export const editMeetingMinutesSchema = Joi.object({
+  title: Joi.string().trim().min(3).max(150).optional().messages({
+    "string.min": "Title must be at least 3 characters",
+    "string.max": "Title must be at most 150 characters",
+  }),
 
-  attendees: yup
-    .number()
-    .typeError("Attendees must be a number")
-    .positive("Attendees must be greater than 0")
-    .integer("Attendees must be an integer")
-    .optional(),
+  attendees: Joi.number().positive().integer().optional().messages({
+    "number.base": "Attendees must be a number",
+    "number.positive": "Attendees must be greater than 0",
+    "number.integer": "Attendees must be an integer",
+  }),
 
-  keyTopicsDiscussed: yup
-    .array()
-    .of(
-      yup.string().trim().max(50, "Each topic must be at most 200 characters")
+  keyTopicsDiscussed: Joi.array()
+    .items(
+      Joi.string().trim().max(50).messages({
+        "string.max": "Each topic must be at most 50 characters",
+      })
     )
-    .max(20, "You can add at most 20 topics")
-    .optional(),
+    .max(20)
+    .optional()
+    .messages({
+      "array.max": "You can add at most 20 topics",
+    }),
 
-  meetingDate: yup.date().typeError("Invalid meeting date format").optional(),
+  meetingDate: Joi.date().optional().messages({
+    "date.base": "Invalid meeting date format",
+  }),
 
-  keyHighlights: yup
-    .array()
-    .of(
-      yup
-        .string()
-        .trim()
-        .max(300, "Each highlight must be at most 300 characters")
+  keyHighlights: Joi.array()
+    .items(
+      Joi.string().trim().max(300).messages({
+        "string.max": "Each highlight must be at most 300 characters",
+      })
     )
-    .max(20, "You can add at most 20 highlights")
-    .optional(),
+    .max(20)
+    .optional()
+    .messages({
+      "array.max": "You can add at most 20 highlights",
+    }),
 });
 
-export const createMeetingMinutesSchema = yup.object({
-  title: yup
-    .string()
-    .trim()
-    .min(3, "Title must be at least 3 characters")
-    .max(150, "Title must be at most 150 characters"),
-  attendees: yup
-    .number()
-    .typeError("Attendees must be a number")
-    .positive("Attendees must be greater than 0")
-    .integer("Attendees must be an integer"),
-  keyTopicsDiscussed: yup
-    .array()
-    .of(
-      yup.string().trim().max(50, "Each topic must be at most 200 characters")
-    )
-    .max(20, "You can add at most 20 topics"),
-  meetingDate: yup
-    .date()
-    .typeError("Invalid meeting date format")
-    .max(new Date(), "Meeting date cannot be in the future")
-    .optional(),
+export const createMeetingMinutesSchema = Joi.object({
+  title: Joi.string().trim().min(3).max(150).required().messages({
+    "string.min": "Title must be at least 3 characters",
+    "string.max": "Title must be at most 150 characters",
+    "any.required": "Title is required",
+  }),
 
-  keyHighlights: yup
-    .array()
-    .of(
-      yup
-        .string()
-        .trim()
-        .max(300, "Each highlight must be at most 300 characters")
+  attendees: Joi.number().positive().integer().required().messages({
+    "number.base": "Attendees must be a number",
+    "number.positive": "Attendees must be greater than 0",
+    "number.integer": "Attendees must be an integer",
+    "any.required": "Attendees is required",
+  }),
+
+  keyTopicsDiscussed: Joi.array()
+    .items(
+      Joi.string().trim().max(50).messages({
+        "string.max": "Each topic must be at most 50 characters",
+      })
     )
-    .max(20, "You can add at most 20 highlights"),
+    .max(20)
+    .required()
+    .messages({
+      "array.max": "You can add at most 20 topics",
+      "any.required": "Key topics discussed is required",
+    }),
+
+  meetingDate: Joi.date().max("now").optional().messages({
+    "date.base": "Invalid meeting date format",
+    "date.max": "Meeting date cannot be in the future",
+  }),
+
+  keyHighlights: Joi.array()
+    .items(
+      Joi.string().trim().max(300).messages({
+        "string.max": "Each highlight must be at most 300 characters",
+      })
+    )
+    .max(20)
+    .required()
+    .messages({
+      "array.max": "You can add at most 20 highlights",
+      "any.required": "Key highlights are required",
+    }),
 });

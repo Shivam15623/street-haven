@@ -1,25 +1,29 @@
-import React from "react";
 import { Col, Row } from "react-bootstrap";
 import DashboardCard from "../../Employee/Dashboard/components/DashboardCard";
 import RecentActivity from "../../Employee/Dashboard/components/RecentActivity";
-import UpcomingEvents from "../../Employee/Dashboard/components/UpcomingEvents";
+
 import dayjs from "dayjs";
 import "@assets/css/PageCss/dashboard.css";
+import { selectAuth } from "../../../redux/AuthSlice";
+import { useSelector } from "react-redux";
+
 const AdminDashboard = () => {
   const today = dayjs().format("dddd, MMMM D, YYYY");
+  const { user } = useSelector(selectAuth);
+
 
   return (
     <div className="d-flex flex-column gap-4 ">
-      <div className="d-flex flex-row justify-content-between">
+      <div className="d-flex flex-column flex-sm-row justify-content-between gap-2">
         <div className="d-flex flex-column gap-1 gap-sm-2">
           <div className="fw-semibold text-lg xs:text-xl sm:text-xxl text-street-dark">
-            Welcome Back,Jane!
+            Welcome Back,{user?.firstName}!
           </div>
           <div className="text-street-base text-xs xs:text-sm sm:text-md fw-normal">
             Here's what's happening at Street Haven today.
           </div>
         </div>
-        <div className="d-flex flex-column justify-content-sm-end justify-content-end gap-1 gap-sm-2 ">
+        <div className="d-flex flex-sm-column flex-row justify-content-sm-end justify-content-start gap-1 gap-sm-2 ">
           <div className="text-street-base text-xs xs:text-sm sm:text-md fw-normal text-end">
             Today
           </div>
@@ -29,7 +33,7 @@ const AdminDashboard = () => {
         </div>
       </div>
       <Row className=" g-2 g-md-4">
-        <Col xs={6} sm={6} md={4}>
+        <Col xs={6} sm={6} md={3}>
           <div
             onClick={() =>
               window.open(
@@ -42,7 +46,7 @@ const AdminDashboard = () => {
             Staff Portal
           </div>
         </Col>
-        <Col xs={6} sm={6} md={4}>
+        <Col xs={6} sm={6} md={3}>
           <div
             onClick={() =>
               window.open(
@@ -55,7 +59,7 @@ const AdminDashboard = () => {
             SH Webmail
           </div>
         </Col>
-        <Col xs={12} sm={12} md={4}>
+        <Col xs={6} sm={6} md={3}>
           <div
             onClick={() =>
               window.open(
@@ -68,32 +72,36 @@ const AdminDashboard = () => {
             Staff Schedules
           </div>
         </Col>
+        <Col xs={6} sm={6} md={3}>
+          <div
+            // onClick={() =>
+            //   window.open(
+            //     "https://streethaven.sharepoint.com/sites/StreetHaven/Staff%20Schedules/Forms/AllItems.aspx",
+            //     "_blank"
+            //   )
+            // }
+            className="link-card h-80-px cursor-pointer h-sm-100-px h-md-144-px w-100 radius-12 p-md-24 d-flex fw-bold text-md sm:text-lg md:text-xl flex-row justify-content-center align-items-center bg-street-primary text-white"
+          >
+            CMS
+          </div>
+        </Col>
       </Row>
 
       <Row className=" g-2 g-md-3 g-lg-4">
-        <DashboardCard
-          icon="lucide:calendar"
-          label="Events"
-          value={4}
-          key={"Events"}
-        />
-        <DashboardCard
-          icon="heroicons:document"
-          label="Recent Documents"
-          value={12}
-          key={"Recent Documents"}
-        />
+    
         <DashboardCard
           icon="iconamoon:ticket-light"
           label="Open Tickets"
+          link={`/it_facility?tab=track_tickets&status=Open`}
           value={8}
           key={"Open Tickets"}
         />
         <DashboardCard
           icon="lucide:party-popper"
-          label="Celebrations"
+          label="Announcements"
           value={3}
-          key={"Celebrations"}
+          link={`/agency_info?tab=announcements`}
+          key={"Announcements"}
         />
       </Row>
       <Row className="g-4">
@@ -101,9 +109,7 @@ const AdminDashboard = () => {
           {" "}
           <RecentActivity />
         </Col>
-        <Col md={6}>
-          <UpcomingEvents />
-        </Col>
+       
       </Row>
     </div>
   );

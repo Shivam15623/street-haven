@@ -1,21 +1,64 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import slugify from "slugify";
 import { customAlphabet } from "nanoid";
+
+export const ROLES = {
+  SUPER_ADMIN: "super_admin",
+  VOLUNTEER_ADMIN: "volunteer_admin",
+  MANAGER: "manager",
+  STAFF: "staff",
+  VOLUNTEER: "volunteer",
+};
+const volunteerStintSchema = new Schema(
+  {
+    startAt: {
+      type: Date,
+      required: true,
+    },
+
+    endAt: {
+      type: Date,
+      default: null,
+    },
+
+    endedReason: {
+      type: String,
+      enum: ["left", "admin_deactivated"],
+      default: null,
+    },
+  },
+  { _id: false },
+);
 const UserSchema = new mongoose.Schema(
   {
     firstname: {
       type: String,
       required: true,
       trim: true,
-      match: [/^[A-Za-z]+$/, "First name must contain only letters"],
+      match: [/^[A-Za-z ]+$/, "First name must contain only letters"],
     },
     lastname: {
       type: String,
       required: true,
       trim: true,
-      match: [/^[A-Za-z]+$/, "Last name must contain only letters"],
+      match: [/^[A-Za-z ]+$/, "Last name must contain only letters"],
+    },
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
+    },
+
+    volunteerStints: {
+      type: [volunteerStintSchema],
+      default: [],
+    },
+
+    currentStint: {
+      startAt: Date,
+      endAt: Date,
     },
     email: {
       type: String,
@@ -24,9 +67,15 @@ const UserSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
       match: [
-        /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-        "Please enter a valid email",
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        "Please enter a valid email address",
       ],
+    },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+      default: "none",
     },
     slug: {
       type: String,
@@ -39,13 +88,7 @@ const UserSchema = new mongoose.Schema(
       type: String, // This can be a URL or file path
       default: "", // Optional
     },
-    slug: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-    },
+
     password: {
       type: String,
       required: true,
@@ -56,29 +99,54 @@ const UserSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "employee"],
-      required: true,
-      lowercase: true,
+      enum: Object.values(ROLES),
+      default: ROLES.STAFF,
     },
     phoneNo: {
       type: String,
       required: true,
       unique: true,
       match: [
-        /^\+?[1-9]\d{7,14}$/,
-        "Please enter a valid international phone number",
+        /^\+1\s?\(?([2-9][0-8][0-9])\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})$/,
+        "Please enter a valid phone number (e.g. +1 (416) 555-1234)",
       ],
     },
+
+    hireDate: {
+      type: Date,
+      required: true,
+      default: new Date(),
+    },
+    // TOTP secret for Microsoft Authenticator
+    totpSecret: {
+      type: String,
+      default: null,
+    },
+    // Whether user completed TOTP setup
+    isTOTPEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    isTOTPVerified: { type: Boolean, default: false },
     forgotPasswordToken: String,
     forgotPasswordTokenExpiry: Date,
     refreshToken: {
       type: String,
       default: "",
     },
+    superviserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // reference to User model
+      default: null,
+    },
+    customPermissions: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 5);
 
@@ -128,7 +196,7 @@ UserSchema.methods.generateAccessToken = function () {
     process.env.ACCESS_TOKEN_SECRET,
     {
       expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "7d",
-    }
+    },
   );
 };
 
@@ -141,7 +209,7 @@ UserSchema.methods.generateRefreshToken = function () {
     process.env.REFRESH_TOKEN_SECRET,
     {
       expiresIn: process.env.REFRESH_TOKEN_EXPIRY || "30d",
-    }
+    },
   );
 };
 const User = mongoose.model("User", UserSchema);

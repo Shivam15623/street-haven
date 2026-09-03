@@ -13,6 +13,7 @@ export interface MeetingMinutesResponseData {
 export interface MeetingMinutesData {
   _id: string;
   title: string;
+  slug:string;
   attendees: number;
   meetingDate: string;
   keyTopicsDiscussed: string[];
@@ -21,7 +22,7 @@ export interface MeetingMinutesData {
     fileName: string;
     fileUrl: string;
     size: number; // Cloudinary gives bytes
-    totalPages: number; // null if not a PDF
+    fileType: string;
   };
   createdBy: {
     _id: string;
@@ -34,6 +35,7 @@ export interface MeetingMinutesData {
 export interface MeetingMinuteQuery {
   page?: number;
   limit?: number;
+  slug?: string;
   search?: string;
   sortBy?: string;
   order?: "asc" | "desc";

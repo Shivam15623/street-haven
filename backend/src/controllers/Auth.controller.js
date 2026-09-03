@@ -5,39 +5,13 @@ import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import generateTokens from "../utills/GenerateTokens.js";
 import jwt from "jsonwebtoken";
-export const RegisterEmployee = asyncHandler(async (req, res) => {
-  const { firstName, lastName, email, password, phone } = req.body;
- 
-  const ExistingUser = await User.findOne({
-    $or: [{ email: email }, { phoneNo: phone }],
-  });
-  if (ExistingUser) {
-    if (ExistingUser.email === email) {
-      throw new ApiError(400, "User already exists with this email");
-    } else if (ExistingUser.phoneNo === phone) {
-      throw new ApiError(400, "User already exists with this phone number");
-    }
-  }
 
-  const newUser = await User.create({
-    firstname: firstName,
-    lastname: lastName,
-    email: email,
-    password: password,
-    phoneNo: phone,
-    role: "employee",
-  });
-  const findUser = await User.findById(newUser._id);
-  if (!findUser) {
-    throw new ApiError(500, "Account not created due to server error");
-  }
-  return res
-    .status(201)
-    .json(new ApiResponse(201, "Account created successfully"));
-});
+import speakeasy from "speakeasy";
+import qrcode from "qrcode";
+
 export const RegisterAdmin = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, password, phone } = req.body;
- 
+
   const ExistingUser = await User.findOne({
     $or: [{ email: email }, { phoneNo: phone }],
   });
@@ -90,53 +64,56 @@ export const LogOut = asyncHandler(async (req, res) => {
 });
 export const Login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  const findUser = await User.findOne({ email: email });
-  if (!findUser) {
+
+  // 1. Find user
+  const user = await User.findOne({ email });
+  if (!user) {
     throw new ApiError(404, "Account not found with this email");
   }
-  const isPasswordCorrect = await findUser.isPasswordCorrect(password);
+  if (user.status === "inactive") {
+    throw new ApiError(
+      403,
+      "Your account has been deactivated",
+      [],
+      "",
+      "ACCOUNT_INACTIVE",
+    );
+  }
+
+  // 2. Validate password
+  const isPasswordCorrect = await user.isPasswordCorrect(password);
   if (!isPasswordCorrect) {
     throw new ApiError(400, "Incorrect password");
   }
-  const { accessToken, refreshToken } = await generateTokens(findUser._id);
-
-  // Sanitize user object for frontend
-  const userToSend = {
-    _id: findUser._id,
-    firstName: findUser.firstname,
-    lastName: findUser.lastname,
-    email: findUser.email,
-    phoneNo: findUser.phoneNo,
-    role: findUser.role,
-    slug: findUser.slug,
-    profilePic: findUser.profilePic,
-  };
-
-  const accessOptions = {
-    httpOnly: true,
-    secure: false, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: "lax", // must be 'None' for cross-site cookies
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  };
-
-  const refreshOptions = {
-    httpOnly: true,
-    secure: false, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: "lax", // must be 'None' for cross-site cookies
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-  };
-
-  return res
-    .status(200)
-    .cookie("accessToken", accessToken, accessOptions)
-    .cookie("refreshToken", refreshToken, refreshOptions)
-    .json(
-      new ApiResponse(200, "Login successful", {
-        user: userToSend,
-        accessToken,
-        refreshToken,
-      })
+  if (user.status !== "active") {
+    throw new ApiError(
+      403,
+      "Your account has been deactivated. Please contact an administrator.",
     );
+  }
+  // 3. Create a short-lived temp token (used for TOTP verification / setup)
+
+  const tempToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+    expiresIn: "10m",
+  });
+
+  // 4. If TOTP is already enabled → Ask for authenticator code
+  if (user.isTOTPEnabled) {
+    return res.status(200).json(
+      new ApiResponse(201, "Please enter your 6-digit authenticator code", {
+        status: "TOTP_REQUIRED",
+        tempToken,
+      }),
+    );
+  }
+
+  // 5. If TOTP is not enabled → Ask to set up 2FA
+  return res.status(200).json(
+    new ApiResponse(201, "Please complete two-factor setup", {
+      status: "TOTP_SETUP_REQUIRED",
+      tempToken,
+    }),
+  );
 });
 export const ForgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
@@ -155,9 +132,9 @@ export const ForgotPassword = asyncHandler(async (req, res) => {
 });
 export const ResetPassword = asyncHandler(async (req, res) => {
   const { token, newPassword, confirmPassword } = req.body;
-  const hashedToken = await bcrypt.hash(token, 10);
+
   const user = await User.findOne({
-    forgotPasswordToken: hashedToken, // Corrected field
+    forgotPasswordToken: token,
     forgotPasswordTokenExpiry: { $gt: Date.now() },
   });
   if (!user) {
@@ -182,14 +159,22 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
   try {
     const decodedToken = jwt.verify(
       incomingRefreshToken,
-      process.env.REFRESH_TOKEN_SECRET
+      process.env.REFRESH_TOKEN_SECRET,
     );
 
     const user = await User.findById(decodedToken._id);
     if (!user) {
       throw new ApiError(401, "User not found");
     }
-
+    if (user.status !== "active") {
+      throw new ApiError(
+        403,
+        "Your account has been deactivated",
+        [],
+        "",
+        "ACCOUNT_INACTIVE",
+      );
+    }
     if (incomingRefreshToken !== user.refreshToken) {
       throw new ApiError(401, "Token mismatch or expired");
     }
@@ -198,9 +183,11 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
     const { accessToken, refreshToken } = await generateTokens(user._id);
 
     // Fetch user again (sanitized fields)
-    const findUser = await User.findById(user._id).select(
-      "-password -refreshToken -updatedAt -createdBy -createdAt -isActive -__v"
-    );
+    const findUser = await User.findById(user._id)
+      .populate("role", "roleName permissions _id")
+      .select(
+        "-password -refreshToken -updatedAt -createdBy -createdAt -isActive -__v",
+      );
 
     const userToSend = {
       _id: findUser._id,
@@ -210,21 +197,26 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
       phoneNo: findUser.phoneNo,
       role: findUser.role,
       slug: findUser.slug,
+      status: findUser.status,
       profilePic: findUser.profilePic,
+      createdAt: findUser.createdAt,
+      hireDate: findUser.hireDate,
+      customPermissions: findUser.customPermissions,
     };
 
-    // Cookie options (same as silentAuth)
+    const isProduction = process.env.NODE_ENV === "production";
+
     const accessOptions = {
       httpOnly: true,
-      secure: false, // must be true in production/HTTPS
-      sameSite: "lax", // use 'None' if cross-site
+      secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
+      sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     };
 
     const refreshOptions = {
       httpOnly: true,
-      secure: false, // must be true in production/HTTPS
-      sameSite: "lax", // use 'None' if cross-site
+      secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
+      sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     };
 
@@ -237,7 +229,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
           user: userToSend,
           accessToken,
           refreshToken,
-        })
+        }),
       );
   } catch (error) {
     throw new ApiError(401, error?.message || "Invalid refresh token");
@@ -252,19 +244,30 @@ export const silentAuth = asyncHandler(async (req, res) => {
 
   const decodedToken = jwt.verify(
     incomingRefreshToken,
-    process.env.REFRESH_TOKEN_SECRET
+    process.env.REFRESH_TOKEN_SECRET,
   );
   const user = await User.findById(decodedToken._id);
   if (!user) {
     throw new ApiError(401, "User not found");
   }
+  if (user.status !== "active") {
+    throw new ApiError(
+      403,
+      "Your account has been deactivated",
+      [],
+      "",
+      "ACCOUNT_INACTIVE",
+    );
+  }
   if (incomingRefreshToken !== user.refreshToken) {
     throw new ApiError(401, "Token mismatch");
   }
   const { accessToken, refreshToken } = await generateTokens(user._id);
-  const finduser = await User.findById(user._id).select(
-    "-password -refreshToken -updatedAt -createdBy -createdAt -isActive -__v"
-  );
+  const finduser = await User.findById(user._id)
+    .populate("role", "roleName permissions _id")
+    .select(
+      "-password -refreshToken -updatedAt -createdBy -createdAt -isActive -__v",
+    );
   const userToSend = {
     _id: finduser._id,
     firstName: finduser.firstname,
@@ -273,19 +276,25 @@ export const silentAuth = asyncHandler(async (req, res) => {
     phoneNo: finduser.phoneNo,
     role: finduser.role,
     slug: finduser.slug,
+    status: finduser.status,
     profilePic: finduser.profilePic,
+    createdAt: finduser.createdAt,
+    hireDate: finduser.hireDate,
+    customPermissions: finduser.customPermissions,
   };
+  const isProduction = process.env.NODE_ENV === "production";
+
   const accessOptions = {
     httpOnly: true,
-    secure: false, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: "lax", // must be 'None' for cross-site cookies
+    secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
+    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   };
 
   const refreshOptions = {
     httpOnly: true,
-    secure: false, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: "lax", // must be 'None' for cross-site cookies
+    secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
+    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   };
   // if (process.env.Deploy_env === "development") {
@@ -303,6 +312,157 @@ export const silentAuth = asyncHandler(async (req, res) => {
         user: userToSend,
         refreshToken,
         accessToken,
-      })
+      }),
     );
+});
+export const totpGenerate = asyncHandler(async (req, res) => {
+  const { tempToken } = req.body;
+  if (!tempToken) throw new ApiError(400, "Temp token required");
+
+  let decoded;
+  try {
+    decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+  } catch {
+    throw new ApiError(401, "Invalid or expired token");
+  }
+
+  const user = await User.findById(decoded.userId);
+  if (!user) throw new ApiError(404, "User not found");
+
+  const issuer = "StreetHaven";
+  const accountName = `${user.firstname} ${user.lastname} (${user.email})`;
+
+  const secret = speakeasy.generateSecret({
+    length: 20,
+  });
+
+  const otpauthUrl =
+    `otpauth://totp/${encodeURIComponent(issuer)}:` +
+    `${encodeURIComponent(accountName)}` +
+    `?secret=${secret.base32}` +
+    `&issuer=${encodeURIComponent(issuer)}`;
+
+  user.totpSecret = secret.base32;
+  user.isTOTPEnabled = false;
+  await user.save({ validateBeforeSave: false });
+
+  // 3. Create a short-lived temp token (used for TOTP verification / setup)
+  const setupToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+    expiresIn: "10m",
+  });
+  const qrCode = await new Promise((resolve, reject) => {
+    qrcode.toDataURL(otpauthUrl, (err, url) => {
+      if (err) reject(err);
+      else resolve(url);
+    });
+  });
+  return res.status(200).json(
+    new ApiResponse(201, "Connect With Authenticator App", {
+      qrCode,
+      setupToken,
+    }),
+  );
+});
+
+export const verifyTOTP = asyncHandler(async (req, res) => {
+  const { tempToken, totpCode } = req.body;
+
+  let decoded;
+  try {
+    decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+  } catch {
+    throw new ApiError(401, "Expired token");
+  }
+
+  const user = await User.findById(decoded.userId);
+  if (!user) {
+    throw new ApiError(404, "No such User Exists");
+  }
+  if (user.status !== "active") {
+    throw new ApiError(403, "Your account has been deactivated");
+  }
+
+  const isValid = speakeasy.totp.verify({
+    secret: user.totpSecret,
+    encoding: "base32",
+    token: totpCode,
+    window: 1,
+  });
+
+  if (!isValid) throw new ApiError(400, "Invalid TOTP");
+
+  user.isTOTPEnabled = true;
+  await user.save({ validateBeforeSave: false });
+
+  // NOW CREATE NORMAL LOGIN TOKENS
+  const { accessToken, refreshToken } = await generateTokens(user._id);
+  const userToSend = {
+    _id: user._id,
+    firstName: user.firstname,
+    lastName: user.lastname,
+    email: user.email,
+    phoneNo: user.phoneNo,
+    role: user.role,
+    status: user.status,
+    slug: user.slug,
+    profilePic: user.profilePic,
+    createdAt: user.createdAt,
+    hireDate: user.hireDate,
+    customPermissions: user.customPermissions,
+  };
+  const isProduction = process.env.NODE_ENV === "production";
+
+  const accessOptions = {
+    httpOnly: true,
+    secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
+    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  };
+
+  const refreshOptions = {
+    httpOnly: true,
+    secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
+    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+  };
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, accessOptions)
+    .cookie("refreshToken", refreshToken, refreshOptions)
+    .json(
+      new ApiResponse(200, "Access token refreshed", {
+        user: userToSend,
+        accessToken,
+        refreshToken,
+      }),
+    );
+});
+
+export const verifyTOTPSetup = asyncHandler(async (req, res) => {
+  const { tempToken, totpCode } = req.body;
+
+  let decoded;
+  try {
+    decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+  } catch {
+    throw new ApiError(401, "Expired token");
+  }
+
+  const user = await User.findById(decoded.userId);
+
+  const isValid = speakeasy.totp.verify({
+    secret: user.totpSecret,
+    encoding: "base32",
+    token: totpCode,
+    window: 1,
+  });
+
+  if (!isValid) throw new ApiError(400, "Invalid TOTP");
+
+  user.isTOTPEnabled = true;
+  user.isTOTPVerified = true;
+  await user.save({ validateBeforeSave: false });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "user Totp setup Verified Now Login"));
 });
