@@ -1,0 +1,140 @@
+@import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap");
+
+/* Input fields */
+.auth-input {
+  height: 38px !important;
+  background-color: #f2f0ec;
+  border: 1px solid #e2e8f0;
+  border-radius: 15px;
+}
+@media (min-width: 768px) {
+  .auth-input {
+    height: 50px !important;
+  }
+}
+/* Labels */
+.auth-label {
+  font-weight: 500; /* fw-medium */
+  font-size: 0.75rem; /* sm */
+}
+@media (min-width: 768px) {
+  .auth-label {
+    font-size: 0.875rem; /* sm */
+  }
+}
+.auth-form-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+@media (min-width: 768px) {
+  .auth-form-input-group {
+    gap: 16px;
+  }
+}
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+@media (min-width: 768px) {
+  .auth-form {
+    gap: 30px;
+  }
+}
+@media (min-width: 1200px) {
+  .auth-form {
+    gap: 40px;
+  }
+}
+/* Status message */
+.auth-status {
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--street-primary-base); /* uses bootstrap primary color */
+}
+
+/* Submit button */
+.auth-btn {
+  width: 100%;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 0.75rem; /* text-xs */
+  padding: 11px 12px; /* py-11 px-12 */
+  color: #fff;
+}
+
+/* Back to login link */
+.auth-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--street-primary-base);
+  font-size: 0.75rem;
+  font-weight: 400;
+
+  text-decoration: none;
+}
+
+@media (min-width: 768px) {
+  .auth-back-link {
+    font-size: 0.875rem;
+  }
+}
+
+.auth-back-link:hover {
+  text-decoration: underline;
+}
+.auth-form-wrap-img {
+  width: 96px;
+  height: 66px;
+}
+@media (min-width: 768px) {
+  .auth-form-wrap-img {
+    width: 116px;
+    height: 86px;
+  }
+}
+.AuthMainText {
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.AuthSubtext {
+  font-family: "Open Sans";
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Tablets */
+@media (min-width: 768px) {
+  .AuthMainText {
+    font-size: 28px;
+  }
+  .AuthSubtext {
+    font-size: 14px;
+  }
+}
+
+/* Desktops */
+@media (min-width: 1200px) {
+  .AuthMainText {
+    font-size: 32px;
+  }
+  .AuthSubtext {
+    font-size: 16px;
+  }
+}
+.invalid-feedback {
+  font-size: 12px;
+}
+@media (min-width: 768px) {
+  .invalid-feedback {
+    font-size: 14px;
+  }
+}

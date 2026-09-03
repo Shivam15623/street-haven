@@ -1,0 +1,37 @@
+.org-icon {
+  background-color: var(--street-primary-base-10);
+  color: var(--street-primary-base);
+}
+[data-theme="dark"] .org-icon {
+  background-color: rgba(36, 47, 59, 1);
+  color: #ffff;
+}
+.collective-icon {
+  background-color: var(--street-primary-base-10);
+  color: var(--street-primary-base);
+}
+[data-theme="dark"] .collective-icon {
+  background-color: rgba(36, 47, 59, 1);
+  color: #ffff;
+}
+.org-node {
+  background: var(--street-card);
+  border: 2px solid var(--street-border-base-50);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.org-node:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(1, 96, 166, 0.15);
+  border-color: var(--street-primary-base);
+}
+.org-label {
+  color: #555555;
+}
+[data-theme="dark"] .org-label {
+  color: #aeb0b2;
+}
+[data-theme="dark"] .org-sub {
+  color: #f2f0ec;
+  font-style: normal;
+}

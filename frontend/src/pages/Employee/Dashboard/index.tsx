@@ -1,0 +1,170 @@
+import { Col, Row } from "react-bootstrap";
+import DashboardCard from "./components/DashboardCard";
+
+import RecentActivity from "./components/RecentActivity";
+import "@assets/css/PageCss/dashboard.css";
+import dayjs from "dayjs";
+import { useSelector } from "react-redux";
+import { selectAuth } from "../../../redux/AuthSlice";
+
+import { useFetchTicketsQuery } from "../../../services/ticketApi";
+import { useRecentAnnouncementcountQuery } from "../../../services/AnnouncementApi";
+import { useGetAllTasksQuery } from "../../../services/taskApi";
+import { PERMISSIONS } from "../../../utills/auth/permissions";
+import useHasPermission from "../../../hooks/Auth";
+
+const EmployeeDashboard = () => {
+  const today = dayjs().format("dddd, MMMM D, YYYY");
+  const { user } = useSelector(selectAuth);
+  const { hasPermission } = useHasPermission();
+
+  const canViewTickets = hasPermission({
+    action: PERMISSIONS.TICKET_VIEW_SELF,
+  });
+  const canViewTasks = hasPermission({
+    action: PERMISSIONS.TASK_VIEW_SELF,
+  });
+  const canViewAnnouncement = hasPermission({
+    action: PERMISSIONS.VIEW_ANNOUNCEMENTS,
+  });
+  const { data: ticketData } = useFetchTicketsQuery({
+    page: 1,
+    priority: "All",
+    status: "Open",
+    limit: 100,
+    order: "desc",
+    search: "",
+  });
+  const { data: taskData } = useGetAllTasksQuery({
+    page: 1,
+
+    status: "assigned",
+    limit: 100,
+
+    search: "",
+  });
+
+  const { data: recentAnnouncement } = useRecentAnnouncementcountQuery();
+
+  return (
+    <div className="d-flex flex-column gap-4 ">
+      <div className="d-flex flex-column flex-sm-row justify-content-between gap-2">
+        <div className="d-flex flex-column gap-1 gap-sm-2">
+          <div
+            className="fw-semibold text-2xl sm:text-xxl text-street-dark"
+            style={{ lineHeight: "normal" }}
+          >
+            Welcome Back,{user?.firstName}!
+          </div>
+          <div
+            className="text-street-base text-sm sm:text-md fw-normal"
+            style={{ lineHeight: "normal" }}
+          >
+            Here's what's happening at Street Haven today.
+          </div>
+        </div>
+        <div className="d-flex flex-sm-column flex-row justify-content-sm-end justify-content-start gap-1 gap-sm-2 ">
+          <div className="text-street-base text-sm sm:text-md fw-normal text-end">
+            Today
+          </div>
+          <div className="fw-semibold text-md sm:text-lg text-end text-street-dark">
+            {today}
+          </div>
+        </div>
+      </div>
+      {/* <Row className=" g-2 g-md-4">
+        <Col xs={6} sm={6} md={3}>
+          <div
+            onClick={() =>
+              window.open(
+                "https://streethaven.sharepoint.com/SitePages/Index.aspx",
+                "_blank"
+              )
+            }
+            className=" h-80-px h-sm-100-px cursor-pointer h-md-144-px w-100 radius-12 p-md-24 d-flex fw-bold text-md sm:text-lg md:text-xl flex-row justify-content-center align-items-center link-card text-white"
+          >
+            Staff Portal
+          </div>
+        </Col>
+        <Col xs={6} sm={6} md={3}>
+          <div
+            onClick={() =>
+              window.open(
+                "https://outlook.office.com/owa/?realm=streethaven.com",
+                "_blank"
+              )
+            }
+            className="link-card h-80-px cursor-pointer h-sm-100-px h-md-144-px w-100 radius-12 p-md-24 d-flex fw-bold text-md sm:text-lg md:text-xl flex-row justify-content-center align-items-center bg-street-primary text-white"
+          >
+            SH Webmail
+          </div>
+        </Col>
+        <Col xs={6} sm={6} md={3}>
+          <div
+            onClick={() =>
+              window.open(
+                "https://streethaven.sharepoint.com/sites/StreetHaven/Staff%20Schedules/Forms/AllItems.aspx",
+                "_blank"
+              )
+            }
+            className="link-card h-80-px cursor-pointer h-sm-100-px h-md-144-px w-100 radius-12 p-md-24 d-flex fw-bold text-md sm:text-lg md:text-xl flex-row justify-content-center align-items-center bg-street-primary text-white"
+          >
+            Staff Schedules
+          </div>
+        </Col>
+        <Col xs={6} sm={6} md={3}>
+          <div
+            // onClick={() =>
+            //   window.open(
+            //     "https://streethaven.sharepoint.com/sites/StreetHaven/Staff%20Schedules/Forms/AllItems.aspx",
+            //     "_blank"
+            //   )
+            // }
+            className="link-card h-80-px cursor-pointer h-sm-100-px h-md-144-px w-100 radius-12 p-md-24 d-flex fw-bold text-md sm:text-lg md:text-xl flex-row justify-content-center align-items-center bg-street-primary text-white"
+          >
+            CMS
+          </div>
+        </Col>
+      </Row> */}
+
+      <Row className=" g-2 g-md-3 g-lg-4">
+        {canViewTickets && (
+          <DashboardCard
+            icon="iconamoon:ticket-light"
+            label="Open Tickets"
+            link="/it_facility?tab=track_tickets&status=Open"
+            value={ticketData?.data.counts.open ?? 0}
+            key="Open Tickets"
+          />
+        )}
+        {canViewTasks && (
+          <DashboardCard
+            icon="mdi:clipboard-text-outline"
+            label="Assigned Tasks"
+            link="/tasks"
+            value={taskData?.data?.counts.assigned ?? 0}
+            key="Assigned Tasks"
+          />
+        )}
+        {canViewAnnouncement && (
+          <DashboardCard
+            icon="lucide:party-popper"
+            label="Announcements"
+            value={recentAnnouncement?.data ?? 0}
+            link={`/agency_info?tab=announcements`}
+            key={"Announcements"}
+          />
+        )}
+      </Row>
+      <Row className="g-4">
+        <Col md={6}>
+          {" "}
+          <RecentActivity />
+        </Col>
+        <Col md={6}></Col>
+      </Row>
+    </div>
+  );
+};
+
+export default EmployeeDashboard;

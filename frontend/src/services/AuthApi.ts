@@ -1,0 +1,147 @@
+import { api } from "../redux/ApiSlice";
+import type { ApiGeneralResponse } from "../interfaces/Response";
+import {
+  setAccountInactive,
+  setAuthChecking,
+  setLoggedIn,
+  setLoggedOut,
+} from "../redux/AuthSlice";
+import type {
+  ForgotPasswordcredential,
+  GenerateTotpCredentials,
+  GenerateTotpResponse,
+  LoginCredentials,
+  LoginResponse,
+  LoginVerifyTotpcredentials,
+  LoginVerifyTotpResponse,
+  RequestResetPasswordcredential,
+  SetUpTotpResponseCredentials,
+} from "../interfaces/AuthInterfaces";
+
+export const authApi = api.injectEndpoints({
+  endpoints: (builder) => ({
+    login: builder.mutation<LoginResponse, LoginCredentials>({
+      query: (credentials) => ({
+        url: "/auth/login",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
+
+    logout: builder.mutation<ApiGeneralResponse, void>({
+      query: () => ({
+        url: "/auth/logout",
+        method: "POST",
+      }),
+    }),
+    forgotPassword: builder.mutation<
+      ApiGeneralResponse,
+      RequestResetPasswordcredential
+    >({
+      query: (credentials) => ({
+        url: "/auth/forgot-password",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
+    resetPassword: builder.mutation<
+      ApiGeneralResponse,
+      ForgotPasswordcredential
+    >({
+      query: (credentials) => ({
+        url: "/auth/reset-password",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
+    verifyTotp: builder.mutation<
+      LoginVerifyTotpResponse,
+      LoginVerifyTotpcredentials
+    >({
+      query: (credentials) => ({
+        url: "/auth/verify-totp",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
+    generateTotp: builder.mutation<
+      GenerateTotpResponse,
+      GenerateTotpCredentials
+    >({
+      query: (credentials) => ({
+        url: "/auth/generate-totp",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
+    setupTotp: builder.mutation<
+      ApiGeneralResponse,
+      SetUpTotpResponseCredentials
+    >({
+      query: (credentials) => ({
+        url: "/auth/setup-totp",
+        method: "POST",
+        body: credentials,
+      }),
+    }),
+    silentAuth: builder.query<LoginVerifyTotpResponse, void>({
+      query: () => ({
+        url: "/auth/silent-auth",
+        method: "GET",
+      }),
+
+      onQueryStarted: async (_arg, { dispatch, queryFulfilled }) => {
+        dispatch(setAuthChecking());
+
+        try {
+          const { data } = await queryFulfilled;
+          const { user,accessToken } = data.data;
+
+          const payload = {
+            _id: user._id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phoneNo: user.phoneNo,
+            profilePic: user.profilePic,
+            role: user.role,
+            slug: user.slug,
+            createdAt: user.createdAt,
+            status:user.status,
+            title: user.title || "",
+            hireDate: new Date(user.hireDate).toISOString(),
+            customPermissions: user.customPermissions || [],
+          };
+
+          dispatch(
+            setLoggedIn({
+              accessToken:accessToken,
+              UserData: payload,
+            }),
+          );
+        } catch (error: any) {
+          const response = error?.error?.data;
+          console.log("t",response);
+          if (response?.code === "ACCOUNT_INACTIVE") {
+            dispatch(setAccountInactive());
+            return;
+          }
+
+          dispatch(setLoggedOut());
+        }
+      },
+    }),
+  }),
+});
+
+export const {
+  useLoginMutation,
+
+  useSilentAuthQuery,
+  useLogoutMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
+  useVerifyTotpMutation,
+  useGenerateTotpMutation,
+  useSetupTotpMutation,
+} = authApi;
