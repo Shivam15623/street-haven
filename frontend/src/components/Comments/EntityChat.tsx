@@ -351,7 +351,7 @@ const EntityChat = ({
       clientId: string;
     }) => {
       if (comment.entityId !== entityId) return;
-      console.log("new comment received", comment, clientId);
+    
       setTimeline((prev) => {
         if (clientId) {
           const index = prev.findIndex((c) => c._id === clientId);
@@ -521,7 +521,7 @@ const EntityChat = ({
                 }
 
                 const isOwn = user?._id && group.user?._id === user._id;
-                console.log(user?._id, group.user?._id, isOwn, group);
+        
                 return (
                   <div
                     key={group.key}

@@ -121,6 +121,7 @@ export const addCommentForEntity = asyncHandler(
     const userIdStr = userId.toString();
     const isSuperAdmin = req.user.role === "super_admin";
     const { message, clientId, parentCommentId } = req.body;
+ 
 
     if (!message && (!req.files || req.files.length === 0)) {
       throw new ApiError(
@@ -192,7 +193,7 @@ export const addCommentForEntity = asyncHandler(
         ),
       ].filter((id) => accessUserIds.has(id) && id !== userIdStr);
     }
-
+   console.log("req.body", req.body.mentions,trustedMentionIds);
     // --- attachments ---
     let attachments = [];
     if (req.files?.length > 0) {

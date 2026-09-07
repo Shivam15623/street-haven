@@ -58,7 +58,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     displayId,
     approvedBy,
   } = ticket;
-  console.log("ticket", ticket);
+  
   const [showApprove, setShowApprove] = useState(false);
   const [showReject, setShowReject] = useState(false);
 

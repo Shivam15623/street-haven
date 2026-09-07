@@ -121,7 +121,7 @@ export const authApi = api.injectEndpoints({
           );
         } catch (error: any) {
           const response = error?.error?.data;
-          console.log("t",response);
+      
           if (response?.code === "ACCOUNT_INACTIVE") {
             dispatch(setAccountInactive());
             return;

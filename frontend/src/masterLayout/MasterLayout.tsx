@@ -86,7 +86,6 @@ const MasterLayout: React.FC<MasterLayoutProps> = ({ children }) => {
   }, [location.pathname]);
 
   const sidebarControl = () => {
-    console.log("sidebarControl", sidebarActive);
     seSidebarActive(!sidebarActive);
   };
 

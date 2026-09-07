@@ -209,14 +209,14 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
     const accessOptions = {
       httpOnly: true,
       secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-      sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
+      sameSite: isProduction ? "lax" : "lax", // must be 'None' for cross-site cookies
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     };
 
     const refreshOptions = {
       httpOnly: true,
       secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-      sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
+      sameSite: isProduction ? "lax" : "lax", // must be 'None' for cross-site cookies
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     };
 
@@ -287,14 +287,14 @@ export const silentAuth = asyncHandler(async (req, res) => {
   const accessOptions = {
     httpOnly: true,
     secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
+    sameSite: isProduction ? "lax" : "lax", // must be 'None' for cross-site cookies
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   };
 
   const refreshOptions = {
     httpOnly: true,
     secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
+    sameSite: isProduction ? "lax" : "lax",// must be 'None' for cross-site cookies
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   };
   // if (process.env.Deploy_env === "development") {
@@ -415,14 +415,14 @@ export const verifyTOTP = asyncHandler(async (req, res) => {
   const accessOptions = {
     httpOnly: true,
     secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
+    sameSite: isProduction ? "lax" : "lax",// must be 'None' for cross-site cookies
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   };
 
   const refreshOptions = {
     httpOnly: true,
     secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
+    sameSite: isProduction ? "lax" : "lax", // must be 'None' for cross-site cookies
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   };
   return res

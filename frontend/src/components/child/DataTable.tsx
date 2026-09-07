@@ -39,7 +39,7 @@ function DataTable<T extends object>({
   order,
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
-  console.log("toatal", total);
+
   const totalPages = Math.ceil(total / limit);
   const pageSizes = [10, 25, 50, 100];
 

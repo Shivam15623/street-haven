@@ -82,6 +82,7 @@ export async function fanOutComment(comment, entity) {
 
     // offline or online-elsewhere — notification path
     const isMentioned = mentionIds.some((id) => id.toString() === memberIdStr);
+
     const isRepliedTo =
       parentComment && parentComment.userId.toString() === memberIdStr;
 
@@ -137,6 +138,7 @@ export async function fanOutComment(comment, entity) {
 
   // fire-and-forget emails, after DB/socket work — never block on delivery
   if (mentionRecipientIds.length) {
+
     notifyCommentEmail({
       type: "mention",
       recipientIds: mentionRecipientIds,
@@ -216,7 +218,6 @@ async function emitFanOutNotifications({
       },
       { entity },
     );
-
     io.to(`user_${doc.userId}`).emit("newNotification", payload);
   }
 }

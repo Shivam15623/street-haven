@@ -37,7 +37,7 @@ const TrackTickettab: React.FC<AgentTabProp> = ({ isActive }) => {
       getTickets(filter);
     }
   }, [isActive, filter, getTickets]);
-  console.log("data",ticketData?.data)
+
   // Pagination calculation
   const total = ticketData?.data?.paggination?.total ?? 0;
   const totalPages = Math.ceil(total / filter?.limit);
