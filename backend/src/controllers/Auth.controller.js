@@ -209,14 +209,14 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
     const accessOptions = {
       httpOnly: true,
       secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-      sameSite: isProduction ? "lax" : "lax", // must be 'None' for cross-site cookies
+      sameSite: "lax", // must be 'None' for cross-site cookies
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     };
 
     const refreshOptions = {
       httpOnly: true,
       secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-      sameSite: isProduction ? "lax" : "lax", // must be 'None' for cross-site cookies
+      sameSite: "lax", // must be 'None' for cross-site cookies
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     };
 
@@ -287,14 +287,14 @@ export const silentAuth = asyncHandler(async (req, res) => {
   const accessOptions = {
     httpOnly: true,
     secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: isProduction ? "lax" : "lax", // must be 'None' for cross-site cookies
+    sameSite: "lax", // must be 'None' for cross-site cookies
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   };
 
   const refreshOptions = {
     httpOnly: true,
     secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: isProduction ? "lax" : "lax",// must be 'None' for cross-site cookies
+    sameSite: "lax", // must be 'None' for cross-site cookies
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   };
   // if (process.env.Deploy_env === "development") {
@@ -366,7 +366,7 @@ export const totpGenerate = asyncHandler(async (req, res) => {
 
 export const verifyTOTP = asyncHandler(async (req, res) => {
   const { tempToken, totpCode } = req.body;
-
+  const tokenStr = String(totpCode).padStart(6, "0");
   let decoded;
   try {
     decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
@@ -385,7 +385,7 @@ export const verifyTOTP = asyncHandler(async (req, res) => {
   const isValid = speakeasy.totp.verify({
     secret: user.totpSecret,
     encoding: "base32",
-    token: totpCode,
+    token: tokenStr,
     window: 1,
   });
 
@@ -415,14 +415,14 @@ export const verifyTOTP = asyncHandler(async (req, res) => {
   const accessOptions = {
     httpOnly: true,
     secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: isProduction ? "lax" : "lax",// must be 'None' for cross-site cookies
+    sameSite: "lax", // must be 'None' for cross-site cookies
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   };
 
   const refreshOptions = {
     httpOnly: true,
     secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: isProduction ? "lax" : "lax", // must be 'None' for cross-site cookies
+    sameSite: "lax", // must be 'None' for cross-site cookies
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   };
   return res

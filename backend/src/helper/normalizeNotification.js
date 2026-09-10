@@ -50,10 +50,7 @@ export function normalizeCommentEntity(entityType, entity) {
   };
 }
 
-export function normalizeCommentNotification(
-  n,
-  { entity = null } = {},
-) {
+export function normalizeCommentNotification(n, { entity = null } = {}) {
   return {
     _id: n._id.toString(),
     source: "comment",
@@ -61,11 +58,12 @@ export function normalizeCommentNotification(
     title: null,
     message: n.formattedMessage,
 
-    severity: (n.priority === "high" ? "warning" : "info"),
+    severity: n.priority === "high" ? "warning" : "info",
 
-    link: entity
-      ? `/${n.entityType.toLowerCase()}/${entity.slug}`
-      : `/${n.entityType.toLowerCase()}/${n.entityId.toString()}`,
+    link:
+      n.entityType === "Ticket"
+        ? `/it_facility?tab=track_tickets&item=${entity.slug}`
+        : `/tasks/${entity.slug}`,
 
     isRead: n.isRead,
     readAt: n.readAt,

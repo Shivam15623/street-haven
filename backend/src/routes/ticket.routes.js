@@ -8,6 +8,7 @@ import {
   createTicket,
   editTicket,
   ExportTicketsReport,
+  FetchTicketBySlug,
   FetchTicketComments,
   FetchTickets,
   GetTicketDetail,
@@ -24,7 +25,6 @@ import {
   fetchTicketsSchema,
 } from "../validations/ticket.js";
 import { idParamSchema } from "../validations/common.js";
-import { upsertCategoryAssignment } from "../controllers/ticketCategoryAssignment.controller.js";
 import { checkActiveUser } from "../middleware/checkActiveUsers.js";
 import { authorizePermissions } from "../middleware/AuthRole.js";
 import { PERMISSIONS } from "../auth/permissions.js";
@@ -82,6 +82,7 @@ router.patch(
   validateRequest(idParamSchema, "params"),
   completeTicket,
 );
+router.get("/slug/:slug", FetchTicketBySlug);
 
 router.patch(
   "/:id/cancel",
@@ -98,6 +99,5 @@ router.route("/:entityId/comments").get(FetchTicketComments);
 router
   .route("/:entityId/comments")
   .post(upload.array("files", 7), validateAddComment, AddTicketComment);
-router.route("/category-assignment").post(upsertCategoryAssignment);
 
 export default router;

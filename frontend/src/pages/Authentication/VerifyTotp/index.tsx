@@ -12,9 +12,8 @@ import { getErrorMessage } from "../../../utills/utills";
 const totpSchema = Yup.object({
   totp: Yup.string()
     .required("OTP is required")
-    .length(6, "OTP must be 6 digits"),
+    .matches(/^\d{6}$/, "OTP must be 6 digits"),
 });
-
 const VerifyTotp: React.FC = () => {
   const location = useLocation();
 
@@ -26,7 +25,7 @@ const VerifyTotp: React.FC = () => {
     try {
       const response = await verifyTotp({
         tempToken,
-        totpCode: Number(values.totp),
+        totpCode: values.totp,
       }).unwrap();
 
       if (response.success) {

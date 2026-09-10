@@ -98,11 +98,11 @@ export const resetPasswordSchema = Joi.object({
 export const setupTotpSchema = Joi.object({
   tempToken: Joi.string().required(),
 
-  totpCode: Joi.number().integer().min(100000).max(999999).required().messages({
-    "number.base": "TOTP code must be a number",
-    "number.integer": "TOTP code must be an integer",
-    "number.min": "TOTP code must be a 6-digit number",
-    "number.max": "TOTP code must be a 6-digit number",
-    "any.required": "TOTP code is required",
-  }),
+  totpCode: Joi.string()
+    .pattern(/^\d{6}$/)
+    .required()
+    .messages({
+      "string.pattern.base": "TOTP code must be a 6-digit number",
+      "any.required": "TOTP code is required",
+    }),
 });

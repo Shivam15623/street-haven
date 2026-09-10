@@ -5,7 +5,6 @@ export type TicketRelationship =
   | "creator"
   | "manager"
   | "assignee"
-
   | "super_admin";
 interface TicketContext {
   ticket: TicketData;
@@ -30,8 +29,6 @@ export const getUserRelationships = (
   if (ticket.location?.managers?.includes(currentUser._id)) {
     relationships.add("manager");
   }
-
-
 
   if (currentUser.role === "super_admin") {
     relationships.add("super_admin");
@@ -75,23 +72,12 @@ const TICKET_ACTION_RULES: TicketActionRule[] = [
   {
     action: "chat",
     allowedStatuses: ALL_STATUSES,
-    requiredRelationships: [
-      "creator",
-      "manager",
-      "assignee",
-  
-    ],
+    requiredRelationships: ["creator", "manager", "assignee", "super_admin"],
   },
   {
     action: "edit",
     allowedStatuses: ALL_STATUSES,
-    requiredRelationships: [
-      "creator",
-      "manager",
-      "assignee",
-   
-      "super_admin",
-    ],
+    requiredRelationships: ["creator", "manager", "assignee", "super_admin"],
   },
   {
     action: "cancel",

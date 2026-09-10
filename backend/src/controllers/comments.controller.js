@@ -193,7 +193,7 @@ export const addCommentForEntity = asyncHandler(
         ),
       ].filter((id) => accessUserIds.has(id) && id !== userIdStr);
     }
-   console.log("req.body", req.body.mentions,trustedMentionIds);
+
     // --- attachments ---
     let attachments = [];
     if (req.files?.length > 0) {

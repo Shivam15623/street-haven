@@ -1,6 +1,7 @@
 import type { FileType } from "../interfaces/fileinterface";
 import type { ApiGeneralResponse, ApiResponse } from "../interfaces/Response";
 import type {
+  TicketData,
   TicketFetchQuery,
   TicketFetchResponseData,
 } from "../interfaces/Ticket";
@@ -152,7 +153,12 @@ const ticketApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Ticket"],
     }),
-
+    fetchTicketBySlug: builder.query<ApiResponse<TicketData>,string>({
+      query: (slug) => ({
+        url: `/ticket/slug/${slug}`,
+        method: "GET",
+      }),
+    }),
     rejectTicket: builder.mutation<
       ApiGeneralResponse,
       { ticketId: string; rejectionReason: string }
@@ -320,4 +326,5 @@ export const {
   useExportTicketReportMutation,
   useLazyFetchTicketMentionableUsersQuery,
   useReopenTicketMutation,
+  useLazyFetchTicketBySlugQuery
 } = ticketApi;

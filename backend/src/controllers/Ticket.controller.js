@@ -18,6 +18,7 @@ import {
   fetchCommentsForEntity,
 } from "./comments.controller.js";
 import TicketCategory from "../model/ticketCategory.js";
+import { resyncTicketMembership } from "../helper/entitymembershipSync.js";
 async function getSuperAdminIds(session) {
   const superAdmins = await User.find({ role: "super_admin" })
     .select("_id")
@@ -134,7 +135,7 @@ export const createTicket = asyncHandler(async (req, res) => {
     ====================== */
     const [ticket] = await Ticket.create([payload], { session });
     if (!ticket) throw new ApiError(500, "Ticket creation failed");
-
+    await resyncTicketMembership(ticket, session);
     /* ======================
        NOTIFY — branches on whether this ticket needs approval
     ====================== */
@@ -340,7 +341,7 @@ export const approveTicket = asyncHandler(async (req, res) => {
     const { id: ticketId } = req.params;
     const { priority } = req.body;
     const userId = req.user._id.toString();
-    const isSuperAdmin=req.user.role==="super_admin"
+    const isSuperAdmin = req.user.role === "super_admin";
 
     if (!priority)
       throw new ApiError(400, "Priority is required to approve a ticket");
@@ -360,11 +361,8 @@ export const approveTicket = asyncHandler(async (req, res) => {
       ticket.location,
       session,
     );
-    if (!isManager&&!isSuperAdmin)
-      throw new ApiError(
-        403,
-        "You are not Authorized",
-      );
+    if (!isManager && !isSuperAdmin)
+      throw new ApiError(403, "You are not Authorized");
 
     const locationDoc = await Location.findById(ticket.location)
       .select("name facilityManager")
@@ -400,6 +398,7 @@ export const approveTicket = asyncHandler(async (req, res) => {
     });
 
     await ticket.save({ session });
+    await resyncTicketMembership(ticket, session);
 
     /* ======================
        FETCH EVERYONE WE NEED TO NOTIFY / EMAIL
@@ -516,7 +515,7 @@ export const rejectTicket = asyncHandler(async (req, res) => {
     const { id: ticketId } = req.params;
     const { rejectionReason } = req.body;
     const userId = req.user._id.toString();
-const isSuperAdmin=req.user.role==="super_admin"
+    const isSuperAdmin = req.user.role === "super_admin";
     if (!rejectionReason?.trim())
       throw new ApiError(400, "Rejection reason is required");
 
@@ -535,7 +534,7 @@ const isSuperAdmin=req.user.role==="super_admin"
       ticket.location,
       session,
     );
-    if (!isManager&&!isSuperAdmin)
+    if (!isManager && !isSuperAdmin)
       throw new ApiError(
         403,
         "You are not a manager for this ticket's location",
@@ -646,6 +645,7 @@ export const startTicket = asyncHandler(async (req, res) => {
       changedAt: new Date(),
     });
     await ticket.save({ session });
+    await resyncTicketMembership(ticket, session); // no-op most of the time, cheap insurance
 
     const recipientIds = [
       ticket.createdBy.toString(),
@@ -934,7 +934,15 @@ function resolveCallerPermissions(ticket, userId, isSuperAdmin) {
 // 3. Which fields did the caller actually submit?
 // ---------------------------------------------------------------------------
 function collectSubmittedFields(body, uploadedFile) {
-  const { description, requestTitle, category, location, priority, assignedTo, status } = body;
+  const {
+    description,
+    requestTitle,
+    category,
+    location,
+    priority,
+    assignedTo,
+    status,
+  } = body;
 
   const submittedFields = new Set();
   if (description !== undefined) submittedFields.add("description");
@@ -965,8 +973,12 @@ function assertFieldPermissions({
   isAssignee,
   isSuperAdmin,
 }) {
-  const wantsCreatorFields = [...submittedFields].some((f) => CREATOR_FIELDS.has(f));
-  const wantsApproverFields = [...submittedFields].some((f) => APPROVER_FIELDS.has(f));
+  const wantsCreatorFields = [...submittedFields].some((f) =>
+    CREATOR_FIELDS.has(f),
+  );
+  const wantsApproverFields = [...submittedFields].some((f) =>
+    APPROVER_FIELDS.has(f),
+  );
   const wantsStatus = submittedFields.has("status");
 
   if (wantsCreatorFields) {
@@ -997,7 +1009,10 @@ function assertFieldPermissions({
     const wantsAssignedTo = submittedFields.has("assignedTo");
 
     if (wantsPriority && !isApprover && !isSuperAdmin) {
-      throw new ApiError(403, "Only the approving manager or super admin can change priority");
+      throw new ApiError(
+        403,
+        "Only the approving manager or super admin can change priority",
+      );
     }
     if (wantsAssignedTo && !isApprover && !isAssignee && !isSuperAdmin) {
       throw new ApiError(
@@ -1005,7 +1020,13 @@ function assertFieldPermissions({
         "Only the approving manager, current assignee, or super admin can reassign this ticket",
       );
     }
-    if ([TICKET_STATUS.OPEN, TICKET_STATUS.CLOSED, TICKET_STATUS.REJECTED].includes(effectiveStatus)) {
+    if (
+      [
+        TICKET_STATUS.OPEN,
+        TICKET_STATUS.CLOSED,
+        TICKET_STATUS.REJECTED,
+      ].includes(effectiveStatus)
+    ) {
       throw new ApiError(
         400,
         `Ticket must be Approved or later to change ${wantsPriority ? "priority" : "assignment"}, currently ${ticket.status}`,
@@ -1021,19 +1042,31 @@ function assertFieldPermissions({
 // ---------------------------------------------------------------------------
 async function resolveLocationChange(ticket, newLocationId, session) {
   const oldLocationId = ticket.location?.toString();
-  const locationChanged = newLocationId && newLocationId.toString() !== oldLocationId;
+  const locationChanged =
+    newLocationId && newLocationId.toString() !== oldLocationId;
 
   if (!locationChanged) {
-    return { locationChanged: false, oldLocation: null, newLocation: null, oldManagerIds: [], newManagerIds: [] };
+    return {
+      locationChanged: false,
+      oldLocation: null,
+      newLocation: null,
+      oldManagerIds: [],
+      newManagerIds: [],
+    };
   }
 
   const [oldLocation, newLocation] = await Promise.all([
-    Location.findById(oldLocationId).select("_id name managers isActive").session(session),
-    Location.findById(newLocationId).select("_id name managers isActive").session(session),
+    Location.findById(oldLocationId)
+      .select("_id name managers isActive")
+      .session(session),
+    Location.findById(newLocationId)
+      .select("_id name managers isActive")
+      .session(session),
   ]);
 
   if (!newLocation) throw new ApiError(404, "New location not found");
-  if (!newLocation.isActive) throw new ApiError(400, "Cannot move ticket to an inactive location");
+  if (!newLocation.isActive)
+    throw new ApiError(400, "Cannot move ticket to an inactive location");
 
   return {
     locationChanged: true,
@@ -1047,9 +1080,11 @@ async function resolveLocationChange(ticket, newLocationId, session) {
 async function resolveCategoryChange(category, session) {
   if (category === undefined) return null;
 
-  const newCategoryDoc = await TicketCategory.findById(category).session(session);
+  const newCategoryDoc =
+    await TicketCategory.findById(category).session(session);
   if (!newCategoryDoc) throw new ApiError(404, "Selected category not found");
-  if (!newCategoryDoc.isActive) throw new ApiError(400, "Selected category is not active");
+  if (!newCategoryDoc.isActive)
+    throw new ApiError(400, "Selected category is not active");
 
   return newCategoryDoc;
 }
@@ -1057,7 +1092,9 @@ async function resolveCategoryChange(category, session) {
 async function resolveCategoryForEmail(ticket, newCategoryDoc, session) {
   return (
     newCategoryDoc ??
-    (await TicketCategory.findById(ticket.category).select("name").session(session))
+    (await TicketCategory.findById(ticket.category)
+      .select("name")
+      .session(session))
   );
 }
 
@@ -1074,12 +1111,19 @@ async function applyTicketUpdates({
   userId,
   session,
 }) {
-  const { description, requestTitle, priority, assignedTo: newAssignedToId, status: newStatus } = body;
+  const {
+    description,
+    requestTitle,
+    priority,
+    assignedTo: newAssignedToId,
+    status: newStatus,
+  } = body;
 
   if (description !== undefined) ticket.description = description;
   if (requestTitle !== undefined) ticket.req_title = requestTitle;
   if (newCategoryDoc) ticket.category = newCategoryDoc._id;
-  if (locationChange.locationChanged) ticket.location = locationChange.newLocation._id;
+  if (locationChange.locationChanged)
+    ticket.location = locationChange.newLocation._id;
   if (uploadedFile) {
     ticket.photo = {
       fileName: uploadedFile.original_filename,
@@ -1132,11 +1176,14 @@ async function applyTicketUpdates({
 function buildRerouteNotifications({ ticket, locationChange, userId, req }) {
   if (!locationChange.locationChanged) return [];
 
-  const { oldLocation, newLocation, oldManagerIds, newManagerIds } = locationChange;
+  const { oldLocation, newLocation, oldManagerIds, newManagerIds } =
+    locationChange;
   const oldManagerSet = new Set(oldManagerIds);
   const newManagerSet = new Set(newManagerIds);
 
-  const removedManagerIds = oldManagerIds.filter((id) => !newManagerSet.has(id));
+  const removedManagerIds = oldManagerIds.filter(
+    (id) => !newManagerSet.has(id),
+  );
   const addedManagerIds = newManagerIds.filter((id) => !oldManagerSet.has(id));
 
   const createdByName = req.user.firstname
@@ -1206,7 +1253,13 @@ function buildRerouteNotifications({ ticket, locationChange, userId, req }) {
   return jobs;
 }
 
-function buildReassignmentNotification({ ticket, newAssignedToId, userIdStr, userId, categoryForEmail }) {
+function buildReassignmentNotification({
+  ticket,
+  newAssignedToId,
+  userIdStr,
+  userId,
+  categoryForEmail,
+}) {
   if (newAssignedToId === undefined) return [];
 
   const recipientId = newAssignedToId.toString();
@@ -1246,7 +1299,11 @@ function buildStatusChangeNotification({
 }) {
   if (!statusChanged) return [];
 
-  const statusRecipients = [ticket.createdBy, ticket.assignedTo, ticket.approvedBy]
+  const statusRecipients = [
+    ticket.createdBy,
+    ticket.assignedTo,
+    ticket.approvedBy,
+  ]
     .filter(Boolean)
     .map((id) => id.toString())
     .filter((id, idx, arr) => arr.indexOf(id) === idx) // dedupe
@@ -1293,7 +1350,12 @@ function buildStatusChangeNotification({
  * or status change. Without this, those edits were previously silent to
  * everyone, including super_admins.
  */
-function buildGenericEditNotification({ ticket, submittedFields, hasOtherJobs, userId }) {
+function buildGenericEditNotification({
+  ticket,
+  submittedFields,
+  hasOtherJobs,
+  userId,
+}) {
   if (hasOtherJobs) return [];
 
   const changedFieldList = [...submittedFields].join(", ");
@@ -1305,7 +1367,11 @@ function buildGenericEditNotification({ ticket, submittedFields, hasOtherJobs, u
       message: `Ticket "${ticket.req_title}" was edited (${changedFieldList}).`,
       link: `/it_facility?tab=track_tickets&item=${ticket.slug}`,
       createdBy: userId,
-      meta: { ticketId: ticket.slug, event: "ticket_edited", changedFields: [...submittedFields] },
+      meta: {
+        ticketId: ticket.slug,
+        event: "ticket_edited",
+        changedFields: [...submittedFields],
+      },
       superAdminOnly: true,
     },
   ];
@@ -1317,7 +1383,9 @@ function buildGenericEditNotification({ ticket, submittedFields, hasOtherJobs, u
 async function withSuperAdminCc(jobs, { userId, session }) {
   if (!jobs.length) return jobs;
 
-  const superAdmins = await User.find({ role: "super_admin" }).select("_id").session(session);
+  const superAdmins = await User.find({ role: "super_admin" })
+    .select("_id")
+    .session(session);
   const superAdminIds = superAdmins
     .map((u) => u._id.toString())
     .filter((id) => id !== userId.toString());
@@ -1327,7 +1395,10 @@ async function withSuperAdminCc(jobs, { userId, session }) {
     const ccIds = superAdminIds.filter((id) => !existingIds.has(id));
     if (!ccIds.length) return job;
 
-    const mergedRecipients = [...job.recipients, ...ccIds.map((id) => ({ userId: id }))];
+    const mergedRecipients = [
+      ...job.recipients,
+      ...ccIds.map((id) => ({ userId: id })),
+    ];
     const mergedEmailUserIds = job.email
       ? [...new Set([...job.email.userIds, ...ccIds])]
       : undefined;
@@ -1335,7 +1406,9 @@ async function withSuperAdminCc(jobs, { userId, session }) {
     return {
       ...job,
       recipients: mergedRecipients,
-      email: job.email ? { ...job.email, userIds: mergedEmailUserIds } : job.email,
+      email: job.email
+        ? { ...job.email, userIds: mergedEmailUserIds }
+        : job.email,
     };
   });
 }
@@ -1380,7 +1453,11 @@ export const editTicket = asyncHandler(async (req, res) => {
   try {
     session.startTransaction();
 
-    const { ticket, uploadedFile } = await loadTicketAndUploadPhoto(ticketId, req.file, session);
+    const { ticket, uploadedFile } = await loadTicketAndUploadPhoto(
+      ticketId,
+      req.file,
+      session,
+    );
 
     const { isCreator, isApprover, isAssignee } = resolveCallerPermissions(
       ticket,
@@ -1400,8 +1477,15 @@ export const editTicket = asyncHandler(async (req, res) => {
       isSuperAdmin,
     });
 
-    const locationChange = await resolveLocationChange(ticket, req.body.location, session);
-    const newCategoryDoc = await resolveCategoryChange(req.body.category, session);
+    const locationChange = await resolveLocationChange(
+      ticket,
+      req.body.location,
+      session,
+    );
+    const newCategoryDoc = await resolveCategoryChange(
+      req.body.category,
+      session,
+    );
 
     const { oldStatus, statusChanged, newAssignee } = await applyTicketUpdates({
       ticket,
@@ -1413,9 +1497,14 @@ export const editTicket = asyncHandler(async (req, res) => {
       userId,
       session,
     });
-
+    await resyncTicketMembership(ticket, session);
     // ---- Build notification jobs (pure — no side effects yet) ----
-    const rerouteJobs = buildRerouteNotifications({ ticket, locationChange, userId, req });
+    const rerouteJobs = buildRerouteNotifications({
+      ticket,
+      locationChange,
+      userId,
+      req,
+    });
 
     const reassignmentCategoryForEmail =
       req.body.assignedTo !== undefined
@@ -1442,7 +1531,9 @@ export const editTicket = asyncHandler(async (req, res) => {
       categoryForEmail: statusCategoryForEmail,
     });
 
-    const hasOtherJobs = Boolean(rerouteJobs.length || reassignmentJobs.length || statusJobs.length);
+    const hasOtherJobs = Boolean(
+      rerouteJobs.length || reassignmentJobs.length || statusJobs.length,
+    );
     const genericJobs = buildGenericEditNotification({
       ticket,
       submittedFields,
@@ -1450,16 +1541,33 @@ export const editTicket = asyncHandler(async (req, res) => {
       userId,
     });
 
-    const allJobs = [...rerouteJobs, ...reassignmentJobs, ...statusJobs, ...genericJobs];
-    const jobsWithSuperAdminCc = await withSuperAdminCc(allJobs, { userId, session });
+    const allJobs = [
+      ...rerouteJobs,
+      ...reassignmentJobs,
+      ...statusJobs,
+      ...genericJobs,
+    ];
+    const jobsWithSuperAdminCc = await withSuperAdminCc(allJobs, {
+      userId,
+      session,
+    });
 
-    await dispatchNotificationJobs(jobsWithSuperAdminCc, { session, emailEvents });
+    await dispatchNotificationJobs(jobsWithSuperAdminCc, {
+      session,
+      emailEvents,
+    });
 
     await session.commitTransaction();
 
-    await Promise.all(emailEvents.map((event) => notifyTicketEmail({ ...event, session: undefined })));
+    await Promise.all(
+      emailEvents.map((event) =>
+        notifyTicketEmail({ ...event, session: undefined }),
+      ),
+    );
 
-    return res.status(200).json(new ApiResponse(200, "Ticket updated successfully", ticket));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Ticket updated successfully", ticket));
   } catch (error) {
     await session.abortTransaction();
     throw error;
@@ -1609,6 +1717,82 @@ export const FetchTickets = asyncHandler(async (req, res) => {
         limit,
       },
     }),
+  );
+});
+export const FetchTicketBySlug = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+
+  if (!slug) {
+    throw new ApiError(400, "Ticket slug is required");
+  }
+
+  /* ----------------------------------
+     PERMISSION SCOPE
+  -----------------------------------*/
+
+  const visibilityOr = [];
+
+  // Super admin can view all tickets
+  if (req.user.role !== "super_admin") {
+    const managedLocations = await Location.find(
+      { managers: req.user._id },
+      "_id",
+    );
+
+    const managedLocationIds = managedLocations.map(
+      (location) => location._id,
+    );
+
+    // Own tickets
+    visibilityOr.push(
+      { createdBy: req.user._id },
+      { assignedTo: req.user._id },
+    );
+
+    // Tickets from locations managed by the user
+    if (managedLocationIds.length) {
+      visibilityOr.push({
+        location: { $in: managedLocationIds },
+      });
+    }
+  }
+
+  /* ----------------------------------
+     FIND TICKET
+  -----------------------------------*/
+
+  const ticketFilter = {
+    slug,
+    ...(visibilityOr.length
+      ? { $or: visibilityOr }
+      : {}),
+  };
+
+  const ticket = await Ticket.findOne(ticketFilter)
+    .populate("category", "name isActive")
+    .populate("location", "name managers")
+    .populate("createdBy", "firstname lastname email")
+    .populate("assignedTo", "firstname lastname email")
+    .populate("approvedBy", "firstname lastname");
+
+  /* ----------------------------------
+     NOT FOUND
+  -----------------------------------*/
+
+  if (!ticket) {
+    throw new ApiError(404, "Ticket not found");
+  }
+
+  /* ----------------------------------
+     RESPONSE
+  -----------------------------------*/
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      "Ticket fetched successfully",
+      ticket,
+    ),
   );
 });
 
@@ -2136,7 +2320,7 @@ export const reopenTicket = asyncHandler(async (req, res) => {
     ticket.priorityLocked = false;
 
     await ticket.save({ session });
-
+    await resyncTicketMembership(ticket, session);
     // -----------------------------------------
     // Notify: creator (if not the actor) + previous assignee (if any)
     // -----------------------------------------

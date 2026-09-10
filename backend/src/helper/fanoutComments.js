@@ -138,7 +138,6 @@ export async function fanOutComment(comment, entity) {
 
   // fire-and-forget emails, after DB/socket work — never block on delivery
   if (mentionRecipientIds.length) {
-
     notifyCommentEmail({
       type: "mention",
       recipientIds: mentionRecipientIds,
@@ -278,6 +277,8 @@ function buildActivityUpsertOp(
                 { $ifNull: ["$windowStartedAt", now] },
               ],
             },
+            createdAt: { $ifNull: ["$createdAt", now] },
+            updatedAt: now,
             commentId,
             entityType,
             entityId,

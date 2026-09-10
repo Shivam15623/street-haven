@@ -2,14 +2,18 @@ import { useEffect, useState } from "react";
 import TicketCard from "./TicketCard";
 import { TicketCountCard } from "./TicketCountCard";
 import type { TicketFetchQuery } from "../../../../interfaces/Ticket";
-import { useLazyFetchTicketsQuery } from "../../../../services/ticketApi";
+import {
+  useLazyFetchTicketBySlugQuery,
+  useLazyFetchTicketsQuery,
+} from "../../../../services/ticketApi";
 import { useSearchParams } from "react-router-dom";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import StreetPaggination from "../../../../components/child/StreetPaggination";
 import type { AgentTabProp } from "../../AgencyInformation/component/Agreement/CollectiveAgreementTab";
+import TicketDetailsModal from "./TicketModal";
 
 const TrackTickettab: React.FC<AgentTabProp> = ({ isActive }) => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const statusParam = searchParams.get("status") ?? "All";
   // Filter state (page included here)
   const [filter, setFilter] = useState<TicketFetchQuery>({
@@ -25,10 +29,15 @@ const TrackTickettab: React.FC<AgentTabProp> = ({ isActive }) => {
       | "All",
     limit: 10,
     order: "desc",
-  
+
     search: "",
   });
+  const itemParam = searchParams.get("item");
 
+  const [
+    fetchTicketBySlug,
+    { data: selectedTicketData, isLoading: isSelectedTicketLoading },
+  ] = useLazyFetchTicketBySlugQuery();
   // Fetch tickets with filter
   const [getTickets, { data: ticketData, isLoading }] =
     useLazyFetchTicketsQuery();
@@ -38,6 +47,12 @@ const TrackTickettab: React.FC<AgentTabProp> = ({ isActive }) => {
     }
   }, [isActive, filter, getTickets]);
 
+  useEffect(() => {
+    if (isActive && itemParam) {
+      fetchTicketBySlug(itemParam);
+    }
+  }, [isActive, itemParam, fetchTicketBySlug]);
+  const selectedTicket = selectedTicketData?.data;
   // Pagination calculation
   const total = ticketData?.data?.paggination?.total ?? 0;
   const totalPages = Math.ceil(total / filter?.limit);
@@ -51,6 +66,19 @@ const TrackTickettab: React.FC<AgentTabProp> = ({ isActive }) => {
 
   return (
     <div className="d-flex flex-column gap-4">
+      {itemParam && (
+        <TicketDetailsModal
+          ticket={selectedTicket}
+          isLoading={isSelectedTicketLoading}
+          onHide={() => {
+            setSearchParams((prev) => {
+              prev.delete("item");
+              return prev;
+            });
+          }}
+          show={!!itemParam}
+        />
+      )}
       {/* Ticket Count Cards */}
       <div className="row row-cols-xxxl-5 row-cols-lg-3 row-cols-sm-2 row-cols-1 gy-xl-3 gy-2 gx-xl-3 gx-2">
         {isLoading ? (
@@ -141,7 +169,7 @@ const TrackTickettab: React.FC<AgentTabProp> = ({ isActive }) => {
               }
               active={filter.status === "Completed"}
             />
-{/* 
+            {/* 
             <TicketCountCard
               count={ticketData?.data.counts.rejected ?? 0}
               label="Rejected"

@@ -55,7 +55,7 @@ export interface LoginResponseData {
 }
 export interface LoginVerifyTotpcredentials {
   tempToken: string;
-  totpCode: number;
+  totpCode: string;
 }
 interface UserVerify {
   _id: string;
@@ -83,7 +83,7 @@ interface GenerateTotpResponseData {
 }
 export interface SetUpTotpResponseCredentials {
   tempToken: string;
-  totpCode: number;
+  totpCode: string;
 }
 
 export interface GenerateTotpCredentials {

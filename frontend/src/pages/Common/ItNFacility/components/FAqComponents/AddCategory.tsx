@@ -45,7 +45,7 @@ const AddCategory: React.FC = () => {
     try {
       await createCategory(values).unwrap();
       setShowModal(false);
-      console.log("FAQ Category created successfully");
+
     } catch (error) {
       showError(getErrorMessage(error));
     }

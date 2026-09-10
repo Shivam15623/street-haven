@@ -12,6 +12,7 @@ import {
   normalizeCommentEntity,
   normalizeSystemNotification,
 } from "../helper/normalizeNotification.js";
+import { ApiError } from "../utills/ApiError.js";
 
 // ---------------------------------------------------------------------------
 // Normalization
@@ -35,10 +36,13 @@ function formatActivityText(n) {
 
 // n.entity is attached beforehand (batched lookup) — see fetchCommentNotifications
 function normalizeComment(n) {
+  console.log(n.entity,n)
   const entity = n.entity || null;
-  const link = entity
-    ? `/${n.entityType.toLowerCase()}/${entity.slug}`
-    : `/${n.entityType.toLowerCase()}/${n.entityId}`;
+
+  const link =
+    n.entityType === "Ticket"
+      ? `/it_facility?tab=track_tickets&item=${entity.slug}`
+      : `/tasks/${entity.slug}`;
 
   return {
     _id: n._id.toString(),
@@ -322,8 +326,7 @@ async function fetchCommentNotifications(userId, { type, status, fetchDepth }) {
     ...tickets.map((t) => [`Ticket:${t._id.toString()}`, t]),
     ...tasks.map((t) => [`Task:${t._id.toString()}`, t]),
   ]);
-
-  return notifications.map((n) => {
+  const result = notifications.map((n) => {
     const rawEntity = entityMap.get(`${n.entityType}:${n.entityId.toString()}`);
     return {
       ...n,
@@ -337,6 +340,8 @@ async function fetchCommentNotifications(userId, { type, status, fetchDepth }) {
         : null,
     };
   });
+
+  return result;
 }
 
 async function countCommentNotifications(userId, { type, status }) {
@@ -383,10 +388,12 @@ export const fetchUnifiedNotifications = asyncHandler(async (req, res) => {
     ),
 
     ...comment.map(normalizeComment),
-  ].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
-
+  ];
+  merged.sort((a, b) => {
+    const aDate = new Date(a.sortDate || a.createdAt).getTime();
+    const bDate = new Date(b.sortDate || b.createdAt).getTime();
+    return bDate - aDate;
+  });
   const total = genericTotal + commentTotal; // real total, not capped-fetch length
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const pageItems = merged.slice(start, start + limit);

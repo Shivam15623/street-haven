@@ -13,11 +13,9 @@ import dayjs from "dayjs";
 import { htmlToText } from "html-to-text";
 
 import ExcelJS from "exceljs";
-import { createNotification } from "../helper/CreateNotoification.js";
-import { io } from "../index.js";
-import User from "../model/user.js";
 
 import { flushTaskEffects } from "../services/task.notification.service.js";
+import { resyncTaskMembership } from "../helper/entitymembershipSync.js";
 export const createTask = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   const effects = [];
@@ -82,6 +80,7 @@ export const createTask = asyncHandler(async (req, res) => {
     if (!task) {
       throw new ApiError(500, "Internal Server Error");
     }
+    await resyncTaskMembership(task, session);
     // Run after commit
     if (task.assignedTo) {
       await TaskNotificationService.taskAssigned(
@@ -247,6 +246,7 @@ export const editTask = asyncHandler(async (req, res) => {
      * - email effects
      */
     if (changes.assignedTo) {
+      await resyncTaskMembership(task, session);
       await TaskNotificationService.taskReassigned(
         task,
         oldAssignedTo,
