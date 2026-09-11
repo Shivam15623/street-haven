@@ -73,7 +73,7 @@ const AddEmployeeSchema = Yup.object({
     .matches(/[@$!%*?&#]/, "Must contain at least one special character"),
   hireDate: Yup.date().required("Hire Date is required"),
   timePeriod: Yup.string(),
-  superviserId: Yup.string(),
+  superviserId: Yup.string().required("Supervisor is required"),
   customPermissions: Yup.array()
     .of(
       Yup.string().oneOf(
