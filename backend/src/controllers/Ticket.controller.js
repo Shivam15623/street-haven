@@ -11,7 +11,10 @@ import { uploadOnCloudinary } from "../utills/cloudinary.js";
 import { createNotification } from "../helper/CreateNotoification.js";
 import ExcelJS from "exceljs";
 import Location from "../model/location.js";
-import { generateEmailTemplate } from "../helper/EmailsMailer/emailTemplates.js";
+import {
+  generateEmailTemplate,
+  getCategoryDisplayName,
+} from "../helper/EmailsMailer/emailTemplates.js";
 import { sendEmail } from "../helper/EmailsMailer/emailSender.js";
 import {
   addCommentForEntity,
@@ -31,7 +34,8 @@ export const createTicket = asyncHandler(async (req, res) => {
 
   try {
     const userId = req.user._id;
-    const { reqTitle, description, category, location } = req.body;
+    const { reqTitle, description, category, categoryOtherText, location } =
+      req.body;
 
     /* ======================
        VALIDATE LOCATION EXISTS
@@ -47,6 +51,7 @@ export const createTicket = asyncHandler(async (req, res) => {
       throw new ApiError(400, "Selected location is not active");
     }
 
+    // AFTER the existing categoryDoc active-check, add the "Other" guard:
     const categoryDoc =
       await TicketCategory.findById(category).session(session);
 
@@ -55,6 +60,15 @@ export const createTicket = asyncHandler(async (req, res) => {
     }
     if (!categoryDoc.isActive) {
       throw new ApiError(400, "Selected category is not active");
+    }
+
+    const isOtherCategory =
+      categoryDoc.isSystem && categoryDoc.name === "Other";
+    if (isOtherCategory && !categoryOtherText?.trim()) {
+      throw new ApiError(
+        400,
+        "Please specify a category when selecting 'Other'",
+      );
     }
     /* ======================
        PHOTO UPLOAD
@@ -90,6 +104,7 @@ export const createTicket = asyncHandler(async (req, res) => {
       description,
       createdBy: userId,
       category,
+      categoryOtherText: isOtherCategory ? categoryOtherText.trim() : null,
       location,
       status: isSelfManaged ? TICKET_STATUS.APPROVED : TICKET_STATUS.OPEN,
       statusHistory: [
@@ -161,7 +176,10 @@ export const createTicket = asyncHandler(async (req, res) => {
           data: {
             recipientName: `${facilitiesUser.firstname} ${facilitiesUser.lastname}`,
             ticketTitle: ticket.req_title,
-            category: categoryDoc.name,
+            category: getCategoryDisplayName(
+              categoryDoc,
+              ticket.categoryOtherText,
+            ),
             location: locationDoc.name,
             priority: "Medium",
             link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&status=Approved&item=${ticket.slug}`,
@@ -230,7 +248,10 @@ export const createTicket = asyncHandler(async (req, res) => {
           createdBy: userId,
           meta: {
             ticketId: ticket.slug,
-            category: categoryDoc.name,
+            category: getCategoryDisplayName(
+              categoryDoc,
+              ticket.categoryOtherText,
+            ),
             location: locationDoc.name,
           },
         },
@@ -243,7 +264,10 @@ export const createTicket = asyncHandler(async (req, res) => {
             data: {
               managerName: `${manager.firstname} ${manager.lastname}`,
               ticketTitle: ticket.req_title,
-              category: categoryDoc.name, // was ticket.category
+              category: getCategoryDisplayName(
+                categoryDoc,
+                ticket.categoryOtherText,
+              ),
               location: locationDoc.name,
               createdBy: `${req.user.firstname} ${req.user.lastname}`,
               link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&status=pending&item=${ticket.slug}`,
@@ -414,7 +438,11 @@ export const approveTicket = asyncHandler(async (req, res) => {
       TicketCategory.findById(ticket.category).select("name").session(session),
     ]);
 
-    const categoryName = categoryDoc?.name || "-";
+    const categoryName = getCategoryDisplayName(
+      categoryDoc,
+      ticket.categoryOtherText,
+    );
+    // replaces: const categoryName = categoryDoc?.name;
 
     const locationName = locationDoc?.name || "Unknown location";
     const approverName = approver
@@ -551,15 +579,21 @@ export const rejectTicket = asyncHandler(async (req, res) => {
 
     await ticket.save({ session });
 
-    const [creator, rejector, locationDoc] = await Promise.all([
+    const [creator, rejector, locationDoc, categoryDoc] = await Promise.all([
       User.findById(ticket.createdBy)
         .select("firstname lastname email")
         .session(session),
       User.findById(userId).select("firstname lastname email").session(session),
       Location.findById(ticket.location).select("name").session(session),
+      TicketCategory.findById(ticket.category).select("name").session(session),
     ]);
 
     const locationName = locationDoc?.name || "Unknown location";
+    const categoryName = getCategoryDisplayName(
+      categoryDoc,
+      ticket.categoryOtherText,
+    );
+    // replaces: const categoryName = categoryDoc?.name;
     const rejectorName = rejector
       ? `${rejector.firstname} ${rejector.lastname}`
       : "Manager";
@@ -580,7 +614,7 @@ export const rejectTicket = asyncHandler(async (req, res) => {
         dataBuilder: (user) => ({
           recipientName: `${user.firstname} ${user.lastname}`,
           ticketTitle: ticket.req_title,
-          category: ticket.category,
+          category: categoryName,
           location: locationName,
           rejectedBy: rejectorName,
           rejectionReason: rejectionReason.trim(),
@@ -667,7 +701,11 @@ export const startTicket = asyncHandler(async (req, res) => {
       ]);
 
       const locationName = locationDoc?.name || "Unknown location";
-      const categoryName = categoryDoc?.name || "-";
+      const categoryName = getCategoryDisplayName(
+        categoryDoc,
+        ticket.categoryOtherText,
+      );
+      // replaces: const categoryName = categoryDoc?.name;
 
       const assigneeName = assignee
         ? `${assignee.firstname} ${assignee.lastname}`
@@ -770,7 +808,11 @@ export const completeTicket = asyncHandler(async (req, res) => {
           .session(session),
       ]);
       const locationName = locationDoc?.name || "Unknown location";
-      const categoryName = categoryDoc?.name || "-";
+      const categoryName = getCategoryDisplayName(
+        categoryDoc,
+        ticket.categoryOtherText,
+      );
+      // replaces: const categoryName = categoryDoc?.name;
 
       await notifyAndEmit(session, {
         recipients: recipientIds.map((id) => ({ userId: id })),
@@ -856,8 +898,9 @@ const CREATOR_FIELDS = new Set([
   "description",
   "requestTitle",
   "category",
+  "categoryOtherText",
   "location",
-  "photo", // implicit via req.file, not a body key, listed for clarity
+  "photo",
 ]);
 const APPROVER_FIELDS = new Set(["priority", "assignedTo", "status"]);
 const ASSIGNEE_FIELDS = new Set(["assignedTo"]);
@@ -929,7 +972,6 @@ function resolveCallerPermissions(ticket, userId, isSuperAdmin) {
 
   return { isCreator, isApprover, isAssignee };
 }
-
 // ---------------------------------------------------------------------------
 // 3. Which fields did the caller actually submit?
 // ---------------------------------------------------------------------------
@@ -939,6 +981,7 @@ function collectSubmittedFields(body, uploadedFile) {
     requestTitle,
     category,
     location,
+    categoryOtherText,
     priority,
     assignedTo,
     status,
@@ -948,6 +991,7 @@ function collectSubmittedFields(body, uploadedFile) {
   if (description !== undefined) submittedFields.add("description");
   if (requestTitle !== undefined) submittedFields.add("requestTitle");
   if (category !== undefined) submittedFields.add("category");
+  if (categoryOtherText !== undefined) submittedFields.add("category");
   if (location !== undefined) submittedFields.add("location");
   if (uploadedFile) submittedFields.add("photo");
   if (priority !== undefined) submittedFields.add("priority");
@@ -1077,7 +1121,7 @@ async function resolveLocationChange(ticket, newLocationId, session) {
   };
 }
 
-async function resolveCategoryChange(category, session) {
+async function resolveCategoryChange(category, categoryOtherText, session) {
   if (category === undefined) return null;
 
   const newCategoryDoc =
@@ -1086,14 +1130,19 @@ async function resolveCategoryChange(category, session) {
   if (!newCategoryDoc.isActive)
     throw new ApiError(400, "Selected category is not active");
 
+  const isOtherCategory =
+    newCategoryDoc.isSystem && newCategoryDoc.name === "Other";
+  if (isOtherCategory && !categoryOtherText?.trim()) {
+    throw new ApiError(400, "Please specify a category when selecting 'Other'");
+  }
+
   return newCategoryDoc;
 }
-
 async function resolveCategoryForEmail(ticket, newCategoryDoc, session) {
   return (
     newCategoryDoc ??
     (await TicketCategory.findById(ticket.category)
-      .select("name")
+      .select("name isSystem")
       .session(session))
   );
 }
@@ -1114,6 +1163,7 @@ async function applyTicketUpdates({
   const {
     description,
     requestTitle,
+    categoryOtherText,
     priority,
     assignedTo: newAssignedToId,
     status: newStatus,
@@ -1121,7 +1171,33 @@ async function applyTicketUpdates({
 
   if (description !== undefined) ticket.description = description;
   if (requestTitle !== undefined) ticket.req_title = requestTitle;
-  if (newCategoryDoc) ticket.category = newCategoryDoc._id;
+
+  if (newCategoryDoc) {
+    ticket.category = newCategoryDoc._id;
+    const isOtherCategory =
+      newCategoryDoc.isSystem && newCategoryDoc.name === "Other";
+    ticket.categoryOtherText = isOtherCategory
+      ? categoryOtherText.trim()
+      : null;
+  } else if (categoryOtherText !== undefined) {
+    // category itself wasn't resubmitted, but text was updated in place —
+    // only allow this if the ticket's *current* category is still "Other"
+    const currentCategoryDoc = await TicketCategory.findById(
+      ticket.category,
+    ).session(session);
+    const isOtherCategory =
+      currentCategoryDoc?.isSystem && currentCategoryDoc?.name === "Other";
+    if (!isOtherCategory) {
+      throw new ApiError(
+        400,
+        "categoryOtherText can only be set when category is 'Other'",
+      );
+    }
+    if (!categoryOtherText?.trim()) {
+      throw new ApiError(400, "Please specify a category");
+    }
+    ticket.categoryOtherText = categoryOtherText.trim();
+  }
   if (locationChange.locationChanged)
     ticket.location = locationChange.newLocation._id;
   if (uploadedFile) {
@@ -1173,7 +1249,13 @@ async function applyTicketUpdates({
 //    { recipients, title, message, link, createdBy, meta, email }
 //    Nothing here calls notifyAndEmit; that happens in dispatchNotificationJobs.
 // ---------------------------------------------------------------------------
-function buildRerouteNotifications({ ticket, locationChange, userId, req }) {
+function buildRerouteNotifications({
+  ticket,
+  locationChange,
+  userId,
+  req,
+  categoryDisplayName,
+}) {
   if (!locationChange.locationChanged) return [];
 
   const { oldLocation, newLocation, oldManagerIds, newManagerIds } =
@@ -1240,7 +1322,7 @@ function buildRerouteNotifications({ ticket, locationChange, userId, req }) {
         dataBuilder: (user) => ({
           managerName: `${user.firstname} ${user.lastname}`,
           ticketTitle: ticket.req_title,
-          category: ticket.category,
+          category: categoryDisplayName,
           location: newLocation.name,
           createdBy: createdByName,
           link: `${process.env.FRONTEND_URL}/tickets/${ticket._id}`,
@@ -1258,7 +1340,7 @@ function buildReassignmentNotification({
   newAssignedToId,
   userIdStr,
   userId,
-  categoryForEmail,
+  categoryDisplayName,
 }) {
   if (newAssignedToId === undefined) return [];
 
@@ -1279,7 +1361,7 @@ function buildReassignmentNotification({
         dataBuilder: (user) => ({
           recipientName: `${user.firstname} ${user.lastname}`,
           ticketTitle: ticket.req_title,
-          category: categoryForEmail?.name ?? "-",
+          category: categoryDisplayName,
           priority: ticket.priority || "-",
           link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&item=${ticket.slug}`,
         }),
@@ -1484,6 +1566,7 @@ export const editTicket = asyncHandler(async (req, res) => {
     );
     const newCategoryDoc = await resolveCategoryChange(
       req.body.category,
+      req.body.categoryOtherText,
       session,
     );
 
@@ -1504,18 +1587,29 @@ export const editTicket = asyncHandler(async (req, res) => {
       locationChange,
       userId,
       req,
+      categoryDisplayName: getCategoryDisplayName(
+        await TicketCategory.findById(ticket.category)
+          .select("name isSystem")
+          .session(session),
+        ticket.categoryOtherText,
+      ),
     });
 
+    // in editTicket controller, right after resolving:
     const reassignmentCategoryForEmail =
       req.body.assignedTo !== undefined
         ? await resolveCategoryForEmail(ticket, newCategoryDoc, session)
         : null;
+
     const reassignmentJobs = buildReassignmentNotification({
       ticket,
       newAssignedToId: req.body.assignedTo,
       userIdStr,
       userId,
-      categoryForEmail: reassignmentCategoryForEmail,
+      categoryDisplayName: getCategoryDisplayName(
+        reassignmentCategoryForEmail,
+        ticket.categoryOtherText,
+      ),
     });
 
     const statusCategoryForEmail = statusChanged
@@ -1739,9 +1833,7 @@ export const FetchTicketBySlug = asyncHandler(async (req, res) => {
       "_id",
     );
 
-    const managedLocationIds = managedLocations.map(
-      (location) => location._id,
-    );
+    const managedLocationIds = managedLocations.map((location) => location._id);
 
     // Own tickets
     visibilityOr.push(
@@ -1763,9 +1855,7 @@ export const FetchTicketBySlug = asyncHandler(async (req, res) => {
 
   const ticketFilter = {
     slug,
-    ...(visibilityOr.length
-      ? { $or: visibilityOr }
-      : {}),
+    ...(visibilityOr.length ? { $or: visibilityOr } : {}),
   };
 
   const ticket = await Ticket.findOne(ticketFilter)
@@ -1787,13 +1877,9 @@ export const FetchTicketBySlug = asyncHandler(async (req, res) => {
      RESPONSE
   -----------------------------------*/
 
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      "Ticket fetched successfully",
-      ticket,
-    ),
-  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Ticket fetched successfully", ticket));
 });
 
 export const FetchTicketComments = (req, res) =>
@@ -1921,7 +2007,11 @@ export const GetTicketsReport = asyncHandler(async (req, res) => {
     title: t.req_title,
     status: t.status,
     priority: t.priority || "-",
-    category: t.category.name,
+    // GetTicketsReport mapping
+    category:
+      t.category.name === "Other" && t.categoryOtherText
+        ? `Other: ${t.categoryOtherText}`
+        : t.category.name,
     location: t.location?.name || "-",
     submittedBy: t.createdBy
       ? `${t.createdBy.firstname} ${t.createdBy.lastname}`
@@ -2048,6 +2138,7 @@ export const GetTicketDetail = asyncHandler(async (req, res) => {
     categoryId: ticket.category?._id || null,
     location: ticket.location?.name || "-",
     photo: ticket.photo || null,
+    categoryOtherText: ticket.categoryOtherText || null,
 
     submittedBy: ticket.createdBy
       ? {
@@ -2161,6 +2252,8 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
     { header: "Status", key: "status", width: 14 },
     { header: "Priority", key: "priority", width: 12 },
     { header: "Category", key: "category", width: 16 },
+    // ExportTicketsReport — add a column
+    { header: "Category Detail", key: "categoryOtherText", width: 24 },
     { header: "Location", key: "location", width: 22 },
     { header: "Submitted By", key: "submittedBy", width: 22 },
     { header: "Submitted Email", key: "submittedEmail", width: 26 },
@@ -2198,6 +2291,8 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
       status: t.status,
       priority: t.priority || "-",
       category: t.category?.name || "-",
+      // in the row-add:
+      categoryOtherText: t.categoryOtherText || "-",
       location: t.location?.name || "-",
       submittedBy: t.createdBy
         ? `${t.createdBy.firstname} ${t.createdBy.lastname}`
@@ -2347,7 +2442,7 @@ export const reopenTicket = asyncHandler(async (req, res) => {
       });
 
       const categoryForEmail = await TicketCategory.findById(ticket.category)
-        .select("name")
+        .select("name isSystem") // add isSystem
         .session(session);
 
       emailEvents.push({
@@ -2356,7 +2451,10 @@ export const reopenTicket = asyncHandler(async (req, res) => {
         dataBuilder: (user) => ({
           recipientName: `${user.firstname} ${user.lastname}`,
           ticketTitle: ticket.req_title,
-          category: categoryForEmail?.name ?? "-",
+          category: getCategoryDisplayName(
+            categoryForEmail,
+            ticket.categoryOtherText,
+          ),
           reason: null,
           reopenedBy: req.user.firstname
             ? `${req.user.firstname} ${req.user.lastname}`

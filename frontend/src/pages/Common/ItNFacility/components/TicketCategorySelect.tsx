@@ -17,6 +17,11 @@ interface TicketCategorySelectProps {
   onChange: (id: string) => void;
   isInvalid?: boolean;
   errorMessage?: string;
+  // "Other" specify-text props
+  otherText: string;
+  onOtherTextChange: (text: string) => void;
+  isOtherTextInvalid?: boolean;
+  otherTextErrorMessage?: string;
 }
 
 const TicketCategorySelect: React.FC<TicketCategorySelectProps> = ({
@@ -24,6 +29,10 @@ const TicketCategorySelect: React.FC<TicketCategorySelectProps> = ({
   onChange,
   isInvalid,
   errorMessage,
+  otherText,
+  onOtherTextChange,
+  isOtherTextInvalid,
+  otherTextErrorMessage,
 }) => {
   const { hasPermission } = useHasPermission();
   const canManage = hasPermission({ action: "ticket_category_manage" });
@@ -48,12 +57,20 @@ const TicketCategorySelect: React.FC<TicketCategorySelectProps> = ({
     (c) => c._id === value,
   );
 
+  const isOtherSelected =
+    !!selectedCategory?.isSystem && selectedCategory?.name === "Other";
+
   const handleAdd = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== "Enter") return;
     e.preventDefault();
 
     const trimmed = draftName.trim();
     if (!trimmed) return;
+
+    if (trimmed.toLowerCase() === "other") {
+      showError("'Other' is a reserved category name");
+      return;
+    }
 
     try {
       const res = await createTicketCategory({ name: trimmed }).unwrap();
@@ -76,13 +93,25 @@ const TicketCategorySelect: React.FC<TicketCategorySelectProps> = ({
       const res = await deleteTicketCategory(categoryId).unwrap();
       if (res.success) {
         showSuccess(res.message);
-        if (value === categoryId) onChange("");
+        if (value === categoryId) {
+          onChange("");
+          onOtherTextChange("");
+        }
       }
     } catch (error) {
       showError(getErrorMessage(error));
     } finally {
       setDeletingId(null);
     }
+  };
+
+  const handleSelect = (cat: TicketCategory) => {
+    onChange(cat._id);
+    // clear stale "other" text if switching away from Other
+    if (!(cat.isSystem && cat.name === "Other")) {
+      onOtherTextChange("");
+    }
+    setIsOpen(false);
   };
 
   return (
@@ -133,10 +162,7 @@ const TicketCategorySelect: React.FC<TicketCategorySelectProps> = ({
                   role="button"
                   onMouseEnter={() => setHoveredId(cat._id)}
                   onMouseLeave={() => setHoveredId(null)}
-                  onClick={() => {
-                    onChange(cat._id);
-                    setIsOpen(false);
-                  }}
+                  onClick={() => handleSelect(cat)}
                   className="d-flex justify-content-between align-items-center"
                   style={{
                     padding: "9px 14px",
@@ -254,9 +280,29 @@ const TicketCategorySelect: React.FC<TicketCategorySelectProps> = ({
       </Dropdown>
 
       {isInvalid && errorMessage && (
-        <div className="invalid-feedback d-block">
-          {errorMessage}
-        </div>
+        <div className="invalid-feedback d-block">{errorMessage}</div>
+      )}
+
+      {isOtherSelected && (
+        <Form.Group className="mt-1">
+          <Form.Control
+            type="text"
+            placeholder="Please specify"
+            value={otherText}
+            onChange={(e) => onOtherTextChange(e.target.value)}
+            isInvalid={isOtherTextInvalid}
+            className="text-sm"
+            style={{
+              border: "1px solid var(--street-border-base-50)",
+              borderRadius: 8,
+            }}
+          />
+          {isOtherTextInvalid && otherTextErrorMessage && (
+            <Form.Control.Feedback type="invalid">
+              {otherTextErrorMessage}
+            </Form.Control.Feedback>
+          )}
+        </Form.Group>
       )}
     </div>
   );

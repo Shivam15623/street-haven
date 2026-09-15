@@ -63,7 +63,6 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.LOCATION_EDIT,
     PERMISSIONS.LOCATION_VIEW,
 
-    PERMISSIONS.TICKET_CATEGORY_ADD,
   ],
 
   staff: [
@@ -73,7 +72,7 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.TICKET_VIEW_SELF,
     // 🔹 FAQs
     PERMISSIONS.VIEW_FAQS,
-    PERMISSIONS.TICKET_CATEGORY_ADD,
+
   ],
   volunteer: [
     // 🔹 Announcements

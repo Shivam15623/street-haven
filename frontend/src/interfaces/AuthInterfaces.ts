@@ -14,6 +14,7 @@ export interface User {
   createdAt: string;
   title: string;
   hireDate: string;
+  isFacilityManager: boolean;
   customPermissions: AllPermissions[];
 }
 export interface ChangeUserDetailsPayLoad {
@@ -70,6 +71,7 @@ interface UserVerify {
   createdAt: string;
   title: string;
   hireDate: Date;
+  isFacilityManager: boolean;
   customPermissions: AllPermissions[];
 }
 export interface LoginVerifyTotpResponseData {
@@ -100,7 +102,7 @@ export interface SignupCredentials {
   phone: string;
   password: string;
   role: Role;
-  superviserId: string;
+  superviserId: string|null;
   locations: string[];
   customPermissions: string[];
 }

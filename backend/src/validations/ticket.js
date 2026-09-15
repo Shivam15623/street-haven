@@ -14,12 +14,20 @@ export const createTicketSchema = Joi.object({
     "string.base": "Description must be a string",
   }),
 
-  category: Joi.string().required().messages({
-    "any.only":
-      "Category must be one of Plumbing, Electrical, HVAC, Carpentry, Appliances, or Cleaning",
+  category: Joi.string().custom(objectId).required().messages({
     "any.required": "Category is required",
     "string.empty": "Category is required",
+    "any.invalid": "Invalid category id",
   }),
+
+  categoryOtherText: Joi.string()
+    .trim()
+    .max(200)
+    .allow("")
+    .optional()
+    .messages({
+      "string.max": "Please specify in 200 characters or less",
+    }),
 
   location: Joi.string().custom(objectId).required().messages({
     "any.required": "Location is required",
@@ -31,9 +39,20 @@ export const createTicketSchema = Joi.object({
 export const editTicketSchema = Joi.object({
   description: Joi.string().optional(),
   requestTitle: Joi.string().trim().optional(),
-  category: Joi.string().optional().messages({
+
+  category: Joi.string().custom(objectId).optional().messages({
     "string.empty": "Category is required",
+    "any.invalid": "Invalid category id",
   }),
+
+  categoryOtherText: Joi.string()
+    .trim()
+    .max(200)
+    .allow("")
+    .optional()
+    .messages({
+      "string.max": "Please specify in 200 characters or less",
+    }),
 
   location: Joi.string().custom(objectId).optional().messages({
     "string.empty": "Location is required",

@@ -673,3 +673,14 @@ ul ul {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+
+.quill-editor-scrollable .ql-container {
+  height: auto;
+}
+
+.quill-editor-scrollable .ql-editor {
+  min-height: 80px;
+  max-height: 400px;   /* the real cap you want */
+  overflow-y: auto;    /* 👈 this is what actually lets it scroll */
+}

@@ -17,7 +17,7 @@ const AdminDashboard = () => {
       <div className="d-flex flex-column flex-sm-row justify-content-between gap-2">
         <div className="d-flex flex-column gap-1 gap-sm-2">
           <div className="fw-semibold text-lg xs:text-xl sm:text-xxl text-street-dark">
-            Welcome Back,{user?.firstName}!
+            Welcome Back, {user?.firstName}!
           </div>
           <div className="text-street-base text-xs xs:text-sm sm:text-md fw-normal">
             Here's what's happening at Street Haven today.

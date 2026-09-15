@@ -36,7 +36,13 @@ export const createTicketCategory = asyncHandler(async (req, res) => {
 
   const trimmedName = name.trim();
 
-  // Check duplicate name
+  if (trimmedName.toLowerCase() === "other") {
+    throw new ApiError(
+      400,
+      "'Other' is a reserved system category and cannot be created manually",
+    );
+  }
+
   const existingCategory = await TicketCategory.findOne({
     name: trimmedName,
     isActive: true,
@@ -73,11 +79,20 @@ export const editTicketCategory = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Ticket category not found");
   }
 
+  if (category.isSystem) {
+    throw new ApiError(403, "System category cannot be renamed");
+  }
+
   const trimmedName = name.trim();
+
+  // if (trimmedName.toLowerCase() === "other") {
+  //   throw new ApiError(400, "'Other' is a reserved category name");
+  // }
 
   const existingCategory = await TicketCategory.findOne({
     name: trimmedName,
     _id: { $ne: id },
+    isActive: true,
   });
 
   if (existingCategory) {
@@ -85,7 +100,6 @@ export const editTicketCategory = asyncHandler(async (req, res) => {
   }
 
   category.name = trimmedName;
-
   await category.save();
 
   return res

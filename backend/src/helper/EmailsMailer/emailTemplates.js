@@ -1,3 +1,11 @@
+// helper/ticketCategoryDisplay.js
+export function getCategoryDisplayName(categoryDoc, categoryOtherText) {
+  if (!categoryDoc) return "-";
+  if (categoryDoc.isSystem && categoryDoc.name === "Other" && categoryOtherText) {
+    return `Other: ${categoryOtherText}`;
+  }
+  return categoryDoc.name;
+}
 export const generateEmailTemplate = ({ type, data }) => {
   switch (type) {
     case "verification":

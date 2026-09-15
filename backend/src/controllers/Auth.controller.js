@@ -8,7 +8,14 @@ import jwt from "jsonwebtoken";
 
 import speakeasy from "speakeasy";
 import qrcode from "qrcode";
-
+import Location from "../model/location.js";
+const checkIsFacilityManager = async (userId) => {
+  const isFacilityManager = await Location.exists({
+    facilityManager: userId,
+    isActive: true,
+  });
+  return !!isFacilityManager;
+};
 export const RegisterAdmin = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, password, phone } = req.body;
 
@@ -188,7 +195,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
       .select(
         "-password -refreshToken -updatedAt -createdBy -createdAt -isActive -__v",
       );
-
+    const isFacilityManager = await checkIsFacilityManager(user._id);
     const userToSend = {
       _id: findUser._id,
       firstName: findUser.firstname,
@@ -202,6 +209,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
       createdAt: findUser.createdAt,
       hireDate: findUser.hireDate,
       customPermissions: findUser.customPermissions,
+      isFacilityManager,
     };
 
     const isProduction = process.env.NODE_ENV === "production";
@@ -268,6 +276,7 @@ export const silentAuth = asyncHandler(async (req, res) => {
     .select(
       "-password -refreshToken -updatedAt -createdBy -createdAt -isActive -__v",
     );
+  const isFacilityManager = await checkIsFacilityManager(user._id);
   const userToSend = {
     _id: finduser._id,
     firstName: finduser.firstname,
@@ -281,6 +290,7 @@ export const silentAuth = asyncHandler(async (req, res) => {
     createdAt: finduser.createdAt,
     hireDate: finduser.hireDate,
     customPermissions: finduser.customPermissions,
+    isFacilityManager,
   };
   const isProduction = process.env.NODE_ENV === "production";
 
@@ -396,6 +406,7 @@ export const verifyTOTP = asyncHandler(async (req, res) => {
 
   // NOW CREATE NORMAL LOGIN TOKENS
   const { accessToken, refreshToken } = await generateTokens(user._id);
+  const isFacilityManager = await checkIsFacilityManager(user._id);
   const userToSend = {
     _id: user._id,
     firstName: user.firstname,
@@ -409,6 +420,7 @@ export const verifyTOTP = asyncHandler(async (req, res) => {
     createdAt: user.createdAt,
     hireDate: user.hireDate,
     customPermissions: user.customPermissions,
+    isFacilityManager,
   };
   const isProduction = process.env.NODE_ENV === "production";
 

@@ -60,6 +60,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
         title: user.title || "",
         hireDate: new Date(user.hireDate).toISOString(),
         customPermissions: user.customPermissions || [],
+        isFacilityManager: user.isFacilityManager,
       };
       api.dispatch(
         setLoggedIn({
@@ -109,7 +110,7 @@ export const api = createApi({
     "Task",
     "Certification",
     "TicketCategory",
-    "CommentNotification"
+    "CommentNotification",
   ],
   endpoints: () => ({}),
 });

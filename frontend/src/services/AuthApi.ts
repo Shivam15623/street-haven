@@ -95,7 +95,7 @@ export const authApi = api.injectEndpoints({
 
         try {
           const { data } = await queryFulfilled;
-          const { user,accessToken } = data.data;
+          const { user, accessToken } = data.data;
 
           const payload = {
             _id: user._id,
@@ -107,21 +107,22 @@ export const authApi = api.injectEndpoints({
             role: user.role,
             slug: user.slug,
             createdAt: user.createdAt,
-            status:user.status,
+            status: user.status,
             title: user.title || "",
             hireDate: new Date(user.hireDate).toISOString(),
             customPermissions: user.customPermissions || [],
+            isFacilityManager: user.isFacilityManager,
           };
 
           dispatch(
             setLoggedIn({
-              accessToken:accessToken,
+              accessToken: accessToken,
               UserData: payload,
             }),
           );
         } catch (error: any) {
           const response = error?.error?.data;
-      
+
           if (response?.code === "ACCOUNT_INACTIVE") {
             dispatch(setAccountInactive());
             return;

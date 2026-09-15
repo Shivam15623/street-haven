@@ -46,6 +46,7 @@ const VerifyTotp: React.FC = () => {
             ? new Date(user.hireDate).toISOString()
             : new Date().toISOString(),
           customPermissions: user.customPermissions || [],
+          isFacilityManager: user.isFacilityManager,
         };
 
         dispatch(

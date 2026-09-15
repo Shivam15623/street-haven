@@ -42,21 +42,28 @@ export const getSuperAdminRecipients = async (excludeUserId, session) => {
  * super_admin PLUS each volunteer's direct manager (User.superviserId),
  * deduped, with the acting user(s) removed.
  *
- * Why this exists: a volunteer_admin only manages a subset of volunteers,
- * while a super_admin manages everyone. Whichever of the two DIDN'T
- * perform the action still needs visibility into it — e.g. if a
- * super_admin reassigns/approves/cancels a task, the volunteer_admin who
- * actually manages that volunteer was previously never told.
+ * Each recipient is tagged with `involved`:
+ * - the volunteer's direct manager is ALWAYS involved (they manage this
+ *   specific person)
+ * - a super_admin is involved only if their id is passed in
+ *   `involvedUserIds` (typically the task's creator, `task.assignedBy`)
+ * - any other super_admin is there purely for broad oversight visibility
+ *
+ * `involved` is what callers use to decide who gets an EMAIL. Everyone in
+ * the returned list still gets the in-app/socket notification regardless.
  *
  * @param {string|string[]} volunteerIds - assignedTo (and, for reassignment,
  *   the previous assignedTo) whose manager(s) should be notified.
  * @param {string|string[]} excludeUserIds - the actor(s) to skip (they
  *   already know, or are getting their own primary notification elsewhere).
+ * @param {import("mongoose").ClientSession} session
+ * @param {{ involvedUserIds?: string|string[] }} [options]
  */
 export const getManagementRecipients = async (
   volunteerIds,
   excludeUserIds,
   session,
+  { involvedUserIds = [] } = {},
 ) => {
   const ids = (Array.isArray(volunteerIds) ? volunteerIds : [volunteerIds])
     .filter(Boolean)
@@ -64,6 +71,12 @@ export const getManagementRecipients = async (
 
   const excludeSet = new Set(
     (Array.isArray(excludeUserIds) ? excludeUserIds : [excludeUserIds])
+      .filter(Boolean)
+      .map((id) => id.toString()),
+  );
+
+  const involvedSet = new Set(
+    (Array.isArray(involvedUserIds) ? involvedUserIds : [involvedUserIds])
       .filter(Boolean)
       .map((id) => id.toString()),
   );
@@ -77,16 +90,36 @@ export const getManagementRecipients = async (
     User.find({ role: "super_admin" }).select("_id").session(session),
   ]);
 
-  const recipientIds = new Set();
+  // A volunteer's direct manager always counts as "involved".
+  const managerIds = new Set();
   volunteers.forEach((v) => {
-    if (v.superviserId) recipientIds.add(v.superviserId.toString());
+    if (v.superviserId) managerIds.add(v.superviserId.toString());
   });
+
+  const recipientIds = new Set(managerIds);
   superAdmins.forEach((u) => recipientIds.add(u._id.toString()));
 
   excludeSet.forEach((id) => recipientIds.delete(id));
 
-  return Array.from(recipientIds).map((id) => ({ userId: id }));
+  return Array.from(recipientIds).map((id) => ({
+    userId: id,
+    involved: managerIds.has(id) || involvedSet.has(id),
+  }));
 };
+
+/**
+ * Splits a `getManagementRecipients` result into:
+ * - `recipients`: plain {userId} list for the in-app/socket notification
+ *   (everyone, involved or not)
+ * - `emailUserIds`: only the ids flagged `involved` — these are the only
+ *   ones who should get an email
+ */
+const splitManagementRecipients = (managementRecipients) => ({
+  recipients: managementRecipients.map((r) => ({ userId: r.userId })),
+  emailUserIds: managementRecipients
+    .filter((r) => r.involved)
+    .map((r) => r.userId),
+});
 
 const CATEGORY = "task";
 
@@ -172,24 +205,30 @@ export const TaskNotificationService = {
     // Notify super_admins AND the volunteer's manager (superviserId) — not
     // just super_admins — so a volunteer_admin-managed assignment run by a
     // super_admin (or vice versa) still reaches the other oversight party.
+    // Only the task's creator (if a super_admin) and the volunteer's direct
+    // manager get an EMAIL; other super_admins just get the in-app entry.
     const managementRecipients = await getManagementRecipients(
       task.assignedTo,
       task.assignedBy,
       session,
+      { involvedUserIds: [task.assignedBy] },
     );
+    const { recipients: managementInApp, emailUserIds: managementEmailIds } =
+      splitManagementRecipients(managementRecipients);
+
     await notify({
       action: "assigned",
       severity: "info",
       title: "Task Assigned",
       message: `"${task.title}" was assigned to ${assignee.firstname} ${assignee.lastname} by ${user.firstname} ${user.lastname}.`,
-      recipients: managementRecipients,
+      recipients: managementInApp,
       createdBy: task.assignedBy,
       link: `/tasks/${task.slug}`,
       meta: { taskId: task.slug },
       session,
       effects,
       email: {
-        userIds: managementRecipients.map((r) => r.userId),
+        userIds: managementEmailIds,
         templateType: "task_assigned",
         dataBuilder: (recipient) => ({
           recipientName: `${recipient.firstname} ${recipient.lastname}`,
@@ -242,24 +281,30 @@ export const TaskNotificationService = {
     // Previously this never told anyone but the volunteer. Now: the
     // volunteer's manager + super_admins also learn about status changes,
     // excluding whoever triggered the change and the volunteer themself.
+    // Email only goes to the volunteer's manager and the task's creator
+    // (if a super_admin) — other super_admins get in-app only.
     const managementRecipients = await getManagementRecipients(
       task.assignedTo,
       [changedBy._id, task.assignedTo],
       session,
+      { involvedUserIds: [task.assignedBy] },
     );
+    const { recipients: managementInApp, emailUserIds: managementEmailIds } =
+      splitManagementRecipients(managementRecipients);
+
     await notify({
       action: "status_changed",
       severity: "info",
       title: "Task Status Changed",
       message: `"${task.title}" status changed from ${oldStatus} to ${newStatus} by ${changedBy.firstname} ${changedBy.lastname}.`,
-      recipients: managementRecipients,
+      recipients: managementInApp,
       createdBy: changedBy._id,
       link: `/tasks/${task.slug}`,
       meta: { taskId: task.slug, oldStatus, newStatus },
       session,
       effects,
       email: {
-        userIds: managementRecipients.map((r) => r.userId),
+        userIds: managementEmailIds,
         templateType: "task_status_changed",
         dataBuilder: (recipient) => ({
           recipientName: `${recipient.firstname} ${recipient.lastname}`,
@@ -331,26 +376,30 @@ export const TaskNotificationService = {
     // Both the OLD and NEW volunteer can have different managers
     // (volunteer_admins), and either notification may have been triggered
     // by a super_admin. Fold both volunteers' managers + all super_admins
-    // into one deduped list so nobody with oversight is missed.
+    // into one deduped list so nobody with oversight is missed. Only the
+    // managers and the task's creator (if a super_admin) get emailed.
     const managementRecipients = await getManagementRecipients(
       [previousVolunteerId, task.assignedTo],
       task.assignedBy,
       session,
+      { involvedUserIds: [task.assignedBy] },
     );
+    const { recipients: managementInApp, emailUserIds: managementEmailIds } =
+      splitManagementRecipients(managementRecipients);
 
     await notify({
       action: "assigned",
       severity: "info",
       title: "Task Reassigned",
       message: `"${task.title}" was reassigned.`,
-      recipients: managementRecipients,
+      recipients: managementInApp,
       createdBy: task.assignedBy,
       link: `/tasks/${task.slug}`,
       meta: { taskId: task.slug },
       session,
       effects,
       email: {
-        userIds: managementRecipients.map((r) => r.userId),
+        userIds: managementEmailIds,
         templateType: "task_reassigned",
         dataBuilder: (recipient) => ({
           recipientName: `${recipient.firstname} ${recipient.lastname}`,
@@ -395,20 +444,24 @@ export const TaskNotificationService = {
       task.assignedTo,
       [task.assignedTo, task.assignedBy],
       session,
+      { involvedUserIds: [task.assignedBy] },
     );
+    const { recipients: managementInApp, emailUserIds: managementEmailIds } =
+      splitManagementRecipients(managementRecipients);
+
     await notify({
       action: "status_changed",
       severity: "info",
       title: "Task Submitted for Review",
       message: `"${task.title}" was submitted for review.`,
-      recipients: managementRecipients,
+      recipients: managementInApp,
       createdBy: task.assignedTo,
       link: `/tasks/${task.slug}`,
       meta: { taskId: task.slug },
       session,
       effects,
       email: {
-        userIds: managementRecipients.map((r) => r.userId),
+        userIds: managementEmailIds,
         templateType: "task_submitted_for_review",
         dataBuilder: (recipient) => ({
           recipientName: `${recipient.firstname} ${recipient.lastname}`,
@@ -449,20 +502,24 @@ export const TaskNotificationService = {
       task.assignedTo,
       adminId,
       session,
+      { involvedUserIds: [task.assignedBy] },
     );
+    const { recipients: managementInApp, emailUserIds: managementEmailIds } =
+      splitManagementRecipients(managementRecipients);
+
     await notify({
       action: "status_changed",
       severity: "success",
       title: "Task Completed",
       message: `"${task.title}" has been approved and marked complete.`,
-      recipients: managementRecipients,
+      recipients: managementInApp,
       createdBy: adminId,
       link: `/tasks/${task.slug}`,
       meta: { taskId: task.slug },
       session,
       effects,
       email: {
-        userIds: managementRecipients.map((r) => r.userId),
+        userIds: managementEmailIds,
         templateType: "task_approved",
         dataBuilder: (recipient) => ({
           recipientName: `${recipient.firstname} ${recipient.lastname}`,
@@ -507,20 +564,24 @@ export const TaskNotificationService = {
       task.assignedTo,
       adminId,
       session,
+      { involvedUserIds: [task.assignedBy] },
     );
+    const { recipients: managementInApp, emailUserIds: managementEmailIds } =
+      splitManagementRecipients(managementRecipients);
+
     await notify({
       action: "status_changed",
       severity: "warning",
       title: "Task Sent Back",
       message,
-      recipients: managementRecipients,
+      recipients: managementInApp,
       createdBy: adminId,
       link: `/tasks/${task.slug}`,
       meta: { taskId: task.slug },
       session,
       effects,
       email: {
-        userIds: managementRecipients.map((r) => r.userId),
+        userIds: managementEmailIds,
         templateType: "task_sent_back",
         dataBuilder: (recipient) => ({
           recipientName: `${recipient.firstname} ${recipient.lastname}`,
@@ -575,20 +636,24 @@ export const TaskNotificationService = {
       task.assignedTo,
       [changedBy, task.assignedTo],
       session,
+      { involvedUserIds: [task.assignedBy] },
     );
+    const { recipients: managementInApp, emailUserIds: managementEmailIds } =
+      splitManagementRecipients(managementRecipients);
+
     await notify({
       action: "updated",
       severity: "warning",
       title: "Task Due Date Updated",
       message: `Due date for "${task.title}" changed from ${oldDate.toLocaleDateString()} to ${new Date(newDate).toLocaleDateString()}.`,
-      recipients: managementRecipients,
+      recipients: managementInApp,
       createdBy: task.assignedBy,
       link: `/tasks/${task.slug}`,
       meta: { taskId: task.slug, oldDate, newDate },
       session,
       effects,
       email: {
-        userIds: managementRecipients.map((r) => r.userId),
+        userIds: managementEmailIds,
         templateType: "task_due_date_changed",
         dataBuilder: (recipient) => ({
           recipientName: `${recipient.firstname} ${recipient.lastname}`,
@@ -637,20 +702,24 @@ export const TaskNotificationService = {
       task.assignedTo,
       [updatedBy, task.assignedTo],
       session,
+      { involvedUserIds: [task.assignedBy] },
     );
+    const { recipients: managementInApp, emailUserIds: managementEmailIds } =
+      splitManagementRecipients(managementRecipients);
+
     await notify({
       action: "updated",
       severity: "info",
       title: "Task Updated",
       message: `"${task.title}" details have been updated.`,
-      recipients: managementRecipients,
+      recipients: managementInApp,
       createdBy: task.assignedBy,
       link: `/tasks/${task.slug}`,
       meta: { taskId: task.slug },
       session,
       effects,
       email: {
-        userIds: managementRecipients.map((r) => r.userId),
+        userIds: managementEmailIds,
         templateType: "task_updated",
         dataBuilder: (recipient) => ({
           recipientName: `${recipient.firstname} ${recipient.lastname}`,
@@ -690,20 +759,24 @@ export const TaskNotificationService = {
       task.assignedTo,
       [adminId, task.assignedTo],
       session,
+      { involvedUserIds: [task.assignedBy] },
     );
+    const { recipients: managementInApp, emailUserIds: managementEmailIds } =
+      splitManagementRecipients(managementRecipients);
+
     await notify({
       action: "status_changed",
       severity: "error",
       title: "Task Cancelled",
       message: `"${task.title}" has been cancelled.`,
-      recipients: managementRecipients,
+      recipients: managementInApp,
       createdBy: adminId,
       link: `/tasks/${task.slug}`,
       meta: { taskId: task.slug },
       session,
       effects,
       email: {
-        userIds: managementRecipients.map((r) => r.userId),
+        userIds: managementEmailIds,
         templateType: "task_cancelled",
         dataBuilder: (recipient) => ({
           recipientName: `${recipient.firstname} ${recipient.lastname}`,
@@ -744,20 +817,24 @@ export const TaskNotificationService = {
       task.assignedTo,
       task.assignedTo,
       session,
+      { involvedUserIds: [task.assignedBy] },
     );
+    const { recipients: managementInApp, emailUserIds: managementEmailIds } =
+      splitManagementRecipients(managementRecipients);
+
     await notify({
       action: "status_changed",
       severity: "warning",
       title: "Task Due Tomorrow",
       message: `"${task.title}" is due tomorrow.`,
-      recipients: managementRecipients,
+      recipients: managementInApp,
       createdBy: task.assignedBy,
       link: `/tasks/${task.slug}`,
       meta: { taskId: task.slug },
       session,
       effects,
       email: {
-        userIds: managementRecipients.map((r) => r.userId),
+        userIds: managementEmailIds,
         templateType: "task_due_tomorrow",
         dataBuilder: (recipient) => ({
           recipientName: `${recipient.firstname} ${recipient.lastname}`,
@@ -796,24 +873,31 @@ export const TaskNotificationService = {
     // assignedBy is who created/assigned the task, but that's not
     // necessarily the volunteer's CURRENT manager (e.g. after a
     // reassignment) and never included super_admins. Cover both.
+    // assignedBy is already excluded here (he got a direct email above),
+    // so `involvedUserIds` mainly matters if a *different* super_admin was
+    // the creator in some edge case — kept for consistency.
     const managementRecipients = await getManagementRecipients(
       task.assignedTo,
       [task.assignedTo, task.assignedBy],
       session,
+      { involvedUserIds: [task.assignedBy] },
     );
+    const { recipients: managementInApp, emailUserIds: managementEmailIds } =
+      splitManagementRecipients(managementRecipients);
+
     await notify({
       action: "status_changed",
       severity: "error",
       title: "Task Overdue",
       message: `"${task.title}" is overdue.`,
-      recipients: managementRecipients,
+      recipients: managementInApp,
       createdBy: task.assignedBy,
       link: `/tasks/${task.slug}`,
       meta: { taskId: task.slug },
       session,
       effects,
       email: {
-        userIds: managementRecipients.map((r) => r.userId),
+        userIds: managementEmailIds,
         templateType: "task_overdue",
         dataBuilder: (recipient) => ({
           recipientName: `${recipient.firstname} ${recipient.lastname}`,

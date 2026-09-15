@@ -20,7 +20,6 @@ const uploadOnCloudinary = async (localFilePath) => {
     const response = await cloudinary.uploader.upload(localFilePath, {
       resource_type: resourceType,
       secure: true,
-      folder: "intranet",
     });
     // file has been uploaded successfull
 

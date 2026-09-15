@@ -22,9 +22,7 @@ export const viewEmployees = Joi.object({
       Joi.string()
         .trim()
         .custom((value, helpers) => {
-       
           const roles = value.split(",");
-
 
           const invalid = roles.some(
             (role) => !Object.values(ROLES).includes(role),
@@ -98,7 +96,7 @@ export const createEmployeeSchema = Joi.object({
   title: Joi.string().trim().required().messages({
     "any.required": "Title is required",
   }),
-  superviserId: Joi.string().hex().length(24),
+  superviserId: Joi.string().hex().length(24).allow(null).optional(),
   password: Joi.string()
     .required()
     .min(8)
