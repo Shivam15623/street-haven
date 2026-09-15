@@ -62,6 +62,11 @@ const TicketSchema = new mongoose.Schema(
       ref: "TicketCategory",
       required: true,
     },
+    categoryOtherText: {
+      type: String,
+      trim: true,
+      default: null,
+    },
     photo: {
       type: photoSchema,
     },
@@ -113,6 +118,28 @@ const TicketSchema = new mongoose.Schema(
 );
 
 const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 5);
+TicketSchema.pre("validate", async function (next) {
+  if (this.isModified("category") || this.isNew) {
+    const TicketCategory = mongoose.model("TicketCategory");
+    const cat = await TicketCategory.findById(this.category).lean();
+
+    if (!cat) {
+      return next(new Error("Invalid category"));
+    }
+
+    if (cat.name === "Other" && cat.isSystem) {
+      if (!this.categoryOtherText || !this.categoryOtherText.trim()) {
+        return next(
+          new Error("Please specify a category when selecting 'Other'"),
+        );
+      }
+    } else {
+      // clear stale value if category isn't "Other"
+      this.categoryOtherText = null;
+    }
+  }
+  next();
+});
 TicketSchema.pre("save", async function (next) {
   if (this.isNew) {
     this.ticketNumber = await getNextSequence("ticketNumber");

@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const attachmentSchema = new mongoose.Schema(
   {
+   
     fileName: {
       type: String,
       required: [true, "File name is required"],

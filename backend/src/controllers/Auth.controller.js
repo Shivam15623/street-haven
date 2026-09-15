@@ -8,7 +8,14 @@ import jwt from "jsonwebtoken";
 
 import speakeasy from "speakeasy";
 import qrcode from "qrcode";
-
+import Location from "../model/location.js";
+const checkIsFacilityManager = async (userId) => {
+  const isFacilityManager = await Location.exists({
+    facilityManager: userId,
+    isActive: true,
+  });
+  return !!isFacilityManager;
+};
 export const RegisterAdmin = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, password, phone } = req.body;
 
@@ -188,7 +195,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
       .select(
         "-password -refreshToken -updatedAt -createdBy -createdAt -isActive -__v",
       );
-
+    const isFacilityManager = await checkIsFacilityManager(user._id);
     const userToSend = {
       _id: findUser._id,
       firstName: findUser.firstname,
@@ -202,6 +209,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
       createdAt: findUser.createdAt,
       hireDate: findUser.hireDate,
       customPermissions: findUser.customPermissions,
+      isFacilityManager,
     };
 
     const isProduction = process.env.NODE_ENV === "production";
@@ -209,14 +217,14 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
     const accessOptions = {
       httpOnly: true,
       secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-      sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
+      sameSite: "lax", // must be 'None' for cross-site cookies
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     };
 
     const refreshOptions = {
       httpOnly: true,
       secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-      sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
+      sameSite: "lax", // must be 'None' for cross-site cookies
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     };
 
@@ -268,6 +276,7 @@ export const silentAuth = asyncHandler(async (req, res) => {
     .select(
       "-password -refreshToken -updatedAt -createdBy -createdAt -isActive -__v",
     );
+  const isFacilityManager = await checkIsFacilityManager(user._id);
   const userToSend = {
     _id: finduser._id,
     firstName: finduser.firstname,
@@ -281,20 +290,21 @@ export const silentAuth = asyncHandler(async (req, res) => {
     createdAt: finduser.createdAt,
     hireDate: finduser.hireDate,
     customPermissions: finduser.customPermissions,
+    isFacilityManager,
   };
   const isProduction = process.env.NODE_ENV === "production";
 
   const accessOptions = {
     httpOnly: true,
     secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
+    sameSite: "lax", // must be 'None' for cross-site cookies
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   };
 
   const refreshOptions = {
     httpOnly: true,
     secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
+    sameSite: "lax", // must be 'None' for cross-site cookies
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   };
   // if (process.env.Deploy_env === "development") {
@@ -366,7 +376,7 @@ export const totpGenerate = asyncHandler(async (req, res) => {
 
 export const verifyTOTP = asyncHandler(async (req, res) => {
   const { tempToken, totpCode } = req.body;
-
+  const tokenStr = String(totpCode).padStart(6, "0");
   let decoded;
   try {
     decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
@@ -385,7 +395,7 @@ export const verifyTOTP = asyncHandler(async (req, res) => {
   const isValid = speakeasy.totp.verify({
     secret: user.totpSecret,
     encoding: "base32",
-    token: totpCode,
+    token: tokenStr,
     window: 1,
   });
 
@@ -396,6 +406,7 @@ export const verifyTOTP = asyncHandler(async (req, res) => {
 
   // NOW CREATE NORMAL LOGIN TOKENS
   const { accessToken, refreshToken } = await generateTokens(user._id);
+  const isFacilityManager = await checkIsFacilityManager(user._id);
   const userToSend = {
     _id: user._id,
     firstName: user.firstname,
@@ -409,20 +420,21 @@ export const verifyTOTP = asyncHandler(async (req, res) => {
     createdAt: user.createdAt,
     hireDate: user.hireDate,
     customPermissions: user.customPermissions,
+    isFacilityManager,
   };
   const isProduction = process.env.NODE_ENV === "production";
 
   const accessOptions = {
     httpOnly: true,
     secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
+    sameSite: "lax", // must be 'None' for cross-site cookies
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   };
 
   const refreshOptions = {
     httpOnly: true,
     secure: isProduction, // must be true for HTTPS (Render uses HTTPS)
-    sameSite: isProduction ? "None" : "lax", // must be 'None' for cross-site cookies
+    sameSite: "lax", // must be 'None' for cross-site cookies
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   };
   return res

@@ -33,7 +33,7 @@ const ChangePassword = () => {
         resetForm(); // ✅ Reset form after success
       }
     } catch (error) {
-      console.log(error)
+     
       showError(getErrorMessage(error));
 
       // Optionally show error toast here

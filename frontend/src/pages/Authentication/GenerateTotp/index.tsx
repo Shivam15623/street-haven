@@ -61,7 +61,7 @@ const GenerateTotp: React.FC = () => {
     try {
       await verifySetup({
         tempToken: setupToken,
-        totpCode: Number(values.totp),
+        totpCode: values.totp,
       }).unwrap();
 
       showSuccess("TOTP setup completed!");

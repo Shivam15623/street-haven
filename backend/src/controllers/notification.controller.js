@@ -3,29 +3,20 @@ import Notification from "../model/notification.js";
 import UserNotification from "../model/notificationTrack.js";
 import UserCommentNotification from "../model/UserCommentNotification.js";
 import User from "../model/user.js";
+import Ticket from "../model/ticket.js"; // lowercase t
+import Task from "../model/task.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
-import { ApiError } from "../utills/ApiError.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
 import { ROLE_PERMISSIONS } from "../auth/rolePermissions.js";
+import {
+  normalizeCommentEntity,
+  normalizeSystemNotification,
+} from "../helper/normalizeNotification.js";
+import { ApiError } from "../utills/ApiError.js";
 
 // ---------------------------------------------------------------------------
-// Normalization — maps each source's native shape into one common shape
-// for the frontend. Nothing here writes to either collection.
+// Normalization
 // ---------------------------------------------------------------------------
-function normalizeGeneric(n) {
-  return {
-    _id: n._id.toString(),
-    source: "system",
-    title: n.title,
-    message: n.message,
-    severity: n.severity || "info",
-    link: n.link || null,
-    isRead: n.isRead,
-    readAt: n.readAt,
-    createdAt: n.createdAt,
-    sortDate: n.isRead && n.readAt ? n.readAt : n.createdAt,
-  };
-}
 
 function formatActivityText(n) {
   const names = n.actorNames || [];
@@ -43,16 +34,24 @@ function formatActivityText(n) {
   return `${actorText} added ${n.commentCount} comment${n.commentCount === 1 ? "" : "s"}`;
 }
 
+// n.entity is attached beforehand (batched lookup) — see fetchCommentNotifications
 function normalizeComment(n) {
+  console.log(n.entity,n)
+  const entity = n.entity || null;
+
   const link =
-    n.entityType === "ticket" ? `/it_facility?tab=track_tickets` : "";
+    n.entityType === "Ticket"
+      ? `/it_facility?tab=track_tickets&item=${entity.slug}`
+      : `/tasks/${entity.slug}`;
+
   return {
     _id: n._id.toString(),
     source: "comment",
     title: null,
     message: formatActivityText(n),
     severity: n.priority === "high" ? "warning" : "info",
-    link: link,
+    link,
+    entity,
     entityType: n.entityType,
     entityId: n.entityId.toString(),
     commentId: n.commentId ? n.commentId.toString() : null,
@@ -67,11 +66,7 @@ function normalizeComment(n) {
 }
 
 // ---------------------------------------------------------------------------
-// Reused as-is from the existing generic notification controller — same
-// permission-gate logic, duplicated here (not imported) only because the
-// original file doesn't export it. If you want to avoid duplication,
-// export buildPermissionGateMatch from the original controller and import
-// it here instead.
+// Reused as-is from the existing generic notification controller
 // ---------------------------------------------------------------------------
 function buildPermissionGateMatch(userPermissions) {
   return {
@@ -107,14 +102,19 @@ function buildPermissionGateMatch(userPermissions) {
     ],
   };
 }
-// ---------------------------------------------------------------------------
-// Source A: generic notifications — now filter-aware. No `limit` cap here;
-// pagination happens after merging both sources (see fetchUnifiedNotifications).
-// A hard MAX_SCAN cap protects against unbounded aggregation on huge collections.
-// ---------------------------------------------------------------------------
-const MAX_SCAN = 500;
 
-async function fetchGenericNotifications(userId, role, { type, status }) {
+// ---------------------------------------------------------------------------
+// Source A: generic notifications.
+// `fetchDepth` replaces the old fixed MAX_SCAN — callers pass how many
+// top-ranked rows they actually need for the requested page.
+// ---------------------------------------------------------------------------
+const HARD_SCAN_CEILING = 5000; // safety net so a huge `page` can't force an unbounded aggregation
+
+async function fetchGenericNotifications(
+  userId,
+  role,
+  { type, status, fetchDepth },
+) {
   const userPermissions = ROLE_PERMISSIONS[role] || [];
 
   const lookupStage = {
@@ -168,11 +168,8 @@ async function fetchGenericNotifications(userId, role, { type, status }) {
     buildPermissionGateMatch(userPermissions),
   ];
 
-  // type filter: "global" | "personal" — maps to isGlobal
   if (type === "global") filters.push({ isGlobal: true });
   if (type === "personal") filters.push({ isGlobal: false });
-
-  // status filter: "read" | "unread"
   if (status === "read") filters.push({ isRead: true });
   if (status === "unread") filters.push({ isRead: false });
 
@@ -181,7 +178,7 @@ async function fetchGenericNotifications(userId, role, { type, status }) {
     addFieldsStage,
     { $match: { $and: filters } },
     { $sort: { createdAt: -1 } },
-    { $limit: MAX_SCAN },
+    { $limit: Math.min(fetchDepth, HARD_SCAN_CEILING) },
     {
       $project: {
         _id: 1,
@@ -201,14 +198,69 @@ async function fetchGenericNotifications(userId, role, { type, status }) {
   return Notification.aggregate(pipeline);
 }
 
+async function countGenericNotifications(userId, role, { type, status }) {
+  const userPermissions = ROLE_PERMISSIONS[role] || [];
+
+  const filters = [
+    {
+      $or: [
+        { isGlobal: true },
+        { $expr: { $gt: [{ $size: "$userTracker" }, 0] } },
+      ],
+    },
+    buildPermissionGateMatch(userPermissions),
+  ];
+  if (type === "global") filters.push({ isGlobal: true });
+  if (type === "personal") filters.push({ isGlobal: false });
+  if (status === "read") filters.push({ isRead: true });
+  if (status === "unread") filters.push({ isRead: false });
+
+  const result = await Notification.aggregate([
+    {
+      $lookup: {
+        from: "usernotifications",
+        let: { notifId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$notificationId", "$$notifId"] },
+                  { $eq: ["$userId", userId] },
+                ],
+              },
+            },
+          },
+          { $project: { _id: 1, readAt: 1 } },
+        ],
+        as: "userTracker",
+      },
+    },
+    {
+      $addFields: {
+        userTracker: { $ifNull: ["$userTracker", []] },
+        isRead: {
+          $cond: [
+            { $gt: [{ $size: "$userTracker" }, 0] },
+            { $ne: [{ $arrayElemAt: ["$userTracker.readAt", 0] }, null] },
+            false,
+          ],
+        },
+      },
+    },
+    { $match: { $and: filters } },
+    { $count: "n" },
+  ]);
+
+  return result[0]?.n || 0;
+}
+
 // ---------------------------------------------------------------------------
-// Source B: comment notifications — filter-aware. Comment notifications
-// have no real "global/personal" concept (they're always personal, tied to
-// entity membership), so a "global" filter excludes this source entirely.
+// Source B: comment notifications — now also attaches `entity` via a
+// batched (not per-row) Ticket/Task lookup, so the frontend gets
+// displayId/slug/title without a query-per-notification.
 // ---------------------------------------------------------------------------
-async function fetchCommentNotifications(userId, { type, status }) {
-  // comment notifications are inherently personal — if the user filtered
-  // to "global" only, there's nothing here to return
+async function fetchCommentNotifications(userId, { type, status, fetchDepth }) {
   if (type === "global") return [];
 
   const filter = { userId };
@@ -217,7 +269,7 @@ async function fetchCommentNotifications(userId, { type, status }) {
 
   const notifications = await UserCommentNotification.find(filter)
     .sort({ createdAt: -1 })
-    .limit(MAX_SCAN)
+    .limit(Math.min(fetchDepth, HARD_SCAN_CEILING))
     .lean();
 
   if (!notifications.length) return [];
@@ -229,50 +281,121 @@ async function fetchCommentNotifications(userId, { type, status }) {
       ),
     ),
   ];
-  const actors = actorIds.length
-    ? await User.find({ _id: { $in: actorIds } }, { firstname: 1 }).lean()
-    : [];
-  const actorMap = new Map(actors.map((a) => [a._id.toString(), a.firstname]));
+  const actorsPromise = actorIds.length
+    ? User.find({ _id: { $in: actorIds } }, { firstname: 1 }).lean()
+    : Promise.resolve([]);
 
-  return notifications.map((n) => ({
-    ...n,
-    actorNames: (n.actorIds || [])
-      .map((id) => actorMap.get(id.toString()))
-      .filter(Boolean),
-  }));
+  // Batch entity lookups by type — at most 2 queries total (one per
+  // entityType present on this page), not one per notification.
+  const ticketIds = [
+    ...new Set(
+      notifications
+        .filter((n) => n.entityType === "Ticket")
+        .map((n) => n.entityId.toString()),
+    ),
+  ];
+  const taskIds = [
+    ...new Set(
+      notifications
+        .filter((n) => n.entityType === "Task")
+        .map((n) => n.entityId.toString()),
+    ),
+  ];
+
+  const ticketsPromise = ticketIds.length
+    ? Ticket.find(
+        { _id: { $in: ticketIds } },
+        { ticketNumber: 1, slug: 1, req_title: 1 },
+      )
+    : Promise.resolve([]);
+  const tasksPromise = taskIds.length
+    ? Task.find(
+        { _id: { $in: taskIds } },
+        { taskNumber: 1, slug: 1, title: 1 },
+      ).lean()
+    : Promise.resolve([]);
+
+  const [actors, tickets, tasks] = await Promise.all([
+    actorsPromise,
+    ticketsPromise,
+    tasksPromise,
+  ]);
+
+  const actorMap = new Map(actors.map((a) => [a._id.toString(), a.firstname]));
+  const entityMap = new Map([
+    ...tickets.map((t) => [`Ticket:${t._id.toString()}`, t]),
+    ...tasks.map((t) => [`Task:${t._id.toString()}`, t]),
+  ]);
+  const result = notifications.map((n) => {
+    const rawEntity = entityMap.get(`${n.entityType}:${n.entityId.toString()}`);
+    return {
+      ...n,
+      actorNames: (n.actorIds || [])
+        .map((id) => actorMap.get(id.toString()))
+        .filter(Boolean),
+      // null if the ticket/task was deleted — normalizeComment falls back
+      // to the raw entityId link in that case
+      entity: rawEntity
+        ? normalizeCommentEntity(n.entityType, rawEntity)
+        : null,
+    };
+  });
+
+  return result;
 }
+
+async function countCommentNotifications(userId, { type, status }) {
+  if (type === "global") return 0;
+  const filter = { userId };
+  if (status === "read") filter.isRead = true;
+  if (status === "unread") filter.isRead = false;
+  return UserCommentNotification.countDocuments(filter);
+}
+
 // ---------------------------------------------------------------------------
 // GET /api/notifications/unified?page=1&limit=20&readStatus=all&type=global
-// Filters by type ("global"|"personal") and readStatus ("read"|"unread"|"all"),
-// merges both sources, sorts, then paginates the merged result.
-//
-// Caveat: since each source is independently capped at MAX_SCAN before
-// merging, a user with more than MAX_SCAN notifications in ONE source could
-// see slightly incomplete results on later pages. Acceptable for a
-// notification center (nobody scrolls that deep), but flagging the
-// limitation rather than hiding it.
 // ---------------------------------------------------------------------------
 export const fetchUnifiedNotifications = asyncHandler(async (req, res) => {
   const userId = new mongoose.Types.ObjectId(req.user._id);
   const page = Math.max(1, parseInt(req.query.page) || 1);
   const limit = Math.max(1, Math.min(50, parseInt(req.query.limit) || 20));
-  const type = req.query.type || undefined; // "global" | "personal" | undefined
-  const readStatus = req.query.readStatus; // "read" | "unread" | "all" | undefined
+  const type = req.query.type || undefined;
+  const readStatus = req.query.readStatus;
   const status = readStatus === "all" ? undefined : readStatus;
 
-  const [generic, comment] = await Promise.all([
-    fetchGenericNotifications(userId, req.user.role, { type, status }),
-    fetchCommentNotifications(userId, { type, status }),
+  const start = (page - 1) * limit;
+  // Need the top (start + limit) ranked rows from EACH source, since in the
+  // worst case every item on this page could come from a single source.
+  const fetchDepth = start + limit;
+
+  const [generic, comment, genericTotal, commentTotal] = await Promise.all([
+    fetchGenericNotifications(userId, req.user.role, {
+      type,
+      status,
+      fetchDepth,
+    }),
+    fetchCommentNotifications(userId, { type, status, fetchDepth }),
+    countGenericNotifications(userId, req.user.role, { type, status }),
+    countCommentNotifications(userId, { type, status }),
   ]);
 
   const merged = [
-    ...generic.map(normalizeGeneric),
-    ...comment.map(normalizeComment),
-  ].sort((a, b) => new Date(b.sortDate) - new Date(a.sortDate));
+    ...generic.map((n) =>
+      normalizeSystemNotification(n, {
+        isRead: n.isRead,
+        readAt: n.readAt,
+      }),
+    ),
 
-  const total = merged.length;
+    ...comment.map(normalizeComment),
+  ];
+  merged.sort((a, b) => {
+    const aDate = new Date(a.sortDate || a.createdAt).getTime();
+    const bDate = new Date(b.sortDate || b.createdAt).getTime();
+    return bDate - aDate;
+  });
+  const total = genericTotal + commentTotal; // real total, not capped-fetch length
   const totalPages = Math.max(1, Math.ceil(total / limit));
-  const start = (page - 1) * limit;
   const pageItems = merged.slice(start, start + limit);
 
   res.status(200).json(
@@ -287,10 +410,9 @@ export const fetchUnifiedNotifications = asyncHandler(async (req, res) => {
     }),
   );
 });
+
 // ---------------------------------------------------------------------------
-// GET /api/notifications/unified/unread-count
-// Cheap, separate from the paginated fetch above — two countDocuments-style
-// queries, not derived from the capped `limit` results.
+// GET /api/notifications/unified/unread-count  (unchanged)
 // ---------------------------------------------------------------------------
 export const getUnifiedUnreadCount = asyncHandler(async (req, res) => {
   const userId = req.user._id;
@@ -356,12 +478,7 @@ export const getUnifiedUnreadCount = asyncHandler(async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// POST /api/notifications/unified/mark-read
-// body: { ids: string[] }  — mixed ids from BOTH sources in one call.
-// Internally splits and dispatches to each collection's own correct
-// read-tracking mechanism. Reuses the existing visibility-check logic for
-// generic notifications (imported, not duplicated) so security behavior
-// doesn't drift from MarkNotificationsAsRead.
+// POST /api/notifications/unified/mark-read  (unchanged)
 // ---------------------------------------------------------------------------
 const TTL_DAYS_BY_TYPE = {
   activity: 14,
@@ -384,9 +501,6 @@ export const markUnifiedNotificationsRead = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, "No valid ids provided"));
   }
 
-  // Determine which ids belong to which collection — check comment
-  // notifications first (cheap, indexed, userId-scoped), whatever's left
-  // over is assumed generic and goes through the existing visibility filter.
   const commentDocs = await UserCommentNotification.find(
     { _id: { $in: objectIds }, userId },
     { type: 1 },
@@ -426,20 +540,22 @@ export const markUnifiedNotificationsRead = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, "Notifications marked as read"));
 });
 
-/**
- * Extracted from the existing MarkNotificationsAsRead so the unified
- * endpoint reuses the exact same visibility-checked write path, rather
- * than reimplementing it. If you'd rather not touch the original
- * controller file at all, this can instead just re-run the same
- * filterVisibleNotificationIds + bulkWrite logic duplicated here — but
- * extracting it avoids the two ever silently drifting apart.
- */
 async function markGenericNotificationsReadInternal(ids, userId, role) {
   const userPermissions = ROLE_PERMISSIONS[role] || [];
-  const objectIds = ids.map((id) => new mongoose.Types.ObjectId(id));
 
+  const objectIds = ids
+    .filter((id) => mongoose.Types.ObjectId.isValid(id))
+    .map((id) => new mongoose.Types.ObjectId(id));
+
+  if (!objectIds.length) return [];
+
+  // Find generic notifications that are actually visible to this user.
   const visible = await Notification.aggregate([
-    { $match: { _id: { $in: objectIds } } },
+    {
+      $match: {
+        _id: { $in: objectIds },
+      },
+    },
     {
       $lookup: {
         from: "usernotifications",
@@ -450,12 +566,18 @@ async function markGenericNotificationsReadInternal(ids, userId, role) {
               $expr: {
                 $and: [
                   { $eq: ["$notificationId", "$$notifId"] },
-                  { $eq: ["$userId", new mongoose.Types.ObjectId(userId)] },
+                  {
+                    $eq: ["$userId", new mongoose.Types.ObjectId(userId)],
+                  },
                 ],
               },
             },
           },
-          { $project: { _id: 1 } },
+          {
+            $project: {
+              _id: 1,
+            },
+          },
         ],
         as: "userTracker",
       },
@@ -466,30 +588,42 @@ async function markGenericNotificationsReadInternal(ids, userId, role) {
           {
             $or: [
               { isGlobal: true },
-              { $expr: { $gt: [{ $size: "$userTracker" }, 0] } },
+              {
+                $expr: {
+                  $gt: [{ $size: "$userTracker" }, 0],
+                },
+              },
             ],
           },
           buildPermissionGateMatch(userPermissions),
         ],
       },
     },
-    { $project: { _id: 1 } },
+    {
+      $project: {
+        _id: 1,
+      },
+    },
   ]);
 
-  const visibleIds = visible.map((n) => n._id.toString());
-  if (!visibleIds.length) return;
+  const visibleIds = visible.map((n) => n._id);
+
+  if (!visibleIds.length) return [];
 
   const now = new Date();
-  const expireAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  await UserNotification.bulkWrite(
-    visibleIds.map((notificationId) => ({
-      updateOne: {
-        filter: { userId, notificationId },
-        update: { $set: { readAt: now, expireAt } },
-        upsert: true,
+  await UserNotification.updateMany(
+    {
+      notificationId: { $in: visibleIds },
+      userId: new mongoose.Types.ObjectId(userId),
+      $or: [{ readAt: null }, { readAt: { $exists: false } }],
+    },
+    {
+      $set: {
+        readAt: now,
       },
-    })),
-    { ordered: false },
+    },
   );
+
+  return visibleIds.map((id) => id.toString());
 }

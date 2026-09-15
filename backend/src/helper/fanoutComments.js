@@ -10,12 +10,13 @@ import { notifyCommentEmail } from "./notifyCommentEmail.js";
 import {
   formatActivityText,
   normalizeCommentNotification,
+  normalizeCommentEntity,
 } from "./normalizeNotification.js";
 
-const GROUP_WINDOW_MS = 15 * 60 * 1000;
-const MAX_ACTORS = 5;
+const GROUP_WINDOW_MS = 15 * 60 * 1000; // 15 min idle closes an activity group
+const MAX_ACTORS = 5; // bound actorIds so a long-running group never grows unbounded
 
-export async function fanOutComment(comment) {
+export async function fanOutComment(comment, entity) {
   const {
     entityType,
     entityId,
@@ -27,13 +28,20 @@ export async function fanOutComment(comment) {
 
   const authorIdStr = authorId.toString();
   const now = new Date();
-  const [members, superAdmins, author] = await Promise.all([
+
+  // Built once from the already-loaded entity — no extra Ticket/Task query.
+  const entityInfo = normalizeCommentEntity(entityType, entity);
+
+  const [members, superAdmins, author, parentComment] = await Promise.all([
     EntityMembership.find(
       { entityType, entityId, removedAt: null },
       { userId: 1 },
     ).lean(),
     User.find({ role: "super_admin" }, { _id: 1 }).lean(),
     User.findById(authorId, { firstname: 1, lastname: 1 }).lean(),
+    parentCommentId
+      ? Comment.findById(parentCommentId, { userId: 1 }).lean()
+      : Promise.resolve(null),
   ]);
 
   const actorName = author
@@ -44,39 +52,37 @@ export async function fanOutComment(comment) {
   const superAdminIdSet = new Set(superAdmins.map((u) => u._id.toString()));
   const allRecipientIds = new Set([...memberIdSet, ...superAdminIdSet]);
 
-  const parentComment = parentCommentId
-    ? await Comment.findById(parentCommentId, { userId: 1 }).lean()
-    : null;
-
   const room = `${entityType.toLowerCase()}:${entityId}`;
   let roomEmitted = false;
+
   const ops = [];
-
-  // Track which _id belongs to which recipient so we can re-fetch and
-  // emit per-user after the bulkWrite, instead of guessing at content.
-  const mentionReplyIdByUser = new Map(); // userId -> notification _id
-  const activityUserIds = []; // users whose notif went through the collapseKey upsert
-
+  const mentionReplyIdByUser = new Map();
+  const activityUserIds = [];
   const mentionRecipientIds = [];
   const replyRecipientIds = [];
 
   const collapseKey = `${entityType}:${entityId}:activity`;
 
   for (const memberIdStr of allRecipientIds) {
-    if (memberIdStr === authorIdStr) continue;
+    if (memberIdStr === authorIdStr) continue; // never notify self
 
     const memberId = new mongoose.Types.ObjectId(memberIdStr);
     const viewingThis = isUserViewing(entityType, entityId, memberId);
 
     if (viewingThis) {
+      // emit the room event once, not once per viewing member
       if (!roomEmitted) {
         io.to(room).emit("comment:new", comment);
         roomEmitted = true;
       }
+      // scrollState kept for future use (bottom vs scrolled-up rendering);
+      // no DB write needed here either way — client decides how to render.
       continue;
     }
 
+    // offline or online-elsewhere — notification path
     const isMentioned = mentionIds.some((id) => id.toString() === memberIdStr);
+
     const isRepliedTo =
       parentComment && parentComment.userId.toString() === memberIdStr;
 
@@ -92,6 +98,7 @@ export async function fanOutComment(comment) {
             entityType,
             entityId,
             type,
+            actorIds: [authorId],
             priority: "high",
             commentId: comment._id,
           },
@@ -110,7 +117,7 @@ export async function fanOutComment(comment) {
           authorId,
           comment._id,
           collapseKey,
-          now
+          now,
         ),
       );
       activityUserIds.push(memberIdStr);
@@ -125,11 +132,11 @@ export async function fanOutComment(comment) {
       entityType,
       entityId,
       collapseKey,
+      entity: entityInfo,
     });
   }
 
-  // fire-and-forget emails, AFTER the socket/DB work — never block the
-  // comment response or the in-app notification path on email delivery
+  // fire-and-forget emails, after DB/socket work — never block on delivery
   if (mentionRecipientIds.length) {
     notifyCommentEmail({
       type: "mention",
@@ -152,17 +159,13 @@ export async function fanOutComment(comment) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Re-fetch the docs the bulkWrite just touched (post-increment for
-// activity groups), resolve actor names in one batched User lookup, format
-// via formatActivityText, normalize, and emit per recipient.
-// ---------------------------------------------------------------------------
 async function emitFanOutNotifications({
   mentionReplyIdByUser,
   activityUserIds,
   entityType,
   entityId,
   collapseKey,
+  entity,
 }) {
   const mentionReplyIds = [...mentionReplyIdByUser.values()];
 
@@ -187,30 +190,34 @@ async function emitFanOutNotifications({
   const allDocs = [...mentionReplyDocs, ...activityDocs];
   if (!allDocs.length) return;
 
-  // batch actor-name resolution across ALL affected docs (mentions/replies
-  // don't have actorIds populated, only activity groups do — but batching
-  // together is still one query instead of N)
   const actorIds = [
     ...new Set(
       allDocs.flatMap((d) => (d.actorIds || []).map((id) => id.toString())),
     ),
   ];
   const actors = actorIds.length
-    ? await User.find({ _id: { $in: actorIds } }, { firstname: 1 }).lean()
+    ? await User.find(
+        { _id: { $in: actorIds } },
+        { firstname: 1, lastname: 1 },
+      ).lean()
     : [];
-  const actorMap = new Map(actors.map((a) => [a._id.toString(), a.firstname]));
+  const actorMap = new Map(
+    actors.map((a) => [a._id.toString(), `${a.firstname} ${a.lastname}`]),
+  );
 
   for (const doc of allDocs) {
     const actorNames = (doc.actorIds || [])
       .map((id) => actorMap.get(id.toString()))
       .filter(Boolean);
 
-    const payload = normalizeCommentNotification({
-      ...doc,
-      formattedMessage: formatActivityText({ ...doc, actorNames }),
-    });
-
-    io.to(`user_${doc.userId}`).emit("notification:new", payload);
+    const payload = normalizeCommentNotification(
+      {
+        ...doc,
+        formattedMessage: formatActivityText({ ...doc, actorNames }),
+      },
+      { entity },
+    );
+    io.to(`user_${doc.userId}`).emit("newNotification", payload);
   }
 }
 
@@ -223,7 +230,6 @@ function buildActivityUpsertOp(
   collapseKey,
   now,
 ) {
-
   const cutoff = new Date(now.getTime() - GROUP_WINDOW_MS);
 
   return {
@@ -262,7 +268,6 @@ function buildActivityUpsertOp(
                 },
               ],
             },
-            createdAt: { $ifNull: ["$createdAt", now] },
             windowStartedAt: {
               $cond: [
                 {
@@ -272,6 +277,8 @@ function buildActivityUpsertOp(
                 { $ifNull: ["$windowStartedAt", now] },
               ],
             },
+            createdAt: { $ifNull: ["$createdAt", now] },
+            updatedAt: now,
             commentId,
             entityType,
             entityId,

@@ -43,6 +43,7 @@ export const LazyAgencyInfo = React.lazy(
 export const LazyEmployees = React.lazy(
   () => import("../pages/Admin/Employees")
 );
+export const LazyPhotoViewer = React.lazy(() => import("../pages/Common/ImageViewer"));
 export const LazyTasks=React.lazy(()=>import("../pages/Common/Task"))
 export const LazyProfile = React.lazy(() => import("../pages/Common/Profile"));
 export const LazyAdminCertificationsPage=React.lazy(()=>import("../pages/Common/AdminCertificationsPage"))

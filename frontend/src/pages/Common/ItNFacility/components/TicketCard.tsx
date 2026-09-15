@@ -58,6 +58,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     displayId,
     approvedBy,
   } = ticket;
+  
   const [showApprove, setShowApprove] = useState(false);
   const [showReject, setShowReject] = useState(false);
 
@@ -68,7 +69,6 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
   const [cancelTicket, { isLoading: cancelling }] = useCancelTicketMutation();
   const [rejectTicket, { isLoading: rejecting }] = useRejectTicketMutation();
   const { user: currentUser } = useSelector(selectAuth);
-
 
   const actions = useMemo(
     () =>
@@ -162,8 +162,8 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
               </div>
             )}
 
-            {approvedBy&&(
-               <div className="col-6 col-sm-auto">
+            {approvedBy && (
+              <div className="col-6 col-sm-auto">
                 <p className="fw-normal text-xs mb-0">
                   • Approved by:{" "}
                   <span className="text-street-dark fw-medium text-xs">
@@ -181,7 +181,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                   className="text-street-dark w-16-px h-16-px"
                 />
                 <Link
-                  to={photo.fileUrl}
+                  to={`/photo-viewer?url=${encodeURIComponent(photo.fileUrl)}`}
                   target="_blank"
                   className="text-street-primary text-xs fw-normal"
                 >
@@ -208,7 +208,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                 <Button
                   className="btn-danger radius-12 px-16 d-flex align-items-center justify-content-center gap-2 border-0 text-sm fw-semibold"
                   style={{ height: "40px" }}
-                   disabled={rejecting}
+                  disabled={rejecting}
                   onClick={() => setShowReject(true)}
                 >
                   <Icon icon="lucide:x" className="w-16-px h-16-px" />
@@ -381,7 +381,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
             }).unwrap();
             if (res.success) {
               showSuccess(res.message);
-              setShowReject(false)
+              setShowReject(false);
             }
           } catch (error) {
             showError(getErrorMessage(error));

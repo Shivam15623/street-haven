@@ -34,6 +34,7 @@ const TicketSchema = Yup.object({
   description: Yup.string(),
   priority: Yup.string(),
   category: Yup.string(),
+  categoryOtherText: Yup.string().notRequired().default(""), // enforced manually in handleEdit, see isOtherSelected check
   location: Yup.string(),
   photo: Yup.mixed<File>().nullable(),
 });
@@ -49,7 +50,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
   const { user } = useSelector(selectAuth);
   const { hasPermission, hasRole } = useHasPermission();
   const { data: locationsData, isLoading: locationsLoading } =
-    useFetchLocationsQuery({}, { skip: !showModal });
+    useFetchLocationsQuery({ isActive: true }, { skip: !showModal });
   const {
     data: categoryData,
     isLoading: categoryLoading,
@@ -88,7 +89,8 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
     id: ticket.displayId ?? ticket.slug,
     description: ticket.description,
     priority: ticket.priority ?? "",
-    category: ticket.category._id,
+    category: ticket.category?._id ?? ticket.category,
+    categoryOtherText: ticket.categoryOtherText ?? "",
     location: ticket.location?._id ?? "", // default to empty string
   };
 
@@ -101,7 +103,22 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
     "Closed",
   ];
 
-  const handleEdit = async (values: TicketValues) => {
+  const handleEdit = async (
+    values: TicketValues,
+    { setFieldError, setFieldTouched }: any,
+  ) => {
+    const selectedCategory = categoryData?.data.find(
+      (c) => c._id === values.category,
+    );
+    const isOtherSelected =
+      !!selectedCategory?.isSystem && selectedCategory?.name === "Other";
+
+    if (isOtherSelected && !values.categoryOtherText?.trim()) {
+      setFieldTouched("categoryOtherText", true, false);
+      setFieldError("categoryOtherText", "Please specify a category");
+      return;
+    }
+
     try {
       const formData = new FormData();
       if (values.requestTitle && values.requestTitle !== ticket.req_title)
@@ -112,6 +129,16 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
         formData.append("priority", values.priority);
       if (values.category && values.category !== ticket.category._id)
         formData.append("category", values.category);
+      // categoryOtherText: send whenever category is "Other", even if the
+      // category id itself didn't change but the text was edited in place,
+      // or if it changed and differs from the ticket's stored value.
+      if (
+        isOtherSelected &&
+        values.categoryOtherText &&
+        values.categoryOtherText !== ticket.categoryOtherText
+      ) {
+        formData.append("categoryOtherText", values.categoryOtherText.trim());
+      }
       // compare against the populated location's _id, not the object itself
       if (values.location && values.location !== ticket.location?._id)
         formData.append("location", values.location);
@@ -145,6 +172,10 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
     const trimmed = customCategoryValue.trim();
     if (!trimmed) {
       showError("Please enter a category name");
+      return;
+    }
+    if (trimmed.toLowerCase() === "other") {
+      showError("'Other' is a reserved category name");
       return;
     }
     try {
@@ -223,402 +254,462 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
             errors,
             touched,
             setFieldValue,
-          }) => (
-            <Form
-              noValidate
-              onSubmit={handleSubmit}
-              as={FormikForm}
-              id="ticket-form"
-            >
-              <div
-                className={`position-relative ${
-                  isLoading ? "pointer-events-none" : ""
-                }`}
+            setFieldTouched,
+          }) => {
+            const selectedCategory = categoryData?.data.find(
+              (c) => c._id === values.category,
+            );
+            const isOtherSelected =
+              !!selectedCategory?.isSystem &&
+              selectedCategory?.name === "Other";
+
+            return (
+              <Form
+                noValidate
+                onSubmit={handleSubmit}
+                as={FormikForm}
+                id="ticket-form"
               >
-                {/* Request Title */}
-                <Row className="mb-3">
-                  <Form.Label
-                    className="align-items-center d-flex"
-                    column
-                    sm={2}
-                  >
-                    Request Title
-                  </Form.Label>
-                  <Col sm={10}>
-                    <Form.Control
-                      size="sm"
-                      type="text"
-                      name="requestTitle"
-                      value={values.requestTitle}
-                      disabled={!hasCreatorPermissions}
-                      onChange={handleChange}
-                      isInvalid={touched.requestTitle && !!errors.requestTitle}
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.requestTitle}
-                    </Form.Control.Feedback>
-                  </Col>
-                </Row>
-
-                {/* Requester */}
-                <Row className="mb-3">
-                  <Form.Label
-                    className="align-items-center d-flex"
-                    column
-                    sm={2}
-                  >
-                    Requester
-                  </Form.Label>
-                  <Col sm={10}>
-                    <Form.Control
-                      size="sm"
-                      type="text"
-                      name="requester"
-                      disabled
-                      value={values.requester}
-                      onChange={handleChange}
-                      isInvalid={touched.requester && !!errors.requester}
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.requester}
-                    </Form.Control.Feedback>
-                  </Col>
-                </Row>
-
-                {/* Assignee */}
-                <Row className="mb-3">
-                  <Form.Label
-                    className="align-items-center d-flex"
-                    column
-                    sm={2}
-                  >
-                    Assignee
-                  </Form.Label>
-                  <Col sm={10}>
-                    <Form.Select
-                      size="sm"
-                      name="assignedId"
-                      value={values.assignedId}
-                      onChange={handleChange}
-                      disabled={
-                        !isSuperAdmin &&
-                        ((!isAssigned && !isApprovingManager) ||
-                          !canTouchApproverFields)
-                      }
-                      isInvalid={touched.assignedId && !!errors.assignedId}
+                <div
+                  className={`position-relative ${
+                    isLoading ? "pointer-events-none" : ""
+                  }`}
+                >
+                  {/* Request Title */}
+                  <Row className="mb-3">
+                    <Form.Label
+                      className="align-items-center d-flex"
+                      column
+                      sm={2}
                     >
-                      <option value="">Unassigned</option>
-                      {isEmployeeLoading ? (
-                        <option disabled>Loading...</option>
-                      ) : (
-                        employeeData?.data.employees.map((emp) => (
-                          <option key={emp._id} value={emp._id}>
-                            {emp.firstname} {emp.lastname} ({emp.email})
-                          </option>
-                        ))
-                      )}
-                    </Form.Select>
-                    <Form.Control.Feedback type="invalid">
-                      {errors.assignedId}
-                    </Form.Control.Feedback>
-                  </Col>
-                </Row>
-
-                {/* Status */}
-                <Row className="mb-3">
-                  <Form.Label
-                    className="align-items-center d-flex"
-                    column
-                    sm={2}
-                  >
-                    Status
-                  </Form.Label>
-                  <Col sm={10}>
-                    <Form.Select
-                      size="sm"
-                      name="status"
-                      value={values.status}
-                      disabled={!isApprovingManager && !isSuperAdmin}
-                      onChange={handleChange}
-                      isInvalid={touched.status && !!errors.status}
-                    >
-                      <option value="">Select Status</option>
-                      {statusOptions.map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                    </Form.Select>
-                    <Form.Control.Feedback type="invalid">
-                      {errors.status}
-                    </Form.Control.Feedback>
-                  </Col>
-                </Row>
-
-                {/* Ticket ID (human-facing slug, never the raw Mongo _id) */}
-                <Row className="mb-3">
-                  <Form.Label
-                    className="align-items-center d-flex"
-                    column
-                    sm={2}
-                  >
-                    Ticket ID
-                  </Form.Label>
-                  <Col sm={10}>
-                    <Form.Control
-                      type="text"
-                      size="sm"
-                      name="id"
-                      disabled
-                      value={values.id}
-                      onChange={handleChange}
-                      isInvalid={touched.id && !!errors.id}
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.id}
-                    </Form.Control.Feedback>
-                  </Col>
-                </Row>
-
-                {/* Description */}
-                <Row className="mb-3">
-                  <Form.Label
-                    className="align-items-center d-flex"
-                    column
-                    sm={2}
-                  >
-                    Description
-                  </Form.Label>
-                  <Col sm={10}>
-                    <QuillEditor
-                      content={values.description}
-                      onChange={(val) => setFieldValue("description", val)}
-                      disabled={!hasCreatorPermissions}
-                      isInvalid={touched.description && !!errors.description}
-                    />
-                    {touched.description && errors.description && (
-                      <div className="invalid-feedback d-block">
-                        {errors.description}
-                      </div>
-                    )}
-                  </Col>
-                </Row>
-
-                {/* Priority */}
-                <Row className="mb-3">
-                  <Form.Label
-                    className="align-items-center d-flex"
-                    column
-                    sm={2}
-                  >
-                    Priority
-                  </Form.Label>
-                  <Col sm={10}>
-                    <Form.Select
-                      name="priority"
-                      size="sm"
-                      value={values.priority}
-                      disabled={
-                        !isSuperAdmin &&
-                        (!isApprovingManager || !canTouchApproverFields)
-                      }
-                      onChange={handleChange}
-                      className="text-street-base"
-                      isInvalid={touched.priority && !!errors.priority}
-                    >
-                      <option value="">Select Priority</option>
-                      <option value="Low">Low</option>
-                      <option value="Medium">Medium</option>
-                      <option value="High">High</option>
-                    </Form.Select>
-                    <Form.Control.Feedback type="invalid">
-                      {errors.priority}
-                    </Form.Control.Feedback>
-                  </Col>
-                </Row>
-
-                {/* Category (single field — predefined list + custom-entry toggle) */}
-                <Row className="mb-3">
-                  <Form.Label
-                    className="align-items-center d-flex"
-                    column
-                    sm={2}
-                  >
-                    Category
-                  </Form.Label>
-                  <Col>
-                    {!isCustomCategory ? (
-                      <div className="d-flex align-items-center gap-8">
-                        <Form.Select
-                          name="category"
-                          size="sm"
-                          value={values.category}
-                          onChange={(e) => {
-                            if (e.target.value === "__custom__") {
-                              setIsCustomCategory(true);
-                              setFieldValue("category", "");
-                            } else {
-                              handleChange(e);
-                            }
-                          }}
-                          disabled={
-                            categoryLoading ||
-                            categoryError ||
-                            !hasCreatorPermissions
-                          }
-                          className="text-street-base"
-                          isInvalid={touched.category && !!errors.category}
-                        >
-                          <option value="">
-                            {categoryLoading
-                              ? "Loading categories..."
-                              : categoryError
-                                ? "Failed to load categories"
-                                : "Select category"}
-                          </option>
-                          {categoryData?.data.map((cat) => (
-                            <option key={cat._id} value={cat._id}>
-                              {cat.name}
-                            </option>
-                          ))}
-                          {hasPermission({
-                            action: "ticket_category_manage",
-                          }) && (
-                            <option value="__custom__">
-                              + Add custom category
-                            </option>
-                          )}
-                        </Form.Select>
-                        {categoryLoading && (
-                          <Spinner animation="border" size="sm" role="status" />
-                        )}
-                      </div>
-                    ) : hasPermission({
-                        action: "ticket_category_manage",
-                      }) ? (
-                      <div className="d-flex gap-8">
-                        <Form.Control
-                          type="text"
-                          size="sm"
-                          autoFocus
-                          placeholder="Enter custom category"
-                          value={customCategoryValue}
-                          onChange={(e) =>
-                            setCustomCategoryValue(e.target.value)
-                          }
-                          className="py-12 px-16 text-street-base"
-                          disabled={
-                            isCreatingCategory || !hasCreatorPermissions
-                          }
-                        />
-                        <button
-                          type="button"
-                          className="btn btn-street-primary btn-sm"
-                          disabled={isCreatingCategory}
-                          onClick={() => handleAddCustomCategory(setFieldValue)}
-                        >
-                          {isCreatingCategory ? "Adding..." : "Add"}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-street-neutral btn-sm"
-                          disabled={isCreatingCategory}
-                          onClick={() => {
-                            setIsCustomCategory(false);
-                            setCustomCategoryValue("");
-                            setFieldValue("category", "");
-                          }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : null}
-
-                    {touched.category && errors.category && (
-                      <div className="invalid-feedback d-block">
-                        {errors.category}
-                      </div>
-                    )}
-                    {categoryError && (
-                      <small className="text-danger">
-                        Could not load categories. Please refresh the page.
-                      </small>
-                    )}
-                  </Col>
-                </Row>
-
-                {/* Location */}
-
-                <Row className="mb-3">
-                  <Form.Label
-                    className="align-items-center d-flex"
-                    column
-                    sm={2}
-                  >
-                    Location
-                  </Form.Label>
-
-                  <Col sm={10}>
-                    <Form.Select
-                      size="sm"
-                      name="location"
-                      value={values.location}
-                      onChange={handleChange}
-                      disabled={!hasCreatorPermissions || locationsLoading}
-                      isInvalid={touched.location && !!errors.location}
-                    >
-                      <option value="">
-                        {locationsLoading
-                          ? "Loading locations..."
-                          : "Select location"}
-                      </option>
-
-                      {locationsData?.data?.map((loc) => (
-                        <option key={loc._id} value={loc._id}>
-                          {loc.name}
-                        </option>
-                      ))}
-                    </Form.Select>
-
-                    {touched.location && errors.location && (
-                      <div className="invalid-feedback d-block">
-                        {errors.location}
-                      </div>
-                    )}
-                  </Col>
-                </Row>
-                {/* Attachment */}
-                <Row className="mb-3">
-                  <Col sm={2}>
-                    <p className="form-label">Attachment</p>
-                  </Col>
-                  {!(editphoto || !ticket.photo) && (
+                      Request Title
+                    </Form.Label>
                     <Col sm={10}>
-                      <Icon icon="lucide:paperclip" className="me-1" />
-                      <Link
-                        className="text-street-primary mt-1 mt-sm-0 text-xs fw-normal"
-                        to="#"
+                      <Form.Control
+                        size="sm"
+                        type="text"
+                        name="requestTitle"
+                        value={values.requestTitle}
+                        disabled={!hasCreatorPermissions}
+                        onChange={handleChange}
+                        isInvalid={
+                          touched.requestTitle && !!errors.requestTitle
+                        }
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.requestTitle}
+                      </Form.Control.Feedback>
+                    </Col>
+                  </Row>
+
+                  {/* Requester */}
+                  <Row className="mb-3">
+                    <Form.Label
+                      className="align-items-center d-flex"
+                      column
+                      sm={2}
+                    >
+                      Requester
+                    </Form.Label>
+                    <Col sm={10}>
+                      <Form.Control
+                        size="sm"
+                        type="text"
+                        name="requester"
+                        disabled
+                        value={values.requester}
+                        onChange={handleChange}
+                        isInvalid={touched.requester && !!errors.requester}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.requester}
+                      </Form.Control.Feedback>
+                    </Col>
+                  </Row>
+
+                  {/* Assignee */}
+                  <Row className="mb-3">
+                    <Form.Label
+                      className="align-items-center d-flex"
+                      column
+                      sm={2}
+                    >
+                      Assignee
+                    </Form.Label>
+                    <Col sm={10}>
+                      <Form.Select
+                        size="sm"
+                        name="assignedId"
+                        value={values.assignedId}
+                        onChange={handleChange}
+                        disabled={
+                          !isSuperAdmin &&
+                          ((!isAssigned && !isApprovingManager) ||
+                            !canTouchApproverFields)
+                        }
+                        isInvalid={touched.assignedId && !!errors.assignedId}
                       >
-                        {ticket.photo?.fileName}
-                      </Link>
-                      {hasCreatorPermissions && (
-                        <Icon
-                          icon="mdi:file-edit"
-                          className="ms-2 icon-street-edit"
-                          onClick={() => seteditphoto(true)}
-                        />
+                        <option value="">Unassigned</option>
+                        {isEmployeeLoading ? (
+                          <option disabled>Loading...</option>
+                        ) : (
+                          employeeData?.data.employees.map((emp) => (
+                            <option key={emp._id} value={emp._id}>
+                              {emp.firstname} {emp.lastname} ({emp.email})
+                            </option>
+                          ))
+                        )}
+                      </Form.Select>
+                      <Form.Control.Feedback type="invalid">
+                        {errors.assignedId}
+                      </Form.Control.Feedback>
+                    </Col>
+                  </Row>
+
+                  {/* Status */}
+                  <Row className="mb-3">
+                    <Form.Label
+                      className="align-items-center d-flex"
+                      column
+                      sm={2}
+                    >
+                      Status
+                    </Form.Label>
+                    <Col sm={10}>
+                      <Form.Select
+                        size="sm"
+                        name="status"
+                        value={values.status}
+                        disabled={!isApprovingManager && !isSuperAdmin}
+                        onChange={handleChange}
+                        isInvalid={touched.status && !!errors.status}
+                      >
+                        <option value="">Select Status</option>
+                        {statusOptions.map((status) => (
+                          <option key={status} value={status}>
+                            {status}
+                          </option>
+                        ))}
+                      </Form.Select>
+                      <Form.Control.Feedback type="invalid">
+                        {errors.status}
+                      </Form.Control.Feedback>
+                    </Col>
+                  </Row>
+
+                  {/* Ticket ID (human-facing slug, never the raw Mongo _id) */}
+                  <Row className="mb-3">
+                    <Form.Label
+                      className="align-items-center d-flex"
+                      column
+                      sm={2}
+                    >
+                      Ticket ID
+                    </Form.Label>
+                    <Col sm={10}>
+                      <Form.Control
+                        type="text"
+                        size="sm"
+                        name="id"
+                        disabled
+                        value={values.id}
+                        onChange={handleChange}
+                        isInvalid={touched.id && !!errors.id}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.id}
+                      </Form.Control.Feedback>
+                    </Col>
+                  </Row>
+
+                  {/* Description */}
+                  <Row className="mb-3">
+                    <Form.Label
+                      className="align-items-center d-flex"
+                      column
+                      sm={2}
+                    >
+                      Description
+                    </Form.Label>
+                    <Col sm={10}>
+                      <QuillEditor
+                        content={values.description}
+                        onChange={(val) => setFieldValue("description", val)}
+                        disabled={!hasCreatorPermissions}
+                        isInvalid={touched.description && !!errors.description}
+                      />
+                      {touched.description && errors.description && (
+                        <div className="invalid-feedback d-block">
+                          {errors.description}
+                        </div>
                       )}
                     </Col>
-                  )}
-                  {(editphoto || !ticket.photo) && (
+                  </Row>
+
+                  {/* Priority */}
+                  <Row className="mb-3">
+                    <Form.Label
+                      className="align-items-center d-flex"
+                      column
+                      sm={2}
+                    >
+                      Priority
+                    </Form.Label>
                     <Col sm={10}>
-                      <ImageUpload name="photo" />
+                      <Form.Select
+                        name="priority"
+                        size="sm"
+                        value={values.priority}
+                        disabled={
+                          !isSuperAdmin &&
+                          (!isApprovingManager || !canTouchApproverFields)
+                        }
+                        onChange={handleChange}
+                        className="text-street-base"
+                        isInvalid={touched.priority && !!errors.priority}
+                      >
+                        <option value="">Select Priority</option>
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                      </Form.Select>
+                      <Form.Control.Feedback type="invalid">
+                        {errors.priority}
+                      </Form.Control.Feedback>
                     </Col>
-                  )}
-                </Row>
-              </div>
-            </Form>
-          )}
+                  </Row>
+
+                  {/* Category (single field — predefined list + custom-entry toggle) */}
+                  <Row className="mb-3">
+                    <Form.Label
+                      className="align-items-center d-flex"
+                      column
+                      sm={2}
+                    >
+                      Category
+                    </Form.Label>
+                    <Col>
+                      {!isCustomCategory ? (
+                        <div className="d-flex align-items-center gap-8">
+                          <Form.Select
+                            name="category"
+                            size="sm"
+                            value={values.category}
+                            onChange={(e) => {
+                              if (e.target.value === "__custom__") {
+                                setIsCustomCategory(true);
+                                setFieldValue("category", "");
+                              } else {
+                                handleChange(e);
+                                // clear stale "other" text when switching away from Other
+                                const newCat = categoryData?.data.find(
+                                  (c) => c._id === e.target.value,
+                                );
+                                const stillOther =
+                                  !!newCat?.isSystem &&
+                                  newCat?.name === "Other";
+                                if (!stillOther) {
+                                  setFieldValue("categoryOtherText", "");
+                                }
+                              }
+                            }}
+                            disabled={
+                              categoryLoading ||
+                              categoryError ||
+                              !hasCreatorPermissions
+                            }
+                            className="text-street-base"
+                            isInvalid={touched.category && !!errors.category}
+                          >
+                            <option value="">
+                              {categoryLoading
+                                ? "Loading categories..."
+                                : categoryError
+                                  ? "Failed to load categories"
+                                  : "Select category"}
+                            </option>
+                            {categoryData?.data.map((cat) => (
+                              <option key={cat._id} value={cat._id}>
+                                {cat.name}
+                              </option>
+                            ))}
+                            {hasPermission({
+                              action: "ticket_category_manage",
+                            }) && (
+                              <option value="__custom__">
+                                + Add custom category
+                              </option>
+                            )}
+                          </Form.Select>
+                          {categoryLoading && (
+                            <Spinner
+                              animation="border"
+                              size="sm"
+                              role="status"
+                            />
+                          )}
+                        </div>
+                      ) : hasPermission({
+                          action: "ticket_category_manage",
+                        }) ? (
+                        <div className="d-flex gap-8">
+                          <Form.Control
+                            type="text"
+                            size="sm"
+                            autoFocus
+                            placeholder="Enter custom category"
+                            value={customCategoryValue}
+                            onChange={(e) =>
+                              setCustomCategoryValue(e.target.value)
+                            }
+                            className="py-12 px-16 text-street-base"
+                            disabled={
+                              isCreatingCategory || !hasCreatorPermissions
+                            }
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-street-primary btn-sm"
+                            disabled={isCreatingCategory}
+                            onClick={() =>
+                              handleAddCustomCategory(setFieldValue)
+                            }
+                          >
+                            {isCreatingCategory ? "Adding..." : "Add"}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-street-neutral btn-sm"
+                            disabled={isCreatingCategory}
+                            onClick={() => {
+                              setIsCustomCategory(false);
+                              setCustomCategoryValue("");
+                              setFieldValue("category", "");
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : null}
+
+                      {touched.category && errors.category && (
+                        <div className="invalid-feedback d-block">
+                          {errors.category}
+                        </div>
+                      )}
+                      {categoryError && (
+                        <small className="text-danger">
+                          Could not load categories. Please refresh the page.
+                        </small>
+                      )}
+
+                      {/* "Please specify" — only when the resolved category is the system "Other" */}
+                      {isOtherSelected && (
+                        <Form.Group className="mt-2">
+                          <Form.Control
+                            type="text"
+                            size="sm"
+                            placeholder="Please specify"
+                            value={values.categoryOtherText ?? ""}
+                            disabled={!hasCreatorPermissions}
+                            onChange={(e) => {
+                              setFieldValue(
+                                "categoryOtherText",
+                                e.target.value,
+                              );
+                            }}
+                            onBlur={() =>
+                              setFieldTouched("categoryOtherText", true, false)
+                            }
+                            isInvalid={
+                              touched.categoryOtherText &&
+                              !!errors.categoryOtherText
+                            }
+                          />
+                          {touched.categoryOtherText &&
+                            errors.categoryOtherText && (
+                              <div className="invalid-feedback d-block">
+                                {errors.categoryOtherText}
+                              </div>
+                            )}
+                        </Form.Group>
+                      )}
+                    </Col>
+                  </Row>
+
+                  {/* Location */}
+
+                  <Row className="mb-3">
+                    <Form.Label
+                      className="align-items-center d-flex"
+                      column
+                      sm={2}
+                    >
+                      Location
+                    </Form.Label>
+
+                    <Col sm={10}>
+                      <Form.Select
+                        size="sm"
+                        name="location"
+                        value={values.location}
+                        onChange={handleChange}
+                        disabled={!hasCreatorPermissions || locationsLoading}
+                        isInvalid={touched.location && !!errors.location}
+                      >
+                        <option value="">
+                          {locationsLoading
+                            ? "Loading locations..."
+                            : "Select location"}
+                        </option>
+
+                        {locationsData?.data?.map((loc) => (
+                          <option key={loc._id} value={loc._id}>
+                            {loc.name}
+                          </option>
+                        ))}
+                      </Form.Select>
+
+                      {touched.location && errors.location && (
+                        <div className="invalid-feedback d-block">
+                          {errors.location}
+                        </div>
+                      )}
+                    </Col>
+                  </Row>
+                  {/* Attachment */}
+                  <Row className="mb-3">
+                    <Col sm={2}>
+                      <p className="form-label">Attachment</p>
+                    </Col>
+                    {!(editphoto || !ticket.photo) && (
+                      <Col sm={10}>
+                        <Icon icon="lucide:paperclip" className="me-1" />
+                        <Link
+                          className="text-street-primary mt-1 mt-sm-0 text-xs fw-normal"
+                          to={`/photo-viewer?url=${encodeURIComponent(ticket.photo.fileUrl)}`}
+                        >
+                          {ticket.photo?.fileName}
+                        </Link>
+                        {hasCreatorPermissions && (
+                          <Icon
+                            icon="mdi:file-edit"
+                            className="ms-2 icon-street-edit"
+                            onClick={() => seteditphoto(true)}
+                          />
+                        )}
+                      </Col>
+                    )}
+                    {(editphoto || !ticket.photo) && (
+                      <Col sm={10}>
+                        <ImageUpload name="photo" />
+                      </Col>
+                    )}
+                  </Row>
+                </div>
+              </Form>
+            );
+          }}
         </Formik>
       </ModalWrapper>
     </div>

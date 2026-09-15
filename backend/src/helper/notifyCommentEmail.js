@@ -13,7 +13,7 @@ function buildEntityLink(entityType, entitySlug) {
   const base = process.env.DOMAIN;
   return entityType === "Ticket"
     ? `${base}/it_facility?tab=track_tickets&item=${entitySlug}`
-    : `${base}/tasks/${entitySlug}`; // adjust to your actual task route
+    : `${base}/tasks?item=${entitySlug}`; // adjust to your actual task route
 }
 
 function snippet(message, maxLen = 140) {

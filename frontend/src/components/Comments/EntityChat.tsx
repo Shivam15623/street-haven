@@ -30,13 +30,10 @@ import {
   type TaskStatus,
   useUpdateTaskStatusMutation,
   type ITask,
-  useLazyFetchTaskMentionableUsersQuery,
 } from "../../services/taskApi";
 import DOMPurify from "dompurify";
 import type { ApiResponse } from "../../interfaces/Response";
 import useHasPermission from "../../hooks/Auth";
-
-import { useReadCursor } from "../../hooks/useReadCursor";
 
 const QuillEditor = lazy(() => import("../child/QuillEditor"));
 dayjs.extend(relativeTime);
@@ -51,32 +48,28 @@ interface Attachment {
   thumbnail?: string;
 }
 
-interface MentionableUser {
-  _id: string;
-  firstname: string;
-  lastname: string;
-  slug: string;
-  role?: string;
-}
-
 // Constants
 const COMMENTS_PER_PAGE = 15;
 const MAX_ATTACHMENTS = 7;
 
-// data-id is an HTML attribute, never rendered as visible text — it does
-// NOT need to be stripped to "hide" it from the user. We keep it (so
-// mentions can be styled/clicked later) and just sanitize everything else.
-const SANITIZE_CONFIG = {
-  ADD_TAGS: ["span"],
-  ADD_ATTR: ["data-id", "data-denotation-char", "data-value", "class"],
-};
+type UseLazyViewCommentsHook = () => readonly [
+  (args: { taskId: string; limit: number; cursor?: string | null }) => any,
+  {
+    data?: ApiResponse<GetTaskTimelineResponseData>;
+    isLoading: boolean;
+    isFetching: boolean;
+    isUninitialized: boolean;
+  },
+];
 
-const getPlainTextPreview = (html: string, maxLen = 80) => {
-  const text =
-    new DOMParser().parseFromString(html, "text/html").body.textContent ?? "";
-  const trimmed = text.trim().replace(/\s+/g, " ");
-  return trimmed.length > maxLen ? `${trimmed.slice(0, maxLen)}…` : trimmed;
-};
+type UseAddCommentHook = () => readonly [
+  (args: { formdata: FormData }) => {
+    unwrap: () => Promise<{ success: boolean }>;
+  },
+  {
+    isLoading: boolean;
+  },
+];
 
 // ---- Grouping helpers -------------------------------------------------
 
@@ -149,11 +142,8 @@ const groupTimelineByDate = (items: TaskTimelineItem[]): DateGroup[] => {
         continue;
       }
 
-      const isReply = !!item.parentCommentId;
       const last = groups[groups.length - 1];
-
       if (
-        !isReply &&
         last &&
         last.kind === "comments" &&
         sameUser(last.user, item.userId)
@@ -239,7 +229,6 @@ const ActivityLogRow = ({
 interface EntityChatProps {
   task: ITask;
   entityId: string; // ticketId or taskId
-  entitySlug: string; // used to fetch mentionable users
   socketRoomPrefix: "ticket" | "task"; // used to namespace socket rooms
   useLazyViewComments: UseLazyViewCommentsHook;
   useAddComment: UseAddCommentHook;
@@ -247,30 +236,16 @@ interface EntityChatProps {
    *  so we know it's safe to fetch + join the socket room. Defaults to true. */
   active?: boolean;
 }
-
-type UseLazyViewCommentsHook = () => readonly [
-  (args: { taskId: string; limit: number; cursor?: string | null }) => any,
-  {
-    data?: ApiResponse<GetTaskTimelineResponseData>;
-    isLoading: boolean;
-    isFetching: boolean;
-    isUninitialized: boolean;
-  },
-];
-
-type UseAddCommentHook = () => readonly [
-  (args: { formdata: FormData }) => {
-    unwrap: () => Promise<{ success: boolean }>;
-  },
-  {
-    isLoading: boolean;
-  },
-];
-
+interface MentionableUser {
+  _id: string;
+  firstname: string;
+  lastname: string;
+  slug: string;
+  role?: string;
+}
 const EntityChat = ({
   task,
   entityId,
-  entitySlug,
   socketRoomPrefix,
   useLazyViewComments,
   useAddComment,
@@ -288,14 +263,9 @@ const EntityChat = ({
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerFiles, setViewerFiles] = useState<FileItem[]>([]);
   const [viewerIndex, setViewerIndex] = useState(0);
-  const [mentionableUsers, setMentionableUsers] = useState<MentionableUser[]>(
+  const [mentionableUsers] = useState<MentionableUser[]>(
     [],
   );
-  const [replyingTo, setReplyingTo] = useState<TaskCommentTimelineItem | null>(
-    null,
-  );
-  const entityType = socketRoomPrefix === "task" ? "task" : "ticket";
-  const { markSeen } = useReadCursor(entityType, entityId);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const initialScrollDoneRef = useRef(false);
@@ -305,7 +275,6 @@ const EntityChat = ({
   ] = useLazyViewComments();
   const [updateTaskStatus, { isLoading: isUpdatingStatus }] =
     useUpdateTaskStatusMutation();
-  const [fetchMentionableUsers] = useLazyFetchTaskMentionableUsersQuery();
   const hasMore = commentData?.data?.pagination.hasMore ?? false;
 
   const handleLoadMore = useCallback(() => {
@@ -333,40 +302,15 @@ const EntityChat = ({
     () => groupTimelineByDate(timeline),
     [timeline],
   );
-
-  // Map of comment-id -> comment, used to resolve reply-quote previews.
-  // Activity rows are excluded since they can't be replied to/quoted.
-  const commentsById = useMemo(() => {
-    const map = new Map<string, TaskCommentTimelineItem>();
-    timeline.forEach((c) => {
-      if (c.itemType !== "activity") map.set(c._id, c);
-    });
-    return map;
-  }, [timeline]);
-
   useEffect(() => {
     mentionableUsersRef.current = mentionableUsers;
   }, [mentionableUsers]);
-
-  const loadMentionableUsers = useCallback(async () => {
-    try {
-      const result = await fetchMentionableUsers({
-        taskId: entitySlug,
-        q: "",
-      }).unwrap();
-      setMentionableUsers(result.data ?? result);
-    } catch (error) {
-      showError(getErrorMessage(error));
-    }
-  }, [fetchMentionableUsers, entitySlug]);
-
   // Initial fetch once "active" (replaces the old Sheet onOpen trigger)
   useEffect(() => {
     if (!active || !isUninitialized) return;
     setCursor(null);
     setTimeline([]);
     getComments({ taskId: entityId, limit: COMMENTS_PER_PAGE });
-    loadMentionableUsers();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, isUninitialized]);
@@ -407,6 +351,7 @@ const EntityChat = ({
       clientId: string;
     }) => {
       if (comment.entityId !== entityId) return;
+    
       setTimeline((prev) => {
         if (clientId) {
           const index = prev.findIndex((c) => c._id === clientId);
@@ -419,9 +364,6 @@ const EntityChat = ({
         if (prev.some((c) => c._id === comment._id)) return prev;
         return [...prev, comment];
       });
-        const el = containerRef.current;
-  const atBottom = el && el.scrollHeight - el.scrollTop - el.clientHeight < 100;
-  if (atBottom) markSeen(comment._id);
     };
 
     const handleNewActivity = (
@@ -472,25 +414,6 @@ const EntityChat = ({
 
   const handleFileSelect = () => fileInputRef.current?.click();
 
-  // Called from the "Reply" affordance on a message bubble.
-  const handleStartReply = useCallback((comment: TaskCommentTimelineItem) => {
-    setReplyingTo(comment);
-  }, []);
-
-  const handleCancelReply = useCallback(() => {
-    setReplyingTo(null);
-  }, []);
-
-  const scrollToComment = useCallback((commentId: string) => {
-    const el = containerRef.current?.querySelector(
-      `[data-comment-id="${commentId}"]`,
-    );
-    if (!el) return;
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
-    el.classList.add("chat-highlight-flash");
-    setTimeout(() => el.classList.remove("chat-highlight-flash"), 1200);
-  }, []);
-
   const handleMessageSend = async () => {
     if (!message.trim() && attachments.length === 0) return;
 
@@ -500,24 +423,6 @@ const EntityChat = ({
       formdata.append("clientId", clientId);
       if (message) formdata.append("message", message);
       attachments.forEach((file) => formdata.append("files", file));
-
-      // Pull out every @mentioned user's id from the rendered HTML.
-      const mentionedUserIds = Array.from(
-        new DOMParser()
-          .parseFromString(message, "text/html")
-          .querySelectorAll(".mention[data-id]"),
-      ).map((el) => el.getAttribute("data-id")!);
-
-      if (mentionedUserIds.length) {
-        formdata.append("mentions", JSON.stringify(mentionedUserIds));
-      }
-
-      // Reply: send the parent id if the user picked one. Snapshot it
-      // locally first since we clear `replyingTo` right after.
-      const parentComment = replyingTo;
-      if (parentComment) {
-        formdata.append("parentCommentId", parentComment._id);
-      }
 
       if (user) {
         const optimisticComment: TaskCommentTimelineItem = {
@@ -542,24 +447,11 @@ const EntityChat = ({
                 ? "video"
                 : "other",
           })),
-          // Optimistic reply preview — backend will send back the same
-          // shape ({_id, message, userId}) once the real comment returns,
-          // reconciled via clientId like everything else.
-          ...(parentComment
-            ? {
-                parentCommentId: {
-                  _id: parentComment._id,
-                  message: parentComment.message,
-                  userId: parentComment.userId,
-                },
-              }
-            : {}),
         };
         setTimeline((prev) => [...prev, optimisticComment]);
       }
       setMessage("");
       setAttachments([]);
-      setReplyingTo(null);
 
       const res = await addComment({ formdata }).unwrap();
       if (res.success) {
@@ -587,20 +479,6 @@ const EntityChat = ({
     },
     [],
   );
-  useLayoutEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    if (!initialScrollDoneRef.current && timeline.length > 0) {
-      el.scrollTop = el.scrollHeight;
-      initialScrollDoneRef.current = true;
-
-      // mark the latest real comment as seen once we've landed at bottom
-      const latestComment = [...timeline]
-        .reverse()
-        .find((c) => c.itemType !== "activity" && !c._id.includes("-")); // skip optimistic ids
-      if (latestComment) markSeen(latestComment._id);
-    }
-  }, [timeline]);
 
   return (
     <>
@@ -643,6 +521,7 @@ const EntityChat = ({
                 }
 
                 const isOwn = user?._id && group.user?._id === user._id;
+        
                 return (
                   <div
                     key={group.key}
@@ -650,96 +529,49 @@ const EntityChat = ({
                       isOwn ? "right" : "left align-items-start"
                     }`}
                   >
-                    {group.messages.map((msg) => {
-                      // parentCommentId may come back either populated
-                      // (from the API) or as our optimistic shape above —
-                      // both have {_id, message, userId}.
-                      const parent = msg.parentCommentId
-                        ? (commentsById.get(msg.parentCommentId._id) ??
-                          msg.parentCommentId)
-                        : null;
-
-                      return (
-                        <div
-                          key={msg._id}
-                          data-comment-id={msg._id}
-                          className="chat-message-content align-items-start position-relative p-8"
-                        >
-                          {!isOwn && group.user && (
-                            <div className="pb-2">
-                              <span className="text-xs fw-semibold text-street-primary">
-                                {group.user.firstname} {group.user.lastname}
-                              </span>
-                            </div>
-                          )}
-
-                          {/* Quoted reply header — click to jump to the
-                              original comment. */}
-                          {parent && (
-                            <button
-                              type="button"
-                              onClick={() => scrollToComment(parent._id)}
-                              className="reply-quote btn p-0 text-start d-block mb-2 text-decoration-none"
-                            >
-                              <div className="reply-quote-inner">
-                                <div className="reply-quote-user">
-                                  <Icon icon="mdi:reply" width={13} />
-                                  <span>
-                                    {parent.userId.firstname}{" "}
-                                    {parent.userId.lastname}
-                                  </span>
-                                </div>
-                                <div className="reply-quote-message">
-                                  {parent.message
-                                    ? getPlainTextPreview(parent.message, 80)
-                                    : "Attachment"}
-                                </div>
-                              </div>
-                            </button>
-                          )}
-
-                          {msg.attachments && msg.attachments.length > 0 && (
-                            <div className="space-y-2 gap-2 d-flex flex-column">
-                              {msg.attachments.map((attachment, attIdx) => (
-                                <AttachmentPreview
-                                  key={attachment._id}
-                                  attachment={attachment}
-                                  onClick={() =>
-                                    openFileViewer(msg.attachments!, attIdx)
-                                  }
-                                />
-                              ))}
-                            </div>
-                          )}
-
-                          {msg.message && (
-                            <div
-                              className="prose Te py-2 chatpara"
-                              dangerouslySetInnerHTML={{
-                                __html: DOMPurify.sanitize(
-                                  msg.message,
-                                  SANITIZE_CONFIG,
-                                ),
-                              }}
-                            />
-                          )}
-
-                          <div className="px-2 d-flex align-items-center justify-content-between gap-1">
-                            <button
-                              type="button"
-                              onClick={() => handleStartReply(msg)}
-                              className="btn p-0 reply-trigger"
-                            >
-                              <Icon icon="mdi:reply" width={13} />
-                              <span>Reply</span>
-                            </button>
-                            <span className="chat-time text-xxs">
-                              {dayjs(msg.createdAt).format("hh:mm A")}
+                    {group.messages.map((msg) => (
+                      <div
+                        key={msg._id}
+                        className="chat-message-content align-items-start position-relative p-8"
+                      >
+                        {!isOwn && group.user && (
+                          <div className="pb-2">
+                            <span className="text-xs fw-semibold text-street-primary">
+                              {group.user.firstname} {group.user.lastname}
                             </span>
                           </div>
+                        )}
+
+                        {msg.attachments && msg.attachments.length > 0 && (
+                          <div className="space-y-2 gap-2 d-flex flex-column">
+                            {msg.attachments.map((attachment, attIdx) => (
+                              <AttachmentPreview
+                                key={attachment._id}
+                                attachment={attachment}
+                                onClick={() =>
+                                  openFileViewer(msg.attachments!, attIdx)
+                                }
+                              />
+                            ))}
+                          </div>
+                        )}
+
+                        {msg.message && (
+                          <div
+                            className="prose Te py-2 chatpara"
+                            dangerouslySetInnerHTML={{
+                              __html: DOMPurify.sanitize(msg.message),
+                            }}
+                          />
+                        )}
+
+                        <div className="px-2 d-flex align-items-center justify-content-end gap-1">
+                          <span className="chat-time text-xxs">
+                            {dayjs(msg.createdAt).format("hh:mm A")}
+                          </span>
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
                   </div>
                 );
               })}
@@ -787,35 +619,6 @@ const EntityChat = ({
         </div>
       )}
 
-      {/* Reply preview bar — shown above the composer while replyingTo
-          is set. Dismissible without sending. */}
-      {replyingTo && (
-        <div className="reply-preview-bar d-flex align-items-center justify-content-between gap-3">
-          <div className="flex-grow-1 min-w-0">
-            <div className="reply-preview-title">
-              <Icon icon="mdi:reply" width={14} />
-              <span>
-                Replying to {replyingTo.userId.firstname}{" "}
-                {replyingTo?.userId.lastname}
-              </span>
-            </div>
-            <div className="reply-preview-text text-truncate">
-              {replyingTo.message
-                ? getPlainTextPreview(replyingTo.message, 100)
-                : "Attachment"}
-            </div>
-          </div>
-          <button
-            type="button"
-            className="btn btn-link reply-cancel-btn border-0 p-1"
-            onClick={handleCancelReply}
-            aria-label="Cancel reply"
-          >
-            <Icon icon="mdi:close" width={16} />
-          </button>
-        </div>
-      )}
-
       <form
         className="chat-message-box p-0 rounded-0"
         onSubmit={(e) => {
@@ -828,7 +631,6 @@ const EntityChat = ({
             <QuillEditor
               content={message}
               onChange={setMessage}
-              mentionableUsers={mentionableUsers}
               features={{
                 align: false,
                 backgroundColor: false,
@@ -837,7 +639,6 @@ const EntityChat = ({
                 headings: true,
                 link: true,
                 lists: true,
-                mentions: true,
               }}
             />
           </div>

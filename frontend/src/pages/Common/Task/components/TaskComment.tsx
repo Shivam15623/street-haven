@@ -173,7 +173,6 @@ const TaskComment = ({ task }: { task: ITask }) => {
               socketRoomPrefix="task"
               useLazyViewComments={useLazyViewComments}
               useAddComment={useAddComment}
-              entitySlug={task.slug}
               active={show}
             />
           </div>

@@ -23,6 +23,7 @@ const AnnouncementSchema = new Schema(
       fileUrl: String,
       fileType: String,
       size: Number,
+  
     },
 
     createdBy: {

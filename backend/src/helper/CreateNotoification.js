@@ -1,6 +1,5 @@
 import Notification from "../model/notification.js";
 import UserNotification from "../model/notificationTrack.js";
-import { normalizeSystemNotification } from "./normalizeNotification.js";
 
 /**
  * Create a notification and link it to users if needed
@@ -108,8 +107,22 @@ export const createNotification = async (options, session = null) => {
   /* ======================
      SOCKET / API PAYLOAD
   ====================== */
-  return normalizeSystemNotification(notification, {
+  return {
+    _id: notification._id.toString(),
+    category: notification.category,
+    action: notification.action,
+    severity: notification.severity,
+    title: notification.title,
+    message: notification.message,
+    link: notification.link,
+    meta: notification.meta,
+    createdBy: notification.createdBy,
+    createdAt: notification.createdAt,
+    updatedAt: notification.updatedAt,
+    requiredPermissions: notification.requiredPermissions,
+    permissionMatchType: notification.permissionMatchType,
+    isGlobal,
     isRead: false,
     readAt: null,
-  });
+  };
 };

@@ -3,7 +3,7 @@ import { Suspense, useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigation } from "react-router-dom";
 import "@assets/css/layout.css";
 import ThemeToggleButton from "../../helper/ThemeToggleButton.tsx";
-import SiteLogo from "@assets/images/auth/e5fcae70d4835039e473c6b00f4a901799a86cf3.png";
+import SiteLogo from "@assets/images/street-logo-auth.png";
 import ProfileDropdown from "../../helper/ProfileDropdown.tsx";
 import NotificationDropdown from "../../helper/NotificationDropdown.tsx";
 import DashboardIcon from "../../assets/icons/sidebaricons/dashboard.svg?react";

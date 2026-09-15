@@ -1,4 +1,7 @@
-export function normalizeSystemNotification(n, { isRead = false, readAt = null } = {}) {
+export function normalizeSystemNotification(
+  n,
+  { isRead = false, readAt = null } = {},
+) {
   return {
     _id: n._id.toString(),
     source: "system",
@@ -12,12 +15,14 @@ export function normalizeSystemNotification(n, { isRead = false, readAt = null }
     sortDate: isRead && readAt ? readAt : n.createdAt,
   };
 }
+
 export function formatActivityText(n) {
   const names = n.actorNames || [];
   const total = n.uniqueActorCount ?? names.length;
 
   if (n.type === "mention") return `${names[0] || "Someone"} mentioned you`;
-  if (n.type === "reply") return `${names[0] || "Someone"} replied to your comment`;
+  if (n.type === "reply")
+    return `${names[0] || "Someone"} replied to your comment`;
 
   let actorText;
   if (total <= 1) actorText = names[0] || "Someone";
@@ -26,23 +31,55 @@ export function formatActivityText(n) {
 
   return `${actorText} added ${n.commentCount} comment${n.commentCount === 1 ? "" : "s"}`;
 }
-export function normalizeCommentNotification(n) {
+
+// Builds the entity payload from an already-loaded Ticket/Task document.
+// No DB access here — purely a shape transform.
+export function normalizeCommentEntity(entityType, entity) {
+  if (!entity) return null;
+
+  const isTicket = entityType === "Ticket";
+
+  return {
+    type: entityType,
+    id: entity._id.toString(),
+    displayId: isTicket
+      ? `TICKET-${String(entity.ticketNumber).padStart(5, "0")}`
+      : `TASK-${String(entity.taskNumber).padStart(5, "0")}`,
+    slug: entity.slug,
+    title: isTicket ? entity.req_title : entity.title,
+  };
+}
+
+export function normalizeCommentNotification(n, { entity = null } = {}) {
   return {
     _id: n._id.toString(),
     source: "comment",
+
     title: null,
-    message: n.formattedMessage, // caller must run formatActivityText first
+    message: n.formattedMessage,
+
     severity: n.priority === "high" ? "warning" : "info",
-    link: `/${n.entityType.toLowerCase()}/${n.entityId}`,
+
+    link:
+      n.entityType === "Ticket"
+        ? `/it_facility?tab=track_tickets&item=${entity.slug}`
+        : `/tasks/${entity.slug}`,
+
+    isRead: n.isRead,
+    readAt: n.readAt,
+
+    createdAt: n.createdAt,
+    sortDate: n.isRead && n.readAt ? n.readAt : n.createdAt,
+
+    // comment-only fields
     entityType: n.entityType,
     entityId: n.entityId.toString(),
+
+    entity,
+
     commentId: n.commentId ? n.commentId.toString() : null,
     notifType: n.type,
     priority: n.priority,
     commentCount: n.commentCount,
-    isRead: n.isRead,
-    readAt: n.readAt,
-    createdAt: n.createdAt,
-    sortDate: n.isRead && n.readAt ? n.readAt : n.createdAt,
   };
 }

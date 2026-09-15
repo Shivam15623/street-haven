@@ -18,6 +18,7 @@ export interface TicketData {
     _id: string;
     name: string;
   };
+  categoryOtherText: string;
   location?: {
     _id: string;
     name: string;

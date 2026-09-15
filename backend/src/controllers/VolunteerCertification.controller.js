@@ -11,7 +11,7 @@ import User, { ROLES } from "../model/user.js";
 import { createNotification } from "../helper/CreateNotoification.js";
 
 const emitNotification = (recipients, notification) => {
-  console.log("Emitting notification to recipients:", recipients, notification);
+
   for (const r of recipients) {
     io.to(`user_${r.userId.toString()}`).emit("newNotification", notification);
   }
@@ -42,6 +42,7 @@ export const submitCertification = asyncHandler(async (req, res) => {
       volunteer: volunteerId,
       title: "Training Completion Certificate",
       fileUrl: uploadedFile.secure_url,
+
       issuedBy,
       issueDate: issueDate ? new Date(issueDate) : undefined,
       expiryDate: expiryDate ? new Date(expiryDate) : undefined,

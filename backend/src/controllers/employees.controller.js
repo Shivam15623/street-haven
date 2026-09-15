@@ -9,7 +9,11 @@ import { ApiError } from "../utills/ApiError.js";
 import Location from "../model/location.js";
 import mongoose from "mongoose";
 import { sendNewUserCredentialsEmail } from "../helper/EmailsMailer/emailHandlers.js";
-import { flushEmployeeEffects, notifyEmployeeAdded, notifyEmployeeStatusChanged } from "../services/Employeenotificationservice.js";
+import {
+  flushEmployeeEffects,
+  notifyEmployeeAdded,
+  notifyEmployeeStatusChanged,
+} from "../services/Employeenotificationservice.js";
 export const AllEmployees = asyncHandler(async (req, res) => {
   const {
     page = 1,
@@ -161,7 +165,18 @@ export const AddEmployee = asyncHandler(async (req, res) => {
       customPermissions,
       locations,
     } = req.body;
+    const resolvedRole = role || ROLES.STAFF;
 
+    // Only a Super Admin can create another Super Admin
+    if (
+      resolvedRole === ROLES.SUPER_ADMIN &&
+      req.user?.role !== ROLES.SUPER_ADMIN
+    ) {
+      throw new ApiError(
+        403,
+        "Only a Super Admin can create another Super Admin",
+      );
+    }
     const existingUser = await User.findOne({
       $or: [{ email }, { phoneNo: phone }],
     }).session(session);
@@ -172,8 +187,6 @@ export const AddEmployee = asyncHandler(async (req, res) => {
       if (existingUser.phoneNo === phone)
         throw new ApiError(400, "User already exists with this phone number");
     }
-
-    const resolvedRole = role || ROLES.STAFF;
 
     // Hire Date / Volunteer Start Date is the same field for all roles now
     if (!hireDate) {
@@ -333,7 +346,14 @@ export const EditEmployee = asyncHandler(async (req, res) => {
       customPermissions,
       locations,
     } = req.body;
-
+    if (role === ROLES.SUPER_ADMIN && findUser.role !== ROLES.SUPER_ADMIN) {
+      if (req.user?.role !== ROLES.SUPER_ADMIN) {
+        throw new ApiError(
+          403,
+          "Only a Super Admin can assign the Super Admin role",
+        );
+      }
+    }
     const updates = {};
 
     /* ======================

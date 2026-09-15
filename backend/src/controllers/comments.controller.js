@@ -11,14 +11,12 @@ import { uploadOnCloudinary } from "../utills/cloudinary.js";
 import { io } from "../index.js";
 import User from "../model/user.js";
 
-import { handleNewComment } from "../helper/commentNotification.js";
 import {
   getEntityAccessUserIds,
   getTaskAccessUserIds,
   getTicketAccessUserIds,
 } from "../helper/mentionAccess.js";
 import EntityMembership from "../model/EntityMemberShip.js";
-import UserCommentNotification from "../model/UserCommentNotification.js";
 import { fanOutComment } from "../helper/fanoutComments.js";
 
 const ENTITY_MODELS = {
@@ -52,17 +50,18 @@ const loadEntityForAccessCheck = async (entityType, entityId) => {
 
   if (entityType === "Task") {
     return EntityModel.findById(entityId)
-      .select("assignedTo assignedBy slug")
+      .select("assignedTo assignedBy slug taskNumber title")
       .populate({ path: "assignedTo", select: "_id superviserId" })
       .lean();
   }
 
   // Ticket
   return EntityModel.findById(entityId)
-    .select("location createdBy assignedTo approvedBy assignmentHistory slug")
+    .select(
+      "location createdBy assignedTo approvedBy assignmentHistory slug ticketNumber req_title",
+    )
     .lean();
 };
-
 // --- Shared core logic ---
 
 export const fetchCommentsForEntity = asyncHandler(
@@ -122,6 +121,7 @@ export const addCommentForEntity = asyncHandler(
     const userIdStr = userId.toString();
     const isSuperAdmin = req.user.role === "super_admin";
     const { message, clientId, parentCommentId } = req.body;
+ 
 
     if (!message && (!req.files || req.files.length === 0)) {
       throw new ApiError(
@@ -251,7 +251,7 @@ export const addCommentForEntity = asyncHandler(
       .json(
         new ApiResponse(201, "Comment added successfully", populatedComment),
       );
-    fanOutComment(comment).catch((err) =>
+    fanOutComment(comment, entity).catch((err) =>
       console.error("fanoutcomment failed", err),
     );
     // --- notification pipeline: fire-and-forget, AFTER the response ---
@@ -369,18 +369,10 @@ export const getTicketMentionableUsers = asyncHandler(async (req, res) => {
     );
 });
 
-/**
- * POST /api/:entityType/:entityId/read-cursor
- * body: { lastSeenCommentId }
- *
- * Called by the client whenever a comment has ACTUALLY been rendered on
- * screen (IntersectionObserver "visible" signal), never on page-open
- * alone (case #9, #10). Debounce this client-side — don't fire per
- * scroll tick, fire on scroll-stop / visibility-change (~500ms-1s).
- *
- * This is intentionally the ONLY place lastSeenCommentId advances.
- * Dismissing a notification does NOT call this (case #35, #17).
- */
+
+
+
+
 export const updateReadCursor = asyncHandler(async (req, res) => {
   const { entityType, entityId } = req.params;
   const { lastSeenCommentId } = req.body;
@@ -526,3 +518,4 @@ function computeExpireAt(type) {
   };
   return new Date(Date.now() + (TTL_DAYS[type] ?? 30) * 86400000);
 }
+

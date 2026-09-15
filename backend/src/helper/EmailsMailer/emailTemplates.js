@@ -1,3 +1,11 @@
+// helper/ticketCategoryDisplay.js
+export function getCategoryDisplayName(categoryDoc, categoryOtherText) {
+  if (!categoryDoc) return "-";
+  if (categoryDoc.isSystem && categoryDoc.name === "Other" && categoryOtherText) {
+    return `Other: ${categoryOtherText}`;
+  }
+  return categoryDoc.name;
+}
 export const generateEmailTemplate = ({ type, data }) => {
   switch (type) {
     case "verification":
@@ -585,6 +593,49 @@ export const generateEmailTemplate = ({ type, data }) => {
       <p style="margin-top:24px;">
         <a href="${data.link}" style="background:#7c3aed;color:#fff;padding:12px 18px;text-decoration:none;border-radius:6px;display:inline-block;">
           View Comment
+        </a>
+      </p>
+    `,
+      };
+
+    case "comment_reply":
+      return {
+        subject: `${data.repliedByName} replied to your comment in ${data.entityLabel}`,
+        html: `
+      <h2>New Reply</h2>
+
+      <p>Hello ${data.recipientName},</p>
+
+      <p>
+        <strong>${data.repliedByName}</strong> replied to your comment on the
+        following ${data.entityLabel}.
+      </p>
+
+      <table style="border-collapse:collapse;">
+        <tr>
+          <td style="padding:6px 12px;"><strong>${data.entityLabel}</strong></td>
+          <td>${data.entityTitle}</td>
+        </tr>
+        ${
+          data.location
+            ? `
+        <tr>
+          <td style="padding:6px 12px;"><strong>Location</strong></td>
+          <td>${data.location}</td>
+        </tr>`
+            : ""
+        }
+      </table>
+
+      <div style="margin:20px 0; padding:14px 18px; background:#eff6ff; border-left:4px solid #2563eb; border-radius:4px;">
+        <p style="margin:0; color:#4b5563; font-style:italic;">
+          "${data.commentSnippet}"
+        </p>
+      </div>
+
+      <p style="margin-top:24px;">
+        <a href="${data.link}" style="background:#2563eb;color:#fff;padding:12px 18px;text-decoration:none;border-radius:6px;display:inline-block;">
+          View Reply
         </a>
       </p>
     `,

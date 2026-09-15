@@ -185,21 +185,21 @@ const TicketDetailDrawer = ({ ticketId, open, onClose }: Props) => {
                 <InfoRow
                   icon="mdi:account-outline"
                   label="Submitted by"
-                  value={`${ticket.submittedBy.name} · ${ticket.submittedBy.email}`}
+                  value={`${ticket.submittedBy.name}`}
                 />
               )}
               {ticket.assignedTo && (
                 <InfoRow
                   icon="mdi:account-arrow-right-outline"
                   label="Assigned to"
-                  value={`${ticket.assignedTo.name} · ${ticket.assignedTo.email}`}
+                  value={`${ticket.assignedTo.name}`}
                 />
               )}
               {ticket.approvedBy && (
                 <InfoRow
                   icon="mdi:account-check-outline"
                   label="Approved by"
-                  value={`${ticket.approvedBy.name} · ${ticket.approvedBy.email}`}
+                  value={`${ticket.approvedBy.name}`}
                 />
               )}
               {ticket.rejectedBy && (

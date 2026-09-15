@@ -20,9 +20,14 @@ type Props = {
 
 const ViewFileModal = ({ attachment, title, trigger }: Props) => {
   const [showModal, setShowModal] = useState(false);
+  const [numPages, setNumPages] = useState<number | null>(null);
   const openModal = () => setShowModal(true);
   const closeModal = () => setShowModal(false);
   const extension = attachment.fileUrl.split(".").pop()?.toLowerCase() || "";
+
+  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+    setNumPages(numPages);
+  };
 
   const handleDownload = async () => {
     const response = await fetch(attachment.fileUrl);
@@ -39,18 +44,24 @@ const ViewFileModal = ({ attachment, title, trigger }: Props) => {
     switch (extension) {
       case "pdf":
         return (
-          <Document file={{ url: attachment.fileUrl }}>
-            {Array.from({ length: attachment.totalPages || 1 }, (_, index) => (
-              <Page
-                key={index}
-                pageNumber={index + 1}
-                width={Math.min(window.innerWidth * 0.8, 450)}
-                height={640}
-                renderAnnotationLayer={false}
-                renderTextLayer={false}
-                className="mb-4"
-              />
-            ))}
+          <Document
+            file={{ url: attachment.fileUrl }}
+            onLoadSuccess={onDocumentLoadSuccess}
+          >
+            {numPages === null ? (
+              <div className="text-center py-8">Loading PDF...</div>
+            ) : (
+              Array.from({ length: numPages }, (_, index) => (
+                <Page
+                  key={index}
+                  pageNumber={index + 1}
+                  width={Math.min(window.innerWidth * 0.8, 450)}
+                  renderAnnotationLayer={false}
+                  renderTextLayer={false}
+                  className="mb-4 d-flex justify-content-center"
+                />
+              ))
+            )}
           </Document>
         );
 
@@ -90,7 +101,7 @@ const ViewFileModal = ({ attachment, title, trigger }: Props) => {
         return (
           <iframe
             src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
-              attachment.fileUrl
+              attachment.fileUrl,
             )}`}
             className="w-100  border rounded-lg"
             height={640}
@@ -144,15 +155,18 @@ const ViewFileModal = ({ attachment, title, trigger }: Props) => {
         size="xl"
         show={showModal}
         onHide={closeModal}
-          footer={
+        footer={
           <div className="d-flex justify-content-end gap-3">
-            <button className="btn btn-street-primary btn-street-lg d-flex align-items-center justify-content-center gap-2 radius-12" onClick={handleDownload}>
+            <button
+              className="btn btn-street-primary btn-street-lg d-flex align-items-center justify-content-center gap-2 radius-12"
+              onClick={handleDownload}
+            >
               <Icon icon="jam:download" className="text-xl" /> Download
             </button>
           </div>
         }
       >
-        <div className="d-flex justify-content-center">{renderPreview()}</div>
+        <div className="d-flex justify-content-center overflow-hidden " >{renderPreview()}</div>
       </ModalWrapper>
     </>
   );

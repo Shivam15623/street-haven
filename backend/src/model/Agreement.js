@@ -34,7 +34,7 @@ const CollectiveAgreementSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 5);
@@ -53,6 +53,6 @@ CollectiveAgreementSchema.pre("save", function (next) {
 });
 const CollectiveAgreement = mongoose.model(
   "CollectiveAgreement",
-  CollectiveAgreementSchema
+  CollectiveAgreementSchema,
 );
 export default CollectiveAgreement;

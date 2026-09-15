@@ -16,6 +16,7 @@ import { UpdateUserDetails } from "../../../../redux/AuthSlice";
 import { PatternFormat } from "react-number-format";
 import { ROLES } from "../../../../interfaces/AuthInterfaces";
 import { getErrorMessage } from "../../../../utills/utills";
+import Badge from "../../../../components/child/Badge";
 
 dayjs.extend(relativeTime);
 // ✅ Validation Schema
@@ -190,27 +191,6 @@ const ProfileSettings: React.FC = () => {
                   </div>
                 </Col>
               </Row>
-              {user?.data.role === ROLES.MANAGER &&
-                Array.isArray(user?.data.location) &&
-                user.data.location.length > 0 && (
-                  <Row className="mb-3 align-items-center">
-                    <Form.Label column sm={2}>
-                      Location{user.data.location.length > 1 ? "s" : ""}
-                    </Form.Label>
-                    <Col sm={10}>
-                      <Form.Control
-                        type="text"
-                        size="sm"
-                        name="location"
-                        value={user.data.location
-                          .map((loc: any) => loc.name)
-                          .join(", ")}
-                        disabled
-                        readOnly
-                      />
-                    </Col>
-                  </Row>
-                )}
               <Row className="mb-3 align-items-center">
                 <Form.Label column sm={2}>
                   Work Phone
@@ -252,6 +232,44 @@ const ProfileSettings: React.FC = () => {
                   )}
                 </Col>
               </Row>
+              {user?.data.role === ROLES.MANAGER &&
+                Array.isArray(user?.data.location) &&
+                user.data.location.length > 0 && (
+                  <div
+                    className="mt-2 mb-3 p-16 p-md-20 rounded-3 "
+                    style={{ backgroundColor: "var(--street-bg-f4)" }}
+                  >
+                    <div className="d-flex align-items-center gap-8 mb-12">
+                      <Icon
+                        icon="mdi:map-marker-outline"
+                        className="text-street-primary text-xl"
+                      />
+
+                      <div>
+                        <p className="text-sm fw-semibold text-street-dark mb-0">
+                          Managed Locations
+                        </p>
+                        <p className="text-xs text-street-base mb-0">
+                          Locations you are responsible for managing
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="d-flex flex-wrap gap-8">
+                      {user.data.location.map((loc: any) => (
+                        <Badge
+                          key={loc._id}
+                          variant="primary-soft"
+                          shape="pill"
+                          leftIcon={<Icon icon="mdi:map-marker-outline" />}
+                        >
+                          {loc.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
               <div className="d-flex gap-16 justify-content-end">
                 <button
                   type="submit"

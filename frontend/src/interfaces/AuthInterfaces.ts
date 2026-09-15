@@ -14,6 +14,7 @@ export interface User {
   createdAt: string;
   title: string;
   hireDate: string;
+  isFacilityManager: boolean;
   customPermissions: AllPermissions[];
 }
 export interface ChangeUserDetailsPayLoad {
@@ -55,7 +56,7 @@ export interface LoginResponseData {
 }
 export interface LoginVerifyTotpcredentials {
   tempToken: string;
-  totpCode: number;
+  totpCode: string;
 }
 interface UserVerify {
   _id: string;
@@ -70,6 +71,7 @@ interface UserVerify {
   createdAt: string;
   title: string;
   hireDate: Date;
+  isFacilityManager: boolean;
   customPermissions: AllPermissions[];
 }
 export interface LoginVerifyTotpResponseData {
@@ -83,7 +85,7 @@ interface GenerateTotpResponseData {
 }
 export interface SetUpTotpResponseCredentials {
   tempToken: string;
-  totpCode: number;
+  totpCode: string;
 }
 
 export interface GenerateTotpCredentials {
@@ -100,7 +102,7 @@ export interface SignupCredentials {
   phone: string;
   password: string;
   role: Role;
-  superviserId: string;
+  superviserId: string|null;
   locations: string[];
   customPermissions: string[];
 }

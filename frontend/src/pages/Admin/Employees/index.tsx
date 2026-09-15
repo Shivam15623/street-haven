@@ -44,7 +44,7 @@ const Employees = () => {
   );
 
   const employees = data?.data?.employees ?? [];
-  console.log("employees", data);
+
   const handleLimitChange = (value: number) => {
     setLimit(value);
     setPage(1);

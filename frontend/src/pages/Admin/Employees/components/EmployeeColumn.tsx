@@ -91,7 +91,6 @@ export const EmployeeColumn = (
                 phoneNo: row.phoneNo,
                 role: row.role,
                 hireDate: row.hireDate,
-                timePeriod: dayjs(row.hireDate).fromNow(),
                 title: row.title,
                 locations: row.locations,
                 superviserId: row.superviserId,

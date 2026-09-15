@@ -16,6 +16,7 @@ import useHasPermission from "../../../hooks/Auth";
 const EmployeeDashboard = () => {
   const today = dayjs().format("dddd, MMMM D, YYYY");
   const { user } = useSelector(selectAuth);
+  const isFacilityManager = user?.isFacilityManager;
   const { hasPermission } = useHasPermission();
 
   const canViewTickets = hasPermission({
@@ -54,7 +55,7 @@ const EmployeeDashboard = () => {
             className="fw-semibold text-2xl sm:text-xxl text-street-dark"
             style={{ lineHeight: "normal" }}
           >
-            Welcome Back,{user?.firstName}!
+            Welcome Back, {user?.firstName}!
           </div>
           <div
             className="text-street-base text-sm sm:text-md fw-normal"
@@ -131,12 +132,22 @@ const EmployeeDashboard = () => {
         {canViewTickets && (
           <DashboardCard
             icon="iconamoon:ticket-light"
-            label="Open Tickets"
+            label={"Open Tickets"}
             link="/it_facility?tab=track_tickets&status=Open"
             value={ticketData?.data.counts.open ?? 0}
             key="Open Tickets"
           />
         )}
+        {isFacilityManager && (
+          <DashboardCard
+            icon="iconamoon:ticket-light"
+            label={"Assigned Tickets"}
+            link="/it_facility?tab=track_tickets&status=Approved"
+            value={ticketData?.data.counts.approved ?? 0}
+            key="Assigned Tickets"
+          />
+        )}
+
         {canViewTasks && (
           <DashboardCard
             icon="mdi:clipboard-text-outline"

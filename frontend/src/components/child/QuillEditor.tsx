@@ -329,7 +329,6 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
         <div
           style={{
             flex: 1,
-            overflowY: "hidden",
             overflowX: "visible",
             cursor: disabled ? "not-allowed" : "text",
             borderBottomRightRadius: "inherit",
@@ -342,12 +341,14 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
             onChange={handleChange}
             modules={modules}
             readOnly={disabled}
+            className="quill-editor-scrollable"
             theme="snow"
             placeholder={placeholder}
             style={{
               height: `${editorHeight}px`,
               minHeight: "80px",
               maxHeight: "130px",
+              overflowY: "auto",
             }}
           />
         </div>

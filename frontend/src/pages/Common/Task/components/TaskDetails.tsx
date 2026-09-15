@@ -168,14 +168,14 @@ const TaskDetailDrawer = ({ taskId, open, onClose }: Props) => {
                 <InfoRow
                   icon="mdi:account-outline"
                   label="Assigned by"
-                  value={`${task.assignedBy.firstname} ${task.assignedBy.lastname} · ${task.assignedBy.email}`}
+                  value={`${task.assignedBy.firstname} ${task.assignedBy.lastname}`}
                 />
               )}
               {task.assignedTo ? (
                 <InfoRow
                   icon="mdi:account-arrow-right-outline"
                   label="Assigned to"
-                  value={`${task.assignedTo.firstname} ${task.assignedTo.lastname} · ${task.assignedTo.email}`}
+                  value={`${task.assignedTo.firstname} ${task.assignedTo.lastname}`}
                 />
               ) : (
                 <InfoRow

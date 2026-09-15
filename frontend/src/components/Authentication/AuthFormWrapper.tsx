@@ -14,7 +14,7 @@ const AuthFormWrapper = ({
       <div className="d-flex align-items-center justify-content-center">
         <img
           className="auth-form-wrap-img "
-          src="assets/images/auth/e5fcae70d4835039e473c6b00f4a901799a86cf3.png"
+          src="assets/images/street-logo-auth.png"
         />
       </div>
       <div className="d-flex flex-column align-items-center gap-24 gap-sm-28 gap-md-32">

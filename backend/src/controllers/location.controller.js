@@ -151,7 +151,7 @@ export const update = asyncHandler(async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     throw new ApiError(400, "Invalid location id");
   }
-  console.log("facilityManager", facilityManager);
+
   const location = await Location.findById(id);
   if (!location) {
     throw new ApiError(404, "Location not found");

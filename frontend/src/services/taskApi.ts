@@ -22,7 +22,6 @@ export interface ITask {
   _id: string;
   title: string;
   description: string;
-  slug: string;
   assignedTo: IUser;
   assignedBy: IUser;
   status: TaskStatus;
@@ -118,6 +117,7 @@ export interface TaskTimelineUser {
   lastname: string;
   email: string | null;
 }
+
 export interface TaskActivityTimelineItem {
   _id: string;
   itemType: "activity";
@@ -132,19 +132,8 @@ export interface TaskActivityTimelineItem {
 
 export interface TaskCommentTimelineItem {
   _id: string;
-  itemType: "comment"; // ← was missing entirely — this is what makes the union discriminated
-
+  itemType: "comment";
   message: string;
-
-  createdAt: string;
-
-  userId: {
-    _id: string;
-    firstname: string;
-    lastname: string;
-    email: string;
-  };
-
   attachments?: {
     _id: string;
     size: number;
@@ -152,28 +141,13 @@ export interface TaskCommentTimelineItem {
     fileUrl: string;
     type: FileType;
   }[];
-
-  mentions?: {
-    _id: string;
-    firstname: string;
-    lastname: string;
-  }[];
-
-  parentCommentId?: {
-    _id: string;
-    message: string;
-    userId: {
-      _id: string;
-      firstname: string;
-      lastname: string;
-    };
-  } | null;
+  userId: TaskTimelineUser | null;
+  createdAt: string;
 }
 
 export type TaskTimelineItem =
   | TaskActivityTimelineItem
   | TaskCommentTimelineItem;
-
 
 // pagination is now cursor-based, not page-based
 export interface GetTaskTimelineResponseData {
@@ -397,6 +371,5 @@ export const {
   useLazyViewTaskCommentsQuery,
   useLazyGetTaskDetailsQuery,
   useExportTaskReportMutation,
-  useGetTaskBySlugQuery,
-  useLazyFetchTaskMentionableUsersQuery,
+  useGetTaskBySlugQuery,  useLazyFetchTaskMentionableUsersQuery,
 } = taskApi;

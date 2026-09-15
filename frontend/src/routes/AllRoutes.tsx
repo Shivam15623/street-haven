@@ -15,6 +15,7 @@ import {
   LazyAdminCertificationsPage,
   LazyInActiveUser,
   LazyUnauthorized,
+  LazyPhotoViewer,
 } from "../Lazy Components";
 import { Navigate, type RouteObject } from "react-router-dom";
 import RouteGuard from "../Routeguard";
@@ -35,6 +36,10 @@ export const AllRoutes: RouteObject[] = [
         <LazyLogin />
       </RouteGuard>,
     ),
+  },
+  {
+    path: "photo-viewer",
+    element: withSuspense(<LazyPhotoViewer />),
   },
 
   {
