@@ -1,0 +1,1 @@
+import{r as t}from"./index-CPd1GWJW.js";const e=typeof window<"u"&&window.navigator&&window.navigator.product==="ReactNative",o=typeof document<"u",n=o||e?t.useLayoutEffect:t.useEffect;export{n as u};
