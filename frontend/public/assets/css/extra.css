@@ -456,7 +456,7 @@ table.dataTable td.dt-type-date {
 .Te .mention {
   display: inline-flex;
   align-items: center;
-  width:fit-content;
+  width: fit-content;
   border-radius: 4px;
   padding: 1px 6px;
   font-weight: 600;
@@ -674,13 +674,20 @@ ul ul {
   }
 }
 
-
 .quill-editor-scrollable .ql-container {
-  height: auto;
+  overflow: visible; /* tooltip can escape */
+  position: relative;
+  border: none;
 }
 
 .quill-editor-scrollable .ql-editor {
   min-height: 80px;
-  max-height: 400px;   /* the real cap you want */
-  overflow-y: auto;    /* 👈 this is what actually lets it scroll */
+  max-height: 130px;
+  overflow-y: auto; /* scrolling happens here now */
+}
+
+/* keep the tooltip above surrounding UI and inside the viewport */
+.quill-editor-scrollable .ql-tooltip {
+  z-index: 9999;
+  left: 0 !important; /* Quill sometimes computes a negative left */
 }

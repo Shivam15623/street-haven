@@ -110,7 +110,7 @@ const NotificationDropdown = () => {
             setNotifications((prev) =>
               prev.map((n) =>
                 ids.includes(n._id)
-                  ? { ...n, readAt: new Date().toISOString() }
+                  ? { ...n, isRead: true, readAt: new Date().toISOString() }
                   : n,
               ),
             );

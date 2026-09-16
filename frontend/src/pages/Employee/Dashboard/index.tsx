@@ -129,24 +129,24 @@ const EmployeeDashboard = () => {
       </Row> */}
 
       <Row className=" g-2 g-md-3 g-lg-4">
-        {canViewTickets && (
-          <DashboardCard
-            icon="iconamoon:ticket-light"
-            label={"Open Tickets"}
-            link="/it_facility?tab=track_tickets&status=Open"
-            value={ticketData?.data.counts.open ?? 0}
-            key="Open Tickets"
-          />
-        )}
-        {isFacilityManager && (
-          <DashboardCard
-            icon="iconamoon:ticket-light"
-            label={"Assigned Tickets"}
-            link="/it_facility?tab=track_tickets&status=Approved"
-            value={ticketData?.data.counts.approved ?? 0}
-            key="Assigned Tickets"
-          />
-        )}
+        {canViewTickets &&
+          (isFacilityManager ? (
+            <DashboardCard
+              icon="iconamoon:ticket-light"
+              label="Assigned Tickets"
+              link="/it_facility?tab=track_tickets&status=Approved"
+              value={ticketData?.data.counts.approved ?? 0}
+              key="Assigned Tickets"
+            />
+          ) : (
+            <DashboardCard
+              icon="iconamoon:ticket-light"
+              label="Open Tickets"
+              link="/it_facility?tab=track_tickets&status=Open"
+              value={ticketData?.data.counts.open ?? 0}
+              key="Open Tickets"
+            />
+          ))}
 
         {canViewTasks && (
           <DashboardCard
