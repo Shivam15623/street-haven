@@ -21,7 +21,7 @@ type Props = {
 const ViewFileModal = ({ attachment, title, trigger }: Props) => {
   const [showModal, setShowModal] = useState(false);
   const [numPages, setNumPages] = useState<number | null>(null);
-  const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
+  const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const extension = attachment.fileUrl.split(".").pop()?.toLowerCase() || "";
   useEffect(() => {
@@ -33,7 +33,7 @@ const ViewFileModal = ({ attachment, title, trigger }: Props) => {
           if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
           return res.arrayBuffer();
         })
-        .then((buf) => setPdfData(buf))
+        .then((buf) => setPdfData(new Uint8Array(buf)))
         .catch((err) => setLoadError(err.message));
     }
   }, [attachment.fileUrl, extension]);
@@ -68,7 +68,7 @@ const ViewFileModal = ({ attachment, title, trigger }: Props) => {
           return <div className="text-center py-8">Loading PDF...</div>;
         return (
           <Document
-            file={{ data: pdfData }}
+            file={{ data: pdfData.slice() }} // clone, so original stays intact
             onLoadSuccess={onDocumentLoadSuccess}
           >
             {numPages !== null &&
