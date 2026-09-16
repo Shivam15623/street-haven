@@ -1,11 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Icon } from "@iconify/react";
 import ModalWrapper from "./ModalWrapper";
-import { Document, Page, pdfjs } from "react-pdf";
-import "pdfjs-dist/web/pdf_viewer.css";
-import pdfjsWorker from "pdfjs-dist/build/pdf.worker?url";
-
-pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 type Props = {
   title: string;
@@ -20,29 +15,10 @@ type Props = {
 
 const ViewFileModal = ({ attachment, title, trigger }: Props) => {
   const [showModal, setShowModal] = useState(false);
-  const [numPages, setNumPages] = useState<number | null>(null);
-  const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const extension = attachment.fileUrl.split(".").pop()?.toLowerCase() || "";
-  useEffect(() => {
-    if (extension === "pdf") {
-      setPdfData(null);
-      setLoadError(null);
-      fetch(attachment.fileUrl)
-        .then((res) => {
-          if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
-          return res.arrayBuffer();
-        })
-        .then((buf) => setPdfData(new Uint8Array(buf)))
-        .catch((err) => setLoadError(err.message));
-    }
-  }, [attachment.fileUrl, extension]);
+
   const openModal = () => setShowModal(true);
   const closeModal = () => setShowModal(false);
-
-  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
-    setNumPages(numPages);
-  };
 
   const handleDownload = async () => {
     const response = await fetch(attachment.fileUrl);
@@ -58,32 +34,30 @@ const ViewFileModal = ({ attachment, title, trigger }: Props) => {
   const renderPreview = () => {
     switch (extension) {
       case "pdf":
-        if (loadError)
-          return (
-            <div className="text-center py-8 text-danger">
-              Failed to load PDF: {loadError}
-            </div>
-          );
-        if (!pdfData)
-          return <div className="text-center py-8">Loading PDF...</div>;
+        // #toolbar=0&navpanes=0&scrollbar=0 strips the native viewer's
+        // toolbar/sidebar/scrollbar in Chromium-based browsers.
+        // Not all browsers honor these params (e.g. Firefox's built-in
+        // viewer ignores them), but it degrades gracefully — you still
+        // get a working preview, just with default browser chrome.
         return (
-          <Document
-            file={{ data: pdfData.slice() }} // clone, so original stays intact
-            onLoadSuccess={onDocumentLoadSuccess}
+          <div
+            className="w-100 d-flex justify-content-center"
+            style={{ maxWidth: 900, margin: "0 auto" }}
           >
-            {numPages !== null &&
-              Array.from({ length: numPages }, (_, index) => (
-                <Page
-                  key={index}
-                  pageNumber={index + 1}
-                  width={Math.min(window.innerWidth * 0.8, 450)}
-                  renderAnnotationLayer={false}
-                  renderTextLayer={false}
-                  className="mb-4 d-flex justify-content-center"
-                />
-              ))}
-          </Document>
+            <iframe
+              src={`${attachment.fileUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+              title={attachment.fileName}
+              width="100%"
+              height={640}
+              style={{
+                border: "1px solid #dee2e6",
+                borderRadius: 8,
+                display: "block",
+              }}
+            />
+          </div>
         );
+
       case "jpg":
       case "jpeg":
       case "png":
