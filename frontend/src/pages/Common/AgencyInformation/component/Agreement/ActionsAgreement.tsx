@@ -10,7 +10,7 @@ import {
 import { showError, showSuccess } from "../../../../../utills/toastutills";
 import ModalWrapper from "../../../../../components/child/ModalWrapper";
 import FormSubmissionLoader from "../../../../../components/child/FormSubmissionLoader";
-import CustomDatePicker from "../../../../../components/child/DatePicker";
+
 import FileField from "../../../../../components/child/FileField";
 import { getAxiosErrorMessage } from "../../../../../utills/utills";
 
@@ -34,13 +34,7 @@ const AgreementFormSchema = () =>
         return value.size <= 16 * 1024 * 1024;
       }),
 
-    startDate: yup.date().nullable().required("Start date is required"),
 
-    endDate: yup
-      .date()
-      .nullable()
-      .required("End date is required")
-      .min(yup.ref("startDate"), "End date must be greater than start date"),
   });
 
 // -------------------------------------------------------
@@ -70,12 +64,7 @@ const ActionsAgreement: React.FC<ActionsAgreementProps> = ({
   const initialValues = {
     title: agreementToEdit?.title || "",
     attachment: null as File | null,
-    startDate: agreementToEdit?.effectiveStartDate
-      ? new Date(agreementToEdit.effectiveStartDate)
-      : null,
-    endDate: agreementToEdit?.effectiveEndDate
-      ? new Date(agreementToEdit.effectiveEndDate)
-      : null,
+   
   };
 
   // -------------------------------------------------------
@@ -89,13 +78,7 @@ const ActionsAgreement: React.FC<ActionsAgreementProps> = ({
       const formData = new FormData();
 
       formData.append("title", values.title);
-      if (values.startDate) {
-        formData.append("startDate", values.startDate.toISOString());
-      }
-      if (values.endDate) {
-        formData.append("endDate", values.endDate.toISOString());
-      }
-
+ 
       if (values.attachment) {
         formData.append("attachment", values.attachment);
       }
@@ -183,12 +166,7 @@ const ActionsAgreement: React.FC<ActionsAgreementProps> = ({
       >
         {({
           handleSubmit,
-          setFieldValue,
-          values,
-          handleBlur,
-          errors,
-          touched,
-          setFieldTouched,
+
         }) => (
           <BootstrapForm
             id="agreement-form"
@@ -210,46 +188,6 @@ const ActionsAgreement: React.FC<ActionsAgreementProps> = ({
               />
             </BootstrapForm.Group>
 
-            {/* Start Date */}
-            <BootstrapForm.Group className="d-flex flex-column gap-8">
-              <BootstrapForm.Label>Start Date</BootstrapForm.Label>
-              <CustomDatePicker
-                name="startDate"
-                value={values.startDate ? new Date(values.startDate) : null}
-                onChange={(date) => {
-                  setFieldValue("startDate", date, true); // ← Add true to validate immediately
-                  setFieldTouched("startDate", true, false); // ← false prevents double validation
-                }}
-                onBlur={handleBlur}
-                isInvalid={!!errors.startDate && touched.startDate}
-              />
-
-              <ErrorMessage
-                name="startDate"
-                component="div"
-                className="text-danger"
-              />
-            </BootstrapForm.Group>
-
-            {/* End Date */}
-            <BootstrapForm.Group className="d-flex flex-column gap-8">
-              <BootstrapForm.Label>End Date</BootstrapForm.Label>
-              <CustomDatePicker
-                name="endDate"
-                value={values.endDate ? new Date(values.endDate) : null}
-                onChange={(date) => {
-                  setFieldValue("endDate", date, true); // ← Add true to validate immediately
-                  setFieldTouched("endDate", true, false); // ← false prevents double validation
-                }}
-                onBlur={handleBlur}
-                isInvalid={!!errors.endDate && touched.endDate}
-              />
-              <ErrorMessage
-                name="endDate"
-                component="div"
-                className="text-danger"
-              />
-            </BootstrapForm.Group>
 
             {/* Attachment */}
             <FileField

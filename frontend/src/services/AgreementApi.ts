@@ -12,8 +12,6 @@ export interface AgreementData {
     size: number;
     fileType: string;
   };
-  effectiveStartDate: Date;
-  effectiveEndDate: Date;
   updatedAt: Date;
   createdAt: Date;
 }

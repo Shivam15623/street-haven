@@ -18,14 +18,7 @@ const CollectiveAgreementSchema = new mongoose.Schema(
       index: true,
     },
     attachment: attachmentSchema,
-    effectiveStartDate: {
-      type: String,
-      required: true,
-    },
-    effectiveEndDate: {
-      type: String,
-      required: true,
-    },
+    
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

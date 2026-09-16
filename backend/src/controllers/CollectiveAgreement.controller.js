@@ -56,7 +56,7 @@ export const createCollectiveAgreement = asyncHandler(async (req, res) => {
 
   try {
     session.startTransaction();
-    const { title, startDate, endDate } = req.body;
+    const { title, } = req.body;
     const { firstname, lastname, _id: userId } = req.user;
     const attachmentpath = req?.file?.path; // Fix typo
 
@@ -70,8 +70,7 @@ export const createCollectiveAgreement = asyncHandler(async (req, res) => {
         {
           title,
           attachment: attachmentData,
-          effectiveStartDate: startDate,
-          effectiveEndDate: endDate,
+        
           createdBy: userId,
         },
       ],
@@ -169,7 +168,7 @@ export const fetchCollectiveAgreements = asyncHandler(async (req, res) => {
 // --------------------------------------------------------
 export const editCollectiveAgreement = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { title, startDate, endDate } = req.body;
+  const { title, } = req.body;
 
   const session = await mongoose.startSession();
 
@@ -185,29 +184,11 @@ export const editCollectiveAgreement = asyncHandler(async (req, res) => {
        TRACK CHANGES
     ====================== */
     const changes = {
-      startDateChanged: false,
-      endDateChanged: false,
+      
       attachmentChanged: false,
     };
 
-    if (
-      startDate &&
-      new Date(startDate).toISOString() !==
-        new Date(agreement.effectiveStartDate).toISOString()
-    ) {
-      changes.startDateChanged = true;
-      agreement.effectiveStartDate = startDate;
-    }
-
-    if (
-      endDate &&
-      new Date(endDate).toISOString() !==
-        new Date(agreement.effectiveEndDate).toISOString()
-    ) {
-      changes.endDateChanged = true;
-      agreement.effectiveEndDate = endDate;
-    }
-
+   
     /* ======================
        ATTACHMENT UPDATE
     ====================== */
@@ -238,15 +219,11 @@ export const editCollectiveAgreement = asyncHandler(async (req, res) => {
        (ONLY IF REQUIRED)
     ====================== */
     if (
-      changes.startDateChanged ||
-      changes.endDateChanged ||
+
       changes.attachmentChanged
     ) {
       const updatedParts = [];
 
-      if (changes.startDateChanged || changes.endDateChanged) {
-        updatedParts.push("validity period");
-      }
       if (changes.attachmentChanged) {
         updatedParts.push("agreement document");
       }
