@@ -53,6 +53,7 @@ const deleteFromCloudinary = async (fileUrl) => {
     const result = await cloudinary.uploader.destroy(publicId, {
       resource_type: resourceType,
       secure: true,
+      folder: "intranet",
     });
     return result;
   } catch (error) {

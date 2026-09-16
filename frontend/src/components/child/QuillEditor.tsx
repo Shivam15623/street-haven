@@ -205,7 +205,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
   }, [disabled, toolbarId]); // <-- remove mentionableUsers
 
   return (
-    <div className={`w-100 ${className}`}>
+    <div className={`w-100 border-1 rounded ${className}`}>
       <div
         className={`border-1 rounded bg-white  position-relative ${
           isInvalid ? "border-danger" : "border-sh-base-50"
@@ -329,7 +329,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
         <div
           style={{
             flex: 1,
-            overflowX: "visible",
+            overflow: "visible",
             cursor: disabled ? "not-allowed" : "text",
             borderBottomRightRadius: "inherit",
             borderBottomLeftRadius: "inherit",
@@ -344,12 +344,6 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
             className="quill-editor-scrollable"
             theme="snow"
             placeholder={placeholder}
-            style={{
-              height: `${editorHeight}px`,
-              minHeight: "80px",
-              maxHeight: "130px",
-              overflowY: "auto",
-            }}
           />
         </div>
       </div>
