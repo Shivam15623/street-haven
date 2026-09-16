@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
 import ModalWrapper from "./ModalWrapper";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -21,9 +21,24 @@ type Props = {
 const ViewFileModal = ({ attachment, title, trigger }: Props) => {
   const [showModal, setShowModal] = useState(false);
   const [numPages, setNumPages] = useState<number | null>(null);
+  const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const extension = attachment.fileUrl.split(".").pop()?.toLowerCase() || "";
+  useEffect(() => {
+    if (extension === "pdf") {
+      setPdfData(null);
+      setLoadError(null);
+      fetch(attachment.fileUrl)
+        .then((res) => {
+          if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+          return res.arrayBuffer();
+        })
+        .then((buf) => setPdfData(buf))
+        .catch((err) => setLoadError(err.message));
+    }
+  }, [attachment.fileUrl, extension]);
   const openModal = () => setShowModal(true);
   const closeModal = () => setShowModal(false);
-  const extension = attachment.fileUrl.split(".").pop()?.toLowerCase() || "";
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -43,14 +58,20 @@ const ViewFileModal = ({ attachment, title, trigger }: Props) => {
   const renderPreview = () => {
     switch (extension) {
       case "pdf":
+        if (loadError)
+          return (
+            <div className="text-center py-8 text-danger">
+              Failed to load PDF: {loadError}
+            </div>
+          );
+        if (!pdfData)
+          return <div className="text-center py-8">Loading PDF...</div>;
         return (
           <Document
-            file={{ url: attachment.fileUrl }}
+            file={{ data: pdfData }}
             onLoadSuccess={onDocumentLoadSuccess}
           >
-            {numPages === null ? (
-              <div className="text-center py-8">Loading PDF...</div>
-            ) : (
+            {numPages !== null &&
               Array.from({ length: numPages }, (_, index) => (
                 <Page
                   key={index}
@@ -60,11 +81,9 @@ const ViewFileModal = ({ attachment, title, trigger }: Props) => {
                   renderTextLayer={false}
                   className="mb-4 d-flex justify-content-center"
                 />
-              ))
-            )}
+              ))}
           </Document>
         );
-
       case "jpg":
       case "jpeg":
       case "png":
@@ -166,7 +185,9 @@ const ViewFileModal = ({ attachment, title, trigger }: Props) => {
           </div>
         }
       >
-        <div className="d-flex justify-content-center overflow-hidden " >{renderPreview()}</div>
+        <div className="d-flex justify-content-center overflow-hidden ">
+          {renderPreview()}
+        </div>
       </ModalWrapper>
     </>
   );
