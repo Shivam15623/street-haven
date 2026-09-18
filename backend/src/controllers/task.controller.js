@@ -1205,7 +1205,37 @@ const getStatusDate = (statusHistory, statusName) => {
     .find((h) => h.toStatus === statusName);
   return entry ? entry.changedAt : null;
 };
+const getActualWorkTime = (statusHistory) => {
+  if (!statusHistory?.length) return 0;
 
+  const sorted = [...statusHistory].sort(
+    (a, b) => new Date(a.changedAt) - new Date(b.changedAt),
+  );
+
+  let totalMs = 0;
+  let workStart = null;
+
+  for (const entry of sorted) {
+    if (entry.toStatus === "in_progress") {
+      // (re)start of a work interval — covers rework after rejection too
+      workStart = entry.changedAt;
+    } else if (entry.toStatus === "under_review" && workStart) {
+      totalMs +=
+        new Date(entry.changedAt).getTime() - new Date(workStart).getTime();
+      workStart = null;
+    }
+  }
+
+  return totalMs;
+};
+
+/* ---- Format a duration given in ms as "Xd Yh" ---- */
+const formatDurationMs = (ms) => {
+  if (!ms || ms <= 0) return "-";
+  const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((ms / (1000 * 60 * 60)) % 24);
+  return `${days}d ${hours}h`;
+};
 /* ---- Latest assignment date from assignmentHistory, not the first ---- */
 const getAssignedDate = (assignmentHistory) => {
   if (!assignmentHistory?.length) return null;
@@ -1414,7 +1444,7 @@ export const ExportTasksReport = asyncHandler(async (req, res) => {
         history.fromStatus === "under_review" &&
         history.toStatus === "assigned",
     ).length;
-
+    const actualWorkMs = getActualWorkTime(t.statusHistory);
     sheet.addRow({
       taskId: t._id.toString(),
       title: t.title,
@@ -1447,7 +1477,7 @@ export const ExportTasksReport = asyncHandler(async (req, res) => {
         assignedDate || t.createdAt,
         completedHistory?.changedAt,
       ),
-      workTime: getDuration(startedWorkDate, completedHistory?.changedAt),
+      workTime: formatDurationMs(actualWorkMs),
       updatedDate: formatDate(t.updatedAt),
     });
   });
