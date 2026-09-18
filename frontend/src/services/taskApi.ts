@@ -3,7 +3,12 @@ import type { ApiGeneralResponse, ApiResponse } from "../interfaces/Response";
 import { api } from "../redux/ApiSlice";
 import { uploadWithProgress } from "../utills/uploadWithProgress";
 
-export type TaskStatus = "new" | "assigned" | "under_review" | "completed";
+export type TaskStatus =
+  | "new"
+  | "assigned"
+  | "in_progress"
+  | "under_review"
+  | "completed";
 
 export interface IUser {
   _id: string;
@@ -371,5 +376,6 @@ export const {
   useLazyViewTaskCommentsQuery,
   useLazyGetTaskDetailsQuery,
   useExportTaskReportMutation,
-  useGetTaskBySlugQuery,  useLazyFetchTaskMentionableUsersQuery,
+  useGetTaskBySlugQuery,
+  useLazyFetchTaskMentionableUsersQuery,
 } = taskApi;

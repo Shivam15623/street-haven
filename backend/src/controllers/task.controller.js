@@ -912,6 +912,22 @@ export const updateTaskStatus = asyncHandler(async (req, res) => {
       const current = task.status;
 
       switch (status) {
+        case "in_progress":
+          // Super admin can force any task into progress.
+          // Otherwise only the assigned volunteer can start their own work.
+          if (
+            role !== "super_admin" &&
+            task.assignedTo.toString() !== userId.toString()
+          ) {
+            throw new ApiError(403, "Only assigned volunteer can start work.");
+          }
+
+          if (current !== "assigned") {
+            throw new ApiError(400, "Task cannot be started.");
+          }
+
+          break;
+
         case "under_review":
           // Super admin can update any task.
           // Otherwise only assigned volunteer can submit.
@@ -922,7 +938,7 @@ export const updateTaskStatus = asyncHandler(async (req, res) => {
             throw new ApiError(403, "Only assigned volunteer can submit task.");
           }
 
-          if (current !== "assigned") {
+          if (current !== "in_progress") {
             throw new ApiError(400, "Task cannot be submitted.");
           }
 
@@ -976,6 +992,15 @@ export const updateTaskStatus = asyncHandler(async (req, res) => {
       await task.save({ session });
 
       switch (status) {
+        case "in_progress":
+          await TaskNotificationService.workStarted(
+            task,
+            userId,
+            session,
+            effects,
+          );
+          break;
+
         case "under_review":
           await TaskNotificationService.submittedForReview(
             task,
@@ -1360,7 +1385,13 @@ export const ExportTasksReport = asyncHandler(async (req, res) => {
     { header: "Approved By", key: "approvedBy", width: 22 }, // <- admin who marked it completed
     { header: "Completed Date", key: "completedDate", width: 20 },
     { header: "Times Reassigned", key: "reassignedCount", width: 16 },
-    { header: "Resolution Time", key: "resolutionTime", width: 16 },
+    { header: "Started Work Date", key: "startedWorkDate", width: 20 },
+    { header: "Total Time (Assigned→Completed)", key: "totalTime", width: 20 },
+    {
+      header: "Actual Work Time (Started→Completed)",
+      key: "workTime",
+      width: 22,
+    },
     { header: "Last Updated Date", key: "updatedDate", width: 20 },
   ];
   sheet.getRow(1).font = { bold: true };
@@ -1373,6 +1404,7 @@ export const ExportTasksReport = asyncHandler(async (req, res) => {
   tasks.forEach((t) => {
     const assignedDate = getAssignedDate(t.assignmentHistory);
     const reviewSubmittedDate = getStatusDate(t.statusHistory, "under_review");
+    const startedWorkDate = getStatusDate(t.statusHistory, "in_progress");
     const completedHistory = [...(t.statusHistory || [])]
       .reverse()
       .find((history) => history.toStatus === "completed");
@@ -1410,7 +1442,12 @@ export const ExportTasksReport = asyncHandler(async (req, res) => {
         : "-",
       completedDate: formatDate(completedHistory?.changedAt),
       reassignedCount,
-      resolutionTime: getDuration(t.createdAt, completedHistory?.changedAt),
+      startedWorkDate: formatDate(startedWorkDate),
+      totalTime: getDuration(
+        assignedDate || t.createdAt,
+        completedHistory?.changedAt,
+      ),
+      workTime: getDuration(startedWorkDate, completedHistory?.changedAt),
       updatedDate: formatDate(t.updatedAt),
     });
   });
@@ -1436,4 +1473,32 @@ export const ExportTasksReport = asyncHandler(async (req, res) => {
 
   await workbook.xlsx.write(res);
   res.end();
+});
+
+export const StartTaskWork = asyncHandler(async (req, res) => {
+  const { taskId } = req.params;
+  const task = await Task.findById(taskId);
+
+  if (!task) return res.status(404).json({ message: "Task not found" });
+
+  if (task.assignedTo.toString() !== req.user._id.toString()) {
+    return res.status(403).json({ message: "Not your task" });
+  }
+
+  if (task.status !== "assigned") {
+    return res.status(400).json({
+      message: `Cannot start work from status '${task.status}'`,
+    });
+  }
+
+  task.statusHistory.push({
+    fromStatus: task.status,
+    toStatus: "in_progress",
+    changedBy: req.user._id,
+    changedAt: new Date(),
+  });
+  task.status = "in_progress";
+
+  await task.save();
+  res.status(200).json({ message: "Task marked in progress", task });
 });
