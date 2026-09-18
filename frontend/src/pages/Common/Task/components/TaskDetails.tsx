@@ -19,6 +19,7 @@ interface Props {
 const statusVariant: Record<string, BadgeVariant> = {
   new: "info-soft",
   assigned: "warning-soft",
+  in_progress: "primary-soft",
   under_review: "orange-soft",
   completed: "success-soft",
 };
@@ -26,6 +27,7 @@ const statusVariant: Record<string, BadgeVariant> = {
 const statusLabel: Record<string, string> = {
   new: "New",
   assigned: "Assigned",
+  in_progress: "In Progress",
   under_review: "Under Review",
   completed: "Completed",
 };

@@ -14,7 +14,9 @@ import { useAllEmployeesQuery } from "../../../../services/EmployeeApi";
 import CustomDatePicker from "../../../../components/child/DatePicker";
 import useHasPermission from "../../../../hooks/Auth";
 import { ROLES } from "../../../../interfaces/AuthInterfaces";
-const QuillEditor = lazy(() => import("../../../../components/child/QuillEditor"));
+const QuillEditor = lazy(
+  () => import("../../../../components/child/QuillEditor"),
+);
 export interface AssignableUser {
   _id: string;
   name: string;
@@ -41,6 +43,7 @@ interface TaskFormValues {
 const STATUS_OPTIONS: { label: string; value: TaskStatus }[] = [
   { label: "Assigned", value: "assigned" },
   { label: "Under Review", value: "under_review" },
+  { label: "In Progress", value: "in_progress" },
   { label: "Completed", value: "completed" },
 ];
 
@@ -64,16 +67,20 @@ const ActionTaskModal: React.FC<ActionTaskModalProps> = ({
 
   onSuccess,
 }) => {
-  const {hasRole}=useHasPermission()
+  const { hasRole } = useHasPermission();
   const {
     data: employeeData,
     isLoading: isEmployeeLoading,
     isError: isEmployeeError,
   } = useAllEmployeesQuery(
-    { forDropdown: true, role: ["volunteer"],managedBy:!hasRole(ROLES.SUPER_ADMIN) },
+    {
+      forDropdown: true,
+      role: ["volunteer"],
+      managedBy: !hasRole(ROLES.SUPER_ADMIN),
+    },
     { skip: !show },
   );
-  
+
   const [createTask, { isLoading: isCreating }] = useCreateTaskMutation();
   const [editTask, { isLoading: isEditing }] = useEditTaskMutation();
 
@@ -203,7 +210,6 @@ const ActionTaskModal: React.FC<ActionTaskModalProps> = ({
                 onChange={(val) => setFieldValue("description", val)}
                 disabled={isLoading}
                 isInvalid={touched.description && !!errors.description}
-               
               />
               <ErrorMessage
                 name="description"

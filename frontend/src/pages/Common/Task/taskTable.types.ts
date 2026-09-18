@@ -1,7 +1,6 @@
 import type { BadgeVariant } from "../../../components/child/Badge";
 import type { TaskStatus } from "../../../services/taskApi";
 
-
 export type DueStatus = "overdue" | "today" | "upcoming" | "noduedate";
 export type DatePreset = "" | "today" | "week" | "month" | "year";
 export type SearchBy = "both" | "title" | "description";
@@ -52,6 +51,7 @@ export const dueStatusLabel: Record<DueStatus, string> = {
 export const taskBadgeVariant: Record<TaskStatus, BadgeVariant> = {
   new: "info-soft",
   assigned: "warning-soft",
-  under_review: "info-soft",
+  in_progress: "primary-soft", // pick whatever variant fits your palette
+  under_review: "orange-soft",
   completed: "success-soft",
 };

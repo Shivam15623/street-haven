@@ -100,6 +100,7 @@ const formatDateLabel = (date: string) => {
 const STATUS_LABELS: Record<TaskStatus, string> = {
   new: "New",
   assigned: "Assigned",
+  in_progress: "In Progress",
   under_review: "Under Review",
   completed: "Completed",
 };
@@ -263,9 +264,7 @@ const EntityChat = ({
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerFiles, setViewerFiles] = useState<FileItem[]>([]);
   const [viewerIndex, setViewerIndex] = useState(0);
-  const [mentionableUsers] = useState<MentionableUser[]>(
-    [],
-  );
+  const [mentionableUsers] = useState<MentionableUser[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const initialScrollDoneRef = useRef(false);
@@ -351,7 +350,7 @@ const EntityChat = ({
       clientId: string;
     }) => {
       if (comment.entityId !== entityId) return;
-    
+
       setTimeline((prev) => {
         if (clientId) {
           const index = prev.findIndex((c) => c._id === clientId);
@@ -521,7 +520,7 @@ const EntityChat = ({
                 }
 
                 const isOwn = user?._id && group.user?._id === user._id;
-        
+
                 return (
                   <div
                     key={group.key}
@@ -645,19 +644,26 @@ const EntityChat = ({
 
           <div className="chat-message-box-action w-100 flex-row flex-nowrap gap-1 justify-content-between px-3 py-2">
             <div className="d-flex gap-2">
-              {task.status !== "under_review" &&
-                task.status !== "completed" &&
-                hasRole("volunteer") && (
-                  <button
-                    type="button"
-                    disabled={isUpdatingStatus}
-                    className="btn btn-street-outline-primary d-flex align-items-center gap-1 text-sm"
-                    onClick={() => handleUpdateTaskStatus("under_review")}
-                  >
-                    <Icon icon="mdi:check" className="text-xl" /> Send for
-                    Review
-                  </button>
-                )}
+              {task.status === "assigned" && hasRole("volunteer") && (
+                <button
+                  type="button"
+                  disabled={isUpdatingStatus}
+                  className="btn btn-street-primary d-flex align-items-center gap-1 text-sm"
+                  onClick={() => handleUpdateTaskStatus("in_progress")}
+                >
+                  <Icon icon="mdi:play" className="text-xl" /> Start Work
+                </button>
+              )}
+              {hasRole("volunteer") && task.status === "in_progress" && (
+                <button
+                  type="button"
+                  disabled={isUpdatingStatus}
+                  className="btn btn-street-outline-primary d-flex align-items-center gap-1 text-sm"
+                  onClick={() => handleUpdateTaskStatus("under_review")}
+                >
+                  <Icon icon="mdi:check" className="text-xl" /> Send for Review
+                </button>
+              )}
               {hasRole(["volunteer_admin", "super_admin"]) &&
                 task.status === "under_review" && (
                   <>

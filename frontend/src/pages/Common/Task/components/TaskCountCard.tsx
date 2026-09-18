@@ -3,7 +3,7 @@ import { Icon } from "@iconify/react";
 type TaskCountCardProps = {
   count: number;
   label: string;
-  variant?: "new" | "assigned" | "under_review" | "completed" | "total";
+  variant?: "new" | "assigned" | "in_progress" | "under_review" | "completed";
   icon?: string;
   active?: boolean;
   onClick?: () => void;
@@ -62,9 +62,7 @@ export const TaskCountCard: React.FC<TaskCountCardProps> = ({
               {count}
             </h4>
 
-            <p className="text-xs xs:text-sm fw-normal mb-0">
-              {label}
-            </p>
+            <p className="text-xs xs:text-sm fw-normal mb-0">{label}</p>
           </div>
 
           <div className={`task-icon ${variant}`}>

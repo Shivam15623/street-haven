@@ -80,7 +80,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
   useEffect(() => {
     mentionableUsersRef.current = mentionableUsers;
   }, [mentionableUsers]);
-  const [editorHeight, setEditorHeight] = useState(100);
+  const [_editorHeight, setEditorHeight] = useState(100);
   const [emojiPosition, setEmojiPosition] = useState<{
     top: number;
     left: number;

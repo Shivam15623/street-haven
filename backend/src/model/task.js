@@ -39,7 +39,7 @@ const taskSchema = new Schema(
 
     status: {
       type: String,
-      enum: ["new", "assigned", "under_review", "completed"],
+      enum: ["new", "assigned", "in_progress", "under_review", "completed"],
       default: "new",
     },
 
@@ -52,12 +52,12 @@ const taskSchema = new Schema(
       {
         fromStatus: {
           type: String,
-          enum: ["new", "assigned", "under_review", "completed"],
+          enum: ["new", "assigned", "in_progress", "under_review", "completed"],
           default: null,
         },
         toStatus: {
           type: String,
-          enum: ["new", "assigned", "under_review", "completed"],
+          enum: ["new", "assigned", "in_progress", "under_review", "completed"],
         },
         changedBy: { type: Schema.Types.ObjectId, ref: "User" },
         changedAt: { type: Date, default: Date.now },

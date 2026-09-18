@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ModalWrapper from "../components/child/ModalWrapper";
 import Badge from "../components/child/Badge";
 import {
   useFetchNotifyQuery,
   useMarkNotificationsAsReadMutation,
+  type notificationData,
 } from "../services/notificationApi";
 import relativeTime from "dayjs/plugin/relativeTime";
 import dayjs from "dayjs";
@@ -20,6 +21,7 @@ const NotificationView = () => {
   const [type, setType] = useState<null | "global" | "personal">(null);
   const [status, setStatus] = useState<null | "read" | "unread">(null);
   const [page, setPage] = useState(1);
+  const [notifications, setNotifications] = useState<notificationData[]>([]);
   const limit = 50;
   const { add, flush } = useNotificationReadBuffer();
   const [markRead] = useMarkNotificationsAsReadMutation();
@@ -37,6 +39,11 @@ const NotificationView = () => {
     setPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  useEffect(() => {
+    setNotifications(data?.data.notifications ?? []);
+  }, [data?.data.notifications]);
+
   const handleClose = async () => {
     setShowModal(false);
 
@@ -45,6 +52,13 @@ const NotificationView = () => {
 
     try {
       await markRead(ids).unwrap();
+      setNotifications((prev) =>
+        prev.map((n) =>
+          ids.includes(n._id)
+            ? { ...n, isRead: true, readAt: new Date().toISOString() }
+            : n,
+        ),
+      );
     } catch (err) {
       showError(getErrorMessage(err));
     }
@@ -104,7 +118,7 @@ const NotificationView = () => {
                     setType(
                       label === "All"
                         ? null
-                        : (label.toLowerCase() as "global" | "personal")
+                        : (label.toLowerCase() as "global" | "personal"),
                     )
                   }
                   className="cursor-pointer"
@@ -131,7 +145,7 @@ const NotificationView = () => {
                     setStatus(
                       label === "All"
                         ? null
-                        : (label.toLowerCase() as "read" | "unread")
+                        : (label.toLowerCase() as "read" | "unread"),
                     )
                   }
                   className="cursor-pointer"
@@ -178,9 +192,7 @@ const NotificationView = () => {
 
             {/* ✅ Notification Data */}
             {!isLoading &&
-              data &&
-              data?.data?.notifications?.length > 0 &&
-              data.data.notifications.map((n) => (
+              notifications.map((n) => (
                 <NotificationItem
                   key={n._id}
                   item={n}
@@ -191,7 +203,7 @@ const NotificationView = () => {
 
             {/* 🕳 Empty State */}
             {!isLoading &&
-              (!data || data?.data?.notifications?.length === 0) && (
+              (!notifications || notifications?.length === 0) && (
                 <div className="text-center text-muted py-40">
                   No notifications found.
                 </div>

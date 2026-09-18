@@ -787,7 +787,48 @@ export const TaskNotificationService = {
 
     return { notification, effects };
   },
+  async workStarted(task, volunteerId, session, effects = []) {
+    const assignerNotification = await notify({
+      action: "status_changed",
+      severity: "info",
+      title: "Work Started",
+      message: `Work has started on "${task.title}".`,
+      recipients: [{ userId: task.assignedBy }],
+      createdBy: volunteerId,
+      link: `/tasks/${task.slug}`,
+      meta: { taskId: task.slug },
+      session,
+      effects,
+      // no email field — in-app/socket only
+    });
 
+    // Exclude the volunteer themself (they triggered this) and assignedBy
+    // (already notified directly above) from the management fan-out.
+    const managementRecipients = await getManagementRecipients(
+      task.assignedTo,
+      [task.assignedTo, task.assignedBy],
+      session,
+      { involvedUserIds: [task.assignedBy] },
+    );
+    const { recipients: managementInApp } =
+      splitManagementRecipients(managementRecipients);
+
+    await notify({
+      action: "status_changed",
+      severity: "info",
+      title: "Task In Progress",
+      message: `Work has started on "${task.title}".`,
+      recipients: managementInApp,
+      createdBy: volunteerId,
+      link: `/tasks/${task.slug}`,
+      meta: { taskId: task.slug },
+      session,
+      effects,
+      // no email field — in-app/socket only
+    });
+
+    return { notification: assignerNotification, effects };
+  },
   async dueTomorrow(task, session, effects = []) {
     const notification = await notify({
       action: "status_changed",

@@ -36,7 +36,7 @@ function formatActivityText(n) {
 
 // n.entity is attached beforehand (batched lookup) — see fetchCommentNotifications
 function normalizeComment(n) {
-  console.log(n.entity,n)
+  console.log(n.entity, n);
   const entity = n.entity || null;
 
   const link =
@@ -612,17 +612,18 @@ async function markGenericNotificationsReadInternal(ids, userId, role) {
 
   const now = new Date();
 
-  await UserNotification.updateMany(
-    {
-      notificationId: { $in: visibleIds },
-      userId: new mongoose.Types.ObjectId(userId),
-      $or: [{ readAt: null }, { readAt: { $exists: false } }],
-    },
-    {
-      $set: {
-        readAt: now,
+  await UserNotification.bulkWrite(
+    visibleIds.map((notifId) => ({
+      updateOne: {
+        filter: {
+          notificationId: notifId,
+          userId: new mongoose.Types.ObjectId(userId),
+        },
+        update: { $set: { readAt: now } },
+        upsert: true,
       },
-    },
+    })),
+    { ordered: false },
   );
 
   return visibleIds.map((id) => id.toString());
