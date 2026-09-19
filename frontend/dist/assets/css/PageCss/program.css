@@ -1,0 +1,16 @@
+
+.doc-card .doc-icon{
+  background-color: rgba(1, 96, 166, 0.04);
+  color:var(--street-primary-base)
+}
+[data-theme="dark"] .doc-card .doc-icon{
+   background-color: rgba(36, 47, 59, 1);
+  color:white;
+}
+.program-input{
+    background-color: var(--street-card);
+    color: var(--street-text-base);
+}
+.program-input input,.program-input .icon{
+     color: var(--street-text-base);
+}
