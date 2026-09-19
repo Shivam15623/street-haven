@@ -16,6 +16,7 @@ import ExcelJS from "exceljs";
 
 import { flushTaskEffects } from "../services/task.notification.service.js";
 import { resyncTaskMembership } from "../helper/entitymembershipSync.js";
+import { formatDate, SERVER_TZ } from "../helper/formatDatetimezone.js";
 export const createTask = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   const effects = [];
@@ -1242,7 +1243,6 @@ const getAssignedDate = (assignmentHistory) => {
   return assignmentHistory[assignmentHistory.length - 1].assignedAt;
 };
 /* ---- Format a Date (or null) for Excel display ---- */
-const formatDate = (date) => (date ? new Date(date).toLocaleString() : "-");
 
 /* ---- Human-readable duration between two dates ---- */
 const getDuration = (start, end) => {
@@ -1381,7 +1381,7 @@ export const buildReportFilter = async (req) => {
 };
 export const ExportTasksReport = asyncHandler(async (req, res) => {
   const filter = await buildReportFilter(req);
-
+  const tz = req.query.timezone || SERVER_TZ;
   const tasks = await Task.find(filter)
     .sort({ createdAt: -1 })
     .populate("assignedTo", "firstname lastname email")
@@ -1457,10 +1457,10 @@ export const ExportTasksReport = asyncHandler(async (req, res) => {
       assignedBy: t.assignedBy
         ? `${t.assignedBy.firstname} ${t.assignedBy.lastname}`
         : "-",
-      dueDate: t.dueDate ? formatDate(t.dueDate) : "-",
-      createdDate: formatDate(t.createdAt),
-      assignedDate: formatDate(assignedDate),
-      reviewSubmittedDate: formatDate(reviewSubmittedDate),
+      dueDate: t.dueDate ? formatDate(t.dueDate,tz) : "-",
+      createdDate: formatDate(t.createdAt,tz),
+      assignedDate: formatDate(assignedDate,tz),
+      reviewSubmittedDate: formatDate(reviewSubmittedDate,tz),
       // worker who actually completed the task = whoever it was assigned to
       completedBy:
         t.status === "completed" && t.assignedTo
@@ -1470,15 +1470,15 @@ export const ExportTasksReport = asyncHandler(async (req, res) => {
       approvedBy: completedHistory?.changedBy
         ? `${completedHistory.changedBy.firstname} ${completedHistory.changedBy.lastname}`
         : "-",
-      completedDate: formatDate(completedHistory?.changedAt),
+      completedDate: formatDate(completedHistory?.changedAt,tz),
       reassignedCount,
-      startedWorkDate: formatDate(startedWorkDate),
+      startedWorkDate: formatDate(startedWorkDate,tz),
       totalTime: getDuration(
         assignedDate || t.createdAt,
         completedHistory?.changedAt,
       ),
       workTime: formatDurationMs(actualWorkMs),
-      updatedDate: formatDate(t.updatedAt),
+      updatedDate: formatDate(t.updatedAt,tz),
     });
   });
 
