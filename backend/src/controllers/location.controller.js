@@ -87,7 +87,7 @@ export const create = asyncHandler(async (req, res) => {
   const locationData = {
     name: name.trim(),
     managers: managerIds ?? [],
-    isActive: false,
+    isActive: true,
   };
 
   // Only set facilityManager if provided, otherwise let the schema default

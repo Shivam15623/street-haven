@@ -142,6 +142,22 @@ const EmployeeApi = api.injectEndpoints({
         body: credentials,
       }),
     }),
+    changeEmployeePassword: builder.mutation<
+      ApiGeneralResponse,
+      {
+        id: string;
+        data: {
+          newPassword: string;
+          confirmPassword: string;
+        };
+      }
+    >({
+      query: ({ id, data }) => ({
+        url: `/employees/changePassword/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+    }),
     editRole: builder.mutation<
       ApiGeneralResponse,
       { id: string; updated: RoleForm }
@@ -234,4 +250,5 @@ export const {
   useLazyEmployeeSuperFormQuery,
   useLazyFetchEmployeeByIdQuery,
   useStatusToggleMutation,
+  useChangeEmployeePasswordMutation,
 } = EmployeeApi;

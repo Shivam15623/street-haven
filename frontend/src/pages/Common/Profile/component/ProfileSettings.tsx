@@ -41,7 +41,7 @@ const ProfileSchema = Yup.object({
 type ProfileValues = Yup.InferType<typeof ProfileSchema>;
 const ProfileSettings: React.FC = () => {
   const { data: user, isLoading } = useFetchUserProfileQuery();
-  const [updateUser, { isLoading: updating }] = useEditProfileMutation();
+  const [updateUser] = useEditProfileMutation();
   const dispatch = useDispatch();
 
   const handleupdate = async (values: ProfileValues) => {
@@ -269,19 +269,6 @@ const ProfileSettings: React.FC = () => {
                     </div>
                   </div>
                 )}
-
-              <div className="d-flex gap-16 justify-content-end">
-                <button
-                  type="submit"
-                  className="btn btn-street-primary btn-street-lg d-flex flex-row align-items-center justify-content-center radius-12 px-8"
-                  disabled={updating} // disable while loading
-                >
-                  {updating && (
-                    <span className="spinner-border spinner-border-sm me-2" />
-                  )}
-                  {updating ? "Updating..." : "Submit"}
-                </button>
-              </div>
             </Form>
           )}
         </Formik>

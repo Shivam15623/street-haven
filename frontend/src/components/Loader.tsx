@@ -1,5 +1,5 @@
 import { motion, easeInOut, easeOut, type Variants } from "framer-motion";
-
+import SiteLogo from "@assets/images/street-logo-auth.png";
 const floatVariant: Variants = {
   animate: {
     y: [0, -8, 0],
@@ -157,7 +157,7 @@ export default function Loader() {
             ))}
             {/* Logo placeholder - centered heart icon */}
             <img
-              src="assets/images/auth/e5fcae70d4835039e473c6b00f4a901799a86cf3.png"
+              src={SiteLogo}
               alt="Street Haven Logo"
               className="loader-logo rounded-circle bg-street-card shadow-lg"
             />

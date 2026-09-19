@@ -6,6 +6,7 @@ import {
   useCallback,
   useLayoutEffect,
   lazy,
+  Suspense,
 } from "react";
 
 import { Icon } from "@iconify/react/dist/iconify.js";
@@ -627,19 +628,25 @@ const EntityChat = ({
       >
         <div className="d-flex flex-column w-100 p-2">
           <div className="w-100 px-2 py-3">
-            <QuillEditor
-              content={message}
-              onChange={setMessage}
-              features={{
-                align: false,
-                backgroundColor: false,
-                color: false,
-                emoji: true,
-                headings: true,
-                link: true,
-                lists: true,
-              }}
-            />
+            <Suspense
+              fallback={
+                <div className="p-2 text-muted small">Loading editor…</div>
+              }
+            >
+              <QuillEditor
+                content={message}
+                onChange={setMessage}
+                features={{
+                  align: false,
+                  backgroundColor: false,
+                  color: false,
+                  emoji: true,
+                  headings: true,
+                  link: true,
+                  lists: true,
+                }}
+              />
+            </Suspense>
           </div>
 
           <div className="chat-message-box-action w-100 flex-row flex-nowrap gap-1 justify-content-between px-3 py-2">

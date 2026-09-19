@@ -200,3 +200,27 @@ export const editEmployeeSchema = Joi.object({
       "array.base": "Locations must be an array",
     }),
 });
+
+export const editEmployeePasswordSchema = Joi.object({
+  newPassword: Joi.string()
+    .required()
+    .min(8)
+    .pattern(/[A-Z]/, "uppercase")
+    .pattern(/[a-z]/, "lowercase")
+    .pattern(/\d/, "number")
+    .pattern(/[@$!%*?&#]/, "special")
+    .messages({
+      "string.min": "Password must be at least 8 characters",
+      "string.pattern.name":
+        "Password must contain at least one {#name} character",
+      "any.required": "New password is required",
+    }),
+
+  confirmPassword: Joi.string()
+    .required()
+    .valid(Joi.ref("newPassword"))
+    .messages({
+      "any.only": "Confirm password must match new password",
+      "any.required": "Confirm password is required",
+    }),
+});

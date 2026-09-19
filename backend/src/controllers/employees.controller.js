@@ -663,7 +663,7 @@ export const EditEmployeePassword = asyncHandler(async (req, res) => {
   if (!findUser) {
     throw new ApiError(404, "No such user found");
   }
-  if (newPassword === confirmPassword) {
+  if (newPassword !== confirmPassword) {
     throw new ApiError(
       400,
       "confirm password does not match with new Password",

@@ -1,21 +1,25 @@
+
 import type { Column } from "../../../../components/child/DataTable";
 import type { EmployeeData } from "../../../../services/EmployeeApi";
 
-import EditEmployee from "./EditEmployee";
-import DeleteEmployee from "./DeleteEmployee";
+
 import type { HasPermissionFn } from "../../../../hooks/Auth";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import ResetTotp from "./ResetTotp";
+
 import StatusToggle from "./StatusToggle";
 
+import EmployeeActions from "./EmployeeAction";
+
 dayjs.extend(relativeTime);
+
 function formatRole(role: string): string {
   return role
     .split("_")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(" ");
 }
+
 export const EmployeeColumn = (
   hasPermission: HasPermissionFn,
 ): Column<EmployeeData>[] => {
@@ -42,16 +46,19 @@ export const EmployeeColumn = (
       ),
       sortable: true,
     },
+
     {
       title: "Email",
       accessorKey: "email",
       sortable: true,
     },
+
     {
       title: "Phone No",
       accessorKey: "phoneNo",
       sortable: true,
     },
+
     {
       title: "Role",
       accessorKey: "role",
@@ -59,12 +66,14 @@ export const EmployeeColumn = (
     },
   ];
 
-  // -----------------------------------
-  // CHECK IF USER HAS ANY ACTION PERMISSION
-  // -----------------------------------
   const canUpdate = hasPermission({ action: "edit_employee" });
   const canDelete = hasPermission({ action: "delete_employee" });
-  const canResetStatus = hasPermission({ action: "employee_status_change" });
+  const canResetStatus = hasPermission({
+    action: "employee_status_change",
+  });
+  const canChangePassword = hasPermission({
+    action: "reset_password",
+  });
 
   if (canResetStatus) {
     columns.push({
@@ -73,54 +82,18 @@ export const EmployeeColumn = (
       render: (row) => <StatusToggle id={row._id} status={row.status} />,
     });
   }
-  // If at least one action is allowed → show Actions column
-  if (canUpdate || canDelete) {
+
+  if (canUpdate || canDelete || canChangePassword) {
     columns.push({
       title: "Actions",
       sortable: false,
       render: (row) => (
-        <div className="d-flex gap-2">
-          {canUpdate && (
-            <EditEmployee
-              id={row._id}
-              profilePic={row.profilePic ?? "assets/images/userlogo.png"}
-              initialValues={{
-                email: row.email,
-                firstname: row.firstname,
-                lastname: row.lastname,
-                phoneNo: row.phoneNo,
-                role: row.role,
-                hireDate: row.hireDate,
-                title: row.title,
-                locations: row.locations,
-                superviserId: row.superviserId,
-                customPermissions: row.customPermissions,
-              }}
-            />
-          )}
-
-          {canDelete && (
-            <DeleteEmployee
-              employee={{
-                email: row.email,
-                firstname: row.firstname,
-                lastname: row.lastname,
-                role: row.role,
-                _id: row._id,
-              }}
-            />
-          )}
-          {canDelete && (
-            <ResetTotp
-              employee={{
-                _id: row._id,
-                email: row.email,
-                firstname: row.firstname,
-                lastname: row.lastname,
-              }}
-            />
-          )}
-        </div>
+        <EmployeeActions
+          row={row}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
+          canChangePassword={canChangePassword}
+        />
       ),
     });
   }

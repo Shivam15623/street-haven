@@ -131,7 +131,7 @@ export const GetUserProfile = asyncHandler(async (req, res) => {
 
   // If the user is a manager, attach their location
   if (user.role === ROLES.MANAGER) {
-    const location = await Location.find({ managers: user._id }).select(
+    const location = await Location.find({ managers: user._id ,isActive:true}).select(
       "name slug isActive"
     );
     userObj.location = location || null;

@@ -17,6 +17,7 @@ import { PERMISSIONS } from "../auth/permissions.js";
 import { validateRequest } from "../middleware/validate.js";
 import {
   createEmployeeSchema,
+  editEmployeePasswordSchema,
   editEmployeeSchema,
   viewEmployees,
 } from "../validations/employee.js";
@@ -42,6 +43,7 @@ router
   .patch(
     authorizePermissions({ action: PERMISSIONS.RESET_PASSWORD }),
     validateRequest(idParamSchema, "params"),
+    validateRequest(editEmployeePasswordSchema,"body"),
     EditEmployeePassword,
   );
 router
