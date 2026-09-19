@@ -671,7 +671,7 @@ export const EditEmployeePassword = asyncHandler(async (req, res) => {
   }
   findUser.password = newPassword;
   await findUser.save();
-  return res.status(200).json(new ApiResponse("user's Pasword changed"));
+  return res.status(200).json(new ApiResponse(200,"Employee's Pasword changed Successfully",null));
 });
 export const RemoveEmployee = asyncHandler(async (req, res) => {
   const { id: userId } = req.params;

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo, useCallback, lazy } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback, lazy, Suspense } from "react";
 import DOMPurify from "dompurify";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import dayjs from "dayjs";
@@ -577,21 +577,27 @@ const EntityComment = ({
         >
           <div className="d-flex flex-column w-100 p-2">
             <div className="w-100 px-2 py-3">
-              <QuillEditor
-                content={message}
-                onChange={setMessage}
-                mentionableUsers={mentionableUsers}
-                features={{
-                  align: false,
-                  backgroundColor: false,
-                  color: false,
-                  emoji: true,
-                  headings: true,
-                  link: true,
-                  lists: true,
-                  mentions: true,
-                }}
-              />
+              <Suspense
+                fallback={
+                  <div className="p-2 text-muted small">Loading editor…</div>
+                }
+              >
+                <QuillEditor
+                  content={message}
+                  onChange={setMessage}
+                  mentionableUsers={mentionableUsers}
+                  features={{
+                    align: false,
+                    backgroundColor: false,
+                    color: false,
+                    emoji: true,
+                    headings: true,
+                    link: true,
+                    lists: true,
+                    mentions: true,
+                  }}
+                />
+              </Suspense>
             </div>
 
             <div className="chat-message-box-action w-100 flex-row flex-nowrap gap-1 justify-content-end px-3 py-2">
