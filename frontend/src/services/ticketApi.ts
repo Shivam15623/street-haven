@@ -153,7 +153,7 @@ const ticketApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Ticket"],
     }),
-    fetchTicketBySlug: builder.query<ApiResponse<TicketData>,string>({
+    fetchTicketBySlug: builder.query<ApiResponse<TicketData>, string>({
       query: (slug) => ({
         url: `/ticket/slug/${slug}`,
         method: "GET",
@@ -284,6 +284,7 @@ const ticketApi = api.injectEndpoints({
           createdBy,
           assignedTo,
           approvedBy,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         },
         responseHandler: (response: Response) => response.blob(),
       }),
@@ -326,5 +327,5 @@ export const {
   useExportTicketReportMutation,
   useLazyFetchTicketMentionableUsersQuery,
   useReopenTicketMutation,
-  useLazyFetchTicketBySlugQuery
+  useLazyFetchTicketBySlugQuery,
 } = ticketApi;

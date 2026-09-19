@@ -280,6 +280,7 @@ export const taskApi = api.injectEndpoints({
           dueStatus,
           hasDueDate,
           isCompleted,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         },
         responseHandler: (response: Response) => response.blob(),
       }),

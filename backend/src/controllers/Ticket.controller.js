@@ -22,6 +22,7 @@ import {
 } from "./comments.controller.js";
 import TicketCategory from "../model/ticketCategory.js";
 import { resyncTicketMembership } from "../helper/entitymembershipSync.js";
+import { formatDate, SERVER_TZ } from "../helper/formatDatetimezone.js";
 async function getSuperAdminIds(session) {
   const superAdmins = await User.find({ role: "super_admin" })
     .select("_id")
@@ -2214,9 +2215,6 @@ const getAssignedDate = (assignmentHistory) => {
   return assignmentHistory[0].assignedAt;
 };
 
-/* ---- Format a Date (or null) for Excel display ---- */
-const formatDate = (date) => (date ? new Date(date).toLocaleString() : "-");
-
 /* ---- Human-readable duration between two dates ---- */
 const getDuration = (start, end) => {
   if (!start || !end) return "-";
@@ -2228,7 +2226,7 @@ const getDuration = (start, end) => {
 };
 export const ExportTicketsReport = asyncHandler(async (req, res) => {
   const filter = await buildReportFilter(req);
-
+  const tz = req.query.timezone || SERVER_TZ;
   const tickets = await Ticket.find(filter)
     .sort({ createdAt: -1 })
     .populate("location", "name")
@@ -2308,15 +2306,15 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
         ? `${t.rejectedBy.firstname} ${t.rejectedBy.lastname}`
         : "-",
       rejectionReason: t.rejectionReason || "-",
-      createdDate: formatDate(t.createdAt),
-      approvedDate: formatDate(approvedDate),
-      assignedDate: formatDate(assignedDate),
-      updatedDate: formatDate(t.updatedAt),
+      createdDate: formatDate(t.createdAt,tz),
+      approvedDate: formatDate(approvedDate,tz),
+      assignedDate: formatDate(assignedDate,tz),
+      updatedDate: formatDate(t.updatedAt,tz),
       resolvedBy: completedStatus?.changedBy
         ? `${completedStatus.changedBy.firstname} ${completedStatus.changedBy.lastname}`
         : "-",
 
-      resolvedDate: formatDate(t.resolvedAt),
+      resolvedDate: formatDate(t.resolvedAt,tz),
       resolutionTime: getDuration(t.createdAt, t.resolvedAt),
       attachmentUrl: t.photo?.fileUrl || "-",
     });
