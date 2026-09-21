@@ -146,16 +146,11 @@ const EmployeeApi = api.injectEndpoints({
       ApiGeneralResponse,
       {
         id: string;
-        data: {
-          newPassword: string;
-          confirmPassword: string;
-        };
       }
     >({
-      query: ({ id, data }) => ({
+      query: ({ id }) => ({
         url: `/employees/changePassword/${id}`,
         method: "PATCH",
-        body: data,
       }),
     }),
     editRole: builder.mutation<

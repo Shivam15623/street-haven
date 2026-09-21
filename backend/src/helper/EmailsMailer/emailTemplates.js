@@ -1,7 +1,11 @@
 // helper/ticketCategoryDisplay.js
 export function getCategoryDisplayName(categoryDoc, categoryOtherText) {
   if (!categoryDoc) return "-";
-  if (categoryDoc.isSystem && categoryDoc.name === "Other" && categoryOtherText) {
+  if (
+    categoryDoc.isSystem &&
+    categoryDoc.name === "Other" &&
+    categoryOtherText
+  ) {
     return `Other: ${categoryOtherText}`;
   }
   return categoryDoc.name;
@@ -91,6 +95,61 @@ export const generateEmailTemplate = ({ type, data }) => {
       <p>
         For security reasons, we recommend changing your password after your
         first login.
+      </p>
+    `,
+      };
+    case "password_reset":
+      return {
+        subject: "Your Password Has Been Reset",
+        html: `
+      <h2>Your Password Has Been Reset</h2>
+
+      <p>Hello ${data.userName},</p>
+
+      <p>
+        Your account password was reset by an administrator. You can use the
+        following temporary password to log in.
+      </p>
+
+      <table style="border-collapse:collapse;">
+        <tr>
+          <td style="padding:6px 12px;">
+            <strong>Email</strong>
+          </td>
+          <td>${data.email}</td>
+        </tr>
+
+        <tr>
+          <td style="padding:6px 12px;">
+            <strong>New Temporary Password</strong>
+          </td>
+          <td>${data.password}</td>
+        </tr>
+      </table>
+
+      <p style="margin-top:24px;">
+        
+          href="${data.link}"
+          style="
+            background:#2563eb;
+            color:#fff;
+            padding:12px 18px;
+            text-decoration:none;
+            border-radius:6px;
+          "
+        >
+          Log In
+        </a>
+      </p>
+
+      <p>
+        For security reasons, we recommend changing this password immediately
+        after logging in.
+      </p>
+
+      <p style="color:#6b7280; font-size:13px; margin-top:16px;">
+        If you did not expect this change, please contact your administrator
+        right away.
       </p>
     `,
       };

@@ -8,12 +8,13 @@ import {
 import { ApiError } from "../utills/ApiError.js";
 import Location from "../model/location.js";
 import mongoose from "mongoose";
-import { sendNewUserCredentialsEmail } from "../helper/EmailsMailer/emailHandlers.js";
+import { sendNewUserCredentialsEmail, sendPasswordResetEmail } from "../helper/EmailsMailer/emailHandlers.js";
 import {
   flushEmployeeEffects,
   notifyEmployeeAdded,
   notifyEmployeeStatusChanged,
 } from "../services/Employeenotificationservice.js";
+import crypto from "crypto";
 export const AllEmployees = asyncHandler(async (req, res) => {
   const {
     page = 1,
@@ -654,40 +655,64 @@ export const EmployeeStatusChange = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, "User status updated successfully", findUser));
 });
+
+const generateRandomPassword = (length = 12) => {
+  const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // no I/O to avoid confusion
+  const lower = "abcdefghijkmnpqrstuvwxyz";
+  const digits = "23456789";
+  const symbols = "!@#$%^&*";
+  const all = upper + lower + digits + symbols;
+
+  const pick = (charset) => charset[crypto.randomInt(0, charset.length)];
+
+  // guarantee at least one of each required character class
+  let passwordChars = [pick(upper), pick(lower), pick(digits), pick(symbols)];
+
+  for (let i = passwordChars.length; i < length; i++) {
+    passwordChars.push(pick(all));
+  }
+
+  // shuffle so the guaranteed chars aren't always in the same position
+  for (let i = passwordChars.length - 1; i > 0; i--) {
+    const j = crypto.randomInt(0, i + 1);
+    [passwordChars[i], passwordChars[j]] = [passwordChars[j], passwordChars[i]];
+  }
+
+  return passwordChars.join("");
+};
+
 export const EditEmployeePassword = asyncHandler(async (req, res) => {
   const { id: userId } = req.params;
 
-  const { newPassword, confirmPassword } = req.body;
   // Check if user exists
   const findUser = await User.findById(userId);
   if (!findUser) {
     throw new ApiError(404, "No such user found");
   }
-  if (newPassword !== confirmPassword) {
-    throw new ApiError(
-      400,
-      "confirm password does not match with new Password",
-    );
-  }
+
+  // No more user-supplied newPassword/confirmPassword — auto-generate it
+  const newPassword = generateRandomPassword();
+
   findUser.password = newPassword;
   await findUser.save();
-  return res.status(200).json(new ApiResponse(200,"Employee's Pasword changed Successfully",null));
-});
-export const RemoveEmployee = asyncHandler(async (req, res) => {
-  const { id: userId } = req.params;
 
-  // Check if user exists
-  const findUser = await User.findById(userId);
-  if (!findUser) {
-    throw new ApiError(404, "No such user found");
-  }
-
-  // Delete user
-  await User.findByIdAndDelete(userId);
+  // Notify the user with their new credentials
+  await sendPasswordResetEmail({
+    email: findUser.email,
+    userName: `${findUser.firstname} ${findUser.lastname}`,
+    password: newPassword, // plain password, sent once, never stored in plaintext
+   
+  });
 
   return res
     .status(200)
-    .json(new ApiResponse(200, "Employee removed successfully", null));
+    .json(
+      new ApiResponse(
+        200,
+        "Employee's password reset and emailed successfully",
+        null,
+      ),
+    );
 });
 export const resetTotp = asyncHandler(async (req, res) => {
   const { id: userId } = req.params;

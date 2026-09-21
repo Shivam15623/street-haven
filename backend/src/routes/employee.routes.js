@@ -43,7 +43,6 @@ router
   .patch(
     authorizePermissions({ action: PERMISSIONS.RESET_PASSWORD }),
     validateRequest(idParamSchema, "params"),
-    validateRequest(editEmployeePasswordSchema,"body"),
     EditEmployeePassword,
   );
 router

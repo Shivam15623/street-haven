@@ -89,3 +89,31 @@ export const sendNewUserCredentialsEmail = async ({
     message: "User credentials email sent successfully.",
   };
 };
+
+export const sendPasswordResetEmail = async ({
+  email,
+  userName,
+  password,
+}) => {
+  const loginLink = `${process.env.DOMAIN}/login`;
+
+  const emailContent = generateEmailTemplate({
+    type: "password_reset",
+    data: {
+      userName,
+      email,
+      password,
+      link: loginLink,
+    },
+  });
+
+  await sendEmail({
+    to: email,
+    ...emailContent,
+  });
+
+  return {
+    success: true,
+    message: "Password reset email sent successfully.",
+  };
+};
