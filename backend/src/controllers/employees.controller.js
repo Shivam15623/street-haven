@@ -8,7 +8,10 @@ import {
 import { ApiError } from "../utills/ApiError.js";
 import Location from "../model/location.js";
 import mongoose from "mongoose";
-import { sendNewUserCredentialsEmail, sendPasswordResetEmail } from "../helper/EmailsMailer/emailHandlers.js";
+import {
+  sendNewUserCredentialsEmail,
+  sendPasswordResetEmail,
+} from "../helper/EmailsMailer/emailHandlers.js";
 import {
   flushEmployeeEffects,
   notifyEmployeeAdded,
@@ -701,7 +704,6 @@ export const EditEmployeePassword = asyncHandler(async (req, res) => {
     email: findUser.email,
     userName: `${findUser.firstname} ${findUser.lastname}`,
     password: newPassword, // plain password, sent once, never stored in plaintext
-   
   });
 
   return res
@@ -713,6 +715,22 @@ export const EditEmployeePassword = asyncHandler(async (req, res) => {
         null,
       ),
     );
+});
+export const RemoveEmployee = asyncHandler(async (req, res) => {
+  const { id: userId } = req.params;
+
+  // Check if user exists
+  const findUser = await User.findById(userId);
+  if (!findUser) {
+    throw new ApiError(404, "No such user found");
+  }
+
+  // Delete user
+  await User.findByIdAndDelete(userId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Employee removed successfully", null));
 });
 export const resetTotp = asyncHandler(async (req, res) => {
   const { id: userId } = req.params;
