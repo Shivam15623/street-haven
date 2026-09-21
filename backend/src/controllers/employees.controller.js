@@ -704,6 +704,7 @@ export const EditEmployeePassword = asyncHandler(async (req, res) => {
     email: findUser.email,
     userName: `${findUser.firstname} ${findUser.lastname}`,
     password: newPassword, // plain password, sent once, never stored in plaintext
+    role: findUser.role,
   });
 
   return res

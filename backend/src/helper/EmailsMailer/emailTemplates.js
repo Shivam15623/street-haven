@@ -33,10 +33,9 @@ export const generateEmailTemplate = ({ type, data }) => {
           <p>Expires in 1 hour.</p>
         `,
       };
-
     case "user_added":
       return {
-        subject: "Your Account Has Been Created",
+        subject: "Welcome to the Platform — Your Account is Ready",
         html: `
       <h2>Welcome to the Platform</h2>
 
@@ -100,18 +99,25 @@ export const generateEmailTemplate = ({ type, data }) => {
       };
     case "password_reset":
       return {
-        subject: "Your Password Has Been Reset",
+        subject: "Your Account Credentials",
         html: `
-      <h2>Your Password Has Been Reset</h2>
+      <h2>Your Account Credentials</h2>
 
       <p>Hello ${data.userName},</p>
 
       <p>
-        Your account password was reset by an administrator. You can use the
-        following temporary password to log in.
+        Here are your account credentials. You can use the following
+        credentials to log in.
       </p>
 
       <table style="border-collapse:collapse;">
+        <tr>
+          <td style="padding:6px 12px;">
+            <strong>Name</strong>
+          </td>
+          <td>${data.userName}</td>
+        </tr>
+
         <tr>
           <td style="padding:6px 12px;">
             <strong>Email</strong>
@@ -121,9 +127,16 @@ export const generateEmailTemplate = ({ type, data }) => {
 
         <tr>
           <td style="padding:6px 12px;">
-            <strong>New Temporary Password</strong>
+            <strong>Temporary Password</strong>
           </td>
           <td>${data.password}</td>
+        </tr>
+
+        <tr>
+          <td style="padding:6px 12px;">
+            <strong>Role</strong>
+          </td>
+          <td>${data.role}</td>
         </tr>
       </table>
 
@@ -143,13 +156,8 @@ export const generateEmailTemplate = ({ type, data }) => {
       </p>
 
       <p>
-        For security reasons, we recommend changing this password immediately
-        after logging in.
-      </p>
-
-      <p style="color:#6b7280; font-size:13px; margin-top:16px;">
-        If you did not expect this change, please contact your administrator
-        right away.
+        For security reasons, we recommend changing your password after your
+        first login.
       </p>
     `,
       };

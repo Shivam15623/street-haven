@@ -89,11 +89,11 @@ export const sendNewUserCredentialsEmail = async ({
     message: "User credentials email sent successfully.",
   };
 };
-
 export const sendPasswordResetEmail = async ({
   email,
   userName,
   password,
+  role,
 }) => {
   const loginLink = `${process.env.DOMAIN}/login`;
 
@@ -103,6 +103,7 @@ export const sendPasswordResetEmail = async ({
       userName,
       email,
       password,
+      role,
       link: loginLink,
     },
   });
