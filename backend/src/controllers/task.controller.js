@@ -16,7 +16,7 @@ import ExcelJS from "exceljs";
 
 import { flushTaskEffects } from "../services/task.notification.service.js";
 import { resyncTaskMembership } from "../helper/entitymembershipSync.js";
-import { formatDate, SERVER_TZ } from "../helper/formatDatetimezone.js";
+
 export const createTask = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   const effects = [];
@@ -1379,9 +1379,10 @@ export const buildReportFilter = async (req) => {
 
   return filter;
 };
+const formatDate = (date) => (date ? new Date(date).toLocaleString() : "-");
 export const ExportTasksReport = asyncHandler(async (req, res) => {
   const filter = await buildReportFilter(req);
-  const tz = req.query.timezone || SERVER_TZ;
+
   const tasks = await Task.find(filter)
     .sort({ createdAt: -1 })
     .populate("assignedTo", "firstname lastname email")
@@ -1457,10 +1458,10 @@ export const ExportTasksReport = asyncHandler(async (req, res) => {
       assignedBy: t.assignedBy
         ? `${t.assignedBy.firstname} ${t.assignedBy.lastname}`
         : "-",
-      dueDate: t.dueDate ? formatDate(t.dueDate,tz) : "-",
-      createdDate: formatDate(t.createdAt,tz),
-      assignedDate: formatDate(assignedDate,tz),
-      reviewSubmittedDate: formatDate(reviewSubmittedDate,tz),
+      dueDate: t.dueDate ? formatDate(t.dueDate) : "-",
+      createdDate: formatDate(t.createdAt),
+      assignedDate: formatDate(assignedDate),
+      reviewSubmittedDate: formatDate(reviewSubmittedDate),
       // worker who actually completed the task = whoever it was assigned to
       completedBy:
         t.status === "completed" && t.assignedTo
@@ -1470,15 +1471,15 @@ export const ExportTasksReport = asyncHandler(async (req, res) => {
       approvedBy: completedHistory?.changedBy
         ? `${completedHistory.changedBy.firstname} ${completedHistory.changedBy.lastname}`
         : "-",
-      completedDate: formatDate(completedHistory?.changedAt,tz),
+      completedDate: formatDate(completedHistory?.changedAt),
       reassignedCount,
-      startedWorkDate: formatDate(startedWorkDate,tz),
+      startedWorkDate: formatDate(startedWorkDate),
       totalTime: getDuration(
         assignedDate || t.createdAt,
         completedHistory?.changedAt,
       ),
       workTime: formatDurationMs(actualWorkMs),
-      updatedDate: formatDate(t.updatedAt,tz),
+      updatedDate: formatDate(t.updatedAt),
     });
   });
 

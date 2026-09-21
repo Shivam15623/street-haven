@@ -284,7 +284,6 @@ const ticketApi = api.injectEndpoints({
           createdBy,
           assignedTo,
           approvedBy,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         },
         responseHandler: (response: Response) => response.blob(),
       }),
