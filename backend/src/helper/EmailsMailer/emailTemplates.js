@@ -128,7 +128,7 @@ export const generateEmailTemplate = ({ type, data }) => {
       </table>
 
       <p style="margin-top:24px;">
-        
+        <a
           href="${data.link}"
           style="
             background:#2563eb;
