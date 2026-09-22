@@ -71,6 +71,7 @@ export const PERMISSIONS = {
   TICKET_CREATE:"ticket_create",
   TICKET_REPORT_ALL:"ticket_report_all",
   TICKET_REPORT_SELF_MANAGED:"ticket_report_self_managed",
+  TICKET_DELETE:"ticket_delete",
 
   
 

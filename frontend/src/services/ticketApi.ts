@@ -131,6 +131,13 @@ const ticketApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Ticket"],
     }),
+    deleteTicket: builder.mutation<ApiGeneralResponse, { id: string }>({
+      query: ({ id }) => ({
+        url: `/ticket/delete/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Ticket"],
+    }),
     editTicket: builder.mutation<
       ApiGeneralResponse,
       { ticketId: string; formData: FormData }
@@ -327,4 +334,5 @@ export const {
   useLazyFetchTicketMentionableUsersQuery,
   useReopenTicketMutation,
   useLazyFetchTicketBySlugQuery,
+  useDeleteTicketMutation
 } = ticketApi;

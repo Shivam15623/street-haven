@@ -24,6 +24,7 @@ import { getErrorMessage } from "../../../../utills/utills";
 import { useSelector } from "react-redux";
 import { selectAuth } from "../../../../redux/AuthSlice";
 import { getTicketActions } from "../utillity/ticketPermissions";
+import DeleteTicket from "./DeleteTicket";
 
 interface TicketCardProps {
   ticket: TicketData;
@@ -58,7 +59,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     displayId,
     approvedBy,
   } = ticket;
-  
+
   const [showApprove, setShowApprove] = useState(false);
   const [showReject, setShowReject] = useState(false);
 
@@ -278,6 +279,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
             )}
 
             {actions.includes("edit") && <TicketDetails ticket={ticket} />}
+            {actions.includes("delete") && <DeleteTicket ticket={ticket} />}
           </div>
           {/* <div className="d-flex flex flex-row gap-2">
             <TicketComment ticket={ticket} />

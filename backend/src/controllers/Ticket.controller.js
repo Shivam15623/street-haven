@@ -3,11 +3,11 @@ import { htmlToText } from "html-to-text";
 import { io } from "../index.js";
 import { notifyTicketEmail } from "../helper/notifyTicketEvent.js";
 import Ticket, { TICKET_STATUS } from "../model/ticket.js";
-import User from "../model/user.js";
+import User, { ROLES } from "../model/user.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
-import { uploadOnCloudinary } from "../utills/cloudinary.js";
+import { deleteFromCloudinary, uploadOnCloudinary } from "../utills/cloudinary.js";
 import { createNotification } from "../helper/CreateNotoification.js";
 import ExcelJS from "exceljs";
 import Location from "../model/location.js";
@@ -22,6 +22,10 @@ import {
 } from "./comments.controller.js";
 import TicketCategory from "../model/ticketCategory.js";
 import { resyncTicketMembership } from "../helper/entitymembershipSync.js";
+import logger from "../utills/logger.js";
+import Comment from "../model/comments.js";
+import UserCommentNotification from "../model/UserCommentNotification.js";
+import EntityMembership from "../model/EntityMemberShip.js";
 
 async function getSuperAdminIds(session) {
   const superAdmins = await User.find({ role: "super_admin" })
@@ -2482,4 +2486,97 @@ export const reopenTicket = asyncHandler(async (req, res) => {
   } finally {
     await session.endSession();
   }
+});
+
+export const deleteTicket = asyncHandler(async (req, res) => {
+  const { id: ticketId } = req.params;
+  const userId = req.user._id;
+  const role = req.user.role;
+  const isSuperAdmin = role === ROLES.SUPER_ADMIN;
+
+  if (!mongoose.Types.ObjectId.isValid(ticketId)) {
+    throw new ApiError(400, "Invalid ticket id");
+  }
+
+  const ticket = await Ticket.findById(ticketId);
+  if (!ticket) {
+    throw new ApiError(404, "No Such Ticket Found");
+  }
+
+  if (!isSuperAdmin) {
+    const location = await Location.findById(ticket.location).select(
+      "managers",
+    );
+    if (!location) {
+      throw new ApiError(404, "Ticket's location not found");
+    }
+    const isManagerOfLocation = location.managers.some(
+      (managerId) => managerId.toString() === userId.toString(),
+    );
+    if (!isManagerOfLocation) {
+      throw new ApiError(403, "You are not authorized to delete this ticket");
+    }
+  }
+
+  // ── gather all Cloudinary file URLs to clean up ──
+  const comments = await Comment.find({
+    entityType: "Ticket",
+    entityId: ticketId,
+  }).select("attachments");
+
+  const fileUrls = [];
+
+  if (ticket.photo?.fileUrl) {
+    fileUrls.push(ticket.photo.fileUrl);
+  }
+
+  for (const comment of comments) {
+    for (const attachment of comment.attachments || []) {
+      if (attachment.fileUrl) fileUrls.push(attachment.fileUrl);
+    }
+  }
+
+  // ── delete files from Cloudinary first (best-effort, non-blocking) ──
+  const results = await Promise.allSettled(
+    fileUrls.map((url) => deleteFromCloudinary(url)),
+  );
+
+  results.forEach((result, i) => {
+    if (result.status === "rejected") {
+      logger.error("Failed to delete Cloudinary attachment", {
+        fileUrl: fileUrls[i],
+        ticketId,
+        error: result.reason?.message,
+      });
+    }
+  });
+
+  // ── atomic DB cleanup ──
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      await Comment.deleteMany(
+        { entityType: "Ticket", entityId: ticketId },
+        { session },
+      );
+
+      await UserCommentNotification.deleteMany(
+        { entityType: "Ticket", entityId: ticketId },
+        { session },
+      );
+
+      await EntityMembership.deleteMany(
+        { entityType: "Ticket", entityId: ticketId },
+        { session },
+      );
+
+      await Ticket.deleteOne({ _id: ticketId }, { session });
+    });
+  } finally {
+    session.endSession();
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Ticket deleted successfully"));
 });

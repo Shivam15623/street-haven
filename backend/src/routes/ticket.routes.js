@@ -6,6 +6,7 @@ import {
   cancelTicket,
   completeTicket,
   createTicket,
+  deleteTicket,
   editTicket,
   ExportTicketsReport,
   FetchTicketBySlug,
@@ -45,7 +46,12 @@ router.post(
   authorizePermissions({ action: PERMISSIONS.TICKET_CREATE }),
   createTicket,
 );
-
+router.delete(
+  "/delete/:id",
+  validateRequest(idParamSchema, "params"),
+  authorizePermissions({ action: PERMISSIONS.TICKET_DELETE }),
+  deleteTicket,
+);
 router.get("/report", GetTicketsReport);
 router.get("/report/export", ExportTicketsReport);
 router.get("/report/:id", GetTicketDetail);
