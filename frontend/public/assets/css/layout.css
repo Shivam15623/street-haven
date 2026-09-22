@@ -1080,6 +1080,7 @@
 .loader-logo {
   max-width: var(--loader-logo-size);
   height: auto;
+  object-fit: contain;
 }
 .loader-title {
   font-size: clamp(1.8rem, 4vw, 3rem);
