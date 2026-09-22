@@ -1,8 +1,15 @@
+import logger from "../utills/logger.js";
+
 const errorHandler = (err, req, res, next) => {
   const statusCode =
     err.statusCode || (err.name === "ValidationError" ? 400 : 500);
 
-  console.error(`[${new Date().toISOString()}]`, err);
+  logger.error(err.message, {
+    stack: err.stack,
+    path: req.originalUrl,
+    method: req.method,
+    statusCode,
+  });
 
   const response = {
     success: false,
@@ -10,12 +17,10 @@ const errorHandler = (err, req, res, next) => {
     code: err.code || null,
   };
 
-  // Validation details are required by the frontend in production too
   if (err.code === "VALIDATION_FAILED") {
     response.errors = Array.isArray(err.errors) ? err.errors : [];
   }
 
-  // Debug information only in development
   if (process.env.NODE_ENV !== "production") {
     response.stack = err.stack;
   }

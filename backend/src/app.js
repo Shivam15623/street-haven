@@ -51,7 +51,8 @@ import locationRouter from "./routes/location.routes.js";
 import taskRouter from "./routes/task.routes.js";
 import certificateRouter from "./routes/certifications.js";
 import tickCategoryRouter from "./routes/ticketCategory.routes.js";
-
+import { requestLogger } from "./middleware/requestLogger.js";
+app.use(requestLogger);
 app.use("/api/v1/activity-logs", activityLogRoutes);
 
 app.get("/api/v1/ping", (req, res) => {

@@ -15892,8 +15892,12 @@ td.fc-header-center {
   animation: chat-flash 1.2s ease-out;
 }
 @keyframes chat-flash {
-  0% { background-color: rgba(255, 217, 102, 0.6); }
-  100% { background-color: transparent; }
+  0% {
+    background-color: rgba(255, 217, 102, 0.6);
+  }
+  100% {
+    background-color: transparent;
+  }
 }
 
 .chat-message-box {
@@ -15953,7 +15957,7 @@ td.fc-header-center {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  white-space: normal; 
+  white-space: normal;
 }
 
 /* =========================================
@@ -16002,10 +16006,18 @@ td.fc-header-center {
    DARK MODE OVERRIDES (For the Left Bubble)
    ========================================= */
 [data-theme="dark"] .chat-single-message.left .reply-quote-inner {
-  background: rgba(255, 255, 255, 0.08); /* Lighten it up against dark mode cards */
+  background: rgba(
+    255,
+    255,
+    255,
+    0.08
+  ); /* Lighten it up against dark mode cards */
 }
 
-[data-theme="dark"] .chat-single-message.left .reply-quote:hover .reply-quote-inner {
+[data-theme="dark"]
+  .chat-single-message.left
+  .reply-quote:hover
+  .reply-quote-inner {
   background: rgba(255, 255, 255, 0.12);
 }
 
@@ -16022,7 +16034,9 @@ td.fc-header-center {
   font-size: 11px !important;
   font-weight: 500;
   opacity: 0.75;
-  transition: opacity 0.2s ease, transform 0.1s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.1s ease;
 }
 
 .reply-trigger:hover {
@@ -16093,7 +16107,9 @@ td.fc-header-center {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .reply-cancel-btn:hover {
@@ -16895,11 +16911,13 @@ td.fc-header-center {
 .street-site-logo {
   width: 92.49px;
   height: 69px;
+  object-fit: contain;
 }
 @media (max-width: 1024px) {
   .street-site-logo {
     width: 85px;
     height: 63px;
+    object-fit: contain;
   }
 }
 
@@ -16908,12 +16926,14 @@ td.fc-header-center {
   .street-site-logo {
     width: 75px;
     height: 55px;
+    object-fit: contain;
   }
 }
 @media (max-width: 480px) {
   .street-site-logo {
     width: 60px;
     height: 45px;
+    object-fit: contain;
   }
 }
 
