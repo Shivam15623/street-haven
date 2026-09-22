@@ -39,7 +39,6 @@ const seedTicketCategories = async () => {
       console.log(`✅ Created: ${category.name} (${category.slug})`);
     }
 
-    console.log("\n🎉 Ticket category seeding completed!");
   } catch (error) {
     console.error("\n❌ Failed to seed ticket categories:");
 

@@ -36,7 +36,7 @@ function formatActivityText(n) {
 
 // n.entity is attached beforehand (batched lookup) — see fetchCommentNotifications
 function normalizeComment(n) {
-  console.log(n.entity, n);
+
   const entity = n.entity || null;
 
   const link =
