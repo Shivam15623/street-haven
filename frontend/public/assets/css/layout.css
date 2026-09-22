@@ -1078,7 +1078,7 @@
   );
 }
 .loader-logo {
-  width: var(--loader-logo-size);
+  max-width: var(--loader-logo-size);
   height: auto;
 }
 .loader-title {

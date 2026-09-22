@@ -16910,30 +16910,25 @@ td.fc-header-center {
 }
 .street-site-logo {
   width: 92.49px;
-  height: 69px;
+  height: auto;
   object-fit: contain;
 }
+
 @media (max-width: 1024px) {
   .street-site-logo {
     width: 85px;
-    height: 63px;
-    object-fit: contain;
   }
 }
 
-/* Small tablets (481px to 768px) */
 @media (max-width: 768px) {
   .street-site-logo {
     width: 75px;
-    height: 55px;
-    object-fit: contain;
   }
 }
+
 @media (max-width: 480px) {
   .street-site-logo {
     width: 60px;
-    height: 45px;
-    object-fit: contain;
   }
 }
 
