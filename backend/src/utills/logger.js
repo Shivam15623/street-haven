@@ -27,7 +27,7 @@ const prodFormat = combine(timestamp(), errors({ stack: true }), json());
 
 const logger = winston.createLogger({
   level: isProd ? "http" : "debug", // "http" includes error/warn/info/http, excludes debug
-  format: isProd ? prodFormat : devFormat,
+  format: isProd ? devFormat : prodFormat,
   transports: [
     new winston.transports.Console(),
     ...(isProd
