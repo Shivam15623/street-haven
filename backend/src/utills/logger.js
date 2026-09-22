@@ -4,7 +4,7 @@ const { combine, timestamp, printf, colorize, json } = winston.format;
 
 const isProd = process.env.NODE_ENV === "production";
 winston.addColors({ http: "magenta" });
-// Console format (dev): readable
+
 const devFormat = combine(
   colorize(),
   timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
@@ -12,14 +12,13 @@ const devFormat = combine(
     return `${timestamp} [${level}]: ${message} ${
       Object.keys(meta).length ? JSON.stringify(meta) : ""
     }`;
-  })
+  }),
 );
 
-// File format (prod): structured JSON, easy to grep/parse
 const prodFormat = combine(timestamp(), json());
 
 const logger = winston.createLogger({
-  level: isProd ? "info" : "debug",
+  level: isProd ? "http" : "debug", // ✅ fixed
   format: isProd ? prodFormat : devFormat,
   transports: [
     new winston.transports.Console(),
@@ -29,9 +28,7 @@ const logger = winston.createLogger({
             filename: "logs/error.log",
             level: "error",
           }),
-          new winston.transports.File({
-            filename: "logs/combined.log",
-          }),
+          new winston.transports.File({ filename: "logs/combined.log" }),
         ]
       : []),
   ],

@@ -31,9 +31,6 @@ app.use("/public/attachments", express.static("public/attachments"));
 app.use(helmet());
 app.use(compression());
 
-if (process.env.NODE_ENV !== "production") {
-  app.use(morgan("dev"));
-}
 
 import authRoutes from "./routes/AuthRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
