@@ -1,15 +1,32 @@
 import logger from "../utills/logger.js";
+import { redact } from "../utills/sanitize.js";
+
 
 const errorHandler = (err, req, res, next) => {
   const statusCode =
     err.statusCode || (err.name === "ValidationError" ? 400 : 500);
 
-  logger.error(err.message, {
-    stack: err.stack,
-    path: req.originalUrl,
+  const isProd = process.env.NODE_ENV === "production";
+
+  const errorPayload = {
     method: req.method,
-    statusCode,
-  });
+    path: req.originalUrl,
+    status: statusCode,
+    message: err.message || "Internal Server Error",
+    name: err.name,
+    code: err.code || null,
+    stack: err.stack,
+    // Only if you actually want query params in logs — redacted, never body by default
+    query: Object.keys(req.query || {}).length ? redact(req.query) : undefined,
+  };
+
+  if (isProd) {
+    logger.error("Request failed", errorPayload);
+  } else {
+    logger.error(
+      `${req.method} | ${req.originalUrl} | ${statusCode} | ${err.message}\n${err.stack}`,
+    );
+  }
 
   const response = {
     success: false,
@@ -21,7 +38,7 @@ const errorHandler = (err, req, res, next) => {
     response.errors = Array.isArray(err.errors) ? err.errors : [];
   }
 
-  if (process.env.NODE_ENV !== "production") {
+  if (!isProd) {
     response.stack = err.stack;
   }
 

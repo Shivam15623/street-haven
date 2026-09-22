@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 import ConPassport from "./middleware/passport.js";
 import compression from "compression";
 import helmet from "helmet";
-import morgan from "morgan";
+
 
 const app = express();
 

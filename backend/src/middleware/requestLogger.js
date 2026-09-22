@@ -1,17 +1,35 @@
-import morgan from "morgan";
 import logger from "../utills/logger.js";
 
+const isProd = process.env.NODE_ENV === "production";
 
-// custom token if you want response time explicitly
-morgan.token("body", (req) => JSON.stringify(req.body));
+const requestLogger = (req, res, next) => {
+  const start = process.hrtime.bigint();
 
-const format =
-  ':method :url :status :res[content-length] - :response-time ms';
+  res.on("finish", () => {
+    const end = process.hrtime.bigint();
+    const responseTimeMs = Number(end - start) / 1e6;
+    const roundedTime = Math.round(responseTimeMs);
 
-const stream = {
-  write: (message) => logger.http(message.trim()),
+    const logPayload = {
+      method: req.method,
+      path: req.originalUrl,
+      status: res.statusCode,
+      responseTime: roundedTime,
+    };
+
+    const message = isProd
+      ? "HTTP Request"
+      : `${req.method.padEnd(6)} | ${req.originalUrl.padEnd(25)} | ${res.statusCode} | ${roundedTime}ms`;
+
+    // Optional: flag slow requests distinctly (still 'http' level, but easy to grep)
+    if (roundedTime > 1000) {
+      logPayload.slow = true;
+    }
+
+    logger.http(message, isProd ? logPayload : {});
+  });
+
+  next();
 };
-
-const requestLogger = morgan(format, { stream });
 
 export { requestLogger };
