@@ -32,7 +32,7 @@ const LazyPage = ({ pageNumber }: { pageNumber: number }) => {
           }
         });
       },
-      { rootMargin: "200px" }
+      { rootMargin: "200px" },
     );
 
     if (ref.current) observer.observe(ref.current);
@@ -56,7 +56,9 @@ const LazyPage = ({ pageNumber }: { pageNumber: number }) => {
 
 const ViewPdfModal = ({ attachment, title }: Props) => {
   const [showModal, setShowModal] = useState(false);
-
+  const getDisplayFileName = (fileName: string) => {
+    return fileName.replace(/^\d+_/, "");
+  };
   const handleDownload = async (url: string, filename: string) => {
     try {
       const response = await fetch(url);
@@ -90,7 +92,7 @@ const ViewPdfModal = ({ attachment, title }: Props) => {
       <ModalWrapper
         title={title}
         size="xl"
-        subtitle={`${attachment.fileName} • ${attachment.totalPages} pages`}
+        subtitle={`${getDisplayFileName(attachment.fileName)} • ${attachment.totalPages} pages`}
         show={showModal}
         onHide={() => setShowModal(false)}
         headerClassName="text-xl p-0 pb-20 text-street-dark"
@@ -102,7 +104,7 @@ const ViewPdfModal = ({ attachment, title }: Props) => {
             <button
               className="btn btn-street-primary btn-street-lg d-flex align-items-center justify-content-center gap-2 radius-12"
               onClick={() =>
-                handleDownload(attachment.fileUrl, attachment.fileName)
+                handleDownload(attachment.fileUrl,getDisplayFileName(attachment.fileName))
               }
             >
               <Icon icon="jam:download" className="text-xl" />

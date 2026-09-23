@@ -23,6 +23,9 @@ const CollectiveAgreementCard = ({
   const [open, setOpen] = useState(false);
   const { hasPermission } = useHasPermission();
   const [showDelete, setShowDelete] = useState(false);
+  const getDisplayFileName = (fileName: string) => {
+    return fileName.replace(/^\d+_/, "");
+  };
   const handleDownload = async (url: string, filename: string) => {
     try {
       const response = await fetch(url);
@@ -33,7 +36,7 @@ const CollectiveAgreementCard = ({
 
       const link = document.createElement("a");
       link.href = blobUrl;
-      link.download = filename;
+      link.download = getDisplayFileName(filename);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
