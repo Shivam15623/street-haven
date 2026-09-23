@@ -19,14 +19,16 @@ const ViewFileModal = ({ attachment, title, trigger }: Props) => {
 
   const openModal = () => setShowModal(true);
   const closeModal = () => setShowModal(false);
-
+  const getDisplayFileName = (fileName: string) => {
+    return fileName.replace(/^\d+_/, "");
+  };
   const handleDownload = async () => {
     const response = await fetch(attachment.fileUrl);
     const blob = await response.blob();
     const blobUrl = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = blobUrl;
-    link.download = attachment.fileName;
+    link.download = getDisplayFileName(attachment.fileName);
     link.click();
     URL.revokeObjectURL(blobUrl);
   };
@@ -144,7 +146,7 @@ const ViewFileModal = ({ attachment, title, trigger }: Props) => {
 
       <ModalWrapper
         title={title}
-        subtitle={attachment.fileName}
+        subtitle={getDisplayFileName(attachment.fileName)}
         size="xl"
         show={showModal}
         onHide={closeModal}
