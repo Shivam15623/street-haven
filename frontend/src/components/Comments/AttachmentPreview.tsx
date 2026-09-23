@@ -20,7 +20,9 @@ export const AttachmentPreview = ({
   onClick: () => void;
 }) => {
   const readableSize = formatFileSize(attachment.size);
-
+  const getDisplayFileName = (fileName: string) => {
+    return fileName.replace(/^\d+_/, "");
+  };
   const handleDownload = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
@@ -32,7 +34,7 @@ export const AttachmentPreview = ({
 
       const link = document.createElement("a");
       link.href = blobUrl;
-      link.download = attachment.fileName;
+      link.download = getDisplayFileName(attachment.fileName);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -50,7 +52,7 @@ export const AttachmentPreview = ({
       >
         <img
           src={attachment.fileUrl}
-          alt={attachment.fileName}
+          alt={getDisplayFileName(attachment.fileName)}
           className="w-100"
           style={{
             height: "12rem",
@@ -75,7 +77,7 @@ export const AttachmentPreview = ({
       >
         <img
           src={attachment.thumbnail || "/placeholder-video.jpg"}
-          alt={attachment.fileName}
+          alt={getDisplayFileName(attachment.fileName)}
           className="w-100"
           style={{ height: "12rem", objectFit: "cover" }}
         />
@@ -94,7 +96,9 @@ export const AttachmentPreview = ({
       <div className="d-flex align-items-center gap-3 p-3 border rounded-3 bg-light">
         <FileIconWithBackground fileType={attachment.type} size={26} />
         <div className="flex-grow-1 text-truncate">
-          <div className="fw-medium text-truncate">{attachment.fileName}</div>
+          <div className="fw-medium text-truncate">
+            {getDisplayFileName(attachment.fileName)}
+          </div>
           <div className="text-muted small">{readableSize}</div>
         </div>
         <button
@@ -115,7 +119,7 @@ export const AttachmentPreview = ({
       <FileIconWithBackground fileType={attachment.type} size={26} />
       <div className="flex-grow-1 text-truncate">
         <div className="fw-medium text-sm text-truncate">
-          {attachment.fileName}
+          {getDisplayFileName(attachment.fileName)}
         </div>
         <div className="text-muted text-xs small">{readableSize}</div>
       </div>

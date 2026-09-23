@@ -48,7 +48,7 @@ const ViewFileModal = ({ attachment, title, trigger }: Props) => {
           >
             <iframe
               src={`${attachment.fileUrl}#toolbar=0&navpanes=0&scrollbar=0`}
-              title={attachment.fileName}
+              title={getDisplayFileName(attachment.fileName)}
               width="100%"
               height={640}
               style={{
@@ -68,7 +68,7 @@ const ViewFileModal = ({ attachment, title, trigger }: Props) => {
         return (
           <img
             src={attachment.fileUrl}
-            alt={attachment.fileName}
+            alt={getDisplayFileName(attachment.fileName)}
             width={Math.min(window.innerWidth * 0.8, 453)}
             height={640}
             className=" rounded-4"
@@ -82,7 +82,7 @@ const ViewFileModal = ({ attachment, title, trigger }: Props) => {
           <iframe
             src={attachment.fileUrl}
             className="w-100  border-1 rounded-2"
-            title={attachment.fileName}
+            title={getDisplayFileName(attachment.fileName)}
             height={640}
           />
         );
@@ -100,7 +100,7 @@ const ViewFileModal = ({ attachment, title, trigger }: Props) => {
             )}`}
             className="w-100  border rounded-lg"
             height={640}
-            title={attachment.fileName}
+            title={getDisplayFileName(attachment.fileName)}
           />
         );
 

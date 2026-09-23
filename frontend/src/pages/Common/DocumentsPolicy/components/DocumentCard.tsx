@@ -35,6 +35,9 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
   const { title, description, tags, type, updatedAt, attachment } = Pdocument;
   const [showEditModal, setShowEditModal] = useState(false);
   const { hasPermission } = useHasPermission();
+  const getDisplayFileName = (fileName: string) => {
+    return fileName.replace(/^\d+_/, "");
+  };
   const handleDownload = async (url: string, filename: string) => {
     try {
       const response = await fetch(url);
@@ -45,7 +48,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
 
       const link = document.createElement("a");
       link.href = blobUrl;
-      link.download = filename;
+      link.download = getDisplayFileName(filename);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
