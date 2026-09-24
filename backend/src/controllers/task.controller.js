@@ -869,7 +869,6 @@ export const getTaskBySlug = asyncHandler(async (req, res) => {
 });
 export const deleteTask = asyncHandler(async (req, res) => {
   const { taskId } = req.params;
-  const { _id: userId } = req.user;
 
   if (!mongoose.isValidObjectId(taskId)) {
     throw new ApiError(400, "Invalid task id");
@@ -878,10 +877,6 @@ export const deleteTask = asyncHandler(async (req, res) => {
   const task = await Task.findById(taskId);
   if (!task) {
     throw new ApiError(404, "Task not found");
-  }
-
-  if (task.assignedBy.toString() !== userId.toString()) {
-    throw new ApiError(403, "You are not authorized to delete this task");
   }
 
   await Task.findByIdAndDelete(taskId);
