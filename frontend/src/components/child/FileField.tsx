@@ -22,7 +22,9 @@ const FileField: React.FC<FileFieldProps> = ({
   showPreview,
 }) => {
   const [editMode, setEditMode] = useState(false);
-
+  const getDisplayFileName = (fileName: string) => {
+    return fileName.replace(/^\d+_/, "");
+  };
   const renderFileIcon = (type?: string) => {
     if (!type) return "mdi:file-outline";
     if (type.startsWith("image/")) return "mdi:file-image";
@@ -50,7 +52,7 @@ const FileField: React.FC<FileFieldProps> = ({
             className="text-street-primary fw-medium text-truncate"
             style={{ maxWidth: "70%" }}
           >
-            {existingFile.fileName}
+            {getDisplayFileName(existingFile.fileName)}
           </a>
           <Icon
             icon="mdi:pencil"

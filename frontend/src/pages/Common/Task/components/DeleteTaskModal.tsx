@@ -2,10 +2,11 @@ import React from "react";
 import { Spinner } from "react-bootstrap";
 import { Icon } from "@iconify/react";
 import { toast } from "react-toastify"; // remove if using a different toast lib
-import { useDeleteTaskMutation, type ITask } from "../../../../services/taskApi";
+import {
+  useDeleteTaskMutation,
+  type ITask,
+} from "../../../../services/taskApi";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
-
-
 
 interface DeleteTaskModalProps {
   show: boolean;
@@ -31,7 +32,9 @@ const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
       onSuccess?.(task._id);
       onHide();
     } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to delete task. Please try again.");
+      toast.error(
+        err?.data?.message || "Failed to delete task. Please try again.",
+      );
     }
   };
 
@@ -58,9 +61,7 @@ const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
             onClick={handleDelete}
             disabled={isLoading}
           >
-            {isLoading && (
-              <Spinner animation="border" size="sm" role="status" />
-            )}
+            <Icon icon="line-md:loading-loop" style={{ fontSize: 16 }} />
             Delete Task
           </button>
         </>
@@ -71,7 +72,11 @@ const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
           className="d-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10"
           style={{ width: 56, height: 56 }}
         >
-          <Icon icon="mdi:alert-outline" className="text-danger" style={{ fontSize: 28 }} />
+          <Icon
+            icon="mdi:alert-outline"
+            className="text-danger"
+            style={{ fontSize: 28 }}
+          />
         </div>
 
         <h6 className="mb-0 fw-semibold">

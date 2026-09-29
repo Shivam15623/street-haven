@@ -570,6 +570,19 @@ span {
 .Te p {
   font-size: 14px !important;
 }
+.Te a {
+  color: var(--street-primary-base);
+  text-decoration: underline;
+}
+.Te ol {
+  list-style: decimal;
+}
+.Te ul {
+  list-style: disc;
+}
+.Te li {
+  font-size: 14px;
+}
 .timePickerselect.form-select {
   background-image: none !important;
   padding: 5px !important ;
