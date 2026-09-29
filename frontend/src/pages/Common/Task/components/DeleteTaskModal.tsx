@@ -1,5 +1,5 @@
 import React from "react";
-import { Spinner } from "react-bootstrap";
+
 import { Icon } from "@iconify/react";
 import { toast } from "react-toastify"; // remove if using a different toast lib
 import {
@@ -61,7 +61,9 @@ const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
             onClick={handleDelete}
             disabled={isLoading}
           >
-            <Icon icon="line-md:loading-loop" style={{ fontSize: 16 }} />
+            {isLoading && (
+              <Icon icon="eos-icons:loading" style={{ fontSize: 18 }} />
+            )}
             Delete Task
           </button>
         </>
