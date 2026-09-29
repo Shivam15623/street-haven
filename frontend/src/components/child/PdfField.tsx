@@ -16,7 +16,9 @@ const PdfField = ({
   fieldLabel: string;
 }) => {
   const [editMode, setEditMode] = useState(false);
-
+  const getDisplayFileName = (fileName: string) => {
+    return fileName.replace(/^\d+_/, "");
+  };
   if (isEdit && existingPdf && !editMode) {
     return (
       <div className="flex items-center gap-2">
@@ -35,7 +37,7 @@ const PdfField = ({
               rel="noopener noreferrer"
               className="text-street-primary cursor-pointer"
             >
-              {existingPdf.fileName}
+              {getDisplayFileName(existingPdf.fileName)}
             </a>
             <Icon
               icon="mdi:pencil"
