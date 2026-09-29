@@ -582,6 +582,7 @@ span {
 }
 .Te li {
   font-size: 14px;
+  padding-left: 12px;
 }
 .timePickerselect.form-select {
   background-image: none !important;
