@@ -704,3 +704,11 @@ ul ul {
   z-index: 9999;
   left: 0 !important; /* Quill sometimes computes a negative left */
 }
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
