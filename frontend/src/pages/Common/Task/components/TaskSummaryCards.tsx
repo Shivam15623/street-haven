@@ -8,16 +8,16 @@ interface TaskCounts {
   assigned?: number;
   under_review?: number;
   completed?: number;
+  total?:number;
 }
 
 interface Props {
   counts?: TaskCounts;
-  total?: number;
   status: TaskStatus | undefined;
   onStatusChange: (status: TaskStatus | undefined) => void;
 }
 
-const TaskSummaryCards = ({ counts, total, status, onStatusChange }: Props) => {
+const TaskSummaryCards = ({ counts,  status, onStatusChange }: Props) => {
   const { hasRole } = useHasPermission();
   const isAdmin = hasRole(["volunteer_admin", "super_admin"]);
 
@@ -57,10 +57,10 @@ const TaskSummaryCards = ({ counts, total, status, onStatusChange }: Props) => {
         label: "Total",
         variant: "total",
         icon: "mdi:format-list-bulleted",
-        count: total ?? 0,
+        count: counts?.total ?? 0,
       },
     ],
-    [counts, total],
+    [counts],
   );
 
   return (

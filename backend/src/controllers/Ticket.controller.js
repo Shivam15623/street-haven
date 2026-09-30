@@ -7,7 +7,10 @@ import User, { ROLES } from "../model/user.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
-import { deleteFromCloudinary, uploadOnCloudinary } from "../utills/cloudinary.js";
+import {
+  deleteFromCloudinary,
+  uploadOnCloudinary,
+} from "../utills/cloudinary.js";
 import { createNotification } from "../helper/CreateNotoification.js";
 import ExcelJS from "exceljs";
 import Location from "../model/location.js";
@@ -26,6 +29,15 @@ import logger from "../utills/logger.js";
 import Comment from "../model/comments.js";
 import UserCommentNotification from "../model/UserCommentNotification.js";
 import EntityMembership from "../model/EntityMemberShip.js";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
+// import Comment from "../models/comment.model.js"; // <- adjust path/name
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const TZ = "America/Toronto";
 
 async function getSuperAdminIds(session) {
   const superAdmins = await User.find({ role: "super_admin" })
@@ -1222,12 +1234,27 @@ async function applyTicketUpdates({
     newAssignee = await User.findById(newAssignedToId).session(session);
     if (!newAssignee) throw new ApiError(404, "New assignee not found");
 
-    ticket.assignmentHistory.push({
-      assignedTo: newAssignee._id,
-      assignedBy: userId,
-      assignedAt: new Date(),
-    });
-    ticket.assignedTo = newAssignee._id;
+    const isSamePerson = ticket.assignedTo?.equals(newAssignee._id);
+    if (!isSamePerson) {
+      ticket.assignmentHistory.push({
+        assignedTo: newAssignee._id,
+        assignedBy: userId,
+        assignedAt: new Date(),
+        reason: "reassigned",
+      });
+      ticket.assignedTo = newAssignee._id;
+
+      // hand-over mid-work: new person must press Start themselves
+      if (ticket.status === TICKET_STATUS.IN_PROGRESS) {
+        ticket.status = TICKET_STATUS.APPROVED;
+        ticket.statusHistory.push({
+          status: TICKET_STATUS.APPROVED,
+          fromStatus: TICKET_STATUS.IN_PROGRESS,
+          changedBy: userId,
+          changedAt: new Date(),
+        });
+      }
+    }
   }
 
   const oldStatus = ticket.status;
@@ -2228,9 +2255,160 @@ const getDuration = (start, end) => {
   const hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
   return `${days}d ${hours}h`;
 };
+
+/* ------------------------------ helpers ------------------------------ */
+
+// Toronto time, handles EST/EDT automatically
+const fmt = (date) =>
+  date ? dayjs(date).tz(TZ).format("YYYY-MM-DD hh:mm A") : "-";
+ 
+const fullName = (u) => {
+  if (!u || (!u.firstname && !u.lastname)) return "-";
+  return `${u.firstname || ""} ${u.lastname || ""}`.trim();
+};
+ 
+const diffMs = (start, end) => {
+  if (!start || !end) return null;
+  const ms = new Date(end).getTime() - new Date(start).getTime();
+  return ms >= 0 ? ms : null;
+};
+ 
+const fmtMs = (ms) => {
+  if (ms === null || ms === undefined) return "-";
+  const totalMin = Math.floor(ms / 60000);
+  const d = Math.floor(totalMin / 1440);
+  const h = Math.floor((totalMin % 1440) / 60);
+  const m = totalMin % 60;
+  return `${d}d ${h}h ${m}m`;
+};
+ 
+const duration = (start, end) => fmtMs(diffMs(start, end));
+ 
+const byDate = (arr, field) =>
+  [...(arr || [])].sort((a, b) => new Date(a[field]) - new Date(b[field]));
+ 
+const lastWhere = (arr, fn) => {
+  for (let i = arr.length - 1; i >= 0; i--) if (fn(arr[i])) return arr[i];
+  return null;
+};
+ 
+// index of the assignment that was active at a given moment (-1 if none)
+const assignmentIndexAt = (assigns, at) => {
+  let idx = -1;
+  assigns.forEach((a, i) => {
+    if (new Date(a.assignedAt) <= new Date(at)) idx = i;
+  });
+  return idx;
+};
+ 
+const displayId = (t) => `TICKET-${String(t.ticketNumber).padStart(5, "0")}`;
+ 
+/* -------------------- everything derived from history -------------------- */
+const analyzeTicket = (t) => {
+  const S = TICKET_STATUS;
+  const hist = byDate(t.statusHistory, "changedAt");
+  const assigns = byDate(t.assignmentHistory, "assignedAt");
+ 
+  /* ---- work sessions: every In Progress -> next status ---- */
+  const sessions = [];
+  let open = null;
+  const closeSession = (end) => {
+    const idx = assignmentIndexAt(assigns, open.changedAt);
+    const assignment = idx >= 0 ? assigns[idx] : null;
+    sessions.push({
+      assignmentNo: idx >= 0 ? idx + 1 : "-",
+      worker: assignment?.assignedTo
+        ? fullName(assignment.assignedTo)
+        : fullName(open.changedBy),
+      assignedAt: assignment?.assignedAt || null,
+      startedAt: open.changedAt,
+      endedAt: end?.changedAt || null,
+      endedWith: end ? end.status || "(not recorded)" : "Still in progress",
+      endedBy: end ? fullName(end.changedBy) : "-",
+      ms: end ? diffMs(open.changedAt, end.changedAt) : null,
+    });
+    open = null;
+  };
+  for (const h of hist) {
+    if (h.status === S.IN_PROGRESS) {
+      if (!open) open = h;
+    } else if (open) {
+      closeSession(h);
+    }
+  }
+  if (open) closeSession(null);
+ 
+  const totalWorkMs = sessions.reduce((sum, s) => sum + (s.ms || 0), 0);
+ 
+  /* ---- key milestones ---- */
+  const completions = hist.filter((h) => h.status === S.COMPLETED);
+  const lastCompletion = completions[completions.length - 1] || null;
+  const completedAt = lastCompletion?.changedAt || t.resolvedAt || null;
+ 
+  let resolvedBy = fullName(lastCompletion?.changedBy);
+  if (resolvedBy === "-" && completedAt) resolvedBy = fullName(t.assignedTo);
+ 
+  const approved = lastWhere(hist, (h) => h.status === S.APPROVED);
+  const rejected = lastWhere(hist, (h) => h.status === S.REJECTED);
+  // an "Open" entry that is not the first entry = a reopen
+  const reopens = hist.filter((h, i) => i > 0 && h.status === S.OPEN);
+ 
+  /* ---- timeline: status changes + assignments merged ---- */
+  const events = [];
+  hist.forEach((h, i) => {
+    events.push({
+      at: h.changedAt,
+      type: "Status change",
+      from: h.fromStatus || hist[i - 1]?.status || "-",
+      to: h.status || "(not recorded)",
+      by: fullName(h.changedBy),
+    });
+  });
+  assigns.forEach((a, i) => {
+    events.push({
+      at: a.assignedAt,
+      type: i === 0 ? "Assigned" : `Reassigned (assignment #${i + 1})`,
+      from: i > 0 ? fullName(assigns[i - 1].assignedTo) : "-",
+      to: fullName(a.assignedTo),
+      by: fullName(a.assignedBy),
+    });
+  });
+  events.sort((a, b) => new Date(a.at) - new Date(b.at));
+ 
+  return {
+    hist,
+    assigns,
+    sessions,
+    events,
+    totalWorkMs,
+    completedAt,
+    resolvedBy,
+    timesCompleted: completions.length,
+    approved,
+    rejected,
+    reopens,
+  };
+};
+ 
+const styleHeader = (sheet) => {
+  const row = sheet.getRow(1);
+  row.font = { bold: true };
+  row.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFF2F2F2" },
+  };
+  sheet.views = [{ state: "frozen", ySplit: 1 }];
+  sheet.autoFilter = {
+    from: { row: 1, column: 1 },
+    to: { row: 1, column: sheet.columns.length },
+  };
+};
+ 
+/* ------------------------------ controller ------------------------------ */
 export const ExportTicketsReport = asyncHandler(async (req, res) => {
   const filter = await buildReportFilter(req);
-
+ 
   const tickets = await Ticket.find(filter)
     .sort({ createdAt: -1 })
     .populate("location", "name")
@@ -2240,104 +2418,178 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
     .populate("approvedBy", "firstname lastname email")
     .populate("rejectedBy", "firstname lastname email")
     .populate("statusHistory.changedBy", "firstname lastname email")
+    .populate("assignmentHistory.assignedTo", "firstname lastname email")
+    .populate("assignmentHistory.assignedBy", "firstname lastname email")
     .lean();
-
+ 
   const workbook = new ExcelJS.Workbook();
-
-  const sheet = workbook.addWorksheet("Tickets Report");
-
+ 
+  /* ============================ Sheet 1: Tickets ============================ */
+  const sheet = workbook.addWorksheet("Tickets");
   sheet.columns = [
-    { header: "Ticket ID", key: "ticketId", width: 16 },
-    { header: "Ticket Number", key: "ticketNumber", width: 14 },
+    { header: "Ticket ID", key: "ticketId", width: 14 },
     { header: "Title", key: "title", width: 28 },
     { header: "Description", key: "description", width: 40 },
     { header: "Status", key: "status", width: 14 },
-    { header: "Priority", key: "priority", width: 12 },
+    { header: "Priority", key: "priority", width: 10 },
     { header: "Category", key: "category", width: 16 },
-    // ExportTicketsReport — add a column
-    { header: "Category Detail", key: "categoryOtherText", width: 24 },
-    { header: "Location", key: "location", width: 22 },
+    { header: "Category Detail", key: "categoryOtherText", width: 22 },
+    { header: "Location", key: "location", width: 20 },
     { header: "Submitted By", key: "submittedBy", width: 22 },
     { header: "Submitted Email", key: "submittedEmail", width: 26 },
-    { header: "Approved By", key: "approvedBy", width: 22 },
-    { header: "Assigned To", key: "assignedTo", width: 22 },
-    { header: "Rejected By", key: "rejectedBy", width: 22 },
-    { header: "Rejection Reason", key: "rejectionReason", width: 30 },
     { header: "Created Date", key: "createdDate", width: 20 },
-    { header: "Approved Date", key: "approvedDate", width: 20 },
-    { header: "Assigned Date", key: "assignedDate", width: 20 },
-    { header: "Last Updated Date", key: "updatedDate", width: 20 },
+    { header: "Approved By", key: "approvedBy", width: 22 },
+    { header: "Approved Date (latest)", key: "approvedDate", width: 22 },
+    { header: "Rejected By", key: "rejectedBy", width: 22 },
+    { header: "Rejected Date (latest)", key: "rejectedDate", width: 22 },
+    { header: "Rejection Reason", key: "rejectionReason", width: 30 },
+    { header: "Currently Assigned To", key: "assignedTo", width: 22 },
+    { header: "First Assigned Date", key: "firstAssignedDate", width: 20 },
+    { header: "Last Assigned Date", key: "lastAssignedDate", width: 20 },
+    { header: "Times Assigned", key: "timesAssigned", width: 12 },
+    { header: "Times Reassigned", key: "timesReassigned", width: 12 },
+    { header: "Times Reopened", key: "timesReopened", width: 12 },
+    { header: "Last Reopened Date", key: "lastReopenedDate", width: 20 },
+    { header: "First Started Work", key: "firstStarted", width: 20 },
+    { header: "Latest Started Work", key: "lastStarted", width: 20 },
+    { header: "Work Sessions", key: "sessionCount", width: 12 },
+    { header: "Completed Date (latest)", key: "completedDate", width: 22 },
+    { header: "Times Completed", key: "timesCompleted", width: 12 },
     { header: "Resolved By", key: "resolvedBy", width: 22 },
-    { header: "Resolved Date", key: "resolvedDate", width: 20 },
-    { header: "Resolution Time", key: "resolutionTime", width: 16 },
+    { header: "Resolution Time (Created→Completed)", key: "resolutionTime", width: 24 },
+    { header: "Time (First Assigned→Completed)", key: "assignToDone", width: 24 },
+    { header: "Actual Work Time (all sessions)", key: "workTime", width: 24 },
+    { header: "Last Updated Date", key: "updatedDate", width: 20 },
     { header: "Attachment URL", key: "attachmentUrl", width: 40 },
   ];
-  sheet.getRow(1).font = { bold: true };
-  sheet.getRow(1).fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FFF2F2F2" },
-  };
-
+ 
+  /* ============================ Sheet 2: Timeline ============================ */
+  const timeline = workbook.addWorksheet("Timeline");
+  timeline.columns = [
+    { header: "Ticket ID", key: "ticketId", width: 14 },
+    { header: "Title", key: "title", width: 28 },
+    { header: "Step #", key: "step", width: 8 },
+    { header: "Date & Time (Toronto)", key: "at", width: 22 },
+    { header: "Event", key: "type", width: 30 },
+    { header: "From", key: "from", width: 22 },
+    { header: "To / Assignee", key: "to", width: 22 },
+    { header: "Done By", key: "by", width: 22 },
+    { header: "Time Since Previous Step", key: "since", width: 22 },
+  ];
+ 
+  /* ========================== Sheet 3: Work Sessions ========================== */
+  const sessionsSheet = workbook.addWorksheet("Work Sessions");
+  sessionsSheet.columns = [
+    { header: "Ticket ID", key: "ticketId", width: 14 },
+    { header: "Title", key: "title", width: 28 },
+    { header: "Session #", key: "no", width: 10 },
+    { header: "Assignment #", key: "assignmentNo", width: 12 },
+    { header: "Worker", key: "worker", width: 22 },
+    { header: "Assigned At", key: "assignedAt", width: 20 },
+    { header: "Started At", key: "startedAt", width: 20 },
+    { header: "Ended At", key: "endedAt", width: 20 },
+    { header: "Ended With Status", key: "endedWith", width: 18 },
+    { header: "Ended By", key: "endedBy", width: 22 },
+    { header: "Time Assigned→Started", key: "toStart", width: 22 },
+    { header: "Work Duration", key: "duration", width: 18 },
+  ];
+ 
+  /* ========================== Sheet 4: Conversation ========================== */
+ 
+ 
+  /* ------------------------------ fill rows ------------------------------ */
   tickets.forEach((t) => {
-    const approvedDate = getStatusDate(t.statusHistory, TICKET_STATUS.APPROVED);
-    const assignedDate = getAssignedDate(t.assignmentHistory);
-    const completedStatus = t.statusHistory?.find(
-      (history) => history.status === TICKET_STATUS.COMPLETED,
-    );
+    const a = analyzeTicket(t);
+    const tid = displayId(t);
+  
+ 
+    const firstAssigned = a.assigns[0]?.assignedAt || null;
+    const lastAssigned = a.assigns[a.assigns.length - 1]?.assignedAt || null;
+    const lastReopen = a.reopens[a.reopens.length - 1] || null;
+ 
     sheet.addRow({
-      ticketId: `TICKET-${String(t.ticketNumber).padStart(5, "0")}`,
-      ticketNumber: t.ticketNumber,
+      ticketId: tid,
       title: t.req_title,
       description: stripHtml(t.description),
       status: t.status,
       priority: t.priority || "-",
       category: t.category?.name || "-",
-      // in the row-add:
       categoryOtherText: t.categoryOtherText || "-",
       location: t.location?.name || "-",
-      submittedBy: t.createdBy
-        ? `${t.createdBy.firstname} ${t.createdBy.lastname}`
-        : "-",
+      submittedBy: fullName(t.createdBy),
       submittedEmail: t.createdBy?.email || "-",
-      approvedBy: t.approvedBy
-        ? `${t.approvedBy.firstname} ${t.approvedBy.lastname}`
-        : "-",
-      assignedTo: t.assignedTo
-        ? `${t.assignedTo.firstname} ${t.assignedTo.lastname}`
-        : "-",
-      rejectedBy: t.rejectedBy
-        ? `${t.rejectedBy.firstname} ${t.rejectedBy.lastname}`
-        : "-",
+      createdDate: fmt(t.createdAt),
+      approvedBy: fullName(t.approvedBy),
+      approvedDate: fmt(a.approved?.changedAt),
+      rejectedBy: fullName(t.rejectedBy),
+      rejectedDate: fmt(a.rejected?.changedAt),
       rejectionReason: t.rejectionReason || "-",
-      createdDate: formatDate(t.createdAt),
-      approvedDate: formatDate(approvedDate),
-      assignedDate: formatDate(assignedDate),
-      updatedDate: formatDate(t.updatedAt),
-      resolvedBy: completedStatus?.changedBy
-        ? `${completedStatus.changedBy.firstname} ${completedStatus.changedBy.lastname}`
-        : "-",
-
-      resolvedDate: formatDate(t.resolvedAt),
-      resolutionTime: getDuration(t.createdAt, t.resolvedAt),
+      assignedTo: fullName(t.assignedTo),
+      firstAssignedDate: fmt(firstAssigned),
+      lastAssignedDate: fmt(lastAssigned),
+      timesAssigned: a.assigns.length,
+      timesReassigned: Math.max(0, a.assigns.length - 1),
+      timesReopened: a.reopens.length,
+      lastReopenedDate: fmt(lastReopen?.changedAt),
+      firstStarted: fmt(a.sessions[0]?.startedAt),
+      lastStarted: fmt(a.sessions[a.sessions.length - 1]?.startedAt),
+      sessionCount: a.sessions.length,
+      completedDate: fmt(a.completedAt),
+      timesCompleted: a.timesCompleted,
+      resolvedBy: a.resolvedBy,
+      resolutionTime: duration(t.createdAt, a.completedAt),
+      assignToDone: duration(firstAssigned, a.completedAt),
+      workTime: a.sessions.length ? fmtMs(a.totalWorkMs) : "-",
+   
+      updatedDate: fmt(t.updatedAt),
       attachmentUrl: t.photo?.fileUrl || "-",
     });
+ 
+    // ---- timeline rows
+    a.events.forEach((e, i) => {
+      timeline.addRow({
+        ticketId: tid,
+        title: t.req_title,
+        step: i + 1,
+        at: fmt(e.at),
+        type: e.type,
+        from: e.from,
+        to: e.to,
+        by: e.by,
+        since: i === 0 ? "-" : duration(a.events[i - 1].at, e.at),
+      });
+    });
+ 
+    // ---- work session rows
+    a.sessions.forEach((s, i) => {
+      sessionsSheet.addRow({
+        ticketId: tid,
+        title: t.req_title,
+        no: i + 1,
+        assignmentNo: s.assignmentNo,
+        worker: s.worker,
+        assignedAt: fmt(s.assignedAt),
+        startedAt: fmt(s.startedAt),
+        endedAt: fmt(s.endedAt),
+        endedWith: s.endedWith,
+        endedBy: s.endedBy,
+        toStart: duration(s.assignedAt, s.startedAt),
+        duration: fmtMs(s.ms),
+      });
+    });
   });
-
+ 
   if (tickets.length === 0) {
     sheet.addRow({ ticketId: "No tickets found for the selected filters." });
   }
+ 
+  /* ------------------------------ formatting ------------------------------ */
+  [sheet, timeline, sessionsSheet].forEach(styleHeader);
+ 
+  sheet.getColumn("description").alignment = { wrapText: true, vertical: "top" };
+  sheet.getColumn("rejectionReason").alignment = { wrapText: true, vertical: "top" };
 
-  // Wrap long text columns (description, rejection reason) for readability
-  sheet.getColumn("description").alignment = {
-    wrapText: true,
-    vertical: "top",
-  };
-  sheet.getColumn("rejectionReason").alignment = {
-    wrapText: true,
-    vertical: "top",
-  };
-
+ 
   res.setHeader(
     "Content-Type",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -2346,7 +2598,7 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
     "Content-Disposition",
     `attachment; filename="tickets-report-${Date.now()}.xlsx"`,
   );
-
+ 
   await workbook.xlsx.write(res);
   res.end();
 });

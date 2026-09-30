@@ -204,7 +204,7 @@ const NotificationView = () => {
             {/* 🕳 Empty State */}
             {!isLoading &&
               (!notifications || notifications?.length === 0) && (
-                <div className="text-center text-muted py-40">
+                <div className="text-center text-street-base py-40">
                   No notifications found.
                 </div>
               )}

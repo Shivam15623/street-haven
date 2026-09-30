@@ -294,7 +294,7 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
 
             {mentionsEnabled && (
               <span
-                className="text-muted small ms-1"
+                className="text-street-base small ms-1"
                 title="Type @ to mention someone with access to this thread"
               >
                 @mention

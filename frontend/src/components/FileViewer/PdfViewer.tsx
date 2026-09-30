@@ -26,7 +26,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ url, name }) => {
             <div className="spinner-border text-primary mb-2" role="status">
               <span className="visually-hidden">Loading...</span>
             </div>
-            <span className="text-muted small">Loading PDF...</span>
+            <span className="text-street-base small">Loading PDF...</span>
           </div>
         </div>
       )}
