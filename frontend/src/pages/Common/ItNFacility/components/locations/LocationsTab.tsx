@@ -132,7 +132,7 @@ const LocationsTab = () => {
         />
       )}
       {isFetching && !isLoading && (
-        <span className="text-sm text-muted">Refreshing...</span>
+        <span className="text-sm text-street-base">Refreshing...</span>
       )}
 
       <ActionsLocation

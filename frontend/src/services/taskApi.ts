@@ -62,6 +62,7 @@ export interface GetTasksResponse {
     assigned: number;
     under_review: number;
     completed: number;
+    total:number;
   };
 }
 

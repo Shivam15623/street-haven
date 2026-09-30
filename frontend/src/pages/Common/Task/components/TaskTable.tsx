@@ -94,7 +94,6 @@ const TaskTable = ({
     <>
       <TaskSummaryCards
         counts={data?.data?.counts}
-        total={data?.data?.total}
         status={status}
         onStatusChange={setStatus}
       />

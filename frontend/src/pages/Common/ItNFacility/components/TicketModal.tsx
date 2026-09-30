@@ -28,7 +28,7 @@ const DetailItem: React.FC<{ label: string; children: React.ReactNode }> = ({
   children,
 }) => (
   <div className="mb-3">
-    <div className="text-xxs text-uppercase text-muted fw-semibold mb-1">
+    <div className="text-xxs text-uppercase text-street-base fw-semibold mb-1">
       {label}
     </div>
     <div className="text-sm text-street-dark">{children}</div>
@@ -137,7 +137,7 @@ const TicketDetailsModal: React.FC<TicketDetailsModalProps> = ({
                   style={{ maxHeight: 180 }}
                 />
               </a>
-              <div className="text-xxs text-muted mt-1">
+              <div className="text-xxs text-street-base mt-1">
                 {ticket.photo.fileName}
               </div>
             </DetailItem>
@@ -147,7 +147,7 @@ const TicketDetailsModal: React.FC<TicketDetailsModalProps> = ({
         <Col md={6}>
           <DetailItem label="Created By">
             {ticket.createdBy.firstname} {ticket.createdBy.lastname}
-            <div className="text-xxs text-muted">{ticket.createdBy.email}</div>
+            <div className="text-xxs text-street-base">{ticket.createdBy.email}</div>
           </DetailItem>
         </Col>
         <Col md={6}>

@@ -570,6 +570,21 @@ span {
 .Te p {
   font-size: 14px !important;
 }
+.Te a {
+  color: var(--street-primary-base);
+  text-decoration: underline;
+}
+.Te ol {
+  list-style: decimal;
+  padding-left: 20px;
+}
+.Te ul {
+  list-style: disc;
+  padding-left: 20px;
+}
+.Te li {
+  font-size: 14px;
+}
 .timePickerselect.form-select {
   background-image: none !important;
   padding: 5px !important ;
@@ -690,4 +705,12 @@ ul ul {
 .quill-editor-scrollable .ql-tooltip {
   z-index: 9999;
   left: 0 !important; /* Quill sometimes computes a negative left */
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

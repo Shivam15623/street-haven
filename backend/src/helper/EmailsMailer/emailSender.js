@@ -29,8 +29,6 @@ const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
       htmlContent: html,
     });
 
-  
-
     return response;
   } catch (error) {
     console.error("========== BREVO ERROR ==========");

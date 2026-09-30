@@ -21,7 +21,10 @@ import EntityMembership from "../model/EntityMemberShip.js";
 import { deleteFromCloudinary } from "../utills/cloudinary.js";
 import logger from "../utills/logger.js";
 import { ROLES } from "../model/user.js";
+import timezone from "dayjs/plugin/timezone.js";
+dayjs.extend(timezone);
 
+const TZ = "America/Toronto";
 export const createTask = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   const effects = [];
@@ -436,9 +439,10 @@ const toObjectIds = (val) => {
 };
 
 // Resolves datePreset -> {start, end}, falling back to explicit startDate/endDate
+// Resolves datePreset -> {start, end}, falling back to explicit startDate/endDate
 const resolveDateRange = ({ datePreset, startDate, endDate }) => {
   if (datePreset) {
-    const now = dayjs();
+    const now = dayjs().tz(TZ);
     switch (datePreset) {
       case "today":
         return {
@@ -467,14 +471,15 @@ const resolveDateRange = ({ datePreset, startDate, endDate }) => {
 
   if (startDate || endDate) {
     return {
-      start: startDate ? dayjs(startDate).startOf("day").toDate() : undefined,
-      end: endDate ? dayjs(endDate).endOf("day").toDate() : undefined,
+      start: startDate
+        ? dayjs.tz(startDate, TZ).startOf("day").toDate()
+        : undefined,
+      end: endDate ? dayjs.tz(endDate, TZ).endOf("day").toDate() : undefined,
     };
   }
 
   return {};
 };
-
 const dateFieldMap = {
   created: "createdAt",
   updated: "updatedAt",
@@ -584,8 +589,8 @@ export const getAllTasks = asyncHandler(async (req, res) => {
   // today: dueDate is today AND status !== completed
   // upcoming: dueDate > today AND status !== completed
   // noduedate: dueDate is null
-  const startOfToday = dayjs().startOf("day").toDate();
-  const endOfToday = dayjs().endOf("day").toDate();
+  const startOfToday = dayjs().tz(TZ).startOf("day").toDate();
+  const endOfToday = dayjs().tz(TZ).endOf("day").toDate();
 
   const dueStatusStage = {
     $addFields: {
@@ -710,9 +715,11 @@ export const getAllTasks = asyncHandler(async (req, res) => {
     under_review: 0,
     completed: 0,
   };
+
   statusCounts.forEach(({ _id, count }) => {
     if (_id in counts) counts[_id] = count;
   });
+  counts.total = Object.values(counts).reduce((a, b) => a + b, 0);
 
   return res.status(200).json(
     new ApiResponse(200, "Tasks fetched Successfully", {
@@ -1333,7 +1340,8 @@ export const buildReportFilter = async (req) => {
   const filter = {};
 
   // ---------- role scoping ----------
-  if (role === "volunteer_admin" || role === "super_admin") {
+  if (role === "super_admin") {
+  } else if (role === "volunteer_admin") {
     filter.assignedBy = new mongoose.Types.ObjectId(userId);
   } else {
     filter.assignedTo = new mongoose.Types.ObjectId(userId);
@@ -1438,7 +1446,8 @@ export const buildReportFilter = async (req) => {
 
   return filter;
 };
-const formatDate = (date) => (date ? new Date(date).toLocaleString() : "-");
+const formatDate = (date) =>
+  date ? dayjs(date).tz(TZ).format("YYYY-MM-DD hh:mm A") : "-";
 export const ExportTasksReport = asyncHandler(async (req, res) => {
   const filter = await buildReportFilter(req);
 
