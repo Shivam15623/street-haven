@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import slugify from "slugify";
 import { customAlphabet } from "nanoid";
+import softDelete from "../../plugin/softDelete.js";
 
 export const ROLES = {
   SUPER_ADMIN: "super_admin",
@@ -139,14 +140,17 @@ const UserSchema = new mongoose.Schema(
       ref: "User", // reference to User model
       default: null,
     },
-  
   },
   {
     timestamps: true,
   },
 );
 const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 5);
-
+UserSchema.plugin(softDelete);
+UserSchema.index(
+  { deletedAt: 1 },
+  { partialFilterExpression: { isDeleted: true } },
+);
 UserSchema.pre("validate", function (next) {
   if (
     this.isModified("firstname") ||

@@ -120,12 +120,26 @@ const EmployeeApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Employees"],
     }),
-    deleteEmployee: builder.mutation<ApiGeneralResponse, { id: string }>({
-      query: ({ id }) => ({
-        url: `/employees/delete/${id}`,
+    deleteEmployee: builder.mutation<
+      ApiGeneralResponse,
+      { id: string; reassign?: Record<string, string> }
+    >({
+      query: ({ id, reassign }) => ({
+        url: `/employees/${id}`, // keep whatever URL your current delete uses
         method: "DELETE",
+        params: reassign,
       }),
-      invalidatesTags: ["Employees"],
+      invalidatesTags: [
+        "Employees",
+        "Task",
+        "Ticket",
+        "Locations",
+        "Certification",
+      ],
+    }),
+    getEmployeeDeletionPreview: builder.query<any, string>({
+      query: (id) => `/employees/deletion-preview/${id}`,
+      keepUnusedDataFor: 0,
     }),
     addEmployee: builder.mutation<ApiGeneralResponse, SignupCredentials>({
       query: (credentials) => ({
@@ -246,4 +260,5 @@ export const {
   useLazyFetchEmployeeByIdQuery,
   useStatusToggleMutation,
   useChangeEmployeePasswordMutation,
+  useGetEmployeeDeletionPreviewQuery,
 } = EmployeeApi;

@@ -10,6 +10,7 @@ import {
 } from "../../../../services/taskApi";
 import dayjs from "dayjs";
 import DOMPurify from "dompurify";
+import { personName } from "../../../../utills/userDisplay";
 // ---- Presentational bits -----------------------------------------------
 
 const InfoChip = ({
@@ -65,14 +66,14 @@ const TaskInfoCard = ({ task }: { task: ITask }) => {
             iconBg="#e7f1ff"
             iconColor="#0d6efd"
             label="Assigned By"
-            value={`${task.assignedBy.firstname} ${task.assignedBy.lastname}`}
+            value={personName(task.assignedBy)}
           />
           <InfoChip
             icon="mdi:account-outline"
             iconBg="#f0fdf4"
             iconColor="#16a34a"
             label="Assigned To"
-            value={`${task.assignedTo.firstname} ${task.assignedTo.lastname}`}
+            value={personName(task.assignedTo)}
           />
           <InfoChip
             icon="mdi:calendar-month-outline"

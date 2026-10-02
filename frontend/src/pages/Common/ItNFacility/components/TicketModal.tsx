@@ -7,6 +7,7 @@ import Badge from "../../../../components/child/Badge";
 
 import DOMPurify from "dompurify";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
+import { personName } from "../../../../utills/userDisplay";
 
 export interface TicketDetailsModalProps {
   show: boolean;
@@ -49,9 +50,6 @@ const TicketDetailsModal: React.FC<TicketDetailsModalProps> = ({
   isLoading,
   ticket,
 }) => {
-
-
-
   if (!ticket) return null;
 
   return (
@@ -69,7 +67,6 @@ const TicketDetailsModal: React.FC<TicketDetailsModalProps> = ({
       onHide={onHide}
       footer={
         <div className="d-flex justify-content-end gap-3">
-        
           <button
             className="btn btn-street-neutral btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
             onClick={onHide}
@@ -146,22 +143,22 @@ const TicketDetailsModal: React.FC<TicketDetailsModalProps> = ({
 
         <Col md={6}>
           <DetailItem label="Created By">
-            {ticket.createdBy.firstname} {ticket.createdBy.lastname}
-            <div className="text-xxs text-street-base">{ticket.createdBy.email}</div>
+            {personName(ticket.createdBy)}
+            <div className="text-xxs text-street-base">
+              {ticket.createdBy.email}
+            </div>
           </DetailItem>
         </Col>
         <Col md={6}>
           <DetailItem label="Assigned To">
-            {ticket.assignedTo
-              ? `${ticket.assignedTo.firstname} ${ticket.assignedTo.lastname}`
-              : "Unassigned"}
+            {ticket.assignedTo ? personName(ticket.assignedTo) : "Unassigned"}
           </DetailItem>
         </Col>
 
         {ticket.approvedBy && (
           <Col md={6}>
             <DetailItem label="Approved By">
-              {ticket.approvedBy.firstname} {ticket.approvedBy.lastname}
+              {personName(ticket.approvedBy)}
             </DetailItem>
           </Col>
         )}

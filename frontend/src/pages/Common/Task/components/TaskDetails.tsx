@@ -10,6 +10,7 @@ import {
   type TaskStatus,
 } from "../../../../services/taskApi";
 import DOMPurify from "dompurify";
+import { personName } from "../../../../utills/userDisplay";
 interface Props {
   taskId: string | null;
   open: boolean;
@@ -170,14 +171,14 @@ const TaskDetailDrawer = ({ taskId, open, onClose }: Props) => {
                 <InfoRow
                   icon="mdi:account-outline"
                   label="Assigned by"
-                  value={`${task.assignedBy.firstname} ${task.assignedBy.lastname}`}
+                  value={personName(task.assignedBy)}
                 />
               )}
               {task.assignedTo ? (
                 <InfoRow
                   icon="mdi:account-arrow-right-outline"
                   label="Assigned to"
-                  value={`${task.assignedTo.firstname} ${task.assignedTo.lastname}`}
+                  value={personName(task.assignedTo)}
                 />
               ) : (
                 <InfoRow
@@ -238,8 +239,8 @@ const TaskDetailDrawer = ({ taskId, open, onClose }: Props) => {
                           {activityLabel(item)}
                         </p>
                         <p className="text-xs text-street-dark mb-0">
-                          {item.userId?.firstname
-                            ? `${item.userId.firstname} ${item.userId.lastname}`.trim()
+                          {item.userId
+                            ? personName(item.userId)
                             : "System"}{" "}
                           ·{" "}
                           {dayjs(item.createdAt).format("DD MMM YYYY, h:mm A")}

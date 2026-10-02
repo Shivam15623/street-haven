@@ -6,6 +6,7 @@ import ViewFileModal from "../../../../../components/child/VIewFileModal";
 import ActionsAnnouncement from "./ActionsAnnouncement";
 import DeleteAnnouncement from "./DeleteAnnouncement";
 import useHasPermission from "../../../../../hooks/Auth";
+import { personName } from "../../../../../utills/userDisplay";
 interface AnnouncementProps {
   announcement: AnnouncementData;
 }
@@ -44,9 +45,7 @@ const AnnouncementCard: React.FC<AnnouncementProps> = ({ announcement }) => {
                   icon="fa6-solid:user-group"
                   className="text-xs text-street-primary"
                 />
-                <span>
-                  {createdBy?.firstname} {createdBy?.lastname}
-                </span>
+                <span>{personName(createdBy)}</span>
               </p>
             </div>
           </div>

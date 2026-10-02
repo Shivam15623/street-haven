@@ -18,6 +18,7 @@ import {
   notifyEmployeeStatusChanged,
 } from "../services/Employeenotificationservice.js";
 import crypto from "crypto";
+import * as userDeletion from "../services/userDeletion.service.js";
 export const AllEmployees = asyncHandler(async (req, res) => {
   const {
     page = 1,
@@ -717,21 +718,30 @@ export const EditEmployeePassword = asyncHandler(async (req, res) => {
       ),
     );
 });
+export const getEmployeeDeletionPreview = asyncHandler(async (req, res) => {
+  const data = await userDeletion.getDeletionPreview(req.params.id, req.user);
+  return res.status(200).json(new ApiResponse(200, "Deletion preview", data));
+});
 export const RemoveEmployee = asyncHandler(async (req, res) => {
-  const { id: userId } = req.params;
+  const {
+    reassignTasksTo,
+    reassignOwnedTasksTo,
+    reassignTicketsTo,
+    reassignLocationsTo,
+    deleteOwnedTasks,
+  } = req.query;
 
-  // Check if user exists
-  const findUser = await User.findById(userId);
-  if (!findUser) {
-    throw new ApiError(404, "No such user found");
-  }
-
-  // Delete user
-  await User.findByIdAndDelete(userId);
+  const data = await userDeletion.deleteUser(req.params.id, req.user, {
+    tasks: reassignTasksTo,
+    owners: reassignOwnedTasksTo,
+    tickets: reassignTicketsTo,
+    locations: reassignLocationsTo,
+    deleteOwnedTasks: deleteOwnedTasks === "true",
+  });
 
   return res
     .status(200)
-    .json(new ApiResponse(200, "Employee removed successfully", null));
+    .json(new ApiResponse(200, "Employee removed successfully", data));
 });
 export const resetTotp = asyncHandler(async (req, res) => {
   const { id: userId } = req.params;

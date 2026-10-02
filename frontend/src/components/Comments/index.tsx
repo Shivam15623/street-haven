@@ -1,4 +1,12 @@
-import { useEffect, useRef, useState, useMemo, useCallback, lazy, Suspense } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+  useCallback,
+  lazy,
+  Suspense,
+} from "react";
 import DOMPurify from "dompurify";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import dayjs from "dayjs";
@@ -20,6 +28,7 @@ import { showError } from "../../utills/toastutills";
 import { getErrorMessage } from "../../utills/utills";
 import Sheet from "../child/Sheet";
 import { AttachmentPreview } from "./AttachmentPreview";
+import { personName } from "../../utills/userDisplay";
 const QuillEditor = lazy(() => import("../child/QuillEditor"));
 dayjs.extend(relativeTime);
 
@@ -419,7 +428,7 @@ const EntityComment = ({
                           {user?._id !== group.user._id && (
                             <div className="pb-2">
                               <span className="text-xs fw-semibold text-street-primary">
-                                {group.user.firstname} {group.user.lastname}
+                                {personName(group.user)}
                               </span>
                             </div>
                           )}
@@ -435,10 +444,7 @@ const EntityComment = ({
                               <div className="reply-quote-inner">
                                 <div className="reply-quote-user">
                                   <Icon icon="mdi:reply" width={13} />
-                                  <span>
-                                    {parent.userId.firstname}{" "}
-                                    {parent.userId.lastname}
-                                  </span>
+                                  <span>{personName(parent.userId)}</span>
                                 </div>
                                 <div className="reply-quote-message">
                                   {parent.message
@@ -548,8 +554,8 @@ const EntityComment = ({
               <div className="reply-preview-title">
                 <Icon icon="mdi:reply" width={14} />
                 <span>
-                  Replying to {replyingTo.userId.firstname}{" "}
-                  {replyingTo.userId.lastname}
+                  Replying to
+                  {personName(replyingTo.userId)}
                 </span>
               </div>
               <div className="reply-preview-text text-truncate">

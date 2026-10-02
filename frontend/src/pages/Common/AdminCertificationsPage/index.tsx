@@ -10,6 +10,7 @@ import {
 import { showError } from "../../../utills/toastutills";
 import { getErrorMessage } from "../../../utills/utills";
 import StreetTab from "../../../components/StreetTab";
+import { personName } from "../../../utills/userDisplay";
 
 const STATUS_CONFIG: Record<
   CertificationStatus,
@@ -171,7 +172,7 @@ const AdminCertificationsPage = () => {
                       <div className="flex-grow-1">
                         <div className="d-flex align-items-center flex-wrap gap-8 mb-2">
                           <span className="text-sm fw-medium text-neutral-900">
-                            {cert.volunteer.firstname} {cert.volunteer.lastname}
+                            {personName(cert.volunteer)}
                           </span>
                           <span
                             className={`badge rounded-pill text-xs fw-medium px-10 py-4-px text-capitalize ${status.badge}`}
@@ -179,9 +180,7 @@ const AdminCertificationsPage = () => {
                             {cert.status}
                           </span>
                         </div>
-                        <p className="text-xs text-neutral-500 mb-8">
-                          {cert.volunteer.email}
-                        </p>
+
                         <div className="d-flex align-items-center flex-wrap gap-8 text-xs">
                           <a
                             href={cert.fileUrl}

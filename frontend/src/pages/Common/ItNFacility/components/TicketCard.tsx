@@ -25,6 +25,7 @@ import { useSelector } from "react-redux";
 import { selectAuth } from "../../../../redux/AuthSlice";
 import { getTicketActions } from "../utillity/ticketPermissions";
 import DeleteTicket from "./DeleteTicket";
+import { personName } from "../../../../utills/userDisplay";
 
 interface TicketCardProps {
   ticket: TicketData;
@@ -146,7 +147,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
               <p className="fw-normal text-xs mb-0">
                 Submitted by:{" "}
                 <span className="text-street-dark fw-medium text-xs">
-                  {createdBy.firstname} {createdBy.lastname}
+                  {personName(createdBy)}
                 </span>
               </p>
             </div>
@@ -157,7 +158,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                 <p className="fw-normal text-xs mb-0">
                   • Assigned to:{" "}
                   <span className="text-street-dark fw-medium text-xs">
-                    {assignedTo.firstname} {assignedTo.lastname}
+                    {personName(assignedTo)}
                   </span>
                 </p>
               </div>
@@ -168,7 +169,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                 <p className="fw-normal text-xs mb-0">
                   • Approved by:{" "}
                   <span className="text-street-dark fw-medium text-xs">
-                    {approvedBy.firstname} {approvedBy.lastname}
+                    {personName(approvedBy)}
                   </span>
                 </p>
               </div>

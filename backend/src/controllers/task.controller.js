@@ -16,11 +16,7 @@ import ExcelJS from "exceljs";
 
 import { flushTaskEffects } from "../services/task.notification.service.js";
 import { resyncTaskMembership } from "../helper/entitymembershipSync.js";
-import UserCommentNotification from "../model/UserCommentNotification.js";
-import EntityMembership from "../model/EntityMemberShip.js";
-import { deleteFromCloudinary } from "../utills/cloudinary.js";
-import logger from "../utills/logger.js";
-import { ROLES } from "../model/user.js";
+import * as taskDeletion from "../services/taskDeletion.service.js";
 import timezone from "dayjs/plugin/timezone.js";
 dayjs.extend(timezone);
 
@@ -880,81 +876,13 @@ export const getTaskBySlug = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "Task fetched successfully", task));
 });
 export const deleteTask = asyncHandler(async (req, res) => {
-  const { taskId } = req.params;
-  const userId = req.user._id;
-  const isSuperAdmin = req.user.role === ROLES.SUPER_ADMIN;
+  const data = await taskDeletion.softDelete(req.params.taskId, req.user);
+  return res.status(200).json(new ApiResponse(200, "Task deleted successfully", data));
+});
 
-  if (!mongoose.isValidObjectId(taskId)) {
-    throw new ApiError(400, "Invalid task id");
-  }
-
-  const task = await Task.findById(taskId);
-  if (!task) {
-    throw new ApiError(404, "Task not found");
-  }
-
-  // ── authorization: super admin or the admin who created the task ──
-  if (!isSuperAdmin && task.assignedBy.toString() !== userId.toString()) {
-    throw new ApiError(403, "You are not authorized to delete this task");
-  }
-
-  // ── gather all Cloudinary file URLs to clean up ──
-  const comments = await Comment.find({
-    entityType: "Task",
-    entityId: taskId,
-  }).select("attachments");
-
-  const fileUrls = [];
-
-  for (const comment of comments) {
-    for (const attachment of comment.attachments || []) {
-      if (attachment.fileUrl) fileUrls.push(attachment.fileUrl);
-    }
-  }
-
-  // ── delete files from Cloudinary first (best-effort, non-blocking) ──
-  const results = await Promise.allSettled(
-    fileUrls.map((url) => deleteFromCloudinary(url)),
-  );
-
-  results.forEach((result, i) => {
-    if (result.status === "rejected") {
-      logger.error("Failed to delete Cloudinary attachment", {
-        fileUrl: fileUrls[i],
-        taskId,
-        error: result.reason?.message,
-      });
-    }
-  });
-
-  // ── atomic DB cleanup ──
-  const session = await mongoose.startSession();
-  try {
-    await session.withTransaction(async () => {
-      await Comment.deleteMany(
-        { entityType: "Task", entityId: taskId },
-        { session },
-      );
-
-      await UserCommentNotification.deleteMany(
-        { entityType: "Task", entityId: taskId },
-        { session },
-      );
-
-      await EntityMembership.deleteMany(
-        { entityType: "Task", entityId: taskId },
-        { session },
-      );
-
-      await Task.deleteOne({ _id: taskId }, { session });
-    });
-  } finally {
-    session.endSession();
-  }
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, "Task deleted successfully", {}));
+export const restoreTask = asyncHandler(async (req, res) => {
+  const data = await taskDeletion.restore(req.params.taskId, req.user);
+  return res.status(200).json(new ApiResponse(200, "Task restored", data));
 });
 export const updateTaskStatus = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();

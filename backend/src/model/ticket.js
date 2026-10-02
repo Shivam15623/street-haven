@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { customAlphabet } from "nanoid";
 import slugify from "slugify";
 import { getNextSequence } from "../utills/getNextSequence.js";
+import softDelete from "../../plugin/softDelete.js";
 
 const photoSchema = new mongoose.Schema({
   fileName: { type: String, required: true },
@@ -113,11 +114,13 @@ const TicketSchema = new mongoose.Schema(
       },
     ],
     resolvedAt: Date,
+  
   },
   { timestamps: true },
 );
 
 const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 5);
+TicketSchema.plugin(softDelete);
 TicketSchema.pre("validate", async function (next) {
   if (this.isModified("category") || this.isNew) {
     const TicketCategory = mongoose.model("TicketCategory");

@@ -35,6 +35,7 @@ import {
 import DOMPurify from "dompurify";
 import type { ApiResponse } from "../../interfaces/Response";
 import useHasPermission from "../../hooks/Auth";
+import { personName } from "../../utills/userDisplay";
 
 const QuillEditor = lazy(() => import("../child/QuillEditor"));
 dayjs.extend(relativeTime);
@@ -168,9 +169,7 @@ const groupTimelineByDate = (items: TaskTimelineItem[]): DateGroup[] => {
 };
 
 const activityLabel = (activity: TaskActivityTimelineItem): string => {
-  const name = activity.userId?._id
-    ? `${activity.userId.firstname} ${activity.userId.lastname}`
-    : "Someone";
+  const name = activity.userId?._id ? personName(activity.userId) : "Someone";
 
   switch (activity.action) {
     case "created":
@@ -537,7 +536,7 @@ const EntityChat = ({
                         {!isOwn && group.user && (
                           <div className="pb-2">
                             <span className="text-xs fw-semibold text-street-primary">
-                              {group.user.firstname} {group.user.lastname}
+                              {personName(group.user)}
                             </span>
                           </div>
                         )}

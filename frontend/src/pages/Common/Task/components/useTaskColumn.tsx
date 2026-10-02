@@ -11,6 +11,7 @@ import {
 } from "../taskTable.types";
 import useHasPermission from "../../../../hooks/Auth";
 import { PERMISSIONS } from "../../../../utills/auth/permissions";
+import { personName } from "../../../../utills/userDisplay";
 
 interface Params {
   onEdit: (task: ITask) => void;
@@ -41,18 +42,14 @@ export const useTaskColumns = ({
       sortable: false,
       render: (row) => (
         <>
-          {row.assignedTo?.firstname} {row.assignedTo?.lastname}
+          {personName(row.assignedTo)}
         </>
       ),
     },
     {
       title: "Assigned By",
       sortable: false,
-      render: (row) => (
-        <>
-          {row.assignedBy?.firstname} {row.assignedBy?.lastname}
-        </>
-      ),
+      render: (row) => <>{personName(row.assignedBy)}</>,
     },
     {
       title: "Due Date",

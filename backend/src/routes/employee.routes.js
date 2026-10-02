@@ -7,6 +7,7 @@ import {
   EmployeeActiveInactiveToggle,
   employeeSuperviserForm,
   getEmployeeById,
+  getEmployeeDeletionPreview,
   RemoveEmployee,
   resetTotp,
 } from "../controllers/employees.controller.js";
@@ -53,6 +54,12 @@ router
     RemoveEmployee,
   );
 router
+  .route("/deletion-preview/:id")
+  .get(
+    authorizePermissions({ action: PERMISSIONS.DELETE_EMPLOYEE }),
+    getEmployeeDeletionPreview,
+  );
+router
   .route("/add")
   .post(
     authorizePermissions({ action: PERMISSIONS.CREATE_EMPLOYEE }),
@@ -65,6 +72,7 @@ router
     authorizePermissions({ action: PERMISSIONS.CREATE_EMPLOYEE }),
     resetTotp,
   );
+
 router.patch("/status-toggle/:id", EmployeeActiveInactiveToggle);
 router.route("/form-superviser").get(employeeSuperviserForm);
 router.route("/:id").get(getEmployeeById);

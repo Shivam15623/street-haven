@@ -21,6 +21,7 @@ import {
   useGetTicketCategoriesQuery,
 } from "../../../../services/ticketCategoryApi";
 import useHasPermission from "../../../../hooks/Auth";
+import { personName } from "../../../../utills/userDisplay";
 const QuillEditor = lazy(
   () => import("../../../../components/child/QuillEditor"),
 );
@@ -81,7 +82,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
 
   const initialValues: TicketValues = {
     requestTitle: ticket.req_title,
-    requester: ticket.createdBy.firstname + " " + ticket.createdBy.lastname,
+    requester:personName(ticket.createdBy),
     // "" (not "Unassigned") so it matches the placeholder <option value="">
     assignedId: ticket.assignedTo ? ticket.assignedTo._id : "",
     status: ticket.status,

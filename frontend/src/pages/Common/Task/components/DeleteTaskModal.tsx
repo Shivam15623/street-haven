@@ -7,6 +7,7 @@ import {
   type ITask,
 } from "../../../../services/taskApi";
 import ModalWrapper from "../../../../components/child/ModalWrapper";
+import { personName } from "../../../../utills/userDisplay";
 
 interface DeleteTaskModalProps {
   show: boolean;
@@ -89,7 +90,7 @@ const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
           <p className="mb-0 text-sm text-street-dark">
             "<strong>{task.title}</strong>" assigned to{" "}
             <strong>
-              {task.assignedTo?.firstname} {task.assignedTo?.lastname}
+              {personName(task.assignedTo)}
             </strong>{" "}
             will be permanently removed. This action cannot be undone.
           </p>
