@@ -1,5 +1,0 @@
-<<<<<<<< HEAD:frontend/dist/assets/Row-Cs05K8Y6.js
-import{u as x,b as d,d as B,c as R}from"./ThemeProvider-CfHFs26H.js";import{r as $,j}from"./index-DOKuV1Jz.js";const w=$.forwardRef(({bsPrefix:c,className:i,as:n="div",...t},l)=>{const a=x(c,"row"),f=d(),p=B(),u=`${a}-cols`,r=[];return f.forEach(s=>{const e=t[s];delete t[s];let o;e!=null&&typeof e=="object"?{cols:o}=e:o=e;const m=s!==p?`-${s}`:"";o!=null&&r.push(`${u}${m}-${o}`)}),j.jsx(n,{ref:l,...t,className:R(i,a,...r)})});w.displayName="Row";export{w as R};
-========
-import{u as x,b as d,d as B,c as R}from"./ThemeProvider-BMpMY_Df.js";import{r as $,j}from"./index-flUFp4eh.js";const w=$.forwardRef(({bsPrefix:c,className:i,as:n="div",...t},l)=>{const a=x(c,"row"),f=d(),p=B(),u=`${a}-cols`,r=[];return f.forEach(s=>{const e=t[s];delete t[s];let o;e!=null&&typeof e=="object"?{cols:o}=e:o=e;const m=s!==p?`-${s}`:"";o!=null&&r.push(`${u}${m}-${o}`)}),j.jsx(n,{ref:l,...t,className:R(i,a,...r)})});w.displayName="Row";export{w as R};
->>>>>>>> 56715a2 (Changes in Export Added):frontend/dist/assets/Row-BS4x1OFH.js

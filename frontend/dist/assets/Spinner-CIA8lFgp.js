@@ -1,5 +1,0 @@
-<<<<<<<< HEAD:frontend/dist/assets/Spinner-BhJRiQSp.js
-import{u as i,c}from"./ThemeProvider-CfHFs26H.js";import{r as x,j as f}from"./index-DOKuV1Jz.js";const $=x.forwardRef(({bsPrefix:r,variant:s,animation:o="border",size:e,as:t="div",className:n,...p},m)=>{r=i(r,"spinner");const a=`${r}-${o}`;return f.jsx(t,{ref:m,...p,className:c(n,a,e&&`${a}-${e}`,s&&`text-${s}`)})});$.displayName="Spinner";export{$ as S};
-========
-import{u as i,c}from"./ThemeProvider-BMpMY_Df.js";import{r as x,j as f}from"./index-flUFp4eh.js";const $=x.forwardRef(({bsPrefix:r,variant:s,animation:o="border",size:e,as:t="div",className:n,...p},m)=>{r=i(r,"spinner");const a=`${r}-${o}`;return f.jsx(t,{ref:m,...p,className:c(n,a,e&&`${a}-${e}`,s&&`text-${s}`)})});$.displayName="Spinner";export{$ as S};
->>>>>>>> 56715a2 (Changes in Export Added):frontend/dist/assets/Spinner-CIA8lFgp.js
