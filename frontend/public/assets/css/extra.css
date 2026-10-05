@@ -573,6 +573,8 @@ span {
 .Te a {
   color: var(--street-primary-base);
   text-decoration: underline;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 .Te ol {
   list-style: decimal;

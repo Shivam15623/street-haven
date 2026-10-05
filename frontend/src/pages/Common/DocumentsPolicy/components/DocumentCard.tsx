@@ -81,7 +81,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
                 />
               </div>
             </div>
-            <div className="d-flex flex-row gap-8 gap-sm-10">
+            <div className="d-flex flex-row flex-wrap gap-8 gap-sm-10">
               {tags.map((tag, idx) => (
                 <Badge key={idx} variant="primary-soft">
                   {tag}
