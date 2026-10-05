@@ -1260,8 +1260,8 @@ async function applyTicketUpdates({
     ticket.status = newStatus;
     if (Array.isArray(ticket.statusHistory)) {
       ticket.statusHistory.push({
-        fromStatus: oldStatus,
-        toStatus: newStatus,
+     
+        status: newStatus,
         changedBy: userId,
         changedAt: new Date(),
       });
@@ -2653,8 +2653,7 @@ export const reopenTicket = asyncHandler(async (req, res) => {
 
     if (Array.isArray(ticket.statusHistory)) {
       ticket.statusHistory.push({
-        fromStatus: oldStatus,
-        toStatus: TICKET_STATUS.APPROVED,
+        status: TICKET_STATUS.APPROVED,
         changedBy: userId,
         changedAt: new Date(),
       });
