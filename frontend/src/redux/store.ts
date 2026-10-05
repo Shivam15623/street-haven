@@ -10,9 +10,14 @@ import {
   PURGE,
   REGISTER,
 } from "redux-persist";
-import { type TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
+import {
+  type TypedUseSelectorHook,
+  useDispatch,
+  useSelector,
+} from "react-redux";
 import { setupListeners } from "@reduxjs/toolkit/query";
-
+import * as Sentry from "@sentry/react";
+import { sentryApiMiddleware } from "./sentryMiddleware.ts";
 import authReducer from "./AuthSlice.ts";
 
 // ✅ Persist config only for `auth`
@@ -22,6 +27,25 @@ const authPersistConfig = {
   storage: storageSession,
 };
 
+// Sentry attaches recent actions and state to error reports.
+// Your auth state is persisted in sessionStorage and may hold tokens or user data,
+// so strip it before it leaves the browser.
+const sentryReduxEnhancer = Sentry.createReduxEnhancer({
+  // Send no state at all. Return a small safe subset instead if you want some context.
+  stateTransformer: () => null,
+
+  actionTransformer: (action) => {
+    // redux-persist's REHYDRATE action carries the whole persisted auth state in its payload
+    if (
+      action.type === REHYDRATE ||
+      action.type === PERSIST ||
+      action.type.startsWith("auth/")
+    ) {
+      return { type: action.type };
+    }
+    return action;
+  },
+});
 // ✅ Wrap only auth reducer with persistReducer
 const rootReducer = combineReducers({
   [api.reducerPath]: api.reducer, // NOT persisted
@@ -35,7 +59,9 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(api.middleware),
+    }).concat(api.middleware, sentryApiMiddleware),
+  enhancers: (getDefaultEnhancers) =>
+    getDefaultEnhancers().concat(sentryReduxEnhancer),
 });
 
 setupListeners(store.dispatch);
