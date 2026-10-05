@@ -229,14 +229,14 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
             {actions.includes("close") && (
               <Button
                 size="sm"
-                className="btn-street-success radius-12 px-12 d-flex align-items-center justify-content-center gap-1 border-0 text-xs fw-semibold"
+                className="btn-street-edit radius-12 px-12 d-flex align-items-center justify-content-center gap-1 border-0 text-xs fw-semibold"
                 style={{ height: "40px" }}
                 title="Close"
                 aria-label="Close ticket"
                 disabled={isClosing}
                 onClick={() => setShowCloseModal(true)}
               >
-                <Icon icon="lucide:check-check" className="w-14-px h-14-px" />
+                <Icon icon="lucide:check-check" className="text-xl" />
               </Button>
             )}
             {actions.includes("reopen") && (
@@ -252,7 +252,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                   setShowReopenModal(true);
                 }}
               >
-                <Icon icon="lucide:rotate-ccw" className="w-14-px h-14-px" />
+                <Icon icon="lucide:rotate-ccw" className="text-xl" />
               </Button>
             )}
             {actions.includes("chat") && <TicketComment ticket={ticket} />}
