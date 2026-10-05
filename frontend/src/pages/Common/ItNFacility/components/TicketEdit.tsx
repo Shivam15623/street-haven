@@ -67,7 +67,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
   const [editphoto, seteditphoto] = useState(false);
 
   const { data: employeeData, isLoading: isEmployeeLoading } =
-    useAllEmployeesQuery({ forDropdown: true }, { skip: !showModal });
+    useAllEmployeesQuery({ forDropdown: true,role:["manager"] }, { skip: !showModal });
   const [editTicket, { isLoading }] = useEditTicketMutation();
   const hasCreatorPermissions = isRequester && ticket.status === "Open";
   // derive once, near hasCreatorPermissions
@@ -356,7 +356,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                         ) : (
                           employeeData?.data.employees.map((emp) => (
                             <option key={emp._id} value={emp._id}>
-                              {emp.firstname} {emp.lastname} ({emp.email})
+                              {emp.firstname} {emp.lastname} ({emp.role})
                             </option>
                           ))
                         )}
