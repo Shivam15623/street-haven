@@ -125,7 +125,7 @@ const EmployeeApi = api.injectEndpoints({
       { id: string; reassign?: Record<string, string> }
     >({
       query: ({ id, reassign }) => ({
-        url: `/employees/${id}`, // keep whatever URL your current delete uses
+        url: `/employees/delete/${id}`, // keep whatever URL your current delete uses
         method: "DELETE",
         params: reassign,
       }),
