@@ -46,6 +46,8 @@ type TicketAction =
   | "edit"
   | "start"
   | "complete"
+  | "close"
+  | "reopen"
   | "delete";
 interface TicketActionRule {
   action: TicketAction;
@@ -112,6 +114,16 @@ const TICKET_ACTION_RULES: TicketActionRule[] = [
     action: "complete",
     allowedStatuses: ["In Progress"],
     requiredRelationships: ["assignee"],
+  },
+  {
+    action: "close",
+    allowedStatuses: ["Completed"],
+    requiredRelationships: ["manager", "super_admin"],
+  },
+  {
+    action: "reopen",
+    allowedStatuses: ["Completed"],
+    requiredRelationships: ["manager", "super_admin"],
   },
 ];
 

@@ -14,6 +14,7 @@ import {
   useCancelTicketMutation,
   useCompleteTicketMutation,
   useRejectTicketMutation,
+  useReopenTicketMutation,
   useStartTicketMutation,
 } from "../../../../services/ticketApi";
 import RejectTicketModal from "./RejectTicketModal";
@@ -26,6 +27,7 @@ import { selectAuth } from "../../../../redux/AuthSlice";
 import { getTicketActions } from "../utillity/ticketPermissions";
 import DeleteTicket from "./DeleteTicket";
 import { personName } from "../../../../utills/userDisplay";
+import ModalWrapper from "../../../../components/child/ModalWrapper";
 
 interface TicketCardProps {
   ticket: TicketData;
@@ -70,6 +72,9 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     useCompleteTicketMutation();
   const [cancelTicket, { isLoading: cancelling }] = useCancelTicketMutation();
   const [rejectTicket, { isLoading: rejecting }] = useRejectTicketMutation();
+  const [showReopenModal, setShowReopenModal] = useState(false);
+  const [reopenTargetId, setReopenTargetId] = useState<string | null>(null);
+  const [reopenTicket, { isLoading: isReopening }] = useReopenTicketMutation();
   const { user: currentUser } = useSelector(selectAuth);
 
   const actions = useMemo(
@@ -86,7 +91,19 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     location?.name || "No location",
     `Submitted: ${createdAt ? new Date(createdAt).toLocaleDateString() : ""}`,
   ];
-
+  const handleConfirmReopen = async () => {
+    if (!reopenTargetId) return;
+    try {
+      const res = await reopenTicket(reopenTargetId).unwrap();
+      if (res.success) {
+        showSuccess(res.message);
+        setShowReopenModal(false);
+        setReopenTargetId(null);
+      }
+    } catch (error) {
+      showError(getErrorMessage(error));
+    }
+  };
   return (
     <div className="card">
       <div
@@ -194,6 +211,22 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
           </div>
           {/* Footer actions — unified button system: radius-12, fixed 40px height, consistent icon+label gap */}
           <div className="d-flex flex-row flex-wrap align-items-center gap-8">
+            {actions.includes("reopen") && (
+              <Button
+                size="sm"
+                className="btn-warning radius-12 px-12 d-flex align-items-center justify-content-center gap-1 border-0 text-xs fw-semibold"
+                style={{ height: "40px" }}
+                title="Reopen"
+                aria-label="Reopen ticket"
+                disabled={isReopening}
+                onClick={() => {
+                  setReopenTargetId(ticket._id);
+                  setShowReopenModal(true);
+                }}
+              >
+                <Icon icon="lucide:rotate-ccw" className="w-14-px h-14-px" />
+              </Button>
+            )}
             {actions.includes("chat") && <TicketComment ticket={ticket} />}
 
             {actions.includes("approve") && (
@@ -391,6 +424,44 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
           }
         }}
       />
+      <ModalWrapper
+        show={showReopenModal}
+        onHide={() => {
+          if (!isReopening) {
+            setShowReopenModal(false);
+            setReopenTargetId(null);
+          }
+        }}
+        title="Reopen Ticket"
+        size="md"
+        isLoading={isReopening}
+        footer={
+          <div className="d-flex justify-content-end gap-2">
+            <button
+              className="btn btn-street-primary btn-sm"
+              onClick={handleConfirmReopen}
+              disabled={isReopening}
+            >
+              {isReopening ? "Reopening..." : "Reopen"}
+            </button>
+            <button
+              className="btn btn-street-neutral btn-sm"
+              onClick={() => {
+                setShowReopenModal(false);
+                setReopenTargetId(null);
+              }}
+              disabled={isReopening}
+            >
+              Cancel
+            </button>
+          </div>
+        }
+      >
+        <p className="mb-0">
+          Are you sure you want to reopen this ticket? It will move back to{" "}
+          <strong>Open</strong> status and re-enter the approval flow.
+        </p>
+      </ModalWrapper>
     </div>
   );
 };
