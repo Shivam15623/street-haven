@@ -55,7 +55,7 @@ const DeleteEmployee: React.FC<DeleteEmployeeProps> = ({ employee }) => {
   const [deleteEmployee, { isLoading }] = useDeleteEmployeeMutation();
 
   const { data, isFetching, isError, error, refetch } =
-    useGetEmployeeDeletionPreviewQuery(employee._id, {
+    useGetEmployeeDeletionPreviewQuery({ id: employee._id }, {
       skip: !showModal,
       refetchOnMountOrArgChange: true,
     });

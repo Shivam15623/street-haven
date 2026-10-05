@@ -2636,7 +2636,7 @@ export const reopenTicket = asyncHandler(async (req, res) => {
     if (!isSuperAdmin && !isApprover) {
       throw new ApiError(
         403,
-        "Only the creator, approving manager, or super admin can reopen this ticket",
+        "Only the approving manager, or super admin can reopen this ticket",
       );
     }
 
@@ -2649,12 +2649,12 @@ export const reopenTicket = asyncHandler(async (req, res) => {
 
     const oldStatus = ticket.status;
 
-    ticket.status = TICKET_STATUS.OPEN;
+    ticket.status = TICKET_STATUS.APPROVED;
 
     if (Array.isArray(ticket.statusHistory)) {
       ticket.statusHistory.push({
         fromStatus: oldStatus,
-        toStatus: TICKET_STATUS.OPEN,
+        toStatus: TICKET_STATUS.APPROVED,
         changedBy: userId,
         changedAt: new Date(),
       });

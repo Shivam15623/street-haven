@@ -137,9 +137,11 @@ const EmployeeApi = api.injectEndpoints({
         "Certification",
       ],
     }),
-    getEmployeeDeletionPreview: builder.query<any, string>({
-      query: (id) => `/employees/deletion-preview/${id}`,
-      keepUnusedDataFor: 0,
+    getEmployeeDeletionPreview: builder.query<any, { id: string }>({
+      query: ({ id }) => ({
+        url: `/employees/deletion-preview/${id}`,
+        method: "GET",
+      }),
     }),
     addEmployee: builder.mutation<ApiGeneralResponse, SignupCredentials>({
       query: (credentials) => ({

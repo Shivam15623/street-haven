@@ -30,7 +30,7 @@ const VolunteerCertificationSchema = new Schema(
             "approved",
             "rejected"
         ],
-        default: "approved",
+        default: "pending",
     },
 
     remarks: String,
