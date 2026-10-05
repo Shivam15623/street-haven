@@ -1,5 +1,7 @@
+import "./instrument";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { ErrorBoundary } from "react-error-boundary";
 // import './index.css'
 import "@assets/css/remixicon.css";
 import "@assets/css/lib/bootstrap.min.css";
@@ -32,7 +34,7 @@ import "react-clock/dist/Clock.css";
 import "@assets/css/Street.css";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 // main.tsx
-
+import * as Sentry from "@sentry/react";
 import App from "./App.tsx";
 import { PersistGate } from "redux-persist/es/integration/react";
 import { Provider } from "react-redux";
@@ -40,16 +42,27 @@ import { store } from "./redux/store.ts";
 import persistStore from "redux-persist/es/persistStore";
 import { ToastContainer } from "react-toastify";
 import { SocketProvider } from "./context/SocketProvider.tsx";
+import GlobalErrorFallback from "./components/GlobalErrorFallback.tsx";
 const persistor = persistStore(store);
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <Provider store={store}>
-      <PersistGate loading={<div>Loading...</div>} persistor={persistor}>
-        <SocketProvider>
-          <ToastContainer />
-          <App />
-        </SocketProvider>
-      </PersistGate>
-    </Provider>
-  </StrictMode>
+    <ErrorBoundary
+      FallbackComponent={GlobalErrorFallback}
+      onError={(error, info) => {
+        Sentry.captureException(error, {
+          contexts: { react: { componentStack: info.componentStack } },
+          tags: { source: "global-boundary" },
+        });
+      }}
+    >
+      <Provider store={store}>
+        <PersistGate loading={<div>Loading...</div>} persistor={persistor}>
+          <SocketProvider>
+            <ToastContainer />
+            <App />
+          </SocketProvider>
+        </PersistGate>
+      </Provider>
+    </ErrorBoundary>
+  </StrictMode>,
 );

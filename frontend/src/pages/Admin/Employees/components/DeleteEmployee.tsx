@@ -276,7 +276,7 @@ const DeleteEmployee: React.FC<DeleteEmployeeProps> = ({ employee }) => {
                                   style={{
                                     color: selected ? accent : "inherit",
                                   }}
-                                >
+                                >tickert
                                   <Icon
                                     icon={
                                       isDelete
