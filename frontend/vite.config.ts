@@ -16,8 +16,8 @@ export default defineConfig(({ mode }) => {
       ...(sentryAuthToken
         ? [
             sentryVitePlugin({
-              org: "ifox-solutions",
-              project: "street-vercel",
+              org: "arileo-infotech-inc",
+              project: "intranet-streethaven",
               authToken: sentryAuthToken,
               sourcemaps: { filesToDeleteAfterUpload: ["./dist/**/*.map"] },
               telemetry: false,
