@@ -6,7 +6,10 @@ import type { Column } from "../../../../../components/child/SimpleTable";
 import SimpleTable from "../../../../../components/child/SimpleTable";
 import type { BadgeVariant } from "../../../../../components/child/Badge";
 import Badge from "../../../../../components/child/Badge";
-import { useReopenTicketMutation } from "../../../../../services/ticketApi";
+import {
+  useCloseTicketMutation,
+  useReopenTicketMutation,
+} from "../../../../../services/ticketApi";
 import { showError, showSuccess } from "../../../../../utills/toastutills";
 import { getErrorMessage } from "../../../../../utills/utills";
 
@@ -36,6 +39,8 @@ const statusVariant: Record<string, BadgeVariant> = {
 
 // Keep in sync with backend REOPENABLE_STATUSES
 const REOPENABLE_STATUSES = ["Completed", "Rejected", "Closed"];
+// Keep in sync with backend closeTicket (only Completed can be closed)
+const CLOSABLE_STATUSES = ["Completed"];
 
 interface Props {
   tickets: TicketReport[];
@@ -57,8 +62,11 @@ const TicketReportTable: React.FC<Props> = ({
 
   const [reopenTargetId, setReopenTargetId] = useState<string | null>(null);
   const [showReopenModal, setShowReopenModal] = useState(false);
-
   const [reopenTicket, { isLoading: isReopening }] = useReopenTicketMutation();
+
+  const [closeTargetId, setCloseTargetId] = useState<string | null>(null);
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [closeTicket, { isLoading: isClosing }] = useCloseTicketMutation();
 
   const handleView = (id: string) => {
     setSelectedTicketId(id);
@@ -70,6 +78,11 @@ const TicketReportTable: React.FC<Props> = ({
     setShowReopenModal(true);
   };
 
+  const handleCloseClick = (id: string) => {
+    setCloseTargetId(id);
+    setShowCloseModal(true);
+  };
+
   const handleConfirmReopen = async () => {
     if (!reopenTargetId) return;
     try {
@@ -78,6 +91,20 @@ const TicketReportTable: React.FC<Props> = ({
         showSuccess(res.message);
         setShowReopenModal(false);
         setReopenTargetId(null);
+      }
+    } catch (error) {
+      showError(getErrorMessage(error));
+    }
+  };
+
+  const handleConfirmClose = async () => {
+    if (!closeTargetId) return;
+    try {
+      const res = await closeTicket(closeTargetId).unwrap();
+      if (res.success) {
+        showSuccess(res.message);
+        setShowCloseModal(false);
+        setCloseTargetId(null);
       }
     } catch (error) {
       showError(getErrorMessage(error));
@@ -159,17 +186,31 @@ const TicketReportTable: React.FC<Props> = ({
         accessor: (row) => (
           <div className="d-flex gap-2">
             <button
-              className="btn btn-street-primary btn-sm"
+              className="btn btn-street-primary btn-sm d-flex align-items-center justify-content-center"
+              title="View"
+              aria-label="View ticket"
               onClick={() => handleView(row.id)}
             >
-              View
+              <Icon icon="lucide:eye" className="w-16-px h-16-px" />
             </button>
+            {CLOSABLE_STATUSES.includes(row.status) && (
+              <button
+                className="btn btn-street-edit btn-sm d-flex align-items-center justify-content-center"
+                title="Close"
+                aria-label="Close ticket"
+                onClick={() => handleCloseClick(row.id)}
+              >
+                <Icon icon="lucide:check-check" className="w-16-px h-16-px" />
+              </button>
+            )}
             {REOPENABLE_STATUSES.includes(row.status) && (
               <button
-                className="btn btn-street-neutral btn-sm"
+                className="btn btn-street-warning btn-sm d-flex align-items-center justify-content-center"
+                title="Reopen"
+                aria-label="Reopen ticket"
                 onClick={() => handleReopenClick(row.id)}
               >
-                Reopen
+                <Icon icon="lucide:rotate-ccw" className="w-16-px h-16-px" />
               </button>
             )}
           </div>
@@ -196,6 +237,7 @@ const TicketReportTable: React.FC<Props> = ({
         onClose={() => setOpen(false)}
       />
 
+      {/* Reopen modal */}
       <ModalWrapper
         show={showReopenModal}
         onHide={() => {
@@ -231,7 +273,47 @@ const TicketReportTable: React.FC<Props> = ({
       >
         <p className="mb-0">
           Are you sure you want to reopen this ticket? It will move back to{" "}
-          <strong>Open</strong> status and re-enter the approval flow.
+          <strong>Approved</strong> status and be sent to the assignee again.
+        </p>
+      </ModalWrapper>
+
+      {/* Close modal */}
+      <ModalWrapper
+        show={showCloseModal}
+        onHide={() => {
+          if (!isClosing) {
+            setShowCloseModal(false);
+            setCloseTargetId(null);
+          }
+        }}
+        title="Close Ticket"
+        size="md"
+        isLoading={isClosing}
+        footer={
+          <div className="d-flex justify-content-end gap-2">
+            <button
+              className="btn btn-street-primary btn-sm"
+              onClick={handleConfirmClose}
+              disabled={isClosing}
+            >
+              {isClosing ? "Closing..." : "Close Ticket"}
+            </button>
+            <button
+              className="btn btn-street-neutral btn-sm"
+              onClick={() => {
+                setShowCloseModal(false);
+                setCloseTargetId(null);
+              }}
+              disabled={isClosing}
+            >
+              Cancel
+            </button>
+          </div>
+        }
+      >
+        <p className="mb-0">
+          Confirm that the work is done and accepted? The ticket will be marked{" "}
+          <strong>Closed</strong>.
         </p>
       </ModalWrapper>
     </>
