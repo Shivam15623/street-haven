@@ -12,6 +12,7 @@ import DOMPurify from "dompurify";
 import {
   useApproveTicketMutation,
   useCancelTicketMutation,
+  useCloseTicketMutation,
   useCompleteTicketMutation,
   useRejectTicketMutation,
   useReopenTicketMutation,
@@ -23,6 +24,7 @@ import { Button } from "react-bootstrap";
 import { showError, showSuccess } from "../../../../utills/toastutills";
 import { getErrorMessage } from "../../../../utills/utills";
 import { useSelector } from "react-redux";
+
 import { selectAuth } from "../../../../redux/AuthSlice";
 import { getTicketActions } from "../utillity/ticketPermissions";
 import DeleteTicket from "./DeleteTicket";
@@ -68,6 +70,8 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
 
   const [approveTicket, { isLoading: approving }] = useApproveTicketMutation();
   const [startTicket, { isLoading: starting }] = useStartTicketMutation();
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [closeTicket, { isLoading: isClosing }] = useCloseTicketMutation();
   const [completeTicket, { isLoading: completing }] =
     useCompleteTicketMutation();
   const [cancelTicket, { isLoading: cancelling }] = useCancelTicketMutation();
@@ -91,6 +95,17 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     location?.name || "No location",
     `Submitted: ${createdAt ? new Date(createdAt).toLocaleDateString() : ""}`,
   ];
+  const handleConfirmClose = async () => {
+    try {
+      const res = await closeTicket(ticket._id).unwrap();
+      if (res.success) {
+        showSuccess(res.message);
+        setShowCloseModal(false);
+      }
+    } catch (error) {
+      showError(getErrorMessage(error));
+    }
+  };
   const handleConfirmReopen = async () => {
     if (!reopenTargetId) return;
     try {
@@ -211,10 +226,23 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
           </div>
           {/* Footer actions — unified button system: radius-12, fixed 40px height, consistent icon+label gap */}
           <div className="d-flex flex-row flex-wrap align-items-center gap-8">
+            {actions.includes("close") && (
+              <Button
+                size="sm"
+                className="btn-street-success radius-12 px-12 d-flex align-items-center justify-content-center gap-1 border-0 text-xs fw-semibold"
+                style={{ height: "40px" }}
+                title="Close"
+                aria-label="Close ticket"
+                disabled={isClosing}
+                onClick={() => setShowCloseModal(true)}
+              >
+                <Icon icon="lucide:check-check" className="w-14-px h-14-px" />
+              </Button>
+            )}
             {actions.includes("reopen") && (
               <Button
                 size="sm"
-                className="btn-warning radius-12 px-12 d-flex align-items-center justify-content-center gap-1 border-0 text-xs fw-semibold"
+                className="btn-street-warning radius-12 px-12 d-flex align-items-center justify-content-center gap-1 border-0 text-xs fw-semibold"
                 style={{ height: "40px" }}
                 title="Reopen"
                 aria-label="Reopen ticket"
@@ -460,6 +488,38 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
         <p className="mb-0">
           Are you sure you want to reopen this ticket? It will move back to{" "}
           <strong>Open</strong> status and re-enter the approval flow.
+        </p>
+      </ModalWrapper>
+      <ModalWrapper
+        show={showCloseModal}
+        onHide={() => {
+          if (!isClosing) setShowCloseModal(false);
+        }}
+        title="Close Ticket"
+        size="md"
+        isLoading={isClosing}
+        footer={
+          <div className="d-flex justify-content-end gap-2">
+            <button
+              className="btn btn-street-primary btn-sm"
+              onClick={handleConfirmClose}
+              disabled={isClosing}
+            >
+              {isClosing ? "Closing..." : "Close Ticket"}
+            </button>
+            <button
+              className="btn btn-street-neutral btn-sm"
+              onClick={() => setShowCloseModal(false)}
+              disabled={isClosing}
+            >
+              Cancel
+            </button>
+          </div>
+        }
+      >
+        <p className="mb-0">
+          Confirm that the work is done and accepted? The ticket will be marked{" "}
+          <strong>Closed</strong>.
         </p>
       </ModalWrapper>
     </div>

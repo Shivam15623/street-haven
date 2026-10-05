@@ -893,9 +893,9 @@ export const cancelTicket = asyncHandler(async (req, res) => {
     );
   }
 
-  ticket.status = TICKET_STATUS.CLOSED;
+  ticket.status = TICKET_STATUS.CANCELLED;
   ticket.statusHistory.push({
-    status: TICKET_STATUS.CLOSED,
+    status: TICKET_STATUS.CANCELLED,
     changedBy: userId,
     changedAt: new Date(),
   });
@@ -2744,4 +2744,144 @@ export const deleteTicket = asyncHandler(async (req, res) => {
 export const restoreTicket = asyncHandler(async (req, res) => {
   const data = await ticketDeletion.restore(req.params.id, req.user);
   return res.status(200).json(new ApiResponse(200, "Ticket restored", data));
+});
+
+
+
+export const closeTicket = asyncHandler(async (req, res) => {
+  const { id: ticketId } = req.params;
+
+  const userId = req.user._id;
+  const userIdStr = userId.toString();
+  const isSuperAdmin = req.user.role === "super_admin";
+  const session = await mongoose.startSession();
+
+  const emailEvents = [];
+  let notification = null;
+  let notifiedIds = [];
+
+  try {
+    session.startTransaction();
+
+    const ticket = await Ticket.findById(ticketId).session(session);
+    if (!ticket) {
+      throw new ApiError(404, "No such ticket found");
+    }
+
+    const isApprover = ticket.approvedBy?.equals(userId) ?? false;
+    if (!isSuperAdmin && !isApprover) {
+      throw new ApiError(
+        403,
+        "Only the approving manager or super admin can close this ticket",
+      );
+    }
+
+    if (ticket.status !== TICKET_STATUS.COMPLETED) {
+      throw new ApiError(
+        400,
+        `Ticket must be Completed to close, currently ${ticket.status}`,
+      );
+    }
+
+    const now = new Date();
+    ticket.status = TICKET_STATUS.CLOSED;
+    ticket.closedBy = userId;
+    ticket.closedAt = now;
+    ticket.statusHistory.push({
+      status: TICKET_STATUS.CLOSED,
+      changedBy: userId,
+      changedAt: now,
+    });
+
+    await ticket.save({ session });
+    await resyncTicketMembership(ticket, session);
+
+    /* ======================
+       NOTIFY: creator + assignee (actor excluded), super admins cc'd
+    ====================== */
+    const stakeholderIds = [ticket.createdBy, ticket.assignedTo]
+      .filter(Boolean)
+      .map((id) => id.toString())
+      .filter((id, idx, arr) => arr.indexOf(id) === idx)
+      .filter((id) => id !== userIdStr);
+
+    const superAdminIds = (await getSuperAdminIds(session)).filter(
+      (id) => id !== userIdStr && !stakeholderIds.includes(id),
+    );
+
+    notifiedIds = [...stakeholderIds, ...superAdminIds];
+
+    if (notifiedIds.length) {
+      const [closer, locationDoc, categoryDoc] = await Promise.all([
+        User.findById(userId).select("firstname lastname").session(session),
+        Location.findById(ticket.location).select("name").session(session),
+        TicketCategory.findById(ticket.category)
+          .select("name isSystem")
+          .session(session),
+      ]);
+
+      const closerName = closer
+        ? `${closer.firstname} ${closer.lastname}`
+        : "Manager";
+
+      notification = await notifyAndEmit(session, {
+        recipients: notifiedIds.map((id) => ({ userId: id })),
+        title: "Ticket Closed",
+        message: `Ticket "${ticket.req_title}" was closed by ${closerName}.`,
+        link: `/it_facility?tab=track_tickets&status=Closed&item=${ticket.slug}`,
+        createdBy: userId,
+        meta: {
+          ticketId: ticket.slug,
+          event: "ticket_closed",
+          fromStatus: TICKET_STATUS.COMPLETED,
+          toStatus: TICKET_STATUS.CLOSED,
+        },
+        emit: false, // emitted after commit
+      });
+
+      // emails only to stakeholders (not super admins)
+      if (stakeholderIds.length) {
+        emailEvents.push({
+          userIds: stakeholderIds,
+          templateType: "ticket_closed",
+          dataBuilder: (user) => ({
+            recipientName: `${user.firstname} ${user.lastname}`,
+            ticketTitle: ticket.req_title,
+            category: getCategoryDisplayName(
+              categoryDoc,
+              ticket.categoryOtherText,
+            ),
+            location: locationDoc?.name || "Unknown location",
+            closedBy: closerName,
+            closedAt: now.toLocaleDateString(),
+            link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&status=Closed&item=${ticket.slug}`,
+          }),
+        });
+      }
+    }
+
+    await session.commitTransaction();
+
+    // ---- side effects only after a successful commit ----
+    if (notification) {
+      notifiedIds.forEach((id) =>
+        io.to(`user_${id}`).emit("newNotification", notification),
+      );
+    }
+
+    await Promise.all(
+      emailEvents.map((event) =>
+        notifyTicketEmail({ ...event, session: undefined }),
+      ),
+    );
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Ticket closed successfully", ticket));
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    await session.endSession();
+  }
 });

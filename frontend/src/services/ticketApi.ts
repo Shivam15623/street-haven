@@ -200,6 +200,13 @@ const ticketApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Ticket"],
     }),
+     closeTicket: builder.mutation<ApiGeneralResponse, string>({
+      query: (ticketId) => ({
+        url: `/ticket/${ticketId}/close`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Ticket"],
+    }),
 
     cancelTicket: builder.mutation<ApiGeneralResponse, string>({
       query: (ticketId) => ({
@@ -334,5 +341,6 @@ export const {
   useLazyFetchTicketMentionableUsersQuery,
   useReopenTicketMutation,
   useLazyFetchTicketBySlugQuery,
-  useDeleteTicketMutation
+  useDeleteTicketMutation,
+  useCloseTicketMutation
 } = ticketApi;

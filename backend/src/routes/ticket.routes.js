@@ -4,6 +4,7 @@ import {
   AddTicketComment,
   approveTicket,
   cancelTicket,
+  closeTicket,
   completeTicket,
   createTicket,
   deleteTicket,
@@ -99,6 +100,11 @@ router.patch(
   "/:id/reopen",
   validateRequest(idParamSchema, "params"),
   reopenTicket,
+);
+router.patch(
+  "/:id/close",
+  validateRequest(idParamSchema, "params"),
+  closeTicket,
 );
 // ticket comments
 router.route("/:entityId/comments").get(FetchTicketComments);

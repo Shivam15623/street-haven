@@ -15,6 +15,7 @@ export const TICKET_STATUS = {
   REJECTED: "Rejected", // manager rejected -> auto-closed
   IN_PROGRESS: "In Progress", // Angelo working on it
   COMPLETED: "Completed", // Angelo closed it
+  CANCELLED: "Cancelled",
   CLOSED: "Closed", // terminal state for rejected tickets
 };
 
