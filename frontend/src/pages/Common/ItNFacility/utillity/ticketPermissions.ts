@@ -119,11 +119,17 @@ const TICKET_ACTION_RULES: TicketActionRule[] = [
     action: "close",
     allowedStatuses: ["Completed"],
     requiredRelationships: ["manager", "super_admin"],
+    exclude: (ctx) =>
+      !ctx.relationships.has("super_admin") &&
+      ctx.ticket.approvedBy?._id !== ctx.currentUser?._id,
   },
   {
     action: "reopen",
     allowedStatuses: ["Completed"],
     requiredRelationships: ["manager", "super_admin"],
+    exclude: (ctx) =>
+      !ctx.relationships.has("super_admin") &&
+      ctx.ticket.approvedBy?._id !== ctx.currentUser?._id,
   },
 ];
 
