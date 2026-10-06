@@ -67,11 +67,18 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
   const [editphoto, seteditphoto] = useState(false);
 
   const { data: employeeData, isLoading: isEmployeeLoading } =
-    useAllEmployeesQuery({ forDropdown: true,role:["manager"] }, { skip: !showModal });
+    useAllEmployeesQuery(
+      { forDropdown: true, role: ["manager"] },
+      { skip: !showModal },
+    );
   const [editTicket, { isLoading }] = useEditTicketMutation();
-  const hasCreatorPermissions = isRequester && ticket.status === "Open";
+
   // derive once, near hasCreatorPermissions
   const isSuperAdmin = hasRole("super_admin");
+  const canEditLocation = isRequester && ticket.status === "Open";
+
+  // everything else: creator (while Open), approving manager, or super admin
+  const canEditDetails = canEditLocation || isApprovingManager || isSuperAdmin;
   const canTouchApproverFields = [
     "Approved",
     "In Progress",
@@ -82,7 +89,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
 
   const initialValues: TicketValues = {
     requestTitle: ticket.req_title,
-    requester:personName(ticket.createdBy),
+    requester: personName(ticket.createdBy),
     // "" (not "Unassigned") so it matches the placeholder <option value="">
     assignedId: ticket.assignedTo ? ticket.assignedTo._id : "",
     status: ticket.status,
@@ -291,7 +298,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                         type="text"
                         name="requestTitle"
                         value={values.requestTitle}
-                        disabled={!hasCreatorPermissions}
+                        disabled={!canEditDetails}
                         onChange={handleChange}
                         isInvalid={
                           touched.requestTitle && !!errors.requestTitle
@@ -436,7 +443,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                       <QuillEditor
                         content={values.description}
                         onChange={(val) => setFieldValue("description", val)}
-                        disabled={!hasCreatorPermissions}
+                        disabled={!canEditDetails}
                         isInvalid={touched.description && !!errors.description}
                       />
                       {touched.description && errors.description && (
@@ -489,7 +496,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                     >
                       Category
                     </Form.Label>
-                    <Col>
+                    <Col sm={10}>
                       {!isCustomCategory ? (
                         <div className="d-flex align-items-center gap-8">
                           <Form.Select
@@ -517,7 +524,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                             disabled={
                               categoryLoading ||
                               categoryError ||
-                              !hasCreatorPermissions
+                              !canEditDetails
                             }
                             className="text-street-base"
                             isInvalid={touched.category && !!errors.category}
@@ -565,7 +572,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                             }
                             className="py-12 px-16 text-street-base"
                             disabled={
-                              isCreatingCategory || !hasCreatorPermissions
+                              isCreatingCategory || !canEditDetails
                             }
                           />
                           <button
@@ -612,7 +619,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                             size="sm"
                             placeholder="Please specify"
                             value={values.categoryOtherText ?? ""}
-                            disabled={!hasCreatorPermissions}
+                            disabled={!canEditDetails}
                             onChange={(e) => {
                               setFieldValue(
                                 "categoryOtherText",
@@ -655,7 +662,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                         name="location"
                         value={values.location}
                         onChange={handleChange}
-                        disabled={!hasCreatorPermissions || locationsLoading}
+                        disabled={!canEditLocation || locationsLoading}
                         isInvalid={touched.location && !!errors.location}
                       >
                         <option value="">
@@ -692,7 +699,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                         >
                           {ticket.photo?.fileName}
                         </Link>
-                        {hasCreatorPermissions && (
+                        {canEditDetails && (
                           <Icon
                             icon="mdi:file-edit"
                             className="ms-2 icon-street-edit"
