@@ -62,6 +62,7 @@ export const editTicketSchema = Joi.object({
   priority: Joi.string().valid("Low", "Medium", "High").optional().messages({
     "any.only": "Priority must be Low, Medium, or High",
   }),
+  overview: Joi.string().optional(),
   status: Joi.string()
     .valid(
       "Open",

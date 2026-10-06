@@ -992,6 +992,7 @@ function collectSubmittedFields(body, hasFile) {
     "priority",
     "assignedTo",
     "status",
+    "overview",
   ];
   for (const key of fieldKeys) {
     if (body[key] !== undefined) submittedFields.add(key);
@@ -1015,16 +1016,25 @@ function assertFieldPermissions({
   isApprover,
   isAssignee,
   isSuperAdmin,
+  isLocationManager,
 }) {
   const wantsDetails = [...submittedFields].some((f) => DETAIL_FIELDS.has(f));
   const wantsLocation = submittedFields.has(LOCATION_FIELD);
   const wantsStatus = submittedFields.has("status");
   const wantsPriority = submittedFields.has("priority");
   const wantsAssignedTo = submittedFields.has("assignedTo");
-
+  const wantsOverview = submittedFields.has("overview");
   const isPrivileged = isApprover || isSuperAdmin;
   const isOpen = ticket.status === TICKET_STATUS.OPEN;
 
+  if (wantsOverview) {
+    if (!isApprover && !isAssignee && !isLocationManager && !isSuperAdmin) {
+      throw new ApiError(
+        403,
+        "Only the property manager, assignee, or super admin can edit the overview",
+      );
+    }
+  }
   // Location: creator only, Open only
   if (wantsLocation) {
     if (!isCreator) throw new ApiError(403, LOCATION_PERMISSION_MESSAGE);
@@ -1176,11 +1186,17 @@ async function applyTicketUpdates({
     priority,
     assignedTo: newAssignedToId,
     status: newStatus,
+    overview,
   } = body;
 
   if (description !== undefined) ticket.description = description;
   if (requestTitle !== undefined) ticket.req_title = requestTitle;
   const oldStatus = ticket.status;
+  if (overview !== undefined) {
+    ticket.overview = String(overview).trim();
+    ticket.overviewUpdatedBy = userId;
+    ticket.overviewUpdatedAt = new Date();
+  }
   if (newCategoryDoc) {
     ticket.category = newCategoryDoc._id;
     const isOtherCategory =
@@ -1563,7 +1579,12 @@ export const editTicket = asyncHandler(async (req, res) => {
       userId,
       isSuperAdmin,
     );
-
+    // controller, after resolveCallerPermissions
+    const isLocationManager = await isManagerOfTicketLocation(
+      userId,
+      ticket.location,
+      session,
+    );
     const submittedFields = collectSubmittedFields(req.body, Boolean(req.file));
 
     const { wantsStatus } = assertFieldPermissions({
@@ -1781,7 +1802,8 @@ export const FetchTickets = asyncHandler(async (req, res) => {
     .populate("location", "name managers")
     .populate("createdBy", "firstname lastname email")
     .populate("assignedTo", "firstname lastname email")
-    .populate("approvedBy", "firstname lastname");
+    .populate("approvedBy", "firstname lastname")
+    .populate("overviewUpdatedBy", "firstname lastname");
 
   const total = await Ticket.countDocuments(filter);
 
@@ -1882,7 +1904,8 @@ export const FetchTicketBySlug = asyncHandler(async (req, res) => {
     .populate("location", "name managers")
     .populate("createdBy", "firstname lastname email")
     .populate("assignedTo", "firstname lastname email")
-    .populate("approvedBy", "firstname lastname");
+    .populate("approvedBy", "firstname lastname")
+    .populate("overviewUpdatedBy", "firstname lastname");
 
   /* ----------------------------------
      NOT FOUND
@@ -2106,6 +2129,7 @@ export const GetTicketDetail = asyncHandler(async (req, res) => {
     .populate("assignmentHistory.assignedTo", "firstname lastname")
     .populate("assignmentHistory.assignedBy", "firstname lastname")
     .populate("statusHistory.changedBy", "firstname lastname")
+    .populate("overviewUpdatedBy", "firstname lastname")
     .populate({
       path: "latestComment",
       populate: { path: "author", select: "firstname lastname" }, // adjust field name if your Comment schema differs
@@ -2158,7 +2182,11 @@ export const GetTicketDetail = asyncHandler(async (req, res) => {
     location: ticket.location?.name || "-",
     photo: ticket.photo || null,
     categoryOtherText: ticket.categoryOtherText || null,
-
+    overviewUpdatedBy: ticket.overviewUpdatedBy
+      ? `${ticket.overviewUpdatedBy.firstname} ${ticket.overviewUpdatedBy.lastname}`
+      : null,
+    overviewUpdatedAt: ticket.overviewUpdatedAt || null,
+    overview: ticket.overview || null,
     submittedBy: ticket.createdBy
       ? {
           name: `${ticket.createdBy.firstname} ${ticket.createdBy.lastname}`,
@@ -2407,6 +2435,7 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
     .populate("statusHistory.changedBy", "firstname lastname email")
     .populate("assignmentHistory.assignedTo", "firstname lastname email")
     .populate("assignmentHistory.assignedBy", "firstname lastname email")
+    .populate("overviewUpdatedBy", "firstname lastname")
     .lean();
 
   const workbook = new ExcelJS.Workbook();
@@ -2417,6 +2446,9 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
     { header: "Ticket ID", key: "ticketId", width: 14 },
     { header: "Title", key: "title", width: 28 },
     { header: "Description", key: "description", width: 40 },
+    { header: "Overview", key: "overview", width: 40 },
+    { header: "Overview Updated By", key: "overviewUpdatedBy", width: 22 },
+    { header: "Overview Updated Date", key: "overviewUpdatedAt", width: 22 },
     { header: "Status", key: "status", width: 14 },
     { header: "Priority", key: "priority", width: 10 },
     { header: "Category", key: "category", width: 16 },
@@ -2504,6 +2536,9 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
       ticketId: tid,
       title: t.req_title,
       description: stripHtml(t.description),
+      overview: t.overview || "-",
+      overviewUpdatedBy: fullName(t.overviewUpdatedBy),
+      overviewUpdatedAt: fmt(t.overviewUpdatedAt),
       status: t.status,
       priority: t.priority || "-",
       category: t.category?.name || "-",
@@ -2587,7 +2622,10 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
     wrapText: true,
     vertical: "top",
   };
-
+  sheet.getColumn("overview").alignment = {
+    wrapText: true,
+    vertical: "top",
+  };
   res.setHeader(
     "Content-Type",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

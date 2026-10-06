@@ -63,6 +63,9 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     createdAt,
     displayId,
     approvedBy,
+    overview,
+    overviewUpdatedBy,
+    overviewUpdatedAt,
   } = ticket;
 
   const [showApprove, setShowApprove] = useState(false);
@@ -158,7 +161,25 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
             __html: DOMPurify.sanitize(description),
           }}
         />
-
+        {overview && (
+          <div className="bg-neutral-50 radius-8 p-12">
+            <p
+              className="text-xs text-street-dark mb-4 overview-clamp"
+              style={{ whiteSpace: "pre-wrap" }}
+            >
+              <span className="fw-semibold">Update: </span>
+              {overview}
+            </p>
+            {(overviewUpdatedBy || overviewUpdatedAt) && (
+              <p className="text-xs text-muted mb-0">
+                {overviewUpdatedBy && personName(overviewUpdatedBy)}
+                {overviewUpdatedBy && overviewUpdatedAt && " • "}
+                {overviewUpdatedAt &&
+                  new Date(overviewUpdatedAt).toLocaleString()}
+              </p>
+            )}
+          </div>
+        )}
         {/* Meta info */}
         <div className="text-xs d-flex flex-column flex-md-row gap-1 gap-md-3 fw-normal">
           {meta.map((item, index) => (

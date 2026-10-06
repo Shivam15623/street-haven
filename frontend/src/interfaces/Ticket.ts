@@ -30,6 +30,13 @@ export interface TicketData {
     firstname: string;
     lastname: string;
   };
+  overview?: string;
+  overviewUpdatedBy?: {
+    _id: string;
+    firstname: string;
+    lastname: string;
+  };
+  overviewUpdatedAt?: string;
   assignedTo?: userPopulatedData; // or a populated User object if you want
   createdBy: userPopulatedData; // required
   createdAt?: Date; // from timestamps
