@@ -53,8 +53,8 @@ const AddEmployeeSchema = Yup.object({
     .min(3, "Last Name must be at least 3 characters")
     .matches(/^[a-zA-Z\s]+$/, "Last Name can only contain letters and spaces"),
   email: Yup.string()
-    .matches(/^[A-Za-z0-9._%+-]/, "Email must be from @streethaven.com domain")
-    .email("Email is required"),
+    .matches(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/, "Email must be valid")
+    .email("Email is required and must be valid"),
   title: Yup.string().required("Title is required"),
   phone: Yup.string()
     .required("Phone number is required")
@@ -182,7 +182,7 @@ const AddEmployee = () => {
               className="btn btn-street-primary btn-street-lg radius-12 d-flex align-items-center text-sm justify-content-center"
               disabled={isLoading}
             >
-              {isLoading ? "Saving..." : "Save Changes"}
+              {isLoading ? "Adding..." : "Add User"}
             </button>
             <button
               className="btn btn-street-neutral btn-street-lg radius-12 d-none d-sm-flex align-items-center text-sm justify-content-center"

@@ -40,11 +40,7 @@ export const useTaskColumns = ({
     {
       title: "Assigned To",
       sortable: false,
-      render: (row) => (
-        <>
-          {personName(row.assignedTo)}
-        </>
-      ),
+      render: (row) => <>{personName(row.assignedTo)}</>,
     },
     {
       title: "Assigned By",

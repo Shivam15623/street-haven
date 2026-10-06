@@ -17,6 +17,22 @@ import { ROLES } from "../../../../interfaces/AuthInterfaces";
 const QuillEditor = lazy(
   () => import("../../../../components/child/QuillEditor"),
 );
+const formatDateOnly = (date: Date | null): string => {
+  if (!date) return "";
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const parseDateOnly = (dateString: string): Date => {
+  const [year, month, day] = dateString.split("-").map(Number);
+
+  // Creates the date in local time.
+  return new Date(year, month - 1, day);
+};
 export interface AssignableUser {
   _id: string;
   name: string;
@@ -46,14 +62,30 @@ const STATUS_OPTIONS: { label: string; value: TaskStatus }[] = [
   { label: "In Progress", value: "in_progress" },
   { label: "Completed", value: "completed" },
 ];
-
 const validationSchema = Yup.object({
   title: Yup.string().trim().required("Task title is required"),
-  description: Yup.string().trim().required("Task description is required"),
+
+  description: Yup.string().test(
+    "not-empty",
+    "Task description is required",
+    (value) => {
+      if (!value) return false;
+
+      const text = value
+        .replace(/<[^>]*>/g, "")
+        .replace(/&nbsp;/g, " ")
+        .trim();
+
+      return text.length > 0;
+    },
+  ),
+
   assignedTo: Yup.string().required("Please assign this task to a volunteer"),
+
   dueDate: Yup.date()
     .nullable()
     .min(new Date(new Date().toDateString()), "Due date cannot be in the past"),
+
   status: Yup.mixed<TaskStatus>()
     .oneOf(["assigned", "under_review", "completed"])
     .required(),
@@ -253,8 +285,12 @@ const ActionTaskModal: React.FC<ActionTaskModalProps> = ({
                 <Form.Group className="mb-16 d-flex flex-column gap-1">
                   <Form.Label>Due Date</Form.Label>
                   <CustomDatePicker
-                    value={values.dueDate ? new Date(values.dueDate) : null}
-                    onChange={(date) => setFieldValue("dueDate", date)}
+                    value={
+                      values.dueDate ? parseDateOnly(values.dueDate) : null
+                    }
+                    onChange={(date) => {
+                      setFieldValue("dueDate", formatDateOnly(date));
+                    }}
                     onBlur={handleBlur}
                     disabled={isLoading}
                   />

@@ -48,10 +48,24 @@ export const AllEmployees = asyncHandler(async (req, res) => {
 
   // Search
   if (search) {
+    const searchRegex = new RegExp(search.trim(), "i");
+
     query.$or = [
-      { firstname: { $regex: search, $options: "i" } },
-      { lastname: { $regex: search, $options: "i" } },
-      { email: { $regex: search, $options: "i" } },
+      { firstname: searchRegex },
+      { lastname: searchRegex },
+      { email: searchRegex },
+
+      {
+        $expr: {
+          $regexMatch: {
+            input: {
+              $concat: ["$firstname", " ", "$lastname"],
+            },
+            regex: search.trim(),
+            options: "i",
+          },
+        },
+      },
     ];
   }
 

@@ -223,13 +223,14 @@ const TicketReportTable: React.FC<Props> = ({
 
   return (
     <>
-      <SimpleTable
+      <SimpleTable<TicketReport>
         columns={columns}
         data={tickets}
         page={page}
         limit={limit}
         total={total}
         onPageChange={onPageChange}
+        getRowKey={(row) => row.id}
       />
 
       <TicketDetailDrawer
