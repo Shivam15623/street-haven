@@ -1,5 +1,6 @@
 import type { FileType } from "../interfaces/fileinterface";
 import type { ApiGeneralResponse, ApiResponse } from "../interfaces/Response";
+import type { DueStatus } from "../pages/Common/Task/taskTable.types";
 import { api } from "../redux/ApiSlice";
 import { uploadWithProgress } from "../utills/uploadWithProgress";
 
@@ -30,7 +31,7 @@ export interface ITask {
   assignedTo: IUser;
   assignedBy: IUser;
   status: TaskStatus;
-  dueStatus: "overdue" | "upcoming" | "today" | "noduedate";
+  dueStatus: DueStatus;
   dueDate: string | null;
   statusHistory: IStatusHistory[];
   createdAt: string;
@@ -70,7 +71,7 @@ export type TaskDateType = "created" | "updated" | "due";
 
 export type TaskDatePreset = "today" | "week" | "month" | "year";
 
-export type TaskDueStatus = "overdue" | "upcoming" | "today" | "noduedate";
+
 
 export type TaskSearchBy = "title" | "description" | "both";
 
@@ -92,7 +93,7 @@ export interface GetTasksParams {
   assignedTo?: string | string[];
   assignedBy?: string | string[];
 
-  dueStatus?: TaskDueStatus;
+  dueStatus?: DueStatus;
 
   hasDueDate?: "" | "true" | "false";
 
@@ -247,7 +248,7 @@ export const taskApi = api.injectEndpoints({
         assignedTo?: string | string[];
         assignedBy?: string | string[];
 
-        dueStatus?: TaskDueStatus;
+        dueStatus?: DueStatus;
 
         hasDueDate?: "" | "true" | "false";
 
