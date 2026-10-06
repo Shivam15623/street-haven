@@ -707,6 +707,31 @@ export const generateEmailTemplate = ({ type, data }) => {
       </p>
     `,
       };
+    case "ticket_closed":
+      return {
+        subject: `Ticket Closed - ${data.ticketTitle}`,
+        html: `
+  <h2>Ticket Closed</h2>
+
+  <p>Hello ${data.recipientName},</p>
+
+  <p>The following ticket has been reviewed and closed.</p>
+
+  <table style="border-collapse:collapse;">
+    <tr><td style="padding:6px 12px;"><strong>Ticket</strong></td><td>${data.ticketTitle}</td></tr>
+    <tr><td style="padding:6px 12px;"><strong>Category</strong></td><td>${data.category}</td></tr>
+    <tr><td style="padding:6px 12px;"><strong>Location</strong></td><td>${data.location}</td></tr>
+    <tr><td style="padding:6px 12px;"><strong>Closed By</strong></td><td>${data.closedBy}</td></tr>
+    <tr><td style="padding:6px 12px;"><strong>Closed On</strong></td><td>${data.closedAt}</td></tr>
+  </table>
+
+  <p style="margin-top:24px;">
+    <a href="${data.link}" style="background:#475569;color:#fff;padding:12px 18px;text-decoration:none;border-radius:6px;">
+      View Ticket
+    </a>
+  </p>
+`,
+      };
     default:
       throw new Error("Invalid email type");
   }
