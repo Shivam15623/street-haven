@@ -2920,7 +2920,9 @@ export const closeTicket = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, "Ticket closed successfully", ticket));
   } catch (error) {
-    await session.abortTransaction();
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     throw error;
   } finally {
     await session.endSession();
