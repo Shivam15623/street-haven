@@ -1,5 +1,4 @@
-// LocationStatusToggle.tsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useEditLocationMutation } from "../../../../../services/locationApi";
 import { showError, showSuccess } from "../../../../../utills/toastutills";
 import { getErrorMessage } from "../../../../../utills/utills";
@@ -17,17 +16,23 @@ const LocationStatusToggle: React.FC<LocationStatusToggleProps> = ({
 
   const [checked, setChecked] = useState(isActive);
 
+  // Keep local state in sync when the location/prop changes
+  useEffect(() => {
+    setChecked(isActive);
+  }, [id, isActive]);
+
   const handleToggle = async () => {
     const previous = checked;
+    const next = !previous;
 
     // Optimistic update
-    setChecked(!previous);
+    setChecked(next);
 
     try {
       const res = await editLocation({
         locationId: id,
         body: {
-          isActive: !previous,
+          isActive: next,
         },
       }).unwrap();
 
@@ -35,7 +40,7 @@ const LocationStatusToggle: React.FC<LocationStatusToggleProps> = ({
         showSuccess(res.message);
       }
     } catch (err) {
-      // Rollback optimistic update
+      // Rollback
       setChecked(previous);
 
       showError(getErrorMessage(err));

@@ -21,6 +21,11 @@ import timezone from "dayjs/plugin/timezone.js";
 dayjs.extend(timezone);
 
 const TZ = "America/Toronto";
+const parseDateOnly = (dateString) => {
+  if (!dateString) return null;
+  const [year, month, day] = dateString.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
+};
 export const createTask = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   const effects = [];
@@ -74,7 +79,7 @@ export const createTask = asyncHandler(async (req, res) => {
           status: currentStatus,
           title,
           description,
-          dueDate,
+          dueDate: dueDate ? parseDateOnly(dueDate) : null,
           statusHistory,
           assignmentHistory,
         },
@@ -168,7 +173,7 @@ export const editTask = asyncHandler(async (req, res) => {
     // -----------------------------------------
 
     if (dueDate !== undefined) {
-      const newDueDate = dueDate ? new Date(dueDate) : null;
+      const newDueDate = dueDate ? parseDateOnly(dueDate) : null;
 
       const changed = oldDueDate?.getTime() !== newDueDate?.getTime();
 
@@ -549,9 +554,15 @@ export const getAllTasks = asyncHandler(async (req, res) => {
   const { start, end } = resolveDateRange({ datePreset, startDate, endDate });
   if (start || end) {
     const field = dateFieldMap[dateType] || "createdAt";
+    const toUTCMidnight = (d) => {
+      const t = dayjs(d).tz(TZ);
+      return new Date(Date.UTC(t.year(), t.month(), t.date()));
+    };
+    const s = start && (field === "dueDate" ? toUTCMidnight(start) : start);
+    const e = end && (field === "dueDate" ? toUTCMidnight(end) : end);
     baseMatch[field] = {
-      ...(start ? { $gte: start } : {}),
-      ...(end ? { $lte: end } : {}),
+      ...(s ? { $gte: s } : {}),
+      ...(e ? { $lte: e } : {}),
     };
   }
 
@@ -581,12 +592,11 @@ export const getAllTasks = asyncHandler(async (req, res) => {
   }
 
   // ---------- computed dueStatus field ----------
-  // overdue: dueDate < today AND status !== completed
-  // today: dueDate is today AND status !== completed
-  // upcoming: dueDate > today AND status !== completed
-  // noduedate: dueDate is null
-  const startOfToday = dayjs().tz(TZ).startOf("day").toDate();
-  const endOfToday = dayjs().tz(TZ).endOf("day").toDate();
+  const nowTz = dayjs().tz(TZ);
+  const todayUTC = new Date(
+    Date.UTC(nowTz.year(), nowTz.month(), nowTz.date()),
+  );
+  const tomorrowUTC = new Date(todayUTC.getTime() + 24 * 60 * 60 * 1000);
 
   const dueStatusStage = {
     $addFields: {
@@ -594,36 +604,11 @@ export const getAllTasks = asyncHandler(async (req, res) => {
         $switch: {
           branches: [
             { case: { $eq: ["$dueDate", null] }, then: "noduedate" },
-            {
-              case: {
-                $and: [
-                  { $ne: ["$status", "completed"] },
-                  { $lt: ["$dueDate", startOfToday] },
-                ],
-              },
-              then: "overdue",
-            },
-            {
-              case: {
-                $and: [
-                  { $ne: ["$status", "completed"] },
-                  { $gte: ["$dueDate", startOfToday] },
-                  { $lte: ["$dueDate", endOfToday] },
-                ],
-              },
-              then: "today",
-            },
-            {
-              case: {
-                $and: [
-                  { $ne: ["$status", "completed"] },
-                  { $gt: ["$dueDate", endOfToday] },
-                ],
-              },
-              then: "upcoming",
-            },
+            { case: { $eq: ["$status", "completed"] }, then: "completed" },
+            { case: { $lt: ["$dueDate", todayUTC] }, then: "overdue" },
+            { case: { $lt: ["$dueDate", tomorrowUTC] }, then: "today" },
           ],
-          default: "noduedate",
+          default: "upcoming",
         },
       },
     },
@@ -877,7 +862,9 @@ export const getTaskBySlug = asyncHandler(async (req, res) => {
 });
 export const deleteTask = asyncHandler(async (req, res) => {
   const data = await taskDeletion.softDelete(req.params.taskId, req.user);
-  return res.status(200).json(new ApiResponse(200, "Task deleted successfully", data));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Task deleted successfully", data));
 });
 
 export const restoreTask = asyncHandler(async (req, res) => {

@@ -129,6 +129,7 @@ const LocationsTab = () => {
           limit={LIMIT}
           total={allLocations.length}
           onPageChange={setPage}
+          getRowKey={(row) => row._id}
         />
       )}
       {isFetching && !isLoading && (

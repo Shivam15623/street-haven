@@ -35,7 +35,7 @@ const Employees = () => {
       limit,
       order,
       sortBy,
-      search: debouncedSearch,
+      search: debouncedSearch.trim(),
       forDropdown: false,
     },
     {
