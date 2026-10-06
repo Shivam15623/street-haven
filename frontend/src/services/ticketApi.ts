@@ -70,6 +70,10 @@ export interface TicketDetail {
   priorityLocked: boolean;
   category: string;
   location: string;
+  overview?: string;
+  overviewUpdatedBy?: string;
+
+  overviewUpdatedAt?: string;
   photo: { fileName: string; fileUrl: string; _id: string } | null;
 
   submittedBy: UserInfo | null;
@@ -200,7 +204,7 @@ const ticketApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Ticket"],
     }),
-     closeTicket: builder.mutation<ApiGeneralResponse, string>({
+    closeTicket: builder.mutation<ApiGeneralResponse, string>({
       query: (ticketId) => ({
         url: `/ticket/${ticketId}/close`,
         method: "PATCH",
@@ -342,5 +346,5 @@ export const {
   useReopenTicketMutation,
   useLazyFetchTicketBySlugQuery,
   useDeleteTicketMutation,
-  useCloseTicketMutation
+  useCloseTicketMutation,
 } = ticketApi;

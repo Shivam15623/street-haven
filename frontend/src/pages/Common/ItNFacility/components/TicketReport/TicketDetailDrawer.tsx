@@ -73,7 +73,6 @@ const TicketDetailDrawer = ({ ticketId, open, onClose }: Props) => {
 
   const ticket = data?.data;
 
-
   return (
     <Sheet
       show={open}
@@ -119,7 +118,7 @@ const TicketDetailDrawer = ({ ticketId, open, onClose }: Props) => {
                 {ticket.status}
               </Badge>
 
-              {ticket.priority&&ticket.priority!=="-" && (
+              {ticket.priority && ticket.priority !== "-" && (
                 <Badge
                   variant={
                     ticket.priority === "High"
@@ -240,6 +239,34 @@ const TicketDetailDrawer = ({ ticketId, open, onClose }: Props) => {
               }}
             />
           </div>
+          {/* Overview */}
+          {ticket.overview && (
+            <div>
+              <h6 className="text-xs fw-semibold text-neutral-500 text-uppercase mb-8">
+                Overview
+              </h6>
+              <div className="bg-neutral-50 radius-12 p-12">
+                <p
+                  className="text-sm text-neutral-800 mb-8"
+                  style={{ whiteSpace: "pre-wrap" }}
+                >
+                  {ticket.overview}
+                </p>
+                {(ticket.overviewUpdatedBy || ticket.overviewUpdatedAt) && (
+                  <p className="text-xs text-neutral-500 mb-0">
+                    {ticket.overviewUpdatedBy}
+                    {ticket.overviewUpdatedBy &&
+                      ticket.overviewUpdatedAt &&
+                      " · "}
+                    {ticket.overviewUpdatedAt &&
+                      dayjs(ticket.overviewUpdatedAt).format(
+                        "DD MMM YYYY, h:mm A",
+                      )}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Attachment */}
           {ticket.photo && (

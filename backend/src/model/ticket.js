@@ -100,6 +100,9 @@ const TicketSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Comment",
     },
+    overview: { type: String, default: "", trim: true },
+    overviewUpdatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    overviewUpdatedAt: { type: Date },
     assignmentHistory: [
       {
         assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -115,7 +118,6 @@ const TicketSchema = new mongoose.Schema(
       },
     ],
     resolvedAt: Date,
-  
   },
   { timestamps: true },
 );

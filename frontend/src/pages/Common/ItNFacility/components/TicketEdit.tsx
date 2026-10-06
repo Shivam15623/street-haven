@@ -35,6 +35,7 @@ const TicketSchema = Yup.object({
   description: Yup.string(),
   priority: Yup.string(),
   category: Yup.string(),
+  overview: Yup.string(),
   categoryOtherText: Yup.string().notRequired().default(""), // enforced manually in handleEdit, see isOtherSelected check
   location: Yup.string(),
   photo: Yup.mixed<File>().nullable(),
@@ -86,6 +87,13 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
   ].includes(ticket.status);
   // pre-select custom-category UI if the ticket's category isn't one of the predefined ones
   const [isCustomCategory, setIsCustomCategory] = useState(false);
+  const REOPENABLE_STATUSES = ["Completed", "Rejected", "Closed"];
+  const isReopenable = REOPENABLE_STATUSES.includes(ticket.status);
+  const isLocationManager = !!ticket.location?.managers?.some(
+    (m) => m === user?._id,
+  );
+  const canEditOverview =
+    isAssigned || isApprovingManager || isLocationManager || isSuperAdmin;
 
   const initialValues: TicketValues = {
     requestTitle: ticket.req_title,
@@ -100,6 +108,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
     category: ticket.category?._id ?? ticket.category,
     categoryOtherText: ticket.categoryOtherText ?? "",
     location: ticket.location?._id ?? "", // default to empty string
+    overview: ticket.overview ?? "",
   };
 
   const statusOptions = [
@@ -160,6 +169,12 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
 
       if (values.photo) {
         formData.append("photo", values.photo);
+      }
+      if (
+        canEditOverview &&
+        (values.overview ?? "") !== (ticket.overview ?? "")
+      ) {
+        formData.append("overview", values.overview ?? "");
       }
       const res = await editTicket({
         ticketId: ticket._id,
@@ -395,7 +410,9 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                         <option value="">Select Status</option>
                         {statusOptions.map((status) => (
                           <option key={status} value={status}>
-                            {status}
+                            {status === "Approved" && isReopenable
+                              ? "Reopen"
+                              : status}
                           </option>
                         ))}
                       </Form.Select>
@@ -571,9 +588,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                               setCustomCategoryValue(e.target.value)
                             }
                             className="py-12 px-16 text-street-base"
-                            disabled={
-                              isCreatingCategory || !canEditDetails
-                            }
+                            disabled={isCreatingCategory || !canEditDetails}
                           />
                           <button
                             type="button"
@@ -682,6 +697,36 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                         <div className="invalid-feedback d-block">
                           {errors.location}
                         </div>
+                      )}
+                    </Col>
+                  </Row>
+                  {/* Overview */}
+                  <Row className="mb-3">
+                    <Form.Label
+                      className="align-items-center d-flex"
+                      column
+                      sm={2}
+                    >
+                      Overview
+                    </Form.Label>
+                    <Col sm={10}>
+                      <Form.Control
+                        as="textarea"
+                        className="h-auto"
+                        rows={4}
+                        size="sm"
+                        name="overview"
+                        placeholder="Work done so far, latest update, next steps..."
+                        value={values.overview}
+                        onChange={handleChange}
+                        disabled={!canEditOverview}
+                        maxLength={1500}
+                      />
+                      {ticket.overviewUpdatedAt && (
+                        <small className="text-street-base">
+                          Last updated{" "}
+                          {new Date(ticket.overviewUpdatedAt).toLocaleString()}
+                        </small>
                       )}
                     </Col>
                   </Row>

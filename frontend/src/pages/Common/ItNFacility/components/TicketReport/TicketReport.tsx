@@ -7,7 +7,6 @@ import {
 import TicketReportTable from "./TicketTable";
 import { TicketCountCard } from "../TicketCountCard";
 
-
 export type TicketStatus =
   | "Open"
   | "Approved"
@@ -186,6 +185,16 @@ const TicketReport = () => {
                 setFilters((p) => ({ ...p, status: "Rejected", page: 1 }))
               }
               active={filters.status === "Rejected"}
+            />
+            <TicketCountCard
+              count={data?.data.counts.closed ?? 0}
+              label="Closed"
+              variant="closed"
+              icon="lucide:archive"
+              onClick={() =>
+                setFilters((p) => ({ ...p, status: "Closed", page: 1 }))
+              }
+              active={filters.status === "Closed"}
             />
           </>
         )}
