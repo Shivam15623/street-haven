@@ -7,10 +7,7 @@ import User, { ROLES } from "../model/user.js";
 import { ApiError } from "../utills/ApiError.js";
 import { ApiResponse } from "../utills/ApiResponse.js";
 import { asyncHandler } from "../utills/AsyncHandler.js";
-import {
-
-  uploadOnCloudinary,
-} from "../utills/cloudinary.js";
+import { uploadOnCloudinary } from "../utills/cloudinary.js";
 import { createNotification } from "../helper/CreateNotoification.js";
 import ExcelJS from "exceljs";
 import Location from "../model/location.js";
@@ -29,7 +26,6 @@ import * as ticketDeletion from "../services/ticketDeletion.service.js";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
-
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -908,22 +904,27 @@ export const cancelTicket = asyncHandler(async (req, res) => {
    EDIT (creator only, Pending only, no priority/status/assignment)
 ====================== */
 
-const CREATOR_FIELDS = new Set([
+const DETAIL_FIELDS = new Set([
   "description",
   "requestTitle",
   "category",
   "categoryOtherText",
-  "location",
   "photo",
 ]);
-const APPROVER_FIELDS = new Set(["priority", "assignedTo", "status"]);
-const ASSIGNEE_FIELDS = new Set(["assignedTo"]);
+const LOCATION_FIELD = "location";
+
 const STATUS_EMAIL_TEMPLATE_MAP = {
   Approved: "ticket_approved",
   "In Progress": "ticket_in_progress",
   Completed: "ticket_completed",
   Rejected: "ticket_rejected",
 };
+
+const LOCATION_PERMISSION_MESSAGE = "Only the creator can edit the location";
+const DETAILS_PERMISSION_MESSAGE =
+  "Only the creator, approving manager, or super admin can edit ticket details";
+const STATUS_PERMISSION_MESSAGE =
+  "Only the approving manager or super admin can change status";
 /**
  * editTicket — organized into small single-purpose helpers:
  *
@@ -947,29 +948,20 @@ const STATUS_EMAIL_TEMPLATE_MAP = {
  * transaction-vs-post-commit boundary is easy to see in `editTicket` itself.
  */
 
-const CREATOR_ONLY_MESSAGE =
-  "Only the creator can edit title, description, photo, or location";
-const STATUS_PERMISSION_MESSAGE =
-  "Only the approving manager or super admin can change status";
-
 // ---------------------------------------------------------------------------
 // 1. Ticket + photo
 // ---------------------------------------------------------------------------
-async function loadTicketAndUploadPhoto(ticketId, file, session) {
-  let uploadedFile;
-  if (file?.path) {
-    uploadedFile = await uploadOnCloudinary(file.path);
-    if (!uploadedFile?.secure_url) {
-      throw new ApiError(500, "Photo upload failed");
-    }
-  }
-
+async function loadTicket(ticketId, session) {
   const ticket = await Ticket.findById(ticketId).session(session);
-  if (!ticket) {
-    throw new ApiError(404, "No such ticket found");
-  }
+  if (!ticket) throw new ApiError(404, "No such ticket found");
+  return ticket;
+}
 
-  return { ticket, uploadedFile };
+async function uploadPhotoIfPresent(file) {
+  if (!file?.path) return undefined;
+  const uploaded = await uploadOnCloudinary(file.path);
+  if (!uploaded?.secure_url) throw new ApiError(500, "Photo upload failed");
+  return uploaded;
 }
 
 // ---------------------------------------------------------------------------
@@ -989,33 +981,26 @@ function resolveCallerPermissions(ticket, userId, isSuperAdmin) {
 // ---------------------------------------------------------------------------
 // 3. Which fields did the caller actually submit?
 // ---------------------------------------------------------------------------
-function collectSubmittedFields(body, uploadedFile) {
-  const {
-    description,
-    requestTitle,
-    category,
-    location,
-    categoryOtherText,
-    priority,
-    assignedTo,
-    status,
-  } = body;
-
+function collectSubmittedFields(body, hasFile) {
   const submittedFields = new Set();
-  if (description !== undefined) submittedFields.add("description");
-  if (requestTitle !== undefined) submittedFields.add("requestTitle");
-  if (category !== undefined) submittedFields.add("category");
-  if (categoryOtherText !== undefined) submittedFields.add("category");
-  if (location !== undefined) submittedFields.add("location");
-  if (uploadedFile) submittedFields.add("photo");
-  if (priority !== undefined) submittedFields.add("priority");
-  if (assignedTo !== undefined) submittedFields.add("assignedTo");
-  if (status !== undefined) submittedFields.add("status");
+  const fieldKeys = [
+    "description",
+    "requestTitle",
+    "category",
+    "categoryOtherText",
+    "location",
+    "priority",
+    "assignedTo",
+    "status",
+  ];
+  for (const key of fieldKeys) {
+    if (body[key] !== undefined) submittedFields.add(key);
+  }
+  if (hasFile) submittedFields.add("photo");
 
   if (submittedFields.size === 0) {
     throw new ApiError(400, "No editable fields were provided");
   }
-
   return submittedFields;
 }
 
@@ -1031,19 +1016,32 @@ function assertFieldPermissions({
   isAssignee,
   isSuperAdmin,
 }) {
-  const wantsCreatorFields = [...submittedFields].some((f) =>
-    CREATOR_FIELDS.has(f),
-  );
-  const wantsApproverFields = [...submittedFields].some((f) =>
-    APPROVER_FIELDS.has(f),
-  );
+  const wantsDetails = [...submittedFields].some((f) => DETAIL_FIELDS.has(f));
+  const wantsLocation = submittedFields.has(LOCATION_FIELD);
   const wantsStatus = submittedFields.has("status");
+  const wantsPriority = submittedFields.has("priority");
+  const wantsAssignedTo = submittedFields.has("assignedTo");
 
-  if (wantsCreatorFields) {
-    if (!isCreator) {
-      throw new ApiError(403, CREATOR_ONLY_MESSAGE);
+  const isPrivileged = isApprover || isSuperAdmin;
+  const isOpen = ticket.status === TICKET_STATUS.OPEN;
+
+  // Location: creator only, Open only
+  if (wantsLocation) {
+    if (!isCreator) throw new ApiError(403, LOCATION_PERMISSION_MESSAGE);
+    if (!isOpen) {
+      throw new ApiError(
+        400,
+        "Location can only be edited while the ticket is Open (pending approval)",
+      );
     }
-    if (ticket.status !== TICKET_STATUS.OPEN) {
+  }
+
+  // Details: creator (Open only) or approver / super admin (any status)
+  if (wantsDetails) {
+    if (!isCreator && !isPrivileged) {
+      throw new ApiError(403, DETAILS_PERMISSION_MESSAGE);
+    }
+    if (!isPrivileged && !isOpen) {
       throw new ApiError(
         400,
         "Ticket details can only be edited while it is Open (pending approval)",
@@ -1051,10 +1049,9 @@ function assertFieldPermissions({
     }
   }
 
+  // Status: approver / super admin
   if (wantsStatus) {
-    if (!isApprover && !isSuperAdmin) {
-      throw new ApiError(403, STATUS_PERMISSION_MESSAGE);
-    }
+    if (!isPrivileged) throw new ApiError(403, STATUS_PERMISSION_MESSAGE);
     if (!Object.values(TICKET_STATUS).includes(newStatus)) {
       throw new ApiError(400, "Invalid status value");
     }
@@ -1062,17 +1059,15 @@ function assertFieldPermissions({
 
   const effectiveStatus = wantsStatus ? newStatus : ticket.status;
 
-  if (wantsApproverFields) {
-    const wantsPriority = submittedFields.has("priority");
-    const wantsAssignedTo = submittedFields.has("assignedTo");
-
-    if (wantsPriority && !isApprover && !isSuperAdmin) {
+  // Priority / assignment: only meaningful once Approved or later
+  if (wantsPriority || wantsAssignedTo) {
+    if (wantsPriority && !isPrivileged) {
       throw new ApiError(
         403,
         "Only the approving manager or super admin can change priority",
       );
     }
-    if (wantsAssignedTo && !isApprover && !isAssignee && !isSuperAdmin) {
+    if (wantsAssignedTo && !isPrivileged && !isAssignee) {
       throw new ApiError(
         403,
         "Only the approving manager, current assignee, or super admin can reassign this ticket",
@@ -1087,12 +1082,12 @@ function assertFieldPermissions({
     ) {
       throw new ApiError(
         400,
-        `Ticket must be Approved or later to change ${wantsPriority ? "priority" : "assignment"}, currently ${ticket.status}`,
+        `Ticket must be Approved or later to change ${wantsPriority ? "priority" : "assignment"}, currently ${effectiveStatus}`,
       );
     }
   }
 
-  return { wantsStatus, effectiveStatus };
+  return { wantsStatus };
 }
 
 // ---------------------------------------------------------------------------
@@ -1185,7 +1180,7 @@ async function applyTicketUpdates({
 
   if (description !== undefined) ticket.description = description;
   if (requestTitle !== undefined) ticket.req_title = requestTitle;
-
+  const oldStatus = ticket.status;
   if (newCategoryDoc) {
     ticket.category = newCategoryDoc._id;
     const isOtherCategory =
@@ -1237,7 +1232,6 @@ async function applyTicketUpdates({
         assignedTo: newAssignee._id,
         assignedBy: userId,
         assignedAt: new Date(),
-        reason: "reassigned",
       });
       ticket.assignedTo = newAssignee._id;
 
@@ -1246,7 +1240,7 @@ async function applyTicketUpdates({
         ticket.status = TICKET_STATUS.APPROVED;
         ticket.statusHistory.push({
           status: TICKET_STATUS.APPROVED,
-          fromStatus: TICKET_STATUS.IN_PROGRESS,
+
           changedBy: userId,
           changedAt: new Date(),
         });
@@ -1254,13 +1248,11 @@ async function applyTicketUpdates({
     }
   }
 
-  const oldStatus = ticket.status;
   const statusChanged = wantsStatus && newStatus !== oldStatus;
   if (statusChanged) {
     ticket.status = newStatus;
     if (Array.isArray(ticket.statusHistory)) {
       ticket.statusHistory.push({
-     
         status: newStatus,
         changedBy: userId,
         changedAt: new Date(),
@@ -1564,11 +1556,7 @@ export const editTicket = asyncHandler(async (req, res) => {
   try {
     session.startTransaction();
 
-    const { ticket, uploadedFile } = await loadTicketAndUploadPhoto(
-      ticketId,
-      req.file,
-      session,
-    );
+    const ticket = await loadTicket(ticketId, session);
 
     const { isCreator, isApprover, isAssignee } = resolveCallerPermissions(
       ticket,
@@ -1576,7 +1564,7 @@ export const editTicket = asyncHandler(async (req, res) => {
       isSuperAdmin,
     );
 
-    const submittedFields = collectSubmittedFields(req.body, uploadedFile);
+    const submittedFields = collectSubmittedFields(req.body, Boolean(req.file));
 
     const { wantsStatus } = assertFieldPermissions({
       submittedFields,
@@ -1588,6 +1576,8 @@ export const editTicket = asyncHandler(async (req, res) => {
       isSuperAdmin,
     });
 
+    // only upload once the caller is known to be allowed to edit
+    const uploadedFile = await uploadPhotoIfPresent(req.file);
     const locationChange = await resolveLocationChange(
       ticket,
       req.body.location,
@@ -2258,18 +2248,18 @@ const getDuration = (start, end) => {
 // Toronto time, handles EST/EDT automatically
 const fmt = (date) =>
   date ? dayjs(date).tz(TZ).format("YYYY-MM-DD hh:mm A") : "-";
- 
+
 const fullName = (u) => {
   if (!u || (!u.firstname && !u.lastname)) return "-";
   return `${u.firstname || ""} ${u.lastname || ""}`.trim();
 };
- 
+
 const diffMs = (start, end) => {
   if (!start || !end) return null;
   const ms = new Date(end).getTime() - new Date(start).getTime();
   return ms >= 0 ? ms : null;
 };
- 
+
 const fmtMs = (ms) => {
   if (ms === null || ms === undefined) return "-";
   const totalMin = Math.floor(ms / 60000);
@@ -2278,17 +2268,17 @@ const fmtMs = (ms) => {
   const m = totalMin % 60;
   return `${d}d ${h}h ${m}m`;
 };
- 
+
 const duration = (start, end) => fmtMs(diffMs(start, end));
- 
+
 const byDate = (arr, field) =>
   [...(arr || [])].sort((a, b) => new Date(a[field]) - new Date(b[field]));
- 
+
 const lastWhere = (arr, fn) => {
   for (let i = arr.length - 1; i >= 0; i--) if (fn(arr[i])) return arr[i];
   return null;
 };
- 
+
 // index of the assignment that was active at a given moment (-1 if none)
 const assignmentIndexAt = (assigns, at) => {
   let idx = -1;
@@ -2297,15 +2287,15 @@ const assignmentIndexAt = (assigns, at) => {
   });
   return idx;
 };
- 
+
 const displayId = (t) => `TICKET-${String(t.ticketNumber).padStart(5, "0")}`;
- 
+
 /* -------------------- everything derived from history -------------------- */
 const analyzeTicket = (t) => {
   const S = TICKET_STATUS;
   const hist = byDate(t.statusHistory, "changedAt");
   const assigns = byDate(t.assignmentHistory, "assignedAt");
- 
+
   /* ---- work sessions: every In Progress -> next status ---- */
   const sessions = [];
   let open = null;
@@ -2334,22 +2324,22 @@ const analyzeTicket = (t) => {
     }
   }
   if (open) closeSession(null);
- 
+
   const totalWorkMs = sessions.reduce((sum, s) => sum + (s.ms || 0), 0);
- 
+
   /* ---- key milestones ---- */
   const completions = hist.filter((h) => h.status === S.COMPLETED);
   const lastCompletion = completions[completions.length - 1] || null;
   const completedAt = lastCompletion?.changedAt || t.resolvedAt || null;
- 
+
   let resolvedBy = fullName(lastCompletion?.changedBy);
   if (resolvedBy === "-" && completedAt) resolvedBy = fullName(t.assignedTo);
- 
+
   const approved = lastWhere(hist, (h) => h.status === S.APPROVED);
   const rejected = lastWhere(hist, (h) => h.status === S.REJECTED);
   // an "Open" entry that is not the first entry = a reopen
   const reopens = hist.filter((h, i) => i > 0 && h.status === S.OPEN);
- 
+
   /* ---- timeline: status changes + assignments merged ---- */
   const events = [];
   hist.forEach((h, i) => {
@@ -2371,7 +2361,7 @@ const analyzeTicket = (t) => {
     });
   });
   events.sort((a, b) => new Date(a.at) - new Date(b.at));
- 
+
   return {
     hist,
     assigns,
@@ -2386,7 +2376,7 @@ const analyzeTicket = (t) => {
     reopens,
   };
 };
- 
+
 const styleHeader = (sheet) => {
   const row = sheet.getRow(1);
   row.font = { bold: true };
@@ -2401,11 +2391,11 @@ const styleHeader = (sheet) => {
     to: { row: 1, column: sheet.columns.length },
   };
 };
- 
+
 /* ------------------------------ controller ------------------------------ */
 export const ExportTicketsReport = asyncHandler(async (req, res) => {
   const filter = await buildReportFilter(req);
- 
+
   const tickets = await Ticket.find(filter)
     .sort({ createdAt: -1 })
     .populate("location", "name")
@@ -2418,9 +2408,9 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
     .populate("assignmentHistory.assignedTo", "firstname lastname email")
     .populate("assignmentHistory.assignedBy", "firstname lastname email")
     .lean();
- 
+
   const workbook = new ExcelJS.Workbook();
- 
+
   /* ============================ Sheet 1: Tickets ============================ */
   const sheet = workbook.addWorksheet("Tickets");
   sheet.columns = [
@@ -2453,13 +2443,21 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
     { header: "Completed Date (latest)", key: "completedDate", width: 22 },
     { header: "Times Completed", key: "timesCompleted", width: 12 },
     { header: "Resolved By", key: "resolvedBy", width: 22 },
-    { header: "Resolution Time (Created→Completed)", key: "resolutionTime", width: 24 },
-    { header: "Time (First Assigned→Completed)", key: "assignToDone", width: 24 },
+    {
+      header: "Resolution Time (Created→Completed)",
+      key: "resolutionTime",
+      width: 24,
+    },
+    {
+      header: "Time (First Assigned→Completed)",
+      key: "assignToDone",
+      width: 24,
+    },
     { header: "Actual Work Time (all sessions)", key: "workTime", width: 24 },
     { header: "Last Updated Date", key: "updatedDate", width: 20 },
     { header: "Attachment URL", key: "attachmentUrl", width: 40 },
   ];
- 
+
   /* ============================ Sheet 2: Timeline ============================ */
   const timeline = workbook.addWorksheet("Timeline");
   timeline.columns = [
@@ -2473,7 +2471,7 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
     { header: "Done By", key: "by", width: 22 },
     { header: "Time Since Previous Step", key: "since", width: 22 },
   ];
- 
+
   /* ========================== Sheet 3: Work Sessions ========================== */
   const sessionsSheet = workbook.addWorksheet("Work Sessions");
   sessionsSheet.columns = [
@@ -2490,20 +2488,18 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
     { header: "Time Assigned→Started", key: "toStart", width: 22 },
     { header: "Work Duration", key: "duration", width: 18 },
   ];
- 
+
   /* ========================== Sheet 4: Conversation ========================== */
- 
- 
+
   /* ------------------------------ fill rows ------------------------------ */
   tickets.forEach((t) => {
     const a = analyzeTicket(t);
     const tid = displayId(t);
-  
- 
+
     const firstAssigned = a.assigns[0]?.assignedAt || null;
     const lastAssigned = a.assigns[a.assigns.length - 1]?.assignedAt || null;
     const lastReopen = a.reopens[a.reopens.length - 1] || null;
- 
+
     sheet.addRow({
       ticketId: tid,
       title: t.req_title,
@@ -2537,11 +2533,11 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
       resolutionTime: duration(t.createdAt, a.completedAt),
       assignToDone: duration(firstAssigned, a.completedAt),
       workTime: a.sessions.length ? fmtMs(a.totalWorkMs) : "-",
-   
+
       updatedDate: fmt(t.updatedAt),
       attachmentUrl: t.photo?.fileUrl || "-",
     });
- 
+
     // ---- timeline rows
     a.events.forEach((e, i) => {
       timeline.addRow({
@@ -2556,7 +2552,7 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
         since: i === 0 ? "-" : duration(a.events[i - 1].at, e.at),
       });
     });
- 
+
     // ---- work session rows
     a.sessions.forEach((s, i) => {
       sessionsSheet.addRow({
@@ -2575,18 +2571,23 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
       });
     });
   });
- 
+
   if (tickets.length === 0) {
     sheet.addRow({ ticketId: "No tickets found for the selected filters." });
   }
- 
+
   /* ------------------------------ formatting ------------------------------ */
   [sheet, timeline, sessionsSheet].forEach(styleHeader);
- 
-  sheet.getColumn("description").alignment = { wrapText: true, vertical: "top" };
-  sheet.getColumn("rejectionReason").alignment = { wrapText: true, vertical: "top" };
 
- 
+  sheet.getColumn("description").alignment = {
+    wrapText: true,
+    vertical: "top",
+  };
+  sheet.getColumn("rejectionReason").alignment = {
+    wrapText: true,
+    vertical: "top",
+  };
+
   res.setHeader(
     "Content-Type",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -2595,7 +2596,7 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
     "Content-Disposition",
     `attachment; filename="tickets-report-${Date.now()}.xlsx"`,
   );
- 
+
   await workbook.xlsx.write(res);
   res.end();
 });
@@ -2738,15 +2739,15 @@ export const reopenTicket = asyncHandler(async (req, res) => {
 
 export const deleteTicket = asyncHandler(async (req, res) => {
   const data = await ticketDeletion.softDelete(req.params.id, req.user);
-  return res.status(200).json(new ApiResponse(200, "Ticket deleted successfully", data));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Ticket deleted successfully", data));
 });
 
 export const restoreTicket = asyncHandler(async (req, res) => {
   const data = await ticketDeletion.restore(req.params.id, req.user);
   return res.status(200).json(new ApiResponse(200, "Ticket restored", data));
 });
-
-
 
 export const closeTicket = asyncHandler(async (req, res) => {
   const { id: ticketId } = req.params;
