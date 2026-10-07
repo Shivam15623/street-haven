@@ -4,16 +4,29 @@
  * Finds every user id that is referenced in the database but no longer has a
  * row in `users`, then removes / repairs everything that points at them so no
  * broken references remain. No reassigning: their content is deleted.
+ * Uploaded files (Cloudinary) belonging to deleted docs are deleted too, but
+ * only after the DB audit passes.
  *
  *   node scripts/cleanupOrphans.js              -> PREVIEW only, nothing changes
  *   node scripts/cleanupOrphans.js --execute    -> apply the cleanup
  *
- * Needs MONGODB_URI (or MONGO_URI) in .env. Take a mongodump before --execute.
+ * Needs in .env:
+ *   MONGODB_URI (or MONGO_URI)
+ *   CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+ *
+ * Take a mongodump before --execute.
  */
 import "dotenv/config";
 import mongoose from "mongoose";
 import fs from "fs";
 import path from "path";
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // ── Collection names (mongoose default pluralisation). Edit if yours differ.
 const C = {
@@ -33,8 +46,33 @@ const C = {
 // If you have other models that reference users (Event, Announcement, ...),
 // add their fields here AND add a cleanup rule below.
 const REF_FIELDS = [
-  [C.tickets, ["createdBy", "assignedTo", "approvedBy", "rejectedBy", "overviewUpdatedBy", "assignmentHistory.assignedTo", "assignmentHistory.assignedBy", "statusHistory.changedBy"]],
-  [C.tasks, ["assignedTo", "assignedBy", "assignmentHistory.assignedTo", "assignmentHistory.assignedBy", "assignmentHistory.fromAssignedTo", "ownershipHistory.from", "ownershipHistory.to", "ownershipHistory.changedBy", "statusHistory.changedBy"]],
+  [
+    C.tickets,
+    [
+      "createdBy",
+      "assignedTo",
+      "approvedBy",
+      "rejectedBy",
+      "overviewUpdatedBy",
+      "assignmentHistory.assignedTo",
+      "assignmentHistory.assignedBy",
+      "statusHistory.changedBy",
+    ],
+  ],
+  [
+    C.tasks,
+    [
+      "assignedTo",
+      "assignedBy",
+      "assignmentHistory.assignedTo",
+      "assignmentHistory.assignedBy",
+      "assignmentHistory.fromAssignedTo",
+      "ownershipHistory.from",
+      "ownershipHistory.to",
+      "ownershipHistory.changedBy",
+      "statusHistory.changedBy",
+    ],
+  ],
   [C.comments, ["userId", "mentions"]],
   [C.memberships, ["userId"]],
   [C.commentNotifs, ["userId", "actorIds"]],
@@ -53,17 +91,44 @@ const backup = {};
 const fileUrls = new Set();
 let db;
 
+// ── Cloudinary ─────────────────────────────────────────────────────────────
+// https://res.cloudinary.com/<cloud>/<type>/upload/[v123/]folder/name.ext
+function parseCloudinaryUrl(fileUrl) {
+  const m = fileUrl.match(/\/(image|raw|video)\/upload\/(?:v\d+\/)?(.+)$/);
+  if (!m) return null;
+  const resourceType = m[1];
+  let publicId = decodeURIComponent(m[2].split("?")[0]);
+  if (resourceType !== "raw") publicId = publicId.replace(/\.[^/.]+$/, ""); // raw keeps its extension
+  return { publicId, resourceType };
+}
+
+const deleteFromCloudinary = async (fileUrl) => {
+  const parsed = parseCloudinaryUrl(fileUrl);
+  if (!parsed) throw new Error("Not a Cloudinary URL");
+  // resolves { result: "ok" | "not found" }
+  return cloudinary.uploader.destroy(parsed.publicId, {
+    resource_type: parsed.resourceType,
+    invalidate: true,
+  });
+};
+
 // ── helpers ────────────────────────────────────────────────────────────────
 function collectUrls(o) {
   if (!o || typeof o !== "object") return;
   for (const [k, v] of Object.entries(o)) {
     if (k === "fileUrl" && typeof v === "string") fileUrls.add(v);
-    else if (v && typeof v === "object" && !isOid(v) && !(v instanceof Date)) collectUrls(v);
+    else if (v && typeof v === "object" && !isOid(v) && !(v instanceof Date))
+      collectUrls(v);
   }
 }
 
 async function ids(coll, filter) {
-  return (await db.collection(coll).find(filter, { projection: { _id: 1 } }).toArray()).map((d) => d._id);
+  return (
+    await db
+      .collection(coll)
+      .find(filter, { projection: { _id: 1 } })
+      .toArray()
+  ).map((d) => d._id);
 }
 
 async function removeDocs(coll, filter) {
@@ -89,7 +154,9 @@ async function update(coll, label, filter, upd, options = {}) {
 async function missingIds(coll, field, targetColl) {
   const vals = (await db.collection(coll).distinct(field)).filter(isOid);
   if (!vals.length) return [];
-  const present = new Set((await ids(targetColl, { _id: { $in: vals } })).map(String));
+  const present = new Set(
+    (await ids(targetColl, { _id: { $in: vals } })).map(String),
+  );
   return vals.filter((v) => !present.has(String(v)));
 }
 
@@ -97,10 +164,14 @@ async function findOrphanUserIds() {
   const referenced = new Map();
   for (const [coll, fields] of REF_FIELDS)
     for (const f of fields)
-      (await db.collection(coll).distinct(f)).filter(isOid).forEach((v) => referenced.set(String(v), v));
+      (await db.collection(coll).distinct(f))
+        .filter(isOid)
+        .forEach((v) => referenced.set(String(v), v));
   const all = [...referenced.values()];
   if (!all.length) return [];
-  const present = new Set((await ids(C.users, { _id: { $in: all } })).map(String));
+  const present = new Set(
+    (await ids(C.users, { _id: { $in: all } })).map(String),
+  );
   return all.filter((v) => !present.has(String(v)));
 }
 
@@ -111,9 +182,14 @@ async function main() {
   await mongoose.connect(uri);
   db = mongoose.connection.db;
 
-  const existing = new Set((await db.listCollections().toArray()).map((c) => c.name));
+  const existing = new Set(
+    (await db.listCollections().toArray()).map((c) => c.name),
+  );
   for (const [k, v] of Object.entries(C))
-    if (!existing.has(v)) console.warn(`⚠ collection "${v}" (${k}) not found - check the names at the top of the script`);
+    if (!existing.has(v))
+      console.warn(
+        `⚠ collection "${v}" (${k}) not found - check the names at the top of the script`,
+      );
 
   // 1 ─ discover deleted users
   const U = await findOrphanUserIds();
@@ -123,8 +199,13 @@ async function main() {
 
   // 2 ─ tickets & tasks that die with their user (children first => safe to re-run)
   const ticketIds = await ids(C.tickets, { createdBy: IN });
-  const taskIds = await ids(C.tasks, { $or: [{ assignedTo: IN }, { assignedBy: IN }] });
-  for (const [type, entIds] of [["Ticket", ticketIds], ["Task", taskIds]]) {
+  const taskIds = await ids(C.tasks, {
+    $or: [{ assignedTo: IN }, { assignedBy: IN }],
+  });
+  for (const [type, entIds] of [
+    ["Ticket", ticketIds],
+    ["Task", taskIds],
+  ]) {
     if (!entIds.length) continue;
     const f = { entityType: type, entityId: { $in: entIds } };
     await removeDocs(C.comments, f);
@@ -143,98 +224,324 @@ async function main() {
 
   // 4 ─ references inside content that survives
   // Tickets
-  await update(C.tickets, "set assignedTo=null", { assignedTo: IN }, { $set: { assignedTo: null } });
-  await update(C.tickets, "set approvedBy=null", { approvedBy: IN }, { $set: { approvedBy: null } });
-  await update(C.tickets, "set rejectedBy=null", { rejectedBy: IN }, { $set: { rejectedBy: null } });
-  await update(C.tickets, "unset overviewUpdatedBy", { overviewUpdatedBy: IN }, { $unset: { overviewUpdatedBy: "" } });
-  await update(C.tickets, "pull assignmentHistory entries (assignedTo)", { "assignmentHistory.assignedTo": IN }, { $pull: { assignmentHistory: { assignedTo: IN } } });
-  await update(C.tickets, "null assignmentHistory.assignedBy", { "assignmentHistory.assignedBy": IN }, { $set: { "assignmentHistory.$[e].assignedBy": null } }, { arrayFilters: [{ "e.assignedBy": IN }] });
-  await update(C.tickets, "null statusHistory.changedBy", { "statusHistory.changedBy": IN }, { $set: { "statusHistory.$[e].changedBy": null } }, { arrayFilters: [{ "e.changedBy": IN }] });
+  await update(
+    C.tickets,
+    "set assignedTo=null",
+    { assignedTo: IN },
+    { $set: { assignedTo: null } },
+  );
+  await update(
+    C.tickets,
+    "set approvedBy=null",
+    { approvedBy: IN },
+    { $set: { approvedBy: null } },
+  );
+  await update(
+    C.tickets,
+    "set rejectedBy=null",
+    { rejectedBy: IN },
+    { $set: { rejectedBy: null } },
+  );
+  await update(
+    C.tickets,
+    "unset overviewUpdatedBy",
+    { overviewUpdatedBy: IN },
+    { $unset: { overviewUpdatedBy: "" } },
+  );
+  await update(
+    C.tickets,
+    "pull assignmentHistory entries (assignedTo)",
+    { "assignmentHistory.assignedTo": IN },
+    { $pull: { assignmentHistory: { assignedTo: IN } } },
+  );
+  await update(
+    C.tickets,
+    "null assignmentHistory.assignedBy",
+    { "assignmentHistory.assignedBy": IN },
+    { $set: { "assignmentHistory.$[e].assignedBy": null } },
+    { arrayFilters: [{ "e.assignedBy": IN }] },
+  );
+  await update(
+    C.tickets,
+    "null statusHistory.changedBy",
+    { "statusHistory.changedBy": IN },
+    { $set: { "statusHistory.$[e].changedBy": null } },
+    { arrayFilters: [{ "e.changedBy": IN }] },
+  );
 
   // Tasks (history subdocs have REQUIRED user fields, so the entry is pulled instead of nulled)
-  await update(C.tasks, "pull assignmentHistory entries (assignedTo)", { "assignmentHistory.assignedTo": IN }, { $pull: { assignmentHistory: { assignedTo: IN } } });
-  await update(C.tasks, "pull assignmentHistory entries (assignedBy)", { "assignmentHistory.assignedBy": IN }, { $pull: { assignmentHistory: { assignedBy: IN } } });
-  await update(C.tasks, "null assignmentHistory.fromAssignedTo", { "assignmentHistory.fromAssignedTo": IN }, { $set: { "assignmentHistory.$[e].fromAssignedTo": null } }, { arrayFilters: [{ "e.fromAssignedTo": IN }] });
-  await update(C.tasks, "pull ownershipHistory entries (from)", { "ownershipHistory.from": IN }, { $pull: { ownershipHistory: { from: IN } } });
-  await update(C.tasks, "pull ownershipHistory entries (to)", { "ownershipHistory.to": IN }, { $pull: { ownershipHistory: { to: IN } } });
-  await update(C.tasks, "null ownershipHistory.changedBy", { "ownershipHistory.changedBy": IN }, { $set: { "ownershipHistory.$[e].changedBy": null } }, { arrayFilters: [{ "e.changedBy": IN }] });
-  await update(C.tasks, "null statusHistory.changedBy", { "statusHistory.changedBy": IN }, { $set: { "statusHistory.$[e].changedBy": null } }, { arrayFilters: [{ "e.changedBy": IN }] });
+  await update(
+    C.tasks,
+    "pull assignmentHistory entries (assignedTo)",
+    { "assignmentHistory.assignedTo": IN },
+    { $pull: { assignmentHistory: { assignedTo: IN } } },
+  );
+  await update(
+    C.tasks,
+    "pull assignmentHistory entries (assignedBy)",
+    { "assignmentHistory.assignedBy": IN },
+    { $pull: { assignmentHistory: { assignedBy: IN } } },
+  );
+  await update(
+    C.tasks,
+    "null assignmentHistory.fromAssignedTo",
+    { "assignmentHistory.fromAssignedTo": IN },
+    { $set: { "assignmentHistory.$[e].fromAssignedTo": null } },
+    { arrayFilters: [{ "e.fromAssignedTo": IN }] },
+  );
+  await update(
+    C.tasks,
+    "pull ownershipHistory entries (from)",
+    { "ownershipHistory.from": IN },
+    { $pull: { ownershipHistory: { from: IN } } },
+  );
+  await update(
+    C.tasks,
+    "pull ownershipHistory entries (to)",
+    { "ownershipHistory.to": IN },
+    { $pull: { ownershipHistory: { to: IN } } },
+  );
+  await update(
+    C.tasks,
+    "null ownershipHistory.changedBy",
+    { "ownershipHistory.changedBy": IN },
+    { $set: { "ownershipHistory.$[e].changedBy": null } },
+    { arrayFilters: [{ "e.changedBy": IN }] },
+  );
+  await update(
+    C.tasks,
+    "null statusHistory.changedBy",
+    { "statusHistory.changedBy": IN },
+    { $set: { "statusHistory.$[e].changedBy": null } },
+    { arrayFilters: [{ "e.changedBy": IN }] },
+  );
 
   // Comments / notifications / misc
-  await update(C.comments, "pull from mentions", { mentions: IN }, { $pull: { mentions: IN } });
-  await update(C.commentNotifs, "pull from actorIds", { actorIds: IN }, { $pull: { actorIds: IN } });
-  if (EXECUTE) await removeDocs(C.commentNotifs, { type: "activity", actorIds: { $size: 0 } }); // group with no actors left
-  await update(C.notifications, "set createdBy=null", { createdBy: IN }, { $set: { createdBy: null } });
-  await update(C.users, "set superviserId=null", { superviserId: IN }, { $set: { superviserId: null } });
-  await update(C.locations, "pull from managers", { managers: IN }, { $pull: { managers: IN } });
-  await update(C.locations, "set facilityManager=null", { facilityManager: IN }, { $set: { facilityManager: null } });
+  await update(
+    C.comments,
+    "pull from mentions",
+    { mentions: IN },
+    { $pull: { mentions: IN } },
+  );
+  await update(
+    C.commentNotifs,
+    "pull from actorIds",
+    { actorIds: IN },
+    { $pull: { actorIds: IN } },
+  );
+  if (EXECUTE)
+    await removeDocs(C.commentNotifs, {
+      type: "activity",
+      actorIds: { $size: 0 },
+    }); // group with no actors left
+  await update(
+    C.notifications,
+    "set createdBy=null",
+    { createdBy: IN },
+    { $set: { createdBy: null } },
+  );
+  await update(
+    C.users,
+    "set superviserId=null",
+    { superviserId: IN },
+    { $set: { superviserId: null } },
+  );
+  await update(
+    C.locations,
+    "pull from managers",
+    { managers: IN },
+    { $pull: { managers: IN } },
+  );
+  await update(
+    C.locations,
+    "set facilityManager=null",
+    { facilityManager: IN },
+    { $set: { facilityManager: null } },
+  );
 
   // 5 ─ comment / membership / notification rows whose ticket or task no longer exists
-  for (const [type, entColl] of [["Ticket", C.tickets], ["Task", C.tasks]])
+  for (const [type, entColl] of [
+    ["Ticket", C.tickets],
+    ["Task", C.tasks],
+  ])
     for (const coll of [C.comments, C.memberships, C.commentNotifs]) {
-      const vals = (await db.collection(coll).distinct("entityId", { entityType: type })).filter(isOid);
+      const vals = (
+        await db.collection(coll).distinct("entityId", { entityType: type })
+      ).filter(isOid);
       if (!vals.length) continue;
-      const present = new Set((await ids(entColl, { _id: { $in: vals } })).map(String));
+      const present = new Set(
+        (await ids(entColl, { _id: { $in: vals } })).map(String),
+      );
       const gone = vals.filter((v) => !present.has(String(v)));
-      if (gone.length) await removeDocs(coll, { entityType: type, entityId: { $in: gone } });
+      if (gone.length)
+        await removeDocs(coll, { entityType: type, entityId: { $in: gone } });
     }
 
   // 6 ─ pointers to comments that no longer exist
-  const badParents = await missingIds(C.comments, "parentCommentId", C.comments);
-  if (badParents.length) await update(C.comments, "set parentCommentId=null", { parentCommentId: { $in: badParents } }, { $set: { parentCommentId: null } });
+  const badParents = await missingIds(
+    C.comments,
+    "parentCommentId",
+    C.comments,
+  );
+  if (badParents.length)
+    await update(
+      C.comments,
+      "set parentCommentId=null",
+      { parentCommentId: { $in: badParents } },
+      { $set: { parentCommentId: null } },
+    );
 
-  const badSeen = await missingIds(C.memberships, "lastSeenCommentId", C.comments);
-  if (badSeen.length) await update(C.memberships, "set lastSeenCommentId=null", { lastSeenCommentId: { $in: badSeen } }, { $set: { lastSeenCommentId: null } });
+  const badSeen = await missingIds(
+    C.memberships,
+    "lastSeenCommentId",
+    C.comments,
+  );
+  if (badSeen.length)
+    await update(
+      C.memberships,
+      "set lastSeenCommentId=null",
+      { lastSeenCommentId: { $in: badSeen } },
+      { $set: { lastSeenCommentId: null } },
+    );
 
   const badNotif = await missingIds(C.commentNotifs, "commentId", C.comments);
   if (badNotif.length) {
-    await removeDocs(C.commentNotifs, { commentId: { $in: badNotif }, type: { $in: ["mention", "reply"] } });
-    await update(C.commentNotifs, "set commentId=null", { commentId: { $in: badNotif } }, { $set: { commentId: null } });
+    await removeDocs(C.commentNotifs, {
+      commentId: { $in: badNotif },
+      type: { $in: ["mention", "reply"] },
+    });
+    await update(
+      C.commentNotifs,
+      "set commentId=null",
+      { commentId: { $in: badNotif } },
+      { $set: { commentId: null } },
+    );
   }
 
   const badLatest = await missingIds(C.tickets, "latestComment", C.comments);
   if (badLatest.length) {
-    const tickets = await db.collection(C.tickets).find({ latestComment: { $in: badLatest } }, { projection: { _id: 1 } }).toArray();
+    const tickets = await db
+      .collection(C.tickets)
+      .find({ latestComment: { $in: badLatest } }, { projection: { _id: 1 } })
+      .toArray();
     for (const t of tickets) {
-      const [last] = await db.collection(C.comments).find({ entityType: "Ticket", entityId: t._id }).sort({ createdAt: -1 }).limit(1).toArray();
+      const [last] = await db
+        .collection(C.comments)
+        .find({ entityType: "Ticket", entityId: t._id })
+        .sort({ createdAt: -1 })
+        .limit(1)
+        .toArray();
       log(`tickets: latestComment of ${t._id} -> ${last ? last._id : "unset"}`);
       if (EXECUTE)
-        await db.collection(C.tickets).updateOne({ _id: t._id }, last ? { $set: { latestComment: last._id } } : { $unset: { latestComment: "" } });
+        await db
+          .collection(C.tickets)
+          .updateOne(
+            { _id: t._id },
+            last
+              ? { $set: { latestComment: last._id } }
+              : { $unset: { latestComment: "" } },
+          );
     }
   }
 
   // 7 ─ audit (apply mode): re-scan, everything must be clean
+  let bad = 0;
   if (EXECUTE) {
-    let bad = 0;
     const left = await findOrphanUserIds();
-    if (left.length) { bad += left.length; console.error(`✗ ${left.length} deleted-user id(s) still referenced`); }
-    for (const [type, entColl] of [["Ticket", C.tickets], ["Task", C.tasks]])
-      for (const coll of [C.comments, C.memberships, C.commentNotifs]) {
-        const vals = (await db.collection(coll).distinct("entityId", { entityType: type })).filter(isOid);
-        const present = new Set((await ids(entColl, { _id: { $in: vals } })).map(String));
-        const n = vals.filter((v) => !present.has(String(v))).length;
-        if (n) { bad += n; console.error(`✗ ${coll}: ${n} ${type} id(s) point to missing ${type.toLowerCase()}s`); }
-      }
-    for (const [coll, field] of [[C.comments, "parentCommentId"], [C.memberships, "lastSeenCommentId"], [C.commentNotifs, "commentId"], [C.tickets, "latestComment"]]) {
-      const n = (await missingIds(coll, field, C.comments)).length;
-      if (n) { bad += n; console.error(`✗ ${coll}.${field}: ${n} missing comment id(s)`); }
+    if (left.length) {
+      bad += left.length;
+      console.error(`✗ ${left.length} deleted-user id(s) still referenced`);
     }
-    console.log(bad ? `\nAudit FAILED: ${bad} problem(s) left` : "\n✓ Audit passed: no broken references remain");
+    for (const [type, entColl] of [
+      ["Ticket", C.tickets],
+      ["Task", C.tasks],
+    ])
+      for (const coll of [C.comments, C.memberships, C.commentNotifs]) {
+        const vals = (
+          await db.collection(coll).distinct("entityId", { entityType: type })
+        ).filter(isOid);
+        const present = new Set(
+          (await ids(entColl, { _id: { $in: vals } })).map(String),
+        );
+        const n = vals.filter((v) => !present.has(String(v))).length;
+        if (n) {
+          bad += n;
+          console.error(
+            `✗ ${coll}: ${n} ${type} id(s) point to missing ${type.toLowerCase()}s`,
+          );
+        }
+      }
+    for (const [coll, field] of [
+      [C.comments, "parentCommentId"],
+      [C.memberships, "lastSeenCommentId"],
+      [C.commentNotifs, "commentId"],
+      [C.tickets, "latestComment"],
+    ]) {
+      const n = (await missingIds(coll, field, C.comments)).length;
+      if (n) {
+        bad += n;
+        console.error(`✗ ${coll}.${field}: ${n} missing comment id(s)`);
+      }
+    }
+    console.log(
+      bad
+        ? `\nAudit FAILED: ${bad} problem(s) left`
+        : "\n✓ Audit passed: no broken references remain",
+    );
   }
 
-  // 8 ─ reports
+  // 8 ─ reports + Cloudinary cleanup
   if (EXECUTE) {
     fs.mkdirSync("backups", { recursive: true });
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
     const E = mongoose.mongo.BSON?.EJSON;
-    fs.writeFileSync(path.join("backups", `cleanup-${stamp}.json`), E ? E.stringify(backup, undefined, 2) : JSON.stringify(backup, null, 2));
-    if (fileUrls.size) fs.writeFileSync(path.join("backups", `cleanup-${stamp}-files-to-delete.txt`), [...fileUrls].join("\n"));
-    console.log(`Backup of deleted docs saved in ./backups (${fileUrls.size} uploaded file URL(s) listed for storage cleanup)`);
+    fs.writeFileSync(
+      path.join("backups", `cleanup-${stamp}.json`),
+      E ? E.stringify(backup, undefined, 2) : JSON.stringify(backup, null, 2),
+    );
+    console.log(`Backup of deleted docs saved in ./backups`);
+
+    // Only touch Cloudinary if the DB audit is clean
+    if (fileUrls.size && bad === 0) {
+      let ok = 0,
+        alreadyGone = 0;
+      const failed = [];
+      for (const url of fileUrls) {
+        try {
+          const r = await deleteFromCloudinary(url);
+          if (r.result === "ok") ok++;
+          else if (r.result === "not found") alreadyGone++;
+          else failed.push(`${url} -> ${r.result}`);
+        } catch (e) {
+          failed.push(`${url} -> ${e.message}`);
+        }
+      }
+      console.log(
+        `Cloudinary: ${ok} deleted, ${alreadyGone} already gone, ${failed.length} failed`,
+      );
+      if (failed.length) {
+        const f = path.join("backups", `cleanup-${stamp}-files-FAILED.txt`);
+        fs.writeFileSync(f, failed.join("\n"));
+        console.warn(`⚠ Failed deletions listed in ${f}`);
+      }
+    } else if (fileUrls.size) {
+      fs.writeFileSync(
+        path.join("backups", `cleanup-${stamp}-files-to-delete.txt`),
+        [...fileUrls].join("\n"),
+      );
+      console.warn(
+        "⚠ Audit failed, so Cloudinary files were NOT deleted (URLs saved to files-to-delete.txt)",
+      );
+    }
   } else {
-    console.log("\nPreview only. Run again with --execute to apply.");
+    console.log(`\n${fileUrls.size} Cloudinary file(s) would be deleted.`);
+    console.log("Preview only. Run again with --execute to apply.");
   }
 }
 
 main()
-  .catch((e) => { console.error(e); process.exitCode = 1; })
+  .catch((e) => {
+    console.error(e);
+    process.exitCode = 1;
+  })
   .finally(() => mongoose.disconnect());

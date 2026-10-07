@@ -8,7 +8,7 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import { useEditTicketMutation } from "../../../../services/ticketApi";
 import { showError, showSuccess } from "../../../../utills/toastutills";
 import type { TicketData } from "../../../../interfaces/Ticket";
-import { useAllEmployeesQuery } from "../../../../services/EmployeeApi";
+
 import ImageUpload from "../../../../components/child/Imageupload";
 import { useSelector } from "react-redux";
 import { selectAuth } from "../../../../redux/AuthSlice";
