@@ -115,8 +115,8 @@
 }
 
 [data-theme="light"] .ticket-icon.closed {
-  background: rgba(107, 114, 128, 0.15);
-  color: #4b5563;
+  background: rgba(139, 92, 246, 0.15);
+  color: #7c3aed;
 }
 
 [data-theme="light"] .ticket-icon.total {
@@ -152,10 +152,9 @@
 }
 
 [data-theme="dark"] .ticket-icon.closed {
-  background: rgba(107, 114, 128, 0.2);
-  color: #9ca3af;
+  background: rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
 }
-
 [data-theme="dark"] .ticket-icon.total {
   background: rgba(255, 255, 255, 0.08);
   color: #e5e7eb;
@@ -191,9 +190,8 @@
 }
 
 [data-theme="light"] .active-count-card.closed {
-  border-color: #4b5563;
+  border-color: #7c3aed;
 }
-
 [data-theme="light"] .active-count-card.total {
   border-color: #555555;
 }
@@ -219,9 +217,8 @@
 [data-theme="dark"] .active-count-card.rejected {
   border-color: #f87171;
 }
-
 [data-theme="dark"] .active-count-card.closed {
-  border-color: #9ca3af;
+  border-color: #a78bfa;
 }
 
 [data-theme="dark"] .active-count-card.total {

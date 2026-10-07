@@ -55,7 +55,7 @@ export const useTaskColumns = ({
           <span className="text-sm">
             {row.dueDate ? new Date(row.dueDate).toLocaleDateString() : "-"}
           </span>
-          {row.dueStatus && (
+          {row.dueStatus && row.dueStatus !== "completed" && (
             <Badge
               variant={dueStatusVariant[row.dueStatus as DueStatus]}
               className="text-capitalize w-fit"

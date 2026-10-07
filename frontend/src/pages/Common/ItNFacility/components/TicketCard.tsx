@@ -47,7 +47,7 @@ const statusVariant: Record<string, BadgeVariant> = {
   "In Progress": "orange-soft",
   Completed: "success-soft",
   Rejected: "danger-soft",
-  Closed: "secondary-soft",
+  Closed: "purple-soft",
 };
 const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
   const {
