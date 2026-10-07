@@ -1835,6 +1835,8 @@ export const FetchTickets = asyncHandler(async (req, res) => {
     approved,
     inProgress,
     completed,
+    closed,
+    rejected,
     total: all,
   };
 
