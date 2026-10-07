@@ -1,0 +1,78 @@
+.custom-event-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr); /* default: 1 col */
+  gap: 0.5rem 0.5rem; /* gx-2 gy-2 */
+}
+
+@media (min-width: 668px) {
+  .custom-event-grid {
+    grid-template-columns: repeat(2, 1fr); /* md: 2 cols */
+    gap: 0.5rem 0.75rem; /* gx-2 gy-lg-3 */
+  }
+}
+
+@media (min-width: 1200px) {
+  .custom-event-grid {
+    grid-template-columns: repeat(2, 1fr); /* xl: 2 cols */
+    gap: 0.75rem 0.75rem;
+  }
+}
+
+@media (min-width: 1400px) {
+  .custom-event-grid {
+    grid-template-columns: repeat(3, 1fr); /* xxl default: 3 cols */
+    gap: 1rem 1rem;
+  }
+}
+
+/* 👇 Custom override between 1440px–1630px */
+@media (min-width: 1400px) and (max-width: 1630px) {
+  .custom-event-grid {
+    grid-template-columns: repeat(2, 1fr); /* force 2 cols */
+  }
+}
+.probar {
+  width: 100%;
+}
+@media (min-width: 668px) {
+  .probar {
+    width: 25%;
+  }
+}
+
+.fc {
+  max-width: 100%;
+}
+
+.fc .fc-daygrid-day-frame {
+  min-height: 80px; /* adjust for better tap targets on mobile */
+}
+
+.bg-event-details {
+  background-color: var(--street-bg-f4);
+}
+[data-theme="dark"] .bg-event-details {
+  background-color: rgba(4, 19, 29, 1);
+}
+.event-card .event-icon {
+  background-color: var(--street-primary-base-10);
+  color: var(--street-primary-base);
+}
+[data-theme="dark"] .event-card .event-icon {
+  background-color: rgba(36, 47, 59, 1);
+  color: white;
+}
+.event-view-toggle {
+  background-color: #f4f4f4;
+}
+[data-theme="dark"] .event-view-toggle {
+  background-color: #0f1c2a;
+}
+.eventTtab {
+  width: fit-content;
+}
+@media (max-width: 576px) {
+  .eventTtab {
+    width: 50%;
+  }
+}

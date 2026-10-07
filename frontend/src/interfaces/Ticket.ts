@@ -81,6 +81,7 @@ export type TicketFetchResponseData = ApiResponse<{
     approved: number;
     completed: number;
     inProgress: number;
+    closed: number;
     total: number;
   };
   tickets: TicketData[];
