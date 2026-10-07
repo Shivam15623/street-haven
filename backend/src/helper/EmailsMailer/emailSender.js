@@ -16,7 +16,7 @@ const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
  * @param {string} param0.html HTML content
  */ export const sendEmail = async ({ to, subject, html }) => {
   try {
-    const senderEmail = "phenomenalshivam2@gmail.com";
+    const senderEmail = "noreply@streethaven.org";
     const senderName = "Streethaven Intranet";
 
     const response = await apiInstance.sendTransacEmail({
