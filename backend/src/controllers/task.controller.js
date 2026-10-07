@@ -1233,7 +1233,8 @@ const getDuration = (start, end) => {
   if (diffMs < 0) return "-";
   const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
-  return `${days}d ${hours}h`;
+  const m = totalMin % 60;
+  return `${days}d ${hours}h ${m}m`;
 };
 export const buildReportFilter = async (req) => {
   const { _id: userId, role } = req.user;

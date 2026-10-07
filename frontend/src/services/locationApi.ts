@@ -97,6 +97,13 @@ export const locationApi = api.injectEndpoints({
       query: (locationId) => `/location/${locationId}`,
       providesTags: (_result, _error, id) => [{ type: "Locations", id }],
     }),
+    getFacilityManagers: builder.query<ApiResponse<IManager[]>, void>({
+      query: () => ({
+        url: "/location/facility-managers",
+        method: "GET",
+      }),
+      providesTags: ["Locations"],
+    }),
 
     editLocation: builder.mutation<ApiResponse<ILocation>, EditLocationRequest>(
       {
@@ -177,4 +184,5 @@ export const {
   useRemoveManagerFromLocationMutation,
   useSetFacilityManagerMutation,
   useLazyGetLocationDetailsQuery,
+  useGetFacilityManagersQuery,
 } = locationApi;
