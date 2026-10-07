@@ -2364,6 +2364,17 @@ const analyzeTicket = (t) => {
 
   let resolvedBy = fullName(lastCompletion?.changedBy);
   if (resolvedBy === "-" && completedAt) resolvedBy = fullName(t.assignedTo);
+  const TERMINAL = [S.COMPLETED, S.CLOSED];
+  let closeIdx = -1;
+  hist.forEach((h, i) => {
+    if (TERMINAL.includes(h.status)) closeIdx = i;
+  });
+  const closedAt =
+    closeIdx >= 0 && closeIdx === hist.length - 1
+      ? hist[closeIdx].changedAt
+      : closeIdx < 0 && TERMINAL.includes(t.status)
+        ? t.resolvedAt || null // fallback for old tickets with no history entry
+        : null;
 
   const approved = lastWhere(hist, (h) => h.status === S.APPROVED);
   const rejected = lastWhere(hist, (h) => h.status === S.REJECTED);
@@ -2398,7 +2409,9 @@ const analyzeTicket = (t) => {
     sessions,
     events,
     totalWorkMs,
+
     completedAt,
+    closedAt,
     resolvedBy,
     timesCompleted: completions.length,
     approved,
@@ -2406,7 +2419,77 @@ const analyzeTicket = (t) => {
     reopens,
   };
 };
+export const argb = (hex) => ({ argb: `FF${hex}` });
+export const solid = (hex) => ({
+  type: "pattern",
+  pattern: "solid",
+  fgColor: argb(hex),
+});
+export const thin = { style: "thin", color: argb("BFBFBF") };
 
+// dark = banner color, light = header tint for that group
+export const C = {
+  blue: { dark: "1F4E79", light: "DDEBF7" },
+  teal: { dark: "0F766E", light: "D5F0EC" },
+  slate: { dark: "475569", light: "E2E8F0" },
+  green: { dark: "2E7D32", light: "DFF0D8" },
+  red: { dark: "B42318", light: "FADBD8" },
+  purple: { dark: "6B21A8", light: "EBDDF7" },
+  amber: { dark: "B45309", light: "FDEBCB" },
+  indigo: { dark: "3730A3", light: "DCDCF7" },
+  gray: { dark: "374151", light: "E5E7EB" },
+};
+const STATUS_COLORS = {
+  Open: { bg: "FEF5D0", fg: "CA8A04" },
+  Approved: { bg: "E2ECFE", fg: "2563EB" },
+  "In Progress": { bg: "FEEADC", fg: "EA580C" },
+  Completed: { bg: "DEF6E7", fg: "16A34A" },
+  Rejected: { bg: "FDE3E3", fg: "DC2626" },
+  Closed: { bg: "EEE7FE", fg: "7C3AED" },
+  Cancelled: { bg: "F4F4F4", fg: "555555" },
+};
+// groups: [{ label, color, from: "colKey", to: "colKey" }]
+export const styleSheet = (sheet, groups, freezeCols = 0) => {
+  sheet.spliceRows(1, 0, []); // push headers down to row 2, row 1 = banner
+
+  groups.forEach(({ label, color, from, to }) => {
+    const c1 = sheet.getColumn(from).number;
+    const c2 = sheet.getColumn(to).number;
+    if (c2 > c1) sheet.mergeCells(1, c1, 1, c2);
+
+    const banner = sheet.getCell(1, c1);
+    banner.value = label;
+    banner.font = { bold: true, color: argb("FFFFFF"), size: 12 };
+    banner.alignment = { horizontal: "center", vertical: "middle" };
+
+    for (let c = c1; c <= c2; c++) {
+      sheet.getCell(1, c).fill = solid(color.dark);
+
+      const h = sheet.getCell(2, c);
+      h.font = { bold: true, color: argb("1F2937") };
+      h.fill = solid(color.light);
+      h.alignment = {
+        horizontal: "center",
+        vertical: "middle",
+        wrapText: true,
+      };
+      h.border = {
+        top: thin,
+        bottom: thin,
+        left: c === c1 ? { style: "medium", color: argb(color.dark) } : thin,
+        right: c === c2 ? { style: "medium", color: argb(color.dark) } : thin,
+      };
+    }
+  });
+
+  sheet.getRow(1).height = 22;
+  sheet.getRow(2).height = 34;
+  sheet.views = [{ state: "frozen", xSplit: freezeCols, ySplit: 2 }];
+  sheet.autoFilter = {
+    from: { row: 2, column: 1 },
+    to: { row: 2, column: sheet.columns.length },
+  };
+};
 const styleHeader = (sheet) => {
   const row = sheet.getRow(1);
   row.font = { bold: true };
@@ -2421,7 +2504,6 @@ const styleHeader = (sheet) => {
     to: { row: 1, column: sheet.columns.length },
   };
 };
-
 /* ------------------------------ controller ------------------------------ */
 export const ExportTicketsReport = asyncHandler(async (req, res) => {
   const filter = await buildReportFilter(req);
@@ -2475,15 +2557,16 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
     { header: "Latest Started Work", key: "lastStarted", width: 20 },
     { header: "Work Sessions", key: "sessionCount", width: 12 },
     { header: "Completed Date (latest)", key: "completedDate", width: 22 },
+    { header: "Closed Date", key: "closedDate", width: 22 },
     { header: "Times Completed", key: "timesCompleted", width: 12 },
     { header: "Resolved By", key: "resolvedBy", width: 22 },
     {
-      header: "Resolution Time (Created→Completed)",
+      header: "Resolution Time (Created→Closed)",
       key: "resolutionTime",
       width: 24,
     },
     {
-      header: "Time (First Assigned→Completed)",
+      header: "Time (First Assigned→Closed)",
       key: "assignToDone",
       width: 24,
     },
@@ -2534,7 +2617,7 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
     const lastAssigned = a.assigns[a.assigns.length - 1]?.assignedAt || null;
     const lastReopen = a.reopens[a.reopens.length - 1] || null;
 
-    sheet.addRow({
+    const row = sheet.addRow({
       ticketId: tid,
       title: t.req_title,
       description: stripHtml(t.description),
@@ -2565,19 +2648,27 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
       lastStarted: fmt(a.sessions[a.sessions.length - 1]?.startedAt),
       sessionCount: a.sessions.length,
       completedDate: fmt(a.completedAt),
+      closedDate: fmt(a.closedAt),
       timesCompleted: a.timesCompleted,
       resolvedBy: a.resolvedBy,
-      resolutionTime: duration(t.createdAt, a.completedAt),
-      assignToDone: duration(firstAssigned, a.completedAt),
+      resolutionTime: duration(t.createdAt, a.closedAt), // was a.completedAt
+      assignToDone: duration(firstAssigned, a.closedAt), // was a.completedAt
       workTime: a.sessions.length ? fmtMs(a.totalWorkMs) : "-",
 
       updatedDate: fmt(t.updatedAt),
       attachmentUrl: t.photo?.fileUrl || "-",
     });
 
+    const sc = STATUS_COLORS[t.status];
+    if (sc) {
+      const cell = row.getCell("status");
+      cell.fill = solid(sc.bg);
+      cell.font = { bold: true, color: argb(sc.fg) };
+      cell.alignment = { horizontal: "center", vertical: "top" };
+    }
     // ---- timeline rows
     a.events.forEach((e, i) => {
-      timeline.addRow({
+      const r = timeline.addRow({
         ticketId: tid,
         title: t.req_title,
         step: i + 1,
@@ -2588,11 +2679,17 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
         by: e.by,
         since: i === 0 ? "-" : duration(a.events[i - 1].at, e.at),
       });
+      const tc = e.type === "Status change" ? STATUS_COLORS[e.to] : null;
+      if (tc) {
+        const c = r.getCell("to");
+        c.fill = solid(tc.bg);
+        c.font = { bold: true, color: argb(tc.fg) };
+      }
     });
 
     // ---- work session rows
     a.sessions.forEach((s, i) => {
-      sessionsSheet.addRow({
+      const r = sessionsSheet.addRow({
         ticketId: tid,
         title: t.req_title,
         no: i + 1,
@@ -2606,15 +2703,117 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
         toStart: duration(s.assignedAt, s.startedAt),
         duration: fmtMs(s.ms),
       });
+      const ec =
+        STATUS_COLORS[s.endedWith] ||
+        (s.endedWith === "Still in progress"
+          ? STATUS_COLORS["In Progress"]
+          : null);
+      if (ec) {
+        const c = r.getCell("endedWith");
+        c.fill = solid(ec.bg);
+        c.font = { bold: true, color: argb(ec.fg) };
+      }
     });
   });
 
   if (tickets.length === 0) {
     sheet.addRow({ ticketId: "No tickets found for the selected filters." });
   }
-
   /* ------------------------------ formatting ------------------------------ */
-  [sheet, timeline, sessionsSheet].forEach(styleHeader);
+  ["description", "rejectionReason", "overview"].forEach((k) => {
+    sheet.getColumn(k).alignment = { wrapText: true, vertical: "top" };
+  });
+
+  styleSheet(
+    sheet,
+    [
+      { label: "Ticket", color: C.blue, from: "ticketId", to: "description" },
+      {
+        label: "Overview",
+        color: C.teal,
+        from: "overview",
+        to: "overviewUpdatedAt",
+      },
+      {
+        label: "Classification",
+        color: C.slate,
+        from: "status",
+        to: "location",
+      },
+      {
+        label: "Submission",
+        color: C.green,
+        from: "submittedBy",
+        to: "createdDate",
+      },
+      {
+        label: "Approval / Rejection",
+        color: C.red,
+        from: "approvedBy",
+        to: "rejectionReason",
+      },
+      {
+        label: "Assignment",
+        color: C.purple,
+        from: "assignedTo",
+        to: "timesReassigned",
+      },
+      {
+        label: "Reopens",
+        color: C.amber,
+        from: "timesReopened",
+        to: "lastReopenedDate",
+      },
+      {
+        label: "Work",
+        color: C.indigo,
+        from: "firstStarted",
+        to: "sessionCount",
+      },
+      {
+        label: "Completion",
+        color: C.green,
+        from: "completedDate",
+        to: "resolvedBy",
+      },
+      {
+        label: "Durations",
+        color: C.teal,
+        from: "resolutionTime",
+        to: "workTime",
+      },
+      {
+        label: "Meta",
+        color: C.gray,
+        from: "updatedDate",
+        to: "attachmentUrl",
+      },
+    ],
+    1,
+  ); // freeze Ticket ID column
+
+  styleSheet(
+    timeline,
+    [
+      { label: "Ticket", color: C.blue, from: "ticketId", to: "title" },
+      { label: "Event", color: C.indigo, from: "step", to: "type" },
+      { label: "Change", color: C.purple, from: "from", to: "by" },
+      { label: "Timing", color: C.teal, from: "since", to: "since" },
+    ],
+    1,
+  );
+
+  styleSheet(
+    sessionsSheet,
+    [
+      { label: "Ticket", color: C.blue, from: "ticketId", to: "title" },
+      { label: "Assignment", color: C.purple, from: "no", to: "assignedAt" },
+      { label: "Session", color: C.indigo, from: "startedAt", to: "endedBy" },
+      { label: "Durations", color: C.teal, from: "toStart", to: "duration" },
+    ],
+    1,
+  );
+  /* ------------------------------ formatting ------------------------------ */
 
   sheet.getColumn("description").alignment = {
     wrapText: true,
