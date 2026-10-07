@@ -18,6 +18,7 @@ import { flushTaskEffects } from "../services/task.notification.service.js";
 import { resyncTaskMembership } from "../helper/entitymembershipSync.js";
 import * as taskDeletion from "../services/taskDeletion.service.js";
 import timezone from "dayjs/plugin/timezone.js";
+import { argb, C, solid, styleSheet } from "./Ticket.controller.js";
 dayjs.extend(timezone);
 
 const TZ = "America/Toronto";
@@ -1177,7 +1178,7 @@ const stripHtml = (html) => {
     ],
   }).trim();
 };
-
+const displayId = (t) => `TASK-${String(t.taskNumber).padStart(5, "0")}`;
 /* ---- Pull the timestamp of a specific status transition from statusHistory ---- */
 /* ---- Latest timestamp a status transition happened, not the first ---- */
 const getStatusDate = (statusHistory, statusName) => {
@@ -1361,6 +1362,13 @@ export const buildReportFilter = async (req) => {
 
   return filter;
 };
+const TASK_STATUS_COLORS = {
+  new: { bg: "E2ECFE", fg: "2563EB", label: "New" },
+  assigned: { bg: "FEF0DA", fg: "D97706", label: "Assigned" },
+  in_progress: { bg: "FEEADC", fg: "EA580C", label: "In Progress" },
+  under_review: { bg: "F2E6FE", fg: "9333EA", label: "Under Review" },
+  completed: { bg: "DEF6E7", fg: "16A34A", label: "Completed" },
+};
 const formatDate = (date) =>
   date ? dayjs(date).tz(TZ).format("YYYY-MM-DD hh:mm A") : "-";
 export const ExportTasksReport = asyncHandler(async (req, res) => {
@@ -1384,41 +1392,43 @@ export const ExportTasksReport = asyncHandler(async (req, res) => {
     { header: "Title", key: "title", width: 28 },
     { header: "Description", key: "description", width: 40 },
     { header: "Status", key: "status", width: 16 },
+
+    { header: "Created Date", key: "createdDate", width: 20 },
+    { header: "Assigned By", key: "assignedBy", width: 22 },
     { header: "Assigned To", key: "assignedTo", width: 22 },
     { header: "Assigned To Email", key: "assignedToEmail", width: 26 },
-    { header: "Assigned By", key: "assignedBy", width: 22 },
-    { header: "Due Date", key: "dueDate", width: 18 },
-    { header: "Created Date", key: "createdDate", width: 20 },
     { header: "Assigned Date", key: "assignedDate", width: 20 },
+    { header: "Times Reassigned", key: "reassignedCount", width: 16 },
+
+    { header: "Started Work Date", key: "startedWorkDate", width: 20 },
+
     {
       header: "Submitted For Review Date",
       key: "reviewSubmittedDate",
       width: 22,
     },
-    { header: "Completed By", key: "completedBy", width: 22 }, // <- worker who did the task
-    { header: "Approved By", key: "approvedBy", width: 22 }, // <- admin who marked it completed
+
+    { header: "Completed By", key: "completedBy", width: 22 },
+    { header: "Approved By", key: "approvedBy", width: 22 },
     { header: "Completed Date", key: "completedDate", width: 20 },
-    { header: "Times Reassigned", key: "reassignedCount", width: 16 },
-    { header: "Started Work Date", key: "startedWorkDate", width: 20 },
+
     { header: "Total Time (Assigned→Completed)", key: "totalTime", width: 20 },
     {
       header: "Actual Work Time (Started→Completed)",
       key: "workTime",
       width: 22,
     },
+
+    { header: "Due Date", key: "dueDate", width: 18 },
     { header: "Last Updated Date", key: "updatedDate", width: 20 },
   ];
-  sheet.getRow(1).font = { bold: true };
-  sheet.getRow(1).fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "FFF2F2F2" },
-  };
 
   tasks.forEach((t) => {
     const assignedDate = getAssignedDate(t.assignmentHistory);
     const reviewSubmittedDate = getStatusDate(t.statusHistory, "under_review");
     const startedWorkDate = getStatusDate(t.statusHistory, "in_progress");
+    const sc = TASK_STATUS_COLORS[t.status];
+    const tid = displayId(t);
     const completedHistory = [...(t.statusHistory || [])]
       .reverse()
       .find((history) => history.toStatus === "completed");
@@ -1429,11 +1439,11 @@ export const ExportTasksReport = asyncHandler(async (req, res) => {
         history.toStatus === "assigned",
     ).length;
     const actualWorkMs = getActualWorkTime(t.statusHistory);
-    sheet.addRow({
-      taskId: t._id.toString(),
+    const row = sheet.addRow({
+      taskId: tid,
       title: t.title,
       description: stripHtml(t.description),
-      status: t.status,
+      status: sc?.label || t.status,
       assignedTo: t.assignedTo
         ? `${t.assignedTo.firstname} ${t.assignedTo.lastname}`
         : "-",
@@ -1464,17 +1474,50 @@ export const ExportTasksReport = asyncHandler(async (req, res) => {
       workTime: formatDurationMs(actualWorkMs),
       updatedDate: formatDate(t.updatedAt),
     });
+    if (sc) {
+      const cell = row.getCell("status");
+      cell.fill = solid(sc.bg);
+      cell.font = { bold: true, color: argb(sc.fg) };
+      cell.alignment = { horizontal: "center", vertical: "top" };
+    }
   });
 
   if (tasks.length === 0) {
     sheet.addRow({ taskId: "No tasks found for the selected filters." });
   }
 
-  // Wrap long text columns for readability
   sheet.getColumn("description").alignment = {
     wrapText: true,
     vertical: "top",
   };
+
+  styleSheet(
+    sheet,
+    [
+      { label: "Task", color: C.blue, from: "taskId", to: "status" },
+      {
+        label: "Creation & Assignment",
+        color: C.purple,
+        from: "createdDate",
+        to: "reassignedCount",
+      },
+      {
+        label: "Work",
+        color: C.indigo,
+        from: "startedWorkDate",
+        to: "reviewSubmittedDate",
+      },
+      {
+        label: "Completion",
+        color: C.green,
+        from: "completedBy",
+        to: "completedDate",
+      },
+      { label: "Durations", color: C.teal, from: "totalTime", to: "workTime" },
+      { label: "Dates", color: C.gray, from: "dueDate", to: "updatedDate" },
+    ],
+    1,
+  ); // freeze Task ID column
 
   res.setHeader(
     "Content-Type",
