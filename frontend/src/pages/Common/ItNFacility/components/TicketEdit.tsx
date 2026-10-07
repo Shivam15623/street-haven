@@ -367,7 +367,8 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                         onChange={handleChange}
                         disabled={
                           !isSuperAdmin &&
-                          ((!isAssigned && !isApprovingManager) ||
+                          (isAssigned ||
+                            !isApprovingManager ||
                             !canTouchApproverFields)
                         }
                         isInvalid={touched.assignedId && !!errors.assignedId}

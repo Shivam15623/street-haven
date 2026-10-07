@@ -104,11 +104,7 @@ const HelpDesk = () => {
     <div className="d-flex flex-column gap-4">
       <div className="d-flex flex-column gap-2">
         <p className="fw-semibold text-xl xs:text-xxl text-street-dark">
-          Facilities
-        </p>
-
-        <p className="fw-normal text-sm xs:text-md">
-          Submit requests for IT support and facility maintenance
+          Facilities Ticketing System
         </p>
       </div>
 

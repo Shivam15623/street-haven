@@ -80,7 +80,7 @@ const TrackTickettab: React.FC<AgentTabProp> = ({ isActive }) => {
         />
       )}
       {/* Ticket Count Cards */}
-      <div className="row row-cols-xxxl-5 row-cols-lg-3 row-cols-sm-2 row-cols-1 gy-xl-3 gy-2 gx-xl-3 gx-2">
+      <div className="row row-cols-xxxl-6 row-cols-lg-3 row-cols-sm-2 row-cols-1 gy-xl-3 gy-2 gx-xl-3 gx-2">
         {isLoading ? (
           // Skeleton Loader for Ticket Count Cards
           Array.from({ length: 5 }).map((_, i) => (
@@ -169,8 +169,8 @@ const TrackTickettab: React.FC<AgentTabProp> = ({ isActive }) => {
               }
               active={filter.status === "Completed"}
             />
-            {/* 
-            <TicketCountCard
+            
+            {/* <TicketCountCard
               count={ticketData?.data.counts.rejected ?? 0}
               label="Rejected"
               variant="rejected"
@@ -183,7 +183,7 @@ const TrackTickettab: React.FC<AgentTabProp> = ({ isActive }) => {
                 }))
               }
               active={filter.status === "Rejected"}
-            />
+            /> */}
 
             <TicketCountCard
               count={ticketData?.data.counts.closed ?? 0}
@@ -198,7 +198,7 @@ const TrackTickettab: React.FC<AgentTabProp> = ({ isActive }) => {
                 }))
               }
               active={filter.status === "Closed"}
-            /> */}
+            />
 
             <TicketCountCard
               count={ticketData?.data.counts.total ?? 0}

@@ -17,7 +17,7 @@ const EmployeeDashboard = () => {
   const today = dayjs().format("dddd, MMMM D, YYYY");
   const { user } = useSelector(selectAuth);
   const isFacilityManager = user?.isFacilityManager;
-  const { hasPermission } = useHasPermission();
+  const { hasPermission, hasRole } = useHasPermission();
 
   const canViewTickets = hasPermission({
     action: PERMISSIONS.TICKET_VIEW_SELF,
@@ -168,10 +168,7 @@ const EmployeeDashboard = () => {
         )}
       </Row>
       <Row className="g-4">
-        <Col md={6}>
-          {" "}
-          <RecentActivity />
-        </Col>
+        <Col md={6}>{hasRole("super_admin") && <RecentActivity />} </Col>
         <Col md={6}></Col>
       </Row>
     </div>

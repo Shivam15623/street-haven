@@ -4889,7 +4889,12 @@ html[data-theme="dark"] .dark-bg-neutral-200 {
 .bottom-3px {
   bottom: 3px;
 }
-
+@media (min-width: 1700px) {
+  .row-cols-xxxl-6 > * {
+    flex: 0 0 auto;
+    width: 16.66666667%;
+  }
+}
 @media (min-width: 1700px) {
   .row-cols-xxxl-5 > * {
     flex: 0 0 auto;
