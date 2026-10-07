@@ -1,0 +1,1 @@
+{"version":3,"file":"useSocket-D5Q2wt1g.js","sources":["../../src/hooks/useSocket.ts"],"sourcesContent":["import { useContext } from \"react\";\r\nimport { SocketContext } from \"../context/SocketContext\";\r\n\r\nexport const useSocket = () => useContext(SocketContext);\r\n"],"names":["useSocket","useContext","SocketContext"],"mappings":"8cAGO,MAAMA,EAAY,IAAMC,EAAAA,WAAWC,CAAa"}
