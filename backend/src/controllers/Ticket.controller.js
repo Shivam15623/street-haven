@@ -1077,7 +1077,7 @@ function assertFieldPermissions({
         "Only the approving manager or super admin can change priority",
       );
     }
-    if (wantsAssignedTo && !isPrivileged && !isAssignee) {
+    if (wantsAssignedTo && !isPrivileged) {
       throw new ApiError(
         403,
         "Only the approving manager, current assignee, or super admin can reassign this ticket",

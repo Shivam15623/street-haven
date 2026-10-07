@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Col } from "react-bootstrap";
 import { Icon } from "@iconify/react";
 import Badge from "../../../../components/child/Badge";
@@ -11,6 +11,7 @@ import DOMPurify from "dompurify";
 import useHasPermission from "../../../../hooks/Auth";
 import type { FileType } from "../../../../interfaces/fileinterface";
 import ViewFileModal from "../../../../components/child/VIewFileModal";
+import DocumentDetailsModal from "./DocumentDetailsModal";
 export type Document = {
   _id: string;
   title: string;
@@ -35,9 +36,18 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
   const { title, description, tags, type, updatedAt, attachment } = Pdocument;
   const [showEditModal, setShowEditModal] = useState(false);
   const { hasPermission } = useHasPermission();
+  const [showDetails, setShowDetails] = useState(false);
+  const [isClamped, setIsClamped] = useState(false);
+  const descRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = descRef.current;
+    if (el) setIsClamped(el.scrollHeight > el.clientHeight + 1);
+  }, [description]);
   const getDisplayFileName = (fileName: string) => {
     return fileName.replace(/^\d+_/, "");
   };
+
   const handleDownload = async (url: string, filename: string) => {
     try {
       const response = await fetch(url);
@@ -74,11 +84,21 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
                   {title}
                 </p>
                 <div
-                  className="parse Te"
+                  ref={descRef}
+                  className="parse Te desc-clamp"
                   dangerouslySetInnerHTML={{
                     __html: DOMPurify.sanitize(description),
                   }}
                 />
+                {isClamped && (
+                  <button
+                    type="button"
+                    className="btn btn-link p-0 text-xs text-start"
+                    onClick={() => setShowDetails(true)}
+                  >
+                    Read more
+                  </button>
+                )}
               </div>
             </div>
             <div className="d-flex flex-row flex-wrap gap-8 gap-sm-10">
@@ -162,6 +182,33 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ Pdocument }) => {
           onHide={() => setShowEditModal(false)}
         />
       )}
+      <DocumentDetailsModal
+        show={showDetails}
+        onHide={() => setShowDetails(false)}
+        doc={Pdocument}
+        footer={
+          <div className="d-flex flex-row gap-8 justify-content-end w-100">
+            <button
+              type="button"
+              className="btn btn-street-neutral radius-12"
+              onClick={() => setShowDetails(false)}
+            >
+              Close
+            </button>
+            <ViewFileModal attachment={attachment} title={title} />
+            <button
+              type="button"
+              className="btn btn-street-primary d-flex align-items-center gap-2 radius-12"
+              onClick={() =>
+                handleDownload(attachment.fileUrl, attachment.fileName)
+              }
+            >
+              <Icon icon="jam:download" className="text-xl" />
+              Download
+            </button>
+          </div>
+        }
+      />
     </Col>
   );
 };
