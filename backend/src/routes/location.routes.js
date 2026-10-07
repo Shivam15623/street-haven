@@ -8,6 +8,7 @@ import {
   remove,
   addManager,
   removeManager,
+  getFacilityManagers,
 } from "../controllers/location.controller.js";
 import { validateRequest } from "../middleware/validate.js";
 import {
@@ -24,25 +25,17 @@ router.use(passport.authenticate("jwt", { session: false }));
 router.use(checkActiveUser);
 
 router.get("/view", validateRequest(fetchLocationsSchema, "query"), getAll);
+router.get("/facility-managers", getFacilityManagers);
+router.get("/:id", validateRequest(idParamSchema, "params"), getOne);
 
-router.get(
-  "/:id",
-  validateRequest(idParamSchema, "params"),
-  getOne
-);
-
-router.post(
-  "/create",
-  validateRequest(createLocationSchema, "body"),
-  create
-);
+router.post("/create", validateRequest(createLocationSchema, "body"), create);
 
 router
   .route("/edit/:id")
   .patch(
     validateRequest(idParamSchema, "params"),
     validateRequest(updateLocationSchema, "body"),
-    update
+    update,
   );
 
 router
@@ -55,12 +48,12 @@ router
   .post(
     validateRequest(idParamSchema, "params"),
     validateRequest(managerActionSchema, "body"),
-    addManager
+    addManager,
   )
   .delete(
     validateRequest(idParamSchema, "params"),
     validateRequest(managerActionSchema, "body"),
-    removeManager
+    removeManager,
   );
 
 export default router;

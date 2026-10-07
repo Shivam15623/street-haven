@@ -315,3 +315,39 @@ export const setFacilityManager = asyncHandler(async (req, res) => {
       new ApiResponse(200, "Facility manager updated for location", location),
     );
 });
+
+// ---------- GET ALL UNIQUE FACILITY MANAGERS ----------
+export const getFacilityManagers = asyncHandler(async (req, res) => {
+  const facilityManagers = await User.aggregate([
+    {
+      $match: {
+        _id: {
+          $in: await Location.distinct("facilityManager", {
+            facilityManager: { $ne: null },
+          }),
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        firstname: 1,
+        lastname: 1,
+      },
+    },
+    {
+      $sort: {
+        firstname: 1,
+        lastname: 1,
+      },
+    },
+  ]);
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      "Facility managers fetched successfully",
+      facilityManagers,
+    ),
+  );
+});

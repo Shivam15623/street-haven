@@ -15,7 +15,7 @@ import { selectAuth } from "../../../../redux/AuthSlice";
 import FormSubmissionLoader from "../../../../components/child/FormSubmissionLoader";
 
 import { getErrorMessage } from "../../../../utills/utills";
-import { useFetchLocationsQuery } from "../../../../services/locationApi";
+import { useFetchLocationsQuery, useGetFacilityManagersQuery } from "../../../../services/locationApi";
 import {
   useCreateTicketCategoryMutation,
   useGetTicketCategoriesQuery,
@@ -68,10 +68,8 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
   const [editphoto, seteditphoto] = useState(false);
 
   const { data: employeeData, isLoading: isEmployeeLoading } =
-    useAllEmployeesQuery(
-      { forDropdown: true, role: ["manager"] },
-      { skip: !showModal },
-    );
+    useGetFacilityManagersQuery();
+  
   const [editTicket, { isLoading }] = useEditTicketMutation();
 
   // derive once, near hasCreatorPermissions
@@ -87,8 +85,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
   ].includes(ticket.status);
   // pre-select custom-category UI if the ticket's category isn't one of the predefined ones
   const [isCustomCategory, setIsCustomCategory] = useState(false);
-  const REOPENABLE_STATUSES = ["Completed", "Rejected", "Closed"];
-  const isReopenable = REOPENABLE_STATUSES.includes(ticket.status);
+
   const isLocationManager = !!ticket.location?.managers?.some(
     (m) => m === user?._id,
   );
@@ -377,9 +374,9 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                         {isEmployeeLoading ? (
                           <option disabled>Loading...</option>
                         ) : (
-                          employeeData?.data.employees.map((emp) => (
+                          employeeData?.data.map((emp) => (
                             <option key={emp._id} value={emp._id}>
-                              {emp.firstname} {emp.lastname} ({emp.role})
+                              {emp.firstname} {emp.lastname}
                             </option>
                           ))
                         )}
@@ -411,9 +408,7 @@ const TicketEdit: React.FC<TicketCardProps> = ({ ticket }) => {
                         <option value="">Select Status</option>
                         {statusOptions.map((status) => (
                           <option key={status} value={status}>
-                            {status === "Approved" && isReopenable
-                              ? "Reopen"
-                              : status}
+                            {status}
                           </option>
                         ))}
                       </Form.Select>

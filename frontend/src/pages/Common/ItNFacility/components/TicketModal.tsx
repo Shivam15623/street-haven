@@ -21,7 +21,7 @@ const statusVariant: Record<string, BadgeVariant> = {
   "In Progress": "orange-soft",
   Completed: "success-soft",
   Rejected: "danger-soft",
-  Closed: "secondary-soft",
+  Closed: "purple-soft",
 };
 
 const DetailItem: React.FC<{ label: string; children: React.ReactNode }> = ({
@@ -89,17 +89,19 @@ const TicketDetailsModal: React.FC<TicketDetailsModalProps> = ({
         </Col>
         <Col md={6}>
           <DetailItem label="Priority">
-            <Badge
-              variant={
-                ticket.priority === "High"
-                  ? "danger-soft"
-                  : ticket.priority === "Medium"
-                    ? "warning-soft"
-                    : "success-soft"
-              }
-            >
-              {ticket.priority}
-            </Badge>
+            {ticket.priority && (
+              <Badge
+                variant={
+                  ticket.priority === "High"
+                    ? "danger-soft"
+                    : ticket.priority === "Medium"
+                      ? "warning-soft"
+                      : "success-soft"
+                }
+              >
+                {ticket.priority}
+              </Badge>
+            )}
           </DetailItem>
         </Col>
 
