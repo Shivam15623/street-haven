@@ -169,7 +169,7 @@ const TrackTickettab: React.FC<AgentTabProp> = ({ isActive }) => {
               }
               active={filter.status === "Completed"}
             />
-            
+
             {/* <TicketCountCard
               count={ticketData?.data.counts.rejected ?? 0}
               label="Rejected"
@@ -189,7 +189,7 @@ const TrackTickettab: React.FC<AgentTabProp> = ({ isActive }) => {
               count={ticketData?.data.counts.closed ?? 0}
               label="Closed"
               variant="closed"
-              icon="lucide:lock"
+              icon="lucide:archive"
               onClick={() =>
                 setFilter((prev) => ({
                   ...prev,

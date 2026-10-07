@@ -9,6 +9,7 @@ export type BadgeVariant =
   | "primary-soft"
   | "info-soft"
   | "orange-soft"
+  | "purple-soft"
   | "primary"
   | "secondary"
   | "success"

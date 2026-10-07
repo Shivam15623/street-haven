@@ -35,7 +35,7 @@ const statusVariant: Record<string, BadgeVariant> = {
   "In Progress": "orange-soft",
   Completed: "success-soft",
   Rejected: "danger-soft",
-  Closed: "secondary-soft",
+  Closed: "purple-soft",
 };
 
 // Keep in sync with backend REOPENABLE_STATUSES
