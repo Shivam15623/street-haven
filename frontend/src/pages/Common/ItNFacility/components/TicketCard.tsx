@@ -11,7 +11,7 @@ import TicketComment from "./TicketComment";
 import DOMPurify from "dompurify";
 import {
   useApproveTicketMutation,
-  useCancelTicketMutation,
+
   useCloseTicketMutation,
   useCompleteTicketMutation,
   useRejectTicketMutation,
@@ -77,7 +77,6 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
   const [closeTicket, { isLoading: isClosing }] = useCloseTicketMutation();
   const [completeTicket, { isLoading: completing }] =
     useCompleteTicketMutation();
-  const [cancelTicket, { isLoading: cancelling }] = useCancelTicketMutation();
   const [rejectTicket, { isLoading: rejecting }] = useRejectTicketMutation();
   const [showReopenModal, setShowReopenModal] = useState(false);
   const [reopenTargetId, setReopenTargetId] = useState<string | null>(null);
@@ -342,24 +341,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
               </Button>
             )}
 
-            {actions.includes("cancel") && (
-              <Button
-                className="btn-street-neutral radius-12 px-16 d-flex flex-row align-items-center justify-content-center gap-2 border-0 text-sm fw-semibold"
-                style={{ height: "40px" }}
-                disabled={cancelling}
-                onClick={async () => {
-                  try {
-                    const res = await cancelTicket(ticket._id).unwrap();
-                    if (res.success) showSuccess(res.message);
-                  } catch (error) {
-                    showError(getErrorMessage(error));
-                  }
-                }}
-              >
-                <Icon icon="lucide:x-circle" className="w-16-px h-16-px" />
-                {cancelling ? "Cancelling..." : "Cancel"}
-              </Button>
-            )}
+            
 
             {actions.includes("edit") && <TicketDetails ticket={ticket} />}
             {actions.includes("delete") && <DeleteTicket ticket={ticket} />}

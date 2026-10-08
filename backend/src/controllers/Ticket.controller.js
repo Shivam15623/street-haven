@@ -870,35 +870,6 @@ export const completeTicket = asyncHandler(async (req, res) => {
   }
 });
 
-/* ======================
-   CANCEL (creator only, Pending only)
-====================== */
-export const cancelTicket = asyncHandler(async (req, res) => {
-  const { id: ticketId } = req.params;
-  const userId = req.user._id.toString();
-
-  const ticket = await Ticket.findById(ticketId);
-  if (!ticket) throw new ApiError(404, "No such ticket found");
-
-  if (!ticket.createdBy.equals(userId))
-    throw new ApiError(403, "Only the creator can cancel this ticket");
-  if (ticket.status !== TICKET_STATUS.OPEN) {
-    throw new ApiError(
-      400,
-      "Ticket can only be cancelled while pending approval",
-    );
-  }
-
-  ticket.status = TICKET_STATUS.CANCELLED;
-  ticket.statusHistory.push({
-    status: TICKET_STATUS.CANCELLED,
-    changedBy: userId,
-    changedAt: new Date(),
-  });
-  await ticket.save();
-
-  return res.status(200).json(new ApiResponse(200, "Ticket cancelled", ticket));
-});
 
 /* ======================
    EDIT (creator only, Pending only, no priority/status/assignment)

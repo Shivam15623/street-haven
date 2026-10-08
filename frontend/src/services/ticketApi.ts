@@ -212,13 +212,7 @@ const ticketApi = api.injectEndpoints({
       invalidatesTags: ["Ticket"],
     }),
 
-    cancelTicket: builder.mutation<ApiGeneralResponse, string>({
-      query: (ticketId) => ({
-        url: `/ticket/${ticketId}/cancel`,
-        method: "PATCH",
-      }),
-      invalidatesTags: ["Ticket"],
-    }),
+  
     addTicketComment: builder.mutation<
       ApiGeneralResponse,
       { ticketId: string; formdata: FormData; onProgress?: (p: number) => void }
@@ -338,7 +332,6 @@ export const {
   useRejectTicketMutation,
   useStartTicketMutation,
   useCompleteTicketMutation,
-  useCancelTicketMutation,
   useGetTicketDetailQuery,
   useLazyGetTicketDetailQuery,
   useExportTicketReportMutation,

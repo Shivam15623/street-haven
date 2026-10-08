@@ -42,7 +42,7 @@ type TicketAction =
   | "chat"
   | "approve"
   | "reject"
-  | "cancel"
+
   | "edit"
   | "start"
   | "complete"
@@ -87,13 +87,7 @@ const TICKET_ACTION_RULES: TicketActionRule[] = [
     allowedStatuses: ALL_STATUSES,
     requiredRelationships: ["manager", "super_admin"],
   },
-  {
-    action: "cancel",
-    allowedStatuses: ["Open"],
-    requiredRelationships: ["creator"],
-    exclude: (ctx) =>
-      ctx.relationships.has("super_admin") || ctx.relationships.has("manager"),
-  },
+
   {
     action: "approve",
     allowedStatuses: ["Open"],

@@ -91,11 +91,7 @@ router.patch(
 );
 router.get("/slug/:slug", FetchTicketBySlug);
 
-router.patch(
-  "/:id/cancel",
-  validateRequest(idParamSchema, "params"),
-  cancelTicket,
-);
+
 router.patch(
   "/:id/reopen",
   validateRequest(idParamSchema, "params"),
