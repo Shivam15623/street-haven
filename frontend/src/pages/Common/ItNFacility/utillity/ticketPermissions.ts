@@ -91,6 +91,8 @@ const TICKET_ACTION_RULES: TicketActionRule[] = [
     action: "cancel",
     allowedStatuses: ["Open"],
     requiredRelationships: ["creator"],
+    exclude: (ctx) =>
+      ctx.relationships.has("super_admin") || ctx.relationships.has("manager"),
   },
   {
     action: "approve",
