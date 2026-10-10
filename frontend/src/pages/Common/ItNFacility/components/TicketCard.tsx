@@ -396,22 +396,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
             )}
 
         
-            {isCreator && status === "Open" && (
-              <Button
-                variant="outline-danger"
-                disabled={cancelling}
-                onClick={async () => {
-                  try {
-                    const res = await cancelTicket(ticket._id).unwrap();
-                    if (res.success) showSuccess(res.message);
-                  } catch (error) {
-                    showError(getErrorMessage(error));
-                  }
-                }}
-              >
-                Cancel
-              </Button>
-            )}
+           
             <TicketDetails ticket={ticket} />
           </div> */}
         </div>

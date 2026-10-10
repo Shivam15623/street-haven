@@ -1,0 +1,275 @@
+import mongoose from "mongoose";
+import { io } from "../index.js";
+import ProgramManual from "../model/programManuals.js";
+import { ApiError } from "../utills/ApiError.js";
+import { ApiResponse } from "../utills/ApiResponse.js";
+import { asyncHandler } from "../utills/AsyncHandler.js";
+import { createNotification } from "../helper/CreateNotoification.js";
+import { addActivityLog } from "../helper/addActivityLogs.js";
+
+import { deleteFromCloudinary } from "../utills/cloudinary.js";
+import { PERMISSIONS } from "../auth/permissions.js";
+import { emitNotification } from "../helper/emitNotification.js";
+import { uploadAttachment } from "./CollectiveAgreement.controller.js";
+
+export const AddProgramManual = asyncHandler(async (req, res) => {
+  const { title, description, tags, type } = req.body;
+  const { _id: userId, firstname, lastname } = req.user;
+  const attachmentpath = req?.file?.path; // Fix typo
+
+  if (!attachmentpath) throw new ApiError(400, "Attachment file is missing");
+
+  const attachmentData = await uploadAttachment(attachmentpath);
+
+  // Phase 2: Minimal transaction - DB only
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+    // Create Training Material within the session
+    const programmanual = await ProgramManual.create(
+      [
+        {
+          title,
+          description,
+          tags,
+          type,
+          createdBy: userId,
+          attachment: attachmentData,
+        },
+      ],
+      { session },
+    );
+
+    if (!programmanual || programmanual.length === 0) {
+      throw new ApiError(500, "Server Error");
+    }
+
+    // Create Notification within the session
+    const notification = await createNotification(
+      {
+        action: "created",
+        category: "training_material",
+        severity: "info",
+        title: "New Training Material Added",
+        message: `${firstname} added a new Training Material: "${title}"`,
+        link: `/volunteer-training?slug=${programmanual[0].slug}`,
+        requiredPermissions: [PERMISSIONS.VIEW_PROGRAM_MANUALS],
+        createdBy: userId,
+        isGlobal: true,
+        expireAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        meta: { programManualId: programmanual[0].slug },
+      },
+      session,
+    );
+    await addActivityLog(
+      {
+        actionType: "TRAINING_MATERIAL_CREATED",
+        performedBy: {
+          id: req.user?._id,
+          name: `${firstname} ${lastname}`,
+          type: "user",
+        },
+        message: `A new training material has been created: ${title}`,
+
+        meta: {
+          recordId: programmanual._id,
+          moduleName: "ProgramManual",
+        },
+      },
+      session, // <-- pass session
+    );
+    // Commit transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    // Emit real-time notifications outside transaction
+
+    emitNotification(io, notification);
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          201,
+          "Training Material added and notifications sent successfully",
+        ),
+      );
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  } finally {
+    session.endSession();
+  }
+});
+
+// 📌 Edit Training Material
+export const EditProgramManual = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { title, description, tags, type } = req.body;
+
+  const programManual = await ProgramManual.findById(id);
+  if (!programManual) {
+    throw new ApiError(404, "Training Material not found");
+  }
+
+  const updates = {};
+  let attachmentChanged = false;
+
+  if (title && title !== programManual.title) {
+    updates.title = title;
+  }
+
+  if (description && description !== programManual.description) {
+    updates.description = description;
+  }
+
+  if (tags && JSON.stringify(tags) !== JSON.stringify(programManual.tags)) {
+    updates.tags = tags;
+  }
+
+  if (type && type !== programManual.type) {
+    updates.type = type;
+  }
+
+  /* ======================
+     ATTACHMENT UPDATE
+     (NOTIFY USERS)
+  ====================== */
+  if (req?.file?.path) {
+    const attachmentData = await uploadAttachment(req.file.path);
+
+    const currentAttachment = programManual.attachment || {};
+
+    if (
+      attachmentData.fileUrl !== currentAttachment.fileUrl ||
+      attachmentData.fileName !== currentAttachment.fileName ||
+      attachmentData.size !== currentAttachment.size
+    ) {
+      updates.attachment = attachmentData;
+      attachmentChanged = true;
+    }
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, programManual, "No changes detected"));
+  }
+
+  const updatedManual = await ProgramManual.findByIdAndUpdate(id, updates, {
+    new: true,
+    runValidators: true,
+  });
+
+  /* ======================
+     NOTIFICATION
+     (ONLY FOR ATTACHMENT)
+  ====================== */
+  if (attachmentChanged) {
+    const notification = await createNotification({
+      category: "training_material",
+      action: "updated",
+      severity: "info",
+      title: "Program manual updated",
+      message: `The training material "${updatedManual.title}" has been updated. Please refer to the latest version.`,
+      link: `/volunteer-training?slug=${updatedManual.slug}`,
+      isGlobal: true,
+      requiredPermissions: [PERMISSIONS.VIEW_PROGRAM_MANUALS],
+      createdBy: req.user?._id,
+      meta: {
+        manualId: updatedManual.slug,
+        attachmentUpdated: true,
+      },
+    });
+
+    emitNotification(io, notification);
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Training Material updated successfully"));
+});
+
+export const DeleteProgramManual = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const programManual = await ProgramManual.findById(id);
+  if (!programManual) {
+    throw new ApiError(404, "Training Material not found");
+  }
+
+  // ✅ Safely delete attachment from Cloudinary
+  const fileUrl = programManual?.attachment?.fileUrl;
+  if (fileUrl) {
+    try {
+      await deleteFromCloudinary(fileUrl);
+    } catch (err) {
+      console.error("Error deleting from Cloudinary:", err.message);
+      // Do NOT block DB delete (correct decision 👍)
+    }
+  }
+
+  // ✅ Delete from DB
+  await ProgramManual.findByIdAndDelete(id);
+
+  // 🔥 REAL-TIME UPDATE (THIS IS THE FIX)
+  io.emit("program-manual-deleted", {
+    manualId: id,
+  });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Training Material deleted successfully"));
+});
+
+export const GetProgramManuals = asyncHandler(async (req, res) => {
+  const {
+    page = 1,
+    limit = 10,
+    search = "",
+    type,
+    slug = "",
+    sortBy = "createdAt",
+    order = "desc",
+  } = req.query;
+
+  const query = {};
+
+  // If search query exists → search in title, description, and tags
+  if (slug) {
+    query.slug = slug; // exact match
+  } else if (search) {
+    query.$or = [
+      { title: { $regex: search, $options: "i" } },
+      { description: { $regex: search, $options: "i" } },
+      { tags: { $regex: search, $options: "i" } },
+      { type: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  // Filter by type (if given)
+  if (type) {
+    query.type = type;
+  }
+
+  const manuals = await ProgramManual.find(query)
+    .populate("createdBy", "firstname lastname email") // optional
+    .sort({ [sortBy]: order === "asc" ? 1 : -1 })
+    .skip((page - 1) * limit)
+    .limit(Number(limit));
+
+  const totalCount = await ProgramManual.countDocuments(query);
+
+  return res.status(200).json(
+    new ApiResponse(200, "Training Materials fetched successfully", {
+      manuals,
+      paggination: {
+        total: totalCount,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    }),
+  );
+});
