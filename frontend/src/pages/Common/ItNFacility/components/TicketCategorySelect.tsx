@@ -10,7 +10,6 @@ import { showError, showSuccess } from "../../../../utills/toastutills";
 import { getErrorMessage } from "../../../../utills/utills";
 import useHasPermission from "../../../../hooks/Auth";
 
-
 interface TicketCategorySelectProps {
   name: string;
   value: string;
@@ -168,7 +167,11 @@ const TicketCategorySelect: React.FC<TicketCategorySelectProps> = ({
                   <span
                     style={{
                       fontSize: "14px",
-                      color: isHovered || isSelected ? "white" : "CanvasText",
+                      color: isHovered
+                        ? "white"
+                        : isSelected
+                          ? "var(--street-primary-base)"
+                          : "CanvasText",
                     }}
                   >
                     {cat.name}
