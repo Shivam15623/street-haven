@@ -20,11 +20,11 @@ interface Params {
 }
 const formatDate = (date?: string | Date | null) => {
   if (!date) return "-";
-
   return new Date(date).toLocaleDateString("en-CA", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
+    timeZone: "UTC", // dueDate is stored as UTC midnight (date-only)
   });
 };
 export const useTaskColumns = ({

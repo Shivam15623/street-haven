@@ -169,7 +169,7 @@ const UserMultiSelect = ({
                     border: "none",
                     background: "transparent",
                     lineHeight: 1,
-                    color:"var(--street-base)",
+                    color: "var(--street-base)",
                     padding: 0,
                     fontSize: "16px",
                   }}
@@ -179,13 +179,11 @@ const UserMultiSelect = ({
               )}
             </span>
           ))}
-
-         
         </div>
         {selectedOptions.length > 0 && !isDisabled && (
           <div
             className="position-absolute top-50 translate-middle-y d-flex align-items-center"
-            style={{ right: "2.25rem" }} // sits just left of the chevron
+            style={{ right: "2.5rem" }} // sits just left of the chevron
           >
             <button
               type="button"
@@ -199,7 +197,7 @@ const UserMultiSelect = ({
                 borderRadius: "50%",
                 background: "transparent",
                 color: "var(--street-gray-base-50, #6c757d)",
-                fontSize: 16,
+                fontSize: 18,
                 lineHeight: 1,
               }}
             >
@@ -210,7 +208,7 @@ const UserMultiSelect = ({
               style={{
                 width: 1,
                 height: 18,
-                marginLeft: 8,
+                marginLeft: 5,
                 background: "var(--street-border-base-50, #dee2e6)",
               }}
             />
@@ -245,6 +243,22 @@ const UserMultiSelect = ({
 
               {/* Scrollable Options */}
               <div style={{ maxHeight: 220, overflowY: "auto" }}>
+                <div
+                  className="d-flex align-items-center gap-2 px-2 py-2 text-sm cursor-pointer"
+                  onClick={() => {
+                    onChange([]);
+                    setSearch("");
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={value.length === 0}
+                    readOnly
+                    className="form-check-input m-0"
+                  />
+                  <span>{placeholder}</span>
+                </div>
                 {isLoading && (
                   <div className="p-2 text-sm text-neutral-500">Loading...</div>
                 )}
