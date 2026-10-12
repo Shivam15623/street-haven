@@ -59,7 +59,7 @@ export interface GetTasksResponse {
   limit: number;
   totalPages: number;
   counts: {
-    new: number;
+    in_progress: number;
     assigned: number;
     under_review: number;
     completed: number;

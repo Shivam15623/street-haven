@@ -28,6 +28,7 @@ export interface TicketReport {
   approvedBy: string;
   created: string;
   resolved: string | null;
+  overview?: string; // optional: used to prefill the modals if the report API returns it
 }
 const statusVariant: Record<string, BadgeVariant> = {
   Open: "warning-soft",
@@ -51,6 +52,29 @@ interface Props {
   onPageChange: (page: number) => void;
 }
 
+const OverviewField: React.FC<{
+  id: string;
+  value: string;
+  onChange: (v: string) => void;
+  disabled?: boolean;
+}> = ({ id, value, onChange, disabled }) => (
+  <div className="mt-3">
+    <label className="form-label text-xs fw-semibold" htmlFor={id}>
+      Update / Overview <span className="fw-normal text-muted">(optional)</span>
+    </label>
+    <textarea
+      id={id}
+      className="form-control"
+      rows={4}
+      maxLength={2000}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder="Add a short update for everyone following this ticket"
+      disabled={disabled}
+    />
+  </div>
+);
+
 const TicketReportTable: React.FC<Props> = ({
   tickets,
   page,
@@ -62,10 +86,12 @@ const TicketReportTable: React.FC<Props> = ({
   const [open, setOpen] = useState(false);
 
   const [reopenTargetId, setReopenTargetId] = useState<string | null>(null);
+  const [reopenOverview, setReopenOverview] = useState("");
   const [showReopenModal, setShowReopenModal] = useState(false);
   const [reopenTicket, { isLoading: isReopening }] = useReopenTicketMutation();
 
   const [closeTargetId, setCloseTargetId] = useState<string | null>(null);
+  const [closeOverview, setCloseOverview] = useState("");
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [closeTicket, { isLoading: isClosing }] = useCloseTicketMutation();
 
@@ -74,24 +100,44 @@ const TicketReportTable: React.FC<Props> = ({
     setOpen(true);
   };
 
-  const handleReopenClick = (id: string) => {
-    setReopenTargetId(id);
+  const handleReopenClick = (row: TicketReport) => {
+    setReopenTargetId(row.id);
+    setReopenOverview(row.overview ?? "");
     setShowReopenModal(true);
   };
 
-  const handleCloseClick = (id: string) => {
-    setCloseTargetId(id);
+  const handleCloseClick = (row: TicketReport) => {
+    setCloseTargetId(row.id);
+    setCloseOverview(row.overview ?? "");
     setShowCloseModal(true);
+  };
+
+  const hideReopenModal = () => {
+    if (isReopening) return;
+    setShowReopenModal(false);
+    setReopenTargetId(null);
+    setReopenOverview("");
+  };
+
+  const hideCloseModal = () => {
+    if (isClosing) return;
+    setShowCloseModal(false);
+    setCloseTargetId(null);
+    setCloseOverview("");
   };
 
   const handleConfirmReopen = async () => {
     if (!reopenTargetId) return;
     try {
-      const res = await reopenTicket(reopenTargetId).unwrap();
+      const res = await reopenTicket({
+        ticketId: reopenTargetId,
+        overview: reopenOverview.trim(),
+      }).unwrap();
       if (res.success) {
         showSuccess(res.message);
         setShowReopenModal(false);
         setReopenTargetId(null);
+        setReopenOverview("");
       }
     } catch (error) {
       showError(getErrorMessage(error));
@@ -101,11 +147,15 @@ const TicketReportTable: React.FC<Props> = ({
   const handleConfirmClose = async () => {
     if (!closeTargetId) return;
     try {
-      const res = await closeTicket(closeTargetId).unwrap();
+      const res = await closeTicket({
+        ticketId: closeTargetId,
+        overview: closeOverview.trim(),
+      }).unwrap();
       if (res.success) {
         showSuccess(res.message);
         setShowCloseModal(false);
         setCloseTargetId(null);
+        setCloseOverview("");
       }
     } catch (error) {
       showError(getErrorMessage(error));
@@ -199,7 +249,7 @@ const TicketReportTable: React.FC<Props> = ({
                 className="btn btn-street-edit btn-sm d-flex align-items-center justify-content-center"
                 title="Close"
                 aria-label="Close ticket"
-                onClick={() => handleCloseClick(row.id)}
+                onClick={() => handleCloseClick(row)}
               >
                 <Icon icon="lucide:check-check" className="w-16-px h-16-px" />
               </button>
@@ -209,7 +259,7 @@ const TicketReportTable: React.FC<Props> = ({
                 className="btn btn-street-warning btn-sm d-flex align-items-center justify-content-center"
                 title="Reopen"
                 aria-label="Reopen ticket"
-                onClick={() => handleReopenClick(row.id)}
+                onClick={() => handleReopenClick(row)}
               >
                 <Icon icon="lucide:rotate-ccw" className="w-16-px h-16-px" />
               </button>
@@ -242,12 +292,7 @@ const TicketReportTable: React.FC<Props> = ({
       {/* Reopen modal */}
       <ModalWrapper
         show={showReopenModal}
-        onHide={() => {
-          if (!isReopening) {
-            setShowReopenModal(false);
-            setReopenTargetId(null);
-          }
-        }}
+        onHide={hideReopenModal}
         title="Reopen Ticket"
         size="md"
         isLoading={isReopening}
@@ -262,10 +307,7 @@ const TicketReportTable: React.FC<Props> = ({
             </button>
             <button
               className="btn btn-street-neutral btn-sm"
-              onClick={() => {
-                setShowReopenModal(false);
-                setReopenTargetId(null);
-              }}
+              onClick={hideReopenModal}
               disabled={isReopening}
             >
               Cancel
@@ -274,20 +316,23 @@ const TicketReportTable: React.FC<Props> = ({
         }
       >
         <p className="mb-0">
-          Are you sure you want to reopen this ticket? It will move back to{" "}
-          <strong>Approved</strong> status and be sent to the assignee again.
+          Are you sure you want to reopen this ticket? Completed and Closed
+          tickets move back to <strong>Approved</strong> and are sent to the
+          assignee again. Rejected tickets move back to <strong>Open</strong>{" "}
+          and need approval again.
         </p>
+        <OverviewField
+          id="reopen-overview"
+          value={reopenOverview}
+          onChange={setReopenOverview}
+          disabled={isReopening}
+        />
       </ModalWrapper>
 
       {/* Close modal */}
       <ModalWrapper
         show={showCloseModal}
-        onHide={() => {
-          if (!isClosing) {
-            setShowCloseModal(false);
-            setCloseTargetId(null);
-          }
-        }}
+        onHide={hideCloseModal}
         title="Close Ticket"
         size="md"
         isLoading={isClosing}
@@ -302,10 +347,7 @@ const TicketReportTable: React.FC<Props> = ({
             </button>
             <button
               className="btn btn-street-neutral btn-sm"
-              onClick={() => {
-                setShowCloseModal(false);
-                setCloseTargetId(null);
-              }}
+              onClick={hideCloseModal}
               disabled={isClosing}
             >
               Cancel
@@ -317,6 +359,12 @@ const TicketReportTable: React.FC<Props> = ({
           Confirm that the work is done and accepted? The ticket will be marked{" "}
           <strong>Closed</strong>.
         </p>
+        <OverviewField
+          id="close-overview"
+          value={closeOverview}
+          onChange={setCloseOverview}
+          disabled={isClosing}
+        />
       </ModalWrapper>
     </>
   );

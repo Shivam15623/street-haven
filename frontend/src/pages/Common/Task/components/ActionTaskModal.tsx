@@ -87,7 +87,7 @@ const validationSchema = Yup.object({
     .min(new Date(new Date().toDateString()), "Due date cannot be in the past"),
 
   status: Yup.mixed<TaskStatus>()
-    .oneOf(["assigned", "under_review", "completed"])
+    .oneOf(["assigned", "under_review", "in_progress","completed"])
     .required(),
 });
 

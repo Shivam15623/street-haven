@@ -53,7 +53,7 @@ export const dueStatusLabel: Record<DueStatus, string> = {
 export const taskBadgeVariant: Record<TaskStatus, BadgeVariant> = {
   new: "info-soft",
   assigned: "warning-soft",
-  in_progress: "primary-soft", // pick whatever variant fits your palette
-  under_review: "orange-soft",
+  in_progress: "orange-soft", // pick whatever variant fits your palette
+  under_review: "purple-soft",
   completed: "success-soft",
 };

@@ -322,7 +322,13 @@
   --input-stroke: var(--neutral-300);
   --border-color: #d1d5db80;
 }
+:root {
+  color-scheme: light;
+}
 
+[data-theme="dark"] {
+  color-scheme: dark;
+}
 [data-theme="dark"] {
   --button-secondary: var(--neutral-300);
   --black: var(--base);

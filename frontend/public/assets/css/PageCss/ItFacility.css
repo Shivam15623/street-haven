@@ -302,6 +302,11 @@
 
 .ticket-category-select-menu {
 }
+.ticket-category-select-trigger.show,
+.dropdown > button.ticket-category-select-trigger.show {
+  background-color: var(--street-card) !important;
+  color: var(--street-text-base) !important;
+}
 .ticket-category-select-trigger {
   height: 40px;
   background-color: var(--street-card);

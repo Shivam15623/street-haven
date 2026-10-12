@@ -206,12 +206,12 @@ const RequestForm = () => {
                                 setFieldValue("category", id);
                                 setFieldTouched("category", true, false);
                               }}
+                              onOtherTextChange={(text) => {
+                                setFieldValue("categoryOtherText", text, false); // no validation
+                              }}
                               isInvalid={touched.category && !!errors.category}
                               errorMessage={errors.category as string}
                               otherText={values.categoryOtherText}
-                              onOtherTextChange={(text) => {
-                                setFieldValue("categoryOtherText", text);
-                              }}
                               isOtherTextInvalid={
                                 touched.categoryOtherText &&
                                 !!errors.categoryOtherText

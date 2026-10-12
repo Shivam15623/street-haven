@@ -9,7 +9,7 @@ import {
 import { showError, showSuccess } from "../../../../utills/toastutills";
 import { getErrorMessage } from "../../../../utills/utills";
 import useHasPermission from "../../../../hooks/Auth";
-import Badge from "../../../../components/child/Badge";
+
 
 interface TicketCategorySelectProps {
   name: string;
@@ -95,7 +95,7 @@ const TicketCategorySelect: React.FC<TicketCategorySelectProps> = ({
         showSuccess(res.message);
         if (value === categoryId) {
           onChange("");
-          onOtherTextChange("");
+          if (otherText) onOtherTextChange("");
         }
       }
     } catch (error) {
@@ -107,13 +107,11 @@ const TicketCategorySelect: React.FC<TicketCategorySelectProps> = ({
 
   const handleSelect = (cat: TicketCategory) => {
     onChange(cat._id);
-    // clear stale "other" text if switching away from Other
-    if (!(cat.isSystem && cat.name === "Other")) {
+    if (!(cat.isSystem && cat.name === "Other") && otherText) {
       onOtherTextChange("");
     }
     setIsOpen(false);
   };
-
   return (
     <div className="d-flex flex-column gap-1">
       <Dropdown
@@ -122,34 +120,29 @@ const TicketCategorySelect: React.FC<TicketCategorySelectProps> = ({
         className="text-street-base w-100"
       >
         <Dropdown.Toggle
-          variant="white"
-          className={`w-100 d-flex justify-content-between align-items-center text-street-base text-start text-sm border-1 ticket-category-select-trigger ${
+          className={`w-100 d-flex justify-content-between align-items-center  text-street-base text-start text-sm border-1 ticket-category-select-trigger ${
             isInvalid ? "border-danger" : ""
           }`}
           disabled={categoryLoading || categoryError}
           style={{
             borderColor: isInvalid ? undefined : "var(--street-border-base-50)",
+            backgroundColor: "var(--street-card)",
+            color: "var(--street-text-base)",
           }}
         >
           {categoryLoading ? (
-            <span style={{ color: "var(--street-gray-base-50)" }}>
-              Loading...
-            </span>
+            <span>Loading...</span>
           ) : categoryError ? (
             <span className="text-danger">Failed to load</span>
           ) : selectedCategory ? (
             selectedCategory.name
           ) : (
-            <span
-              style={{ fontSize: "14px", color: "var(--street-gray-base-50)" }}
-            >
-              Select category
-            </span>
+            <span style={{ fontSize: "14px" }}>Select category</span>
           )}
         </Dropdown.Toggle>
 
         <Dropdown.Menu
-          className="w-100 shadow-sm rounded-3 border-1 overflow-hidden p-0"
+          className="w-100 shadow-sm rounded-0 border-1 overflow-hidden p-0"
           style={{ borderColor: "var(--street-border-base-50)" }}
         >
           <div style={{ maxHeight: 240, overflowY: "auto" }}>
@@ -165,13 +158,9 @@ const TicketCategorySelect: React.FC<TicketCategorySelectProps> = ({
                   onClick={() => handleSelect(cat)}
                   className="d-flex justify-content-between align-items-center"
                   style={{
-                    padding: "9px 14px",
+                    padding: "2px 14px",
                     cursor: "pointer",
-                    backgroundColor: isSelected
-                      ? "var(--street-primary-base-10)"
-                      : isHovered
-                        ? "var(--street-sidebar-accent)"
-                        : "transparent",
+                    backgroundColor: isHovered ? "Highlight" : "transparent",
                     fontWeight: isSelected ? 500 : 400,
                     transition: "background-color 120ms ease",
                   }}
@@ -179,27 +168,14 @@ const TicketCategorySelect: React.FC<TicketCategorySelectProps> = ({
                   <span
                     style={{
                       fontSize: "14px",
-                      color: isSelected
-                        ? "var(--street-primary-base)"
-                        : "var(--street-text-base)",
+                      color: isHovered || isSelected ? "white" : "CanvasText",
                     }}
                   >
                     {cat.name}
                   </span>
 
                   {canManage &&
-                    (cat.isSystem ? (
-                      <Badge
-                        variant="warning-soft"
-                        shape="pill"
-                        small
-                        title="System category cannot be deleted"
-                        className="flex-shrink-0"
-                        style={{ marginLeft: 12 }}
-                      >
-                        System
-                      </Badge>
-                    ) : (
+                    (cat.isSystem ? null : (
                       <span
                         title="Delete category"
                         onClick={(e) => handleDelete(e, cat._id)}

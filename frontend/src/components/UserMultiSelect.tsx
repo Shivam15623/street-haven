@@ -16,7 +16,7 @@ interface UserMultiSelectProps {
   role?: Role[];
   isDisabled?: boolean;
   className?: string;
-  managedBy?:boolean;
+  managedBy?: boolean;
 }
 
 const UserMultiSelect = ({
@@ -27,7 +27,7 @@ const UserMultiSelect = ({
   role,
   isDisabled = false,
   className = "",
-  managedBy=false
+  managedBy = false,
 }: UserMultiSelectProps) => {
   const { data, isLoading } = useAllEmployeesQuery({
     forDropdown: true,
@@ -131,11 +131,7 @@ const UserMultiSelect = ({
 
   return (
     <div className={className} ref={containerRef}>
-      {label && (
-        <label className="form-label  mb-6">
-          {label}
-        </label>
-      )}
+      {label && <label className="form-label  mb-6">{label}</label>}
 
       <div className="position-relative" ref={triggerRef}>
         {/* Trigger */}
@@ -146,6 +142,8 @@ const UserMultiSelect = ({
           style={{
             minHeight: "44px",
             height: "auto",
+            paddingRight:
+              selectedOptions.length > 0 && !isDisabled ? "4.25rem" : undefined,
           }}
           onClick={() => {
             if (!isDisabled) setIsOpen((prev) => !prev);
@@ -171,8 +169,9 @@ const UserMultiSelect = ({
                     border: "none",
                     background: "transparent",
                     lineHeight: 1,
+                    color:"var(--street-base)",
                     padding: 0,
-                    fontSize: "14px",
+                    fontSize: "16px",
                   }}
                 >
                   &times;
@@ -181,19 +180,42 @@ const UserMultiSelect = ({
             </span>
           ))}
 
-          {selectedOptions.length > 0 && !isDisabled && (
+         
+        </div>
+        {selectedOptions.length > 0 && !isDisabled && (
+          <div
+            className="position-absolute top-50 translate-middle-y d-flex align-items-center"
+            style={{ right: "2.25rem" }} // sits just left of the chevron
+          >
             <button
               type="button"
               onClick={clearAll}
-              className="ms-auto text-neutral-400 border-0 bg-transparent"
-              style={{ fontSize: "12px" }}
               title="Clear all"
+              aria-label="Clear all"
+              className="d-flex align-items-center justify-content-center border-0 p-0 user-select-clear"
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: "50%",
+                background: "transparent",
+                color: "var(--street-gray-base-50, #6c757d)",
+                fontSize: 16,
+                lineHeight: 1,
+              }}
             >
               &times;
             </button>
-          )}
-        </div>
-
+            {/* divider between × and chevron */}
+            <span
+              style={{
+                width: 1,
+                height: 18,
+                marginLeft: 8,
+                background: "var(--street-border-base-50, #dee2e6)",
+              }}
+            />
+          </div>
+        )}
         {/* Dropdown — rendered via portal so it isn't clipped by the
             modal body's `overflow: auto` / `maxHeight: 60vh` container */}
         {isOpen &&

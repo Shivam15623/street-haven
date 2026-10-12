@@ -2,38 +2,36 @@
 import React, { useMemo, useState } from "react";
 import { Icon } from "@iconify/react";
 import { Link } from "react-router-dom";
+import DOMPurify from "dompurify";
+import { Button } from "react-bootstrap";
+import { useSelector } from "react-redux";
 
 import TicketDetails from "./TicketEdit";
-import Badge, { type BadgeVariant } from "../../../../components/child/Badge";
-import type { TicketData } from "../../../../interfaces/Ticket";
 import TicketComment from "./TicketComment";
-
-import DOMPurify from "dompurify";
+import RejectTicketModal from "./RejectTicketModal";
+import ApproveTicketModal from "./ApproveTicketModal";
+import DeleteTicket from "./DeleteTicket";
+import Badge, { type BadgeVariant } from "../../../../components/child/Badge";
+import ModalWrapper from "../../../../components/child/ModalWrapper";
+import type { TicketData } from "../../../../interfaces/Ticket";
 import {
   useApproveTicketMutation,
-
   useCloseTicketMutation,
   useCompleteTicketMutation,
   useRejectTicketMutation,
   useReopenTicketMutation,
   useStartTicketMutation,
 } from "../../../../services/ticketApi";
-import RejectTicketModal from "./RejectTicketModal";
-import ApproveTicketModal from "./ApproveTicketModal";
-import { Button } from "react-bootstrap";
 import { showError, showSuccess } from "../../../../utills/toastutills";
 import { getErrorMessage } from "../../../../utills/utills";
-import { useSelector } from "react-redux";
-
+import { personName } from "../../../../utills/userDisplay";
 import { selectAuth } from "../../../../redux/AuthSlice";
 import { getTicketActions } from "../utillity/ticketPermissions";
-import DeleteTicket from "./DeleteTicket";
-import { personName } from "../../../../utills/userDisplay";
-import ModalWrapper from "../../../../components/child/ModalWrapper";
 
 interface TicketCardProps {
   ticket: TicketData;
 }
+
 const titleCase = (str: string) =>
   str
     .toLowerCase()
@@ -49,6 +47,44 @@ const statusVariant: Record<string, BadgeVariant> = {
   Rejected: "danger-soft",
   Closed: "purple-soft",
 };
+
+type OverviewAction = "start" | "complete" | "close" | "reopen";
+
+const actionConfig: Record<
+  OverviewAction,
+  { title: string; confirm: string; loading: string; body: React.ReactNode }
+> = {
+  start: {
+    title: "Start Work",
+    confirm: "Start Work",
+    loading: "Starting...",
+    body: "Mark this ticket as in progress.",
+  },
+  complete: {
+    title: "Mark Completed",
+    confirm: "Mark Completed",
+    loading: "Completing...",
+    body: "Mark the work on this ticket as completed.",
+  },
+  close: {
+    title: "Close Ticket",
+    confirm: "Close Ticket",
+    loading: "Closing...",
+    body: (
+      <>
+        Confirm that the work is done and accepted? The ticket will be marked{" "}
+        <strong>Closed</strong>.
+      </>
+    ),
+  },
+  reopen: {
+    title: "Reopen Ticket",
+    confirm: "Reopen",
+    loading: "Reopening...",
+    body: "Reopen this ticket and send it back through the workflow.",
+  },
+};
+
 const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
   const {
     req_title,
@@ -68,59 +104,73 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     overviewUpdatedAt,
   } = ticket;
 
-  const [showApprove, setShowApprove] = useState(false);
-  const [showReject, setShowReject] = useState(false);
-
-  const [approveTicket, { isLoading: approving }] = useApproveTicketMutation();
-  const [startTicket, { isLoading: starting }] = useStartTicketMutation();
-  const [showCloseModal, setShowCloseModal] = useState(false);
-  const [closeTicket, { isLoading: isClosing }] = useCloseTicketMutation();
-  const [completeTicket, { isLoading: completing }] =
-    useCompleteTicketMutation();
-  const [rejectTicket, { isLoading: rejecting }] = useRejectTicketMutation();
-  const [showReopenModal, setShowReopenModal] = useState(false);
-  const [reopenTargetId, setReopenTargetId] = useState<string | null>(null);
-  const [reopenTicket, { isLoading: isReopening }] = useReopenTicketMutation();
   const { user: currentUser } = useSelector(selectAuth);
 
+  const [showApprove, setShowApprove] = useState(false);
+  const [showReject, setShowReject] = useState(false);
+  const [pendingAction, setPendingAction] = useState<OverviewAction | null>(
+    null,
+  );
+  const [overviewText, setOverviewText] = useState("");
+
+  const [approveTicket, { isLoading: approving }] = useApproveTicketMutation();
+  const [rejectTicket, { isLoading: rejecting }] = useRejectTicketMutation();
+  const [startTicket, { isLoading: starting }] = useStartTicketMutation();
+  const [completeTicket, { isLoading: completing }] =
+    useCompleteTicketMutation();
+  const [closeTicket, { isLoading: isClosing }] = useCloseTicketMutation();
+  const [reopenTicket, { isLoading: isReopening }] = useReopenTicketMutation();
+
+  const actionBusy = starting || completing || isClosing || isReopening;
+
   const actions = useMemo(
-    () =>
-      getTicketActions({
-        ticket,
-        currentUser,
-      }),
+    () => getTicketActions({ ticket, currentUser }),
     [ticket, currentUser],
   );
+
   const meta: string[] = [
-    `#${displayId}`, // Ticket ID
+    `#${displayId}`,
     titleCase(category.name),
     location?.name || "No location",
     `Submitted: ${createdAt ? new Date(createdAt).toLocaleDateString() : ""}`,
   ];
-  const handleConfirmClose = async () => {
+
+  const openAction = (action: OverviewAction) => {
+    setOverviewText(overview ?? ""); // prefill with the current overview
+    setPendingAction(action);
+  };
+
+  const closeActionModal = () => {
+    if (actionBusy) return;
+    setPendingAction(null);
+    setOverviewText("");
+  };
+
+  const handleConfirmAction = async () => {
+    if (!pendingAction) return;
+
+    const trigger = {
+      start: startTicket,
+      complete: completeTicket,
+      close: closeTicket,
+      reopen: reopenTicket,
+    }[pendingAction];
+
     try {
-      const res = await closeTicket(ticket._id).unwrap();
+      const res = await trigger({
+        ticketId: ticket._id,
+        overview: overviewText.trim(),
+      }).unwrap();
       if (res.success) {
         showSuccess(res.message);
-        setShowCloseModal(false);
+        setPendingAction(null);
+        setOverviewText("");
       }
     } catch (error) {
       showError(getErrorMessage(error));
     }
   };
-  const handleConfirmReopen = async () => {
-    if (!reopenTargetId) return;
-    try {
-      const res = await reopenTicket(reopenTargetId).unwrap();
-      if (res.success) {
-        showSuccess(res.message);
-        setShowReopenModal(false);
-        setReopenTargetId(null);
-      }
-    } catch (error) {
-      showError(getErrorMessage(error));
-    }
-  };
+
   return (
     <div className="card">
       <div
@@ -136,7 +186,6 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
             <Badge variant={statusVariant[status] ?? "secondary-soft"}>
               {status}
             </Badge>
-
             {priority && (
               <Badge
                 variant={
@@ -156,10 +205,10 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
         {/* Description */}
         <div
           className="parse Te"
-          dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(description),
-          }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(description) }}
         />
+
+        {/* Overview */}
         {overview && (
           <div className="bg-neutral-50 radius-8 p-12">
             <p
@@ -179,6 +228,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
             )}
           </div>
         )}
+
         {/* Meta info */}
         <div className="text-xs d-flex flex-column flex-md-row gap-1 gap-md-3 fw-normal">
           {meta.map((item, index) => (
@@ -194,7 +244,6 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
         {/* Footer Section */}
         <div className="d-flex flex-column flex-md-row gap-3 align-items-md-center justify-content-between">
           <div className="row gy-2 gx-3 w-auto align-items-sm-center">
-            {/* Submitted by */}
             <div className="col-6 col-sm-auto">
               <p className="fw-normal text-xs mb-0">
                 Submitted by:{" "}
@@ -204,7 +253,6 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
               </p>
             </div>
 
-            {/* Assigned to */}
             {assignedTo && (
               <div className="col-6 col-sm-auto">
                 <p className="fw-normal text-xs mb-0">
@@ -227,7 +275,6 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
               </div>
             )}
 
-            {/* Attachments */}
             {photo && (
               <div className="col-6 col-sm-auto d-flex align-items-center gap-2">
                 <Icon
@@ -244,7 +291,8 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
               </div>
             )}
           </div>
-          {/* Footer actions — unified button system: radius-12, fixed 40px height, consistent icon+label gap */}
+
+          {/* Footer actions */}
           <div className="d-flex flex-row flex-wrap align-items-center gap-8">
             {actions.includes("close") && (
               <Button
@@ -254,11 +302,12 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                 title="Close"
                 aria-label="Close ticket"
                 disabled={isClosing}
-                onClick={() => setShowCloseModal(true)}
+                onClick={() => openAction("close")}
               >
                 <Icon icon="lucide:check-check" className="text-xl" />
               </Button>
             )}
+
             {actions.includes("reopen") && (
               <Button
                 size="sm"
@@ -267,14 +316,12 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                 title="Reopen"
                 aria-label="Reopen ticket"
                 disabled={isReopening}
-                onClick={() => {
-                  setReopenTargetId(ticket._id);
-                  setShowReopenModal(true);
-                }}
+                onClick={() => openAction("reopen")}
               >
                 <Icon icon="lucide:rotate-ccw" className="text-xl" />
               </Button>
             )}
+
             {actions.includes("chat") && <TicketComment ticket={ticket} />}
 
             {actions.includes("approve") && (
@@ -305,14 +352,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                 className="btn-street-primary radius-12 px-16 d-flex flex-row align-items-center justify-content-center gap-2 border-0 text-sm fw-semibold"
                 style={{ height: "40px" }}
                 disabled={starting}
-                onClick={async () => {
-                  try {
-                    const res = await startTicket(ticket._id).unwrap();
-                    if (res.success) showSuccess(res.message);
-                  } catch (error) {
-                    showError(getErrorMessage(error));
-                  }
-                }}
+                onClick={() => openAction("start")}
               >
                 <Icon icon="lucide:play" className="w-16-px h-16-px" />
                 {starting ? "Starting..." : "Start Work"}
@@ -324,14 +364,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                 className="btn-success radius-12 px-16 d-flex align-items-center justify-content-center gap-2 border-0 text-sm fw-semibold"
                 style={{ height: "40px" }}
                 disabled={completing}
-                onClick={async () => {
-                  try {
-                    const res = await completeTicket(ticket._id).unwrap();
-                    if (res.success) showSuccess(res.message);
-                  } catch (error) {
-                    showError(getErrorMessage(error));
-                  }
-                }}
+                onClick={() => openAction("complete")}
               >
                 <Icon
                   icon="lucide:check-circle-2"
@@ -341,75 +374,22 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
               </Button>
             )}
 
-            
-
             {actions.includes("edit") && <TicketDetails ticket={ticket} />}
             {actions.includes("delete") && <DeleteTicket ticket={ticket} />}
           </div>
-          {/* <div className="d-flex flex flex-row gap-2">
-            <TicketComment ticket={ticket} />
-            {isManagerOfLocation && status === "Open" && (
-              <>
-                <Button
-                  className="btn-street-primary"
-                  onClick={() => setShowApprove(true)}
-                >
-                  Approve
-                </Button>
-                <Button variant="danger" onClick={() => setShowReject(true)}>
-                  Reject
-                </Button>
-              </>
-            )}
-            {isAssignee && status === "Approved" && (
-              <Button
-                className="btn-street-primary"
-                disabled={starting}
-                onClick={async () => {
-                  try {
-                    const res = await startTicket(ticket._id).unwrap();
-                    if (res.success) showSuccess(res.message);
-                  } catch (error) {
-                    showError(getErrorMessage(error));
-                  }
-                }}
-              >
-                Start Work
-              </Button>
-            )}
-
-            {isAssignee && status === "In Progress" && (
-              <Button
-                variant="success"
-                disabled={completing}
-                onClick={async () => {
-                  try {
-                    const res = await completeTicket(ticket._id).unwrap();
-                    if (res.success) showSuccess(res.message);
-                  } catch (error) {
-                    showError(getErrorMessage(error));
-                  }
-                }}
-              >
-                Mark Completed
-              </Button>
-            )}
-
-        
-           
-            <TicketDetails ticket={ticket} />
-          </div> */}
         </div>
       </div>
+
       <ApproveTicketModal
         show={showApprove}
         onHide={() => setShowApprove(false)}
         isLoading={approving}
-        onApprove={async (priority) => {
+        onApprove={async (priority, overview) => {
           try {
             const res = await approveTicket({
               ticketId: ticket._id,
               priority,
+              overview,
             }).unwrap();
             if (res.success) {
               showSuccess(res.message);
@@ -440,76 +420,56 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
           }
         }}
       />
-      <ModalWrapper
-        show={showReopenModal}
-        onHide={() => {
-          if (!isReopening) {
-            setShowReopenModal(false);
-            setReopenTargetId(null);
+
+      {/* Shared modal: start / complete / close / reopen */}
+      {pendingAction && (
+        <ModalWrapper
+          show
+          onHide={closeActionModal}
+          title={actionConfig[pendingAction].title}
+          size="md"
+          isLoading={actionBusy}
+          footer={
+            <div className="d-flex justify-content-end gap-2">
+              <button
+                className="btn btn-street-primary btn-sm"
+                onClick={handleConfirmAction}
+                disabled={actionBusy}
+              >
+                {actionBusy
+                  ? actionConfig[pendingAction].loading
+                  : actionConfig[pendingAction].confirm}
+              </button>
+              <button
+                className="btn btn-street-neutral btn-sm"
+                onClick={closeActionModal}
+                disabled={actionBusy}
+              >
+                Cancel
+              </button>
+            </div>
           }
-        }}
-        title="Reopen Ticket"
-        size="md"
-        isLoading={isReopening}
-        footer={
-          <div className="d-flex justify-content-end gap-2">
-            <button
-              className="btn btn-street-primary btn-sm"
-              onClick={handleConfirmReopen}
-              disabled={isReopening}
-            >
-              {isReopening ? "Reopening..." : "Reopen"}
-            </button>
-            <button
-              className="btn btn-street-neutral btn-sm"
-              onClick={() => {
-                setShowReopenModal(false);
-                setReopenTargetId(null);
-              }}
-              disabled={isReopening}
-            >
-              Cancel
-            </button>
-          </div>
-        }
-      >
-        <p className="mb-0">
-          Are you sure you want to reopen this ticket? It will move back to{" "}
-          <strong>Open</strong> status and re-enter the approval flow.
-        </p>
-      </ModalWrapper>
-      <ModalWrapper
-        show={showCloseModal}
-        onHide={() => {
-          if (!isClosing) setShowCloseModal(false);
-        }}
-        title="Close Ticket"
-        size="md"
-        isLoading={isClosing}
-        footer={
-          <div className="d-flex justify-content-end gap-2">
-            <button
-              className="btn btn-street-primary btn-sm"
-              onClick={handleConfirmClose}
-              disabled={isClosing}
-            >
-              {isClosing ? "Closing..." : "Close Ticket"}
-            </button>
-            <button
-              className="btn btn-street-neutral btn-sm"
-              onClick={() => setShowCloseModal(false)}
-              disabled={isClosing}
-            >
-              Cancel
-            </button>
-          </div>
-        }
-      >
-        <p className="mb-0">
-          Confirm that the work is done and accepted? The ticket will be marked{" "}
-          <strong>Closed</strong>.
-        </p>
-      </ModalWrapper>
+        >
+          <p>{actionConfig[pendingAction].body}</p>
+          <label
+            className="form-label text-xs fw-semibold"
+            htmlFor="ticket-overview"
+          >
+            Update / Overview{" "}
+            <span className="fw-normal text-muted">(optional)</span>
+          </label>
+          <textarea
+            id="ticket-overview"
+            className="form-control"
+            rows={4}
+            maxLength={2000}
+            value={overviewText}
+            onChange={(e) => setOverviewText(e.target.value)}
+            placeholder="Add a short update for everyone following this ticket"
+            disabled={actionBusy}
+          />
+        </ModalWrapper>
+      )}
     </div>
   );
 };

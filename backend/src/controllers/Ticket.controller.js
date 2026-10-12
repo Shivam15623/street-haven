@@ -38,6 +38,20 @@ async function getSuperAdminIds(session) {
     .session(session);
   return superAdmins.map((u) => u._id.toString());
 }
+// undefined -> leave unchanged | null or "" -> clear | string -> set
+export const applyOverview = (doc, overview, userId) => {
+  if (overview === undefined) return;
+  if (overview !== null && typeof overview !== "string") {
+    throw new ApiError(400, "Overview must be a string");
+  }
+
+  const value = (overview ?? "").trim();
+  if (value === (doc.overview ?? "")) return; // nothing changed, don't touch audit fields
+
+  doc.overview = value; // schema default is "", so clear = ""
+  doc.overviewUpdatedBy = userId;
+  doc.overviewUpdatedAt = new Date();
+};
 export const createTicket = asyncHandler(async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -373,7 +387,7 @@ export const approveTicket = asyncHandler(async (req, res) => {
   session.startTransaction();
   try {
     const { id: ticketId } = req.params;
-    const { priority } = req.body;
+    const { priority, overview } = req.body;
     const userId = req.user._id.toString();
     const isSuperAdmin = req.user.role === "super_admin";
 
@@ -430,7 +444,7 @@ export const approveTicket = asyncHandler(async (req, res) => {
       assignedBy: userId,
       assignedAt: new Date(),
     });
-
+    applyOverview(ticket, overview, userId);
     await ticket.save({ session });
     await resyncTicketMembership(ticket, session);
 
@@ -664,6 +678,7 @@ export const startTicket = asyncHandler(async (req, res) => {
   session.startTransaction();
   try {
     const { id: ticketId } = req.params;
+    const { overview } = req.body;
     const userId = req.user._id.toString();
 
     const ticket = await Ticket.findById(ticketId).session(session);
@@ -688,6 +703,7 @@ export const startTicket = asyncHandler(async (req, res) => {
       changedBy: userId,
       changedAt: new Date(),
     });
+    applyOverview(ticket, overview, userId);
     await ticket.save({ session });
     await resyncTicketMembership(ticket, session); // no-op most of the time, cheap insurance
 
@@ -776,6 +792,7 @@ export const completeTicket = asyncHandler(async (req, res) => {
   session.startTransaction();
   try {
     const { id: ticketId } = req.params;
+    const { overview } = req.body;
     const userId = req.user._id.toString();
 
     const ticket = await Ticket.findById(ticketId).session(session);
@@ -801,6 +818,7 @@ export const completeTicket = asyncHandler(async (req, res) => {
       changedBy: userId,
       changedAt: new Date(),
     });
+    applyOverview(ticket, overview, userId);
     await ticket.save({ session });
 
     const recipientIds = [
@@ -869,7 +887,6 @@ export const completeTicket = asyncHandler(async (req, res) => {
     throw err;
   }
 });
-
 
 /* ======================
    EDIT (creator only, Pending only, no priority/status/assignment)
@@ -2826,6 +2843,7 @@ const REOPENABLE_STATUSES = [
 
 export const reopenTicket = asyncHandler(async (req, res) => {
   const { id: ticketId } = req.params;
+  const { overview } = req.body;
 
   const userId = req.user._id;
   const userIdStr = userId.toString();
@@ -2874,7 +2892,7 @@ export const reopenTicket = asyncHandler(async (req, res) => {
     // through the normal flow again. Adjust if you want to preserve these.
 
     ticket.priorityLocked = false;
-
+    applyOverview(ticket, overview, userId);
     await ticket.save({ session });
     await resyncTicketMembership(ticket, session);
     // -----------------------------------------
@@ -2961,7 +2979,7 @@ export const restoreTicket = asyncHandler(async (req, res) => {
 
 export const closeTicket = asyncHandler(async (req, res) => {
   const { id: ticketId } = req.params;
-
+  const { overview } = req.body;
   const userId = req.user._id;
   const userIdStr = userId.toString();
   const isSuperAdmin = req.user.role === "super_admin";
@@ -3003,7 +3021,7 @@ export const closeTicket = asyncHandler(async (req, res) => {
       changedBy: userId,
       changedAt: now,
     });
-
+    applyOverview(ticket, overview, userId);
     await ticket.save({ session });
     await resyncTicketMembership(ticket, session);
 

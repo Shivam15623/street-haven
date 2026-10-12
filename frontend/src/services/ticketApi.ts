@@ -155,12 +155,12 @@ const ticketApi = api.injectEndpoints({
     }),
     approveTicket: builder.mutation<
       ApiGeneralResponse,
-      { ticketId: string; priority: string }
+      { ticketId: string; priority: string; overview?: string }
     >({
-      query: ({ ticketId, priority }) => ({
+      query: ({ ticketId, priority, overview }) => ({
         url: `/ticket/${ticketId}/approve`,
         method: "PATCH",
-        body: { priority },
+        body: { priority, overview },
       }),
       invalidatesTags: ["Ticket"],
     }),
@@ -182,32 +182,36 @@ const ticketApi = api.injectEndpoints({
       invalidatesTags: ["Ticket"],
     }),
 
-    startTicket: builder.mutation<ApiGeneralResponse, string>({
-      query: (ticketId) => ({
+    startTicket: builder.mutation<ApiGeneralResponse, { ticketId: string; overview?: string }>({
+      query: ({ ticketId, overview }) => ({
         url: `/ticket/${ticketId}/start`,
         method: "PATCH",
+        body: { overview },
       }),
       invalidatesTags: ["Ticket"],
     }),
 
-    completeTicket: builder.mutation<ApiGeneralResponse, string>({
-      query: (ticketId) => ({
+    completeTicket: builder.mutation<ApiGeneralResponse, { ticketId: string; overview?: string }>({
+      query: ({ ticketId, overview }) => ({
         url: `/ticket/${ticketId}/complete`,
         method: "PATCH",
+          body: { overview },
       }),
       invalidatesTags: ["Ticket"],
     }),
-    reopenTicket: builder.mutation<ApiGeneralResponse, string>({
-      query: (ticketId) => ({
+    reopenTicket: builder.mutation<ApiGeneralResponse, { ticketId: string; overview?: string }>({
+     query: ({ ticketId, overview }) => ({
         url: `/ticket/${ticketId}/reopen`,
         method: "PATCH",
+          body: { overview },
       }),
       invalidatesTags: ["Ticket"],
     }),
-    closeTicket: builder.mutation<ApiGeneralResponse, string>({
-      query: (ticketId) => ({
+    closeTicket: builder.mutation<ApiGeneralResponse, { ticketId: string; overview?: string }>({
+      query: ({ ticketId, overview }) => ({
         url: `/ticket/${ticketId}/close`,
         method: "PATCH",
+        body: { overview },
       }),
       invalidatesTags: ["Ticket"],
     }),

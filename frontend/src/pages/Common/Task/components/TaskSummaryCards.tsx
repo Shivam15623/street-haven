@@ -4,7 +4,7 @@ import { TaskCountCard } from "./TaskCountCard";
 import useHasPermission from "../../../../hooks/Auth";
 
 interface TaskCounts {
-  new?: number;
+  in_progress?: number;
   assigned?: number;
   under_review?: number;
   completed?: number;
@@ -23,20 +23,21 @@ const TaskSummaryCards = ({ counts,  status, onStatusChange }: Props) => {
 
   const cards = useMemo(
     () => [
-      {
-        key: "new",
-        label: "New",
-        variant: "new",
-        icon: "mdi:plus-circle-outline",
-        count: counts?.new ?? 0,
-        adminOnly: true,
-      },
+ 
       {
         key: "assigned",
         label: "Assigned",
         variant: "assigned",
         icon: "mdi:account-check-outline",
         count: counts?.assigned ?? 0,
+      },
+           {
+        key: "in_progress",
+        label: "In Progress",
+        variant: "in_progress",
+        icon: "mdi:account-clock-outline",
+        count: counts?.in_progress ?? 0,
+        adminOnly: true,
       },
       {
         key: "under_review",

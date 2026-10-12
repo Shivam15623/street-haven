@@ -18,7 +18,15 @@ interface Params {
   onDelete: (task: ITask) => void;
   onView: (task: ITask) => void;
 }
+const formatDate = (date?: string | Date | null) => {
+  if (!date) return "-";
 
+  return new Date(date).toLocaleDateString("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+};
 export const useTaskColumns = ({
   onEdit,
   onDelete,
@@ -52,8 +60,8 @@ export const useTaskColumns = ({
       accessorKey: "dueDate",
       render: (row) => (
         <div className="d-flex flex-row gap-4">
-          <span className="text-sm">
-            {row.dueDate ? new Date(row.dueDate).toLocaleDateString() : "-"}
+          <span >
+            {row.dueDate ? formatDate(row.dueDate) : "-"}
           </span>
           {row.dueStatus && row.dueStatus !== "completed" && (
             <Badge
@@ -81,12 +89,12 @@ export const useTaskColumns = ({
     {
       title: "Created",
       accessorKey: "createdAt",
-      render: (row) => new Date(row.createdAt).toLocaleDateString(),
+      render: (row) => formatDate(row.createdAt),
     },
     {
       title: "Updated",
       accessorKey: "updatedAt",
-      render: (row) => new Date(row.updatedAt).toLocaleDateString(),
+      render: (row) => formatDate(row.updatedAt),
     },
     {
       title: "Actions",

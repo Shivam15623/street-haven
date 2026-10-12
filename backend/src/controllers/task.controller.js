@@ -141,7 +141,10 @@ export const editTask = asyncHandler(async (req, res) => {
     }
 
     // Only creator/admin can edit
-    if (task.assignedBy.toString() !== userId.toString()) {
+    if (
+      task.assignedBy.toString() !== userId.toString() &&
+      req.user.role !== "super_admin"
+    ) {
       throw new ApiError(403, "You are not authorized to edit this task");
     }
 
@@ -1231,6 +1234,7 @@ const getDuration = (start, end) => {
   if (!start || !end) return "-";
   const diffMs = new Date(end).getTime() - new Date(start).getTime();
   if (diffMs < 0) return "-";
+  const totalMin = Math.floor(diffMs / (1000 * 60)); // ← missing line
   const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
   const m = totalMin % 60;
