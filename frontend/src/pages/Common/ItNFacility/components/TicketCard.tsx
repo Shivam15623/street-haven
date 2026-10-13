@@ -249,7 +249,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
             )}
           </div>
         )}
-        ```
+     
         {/* Overview */}
         {overview && (
           <div className="bg-neutral-50 radius-8 p-12">
