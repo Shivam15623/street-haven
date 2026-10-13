@@ -387,7 +387,7 @@ export const approveTicket = asyncHandler(async (req, res) => {
   session.startTransaction();
   try {
     const { id: ticketId } = req.params;
-    const { priority} = req.body;
+    const { priority } = req.body;
     const userId = req.user._id.toString();
     const isSuperAdmin = req.user.role === "super_admin";
 
@@ -444,7 +444,7 @@ export const approveTicket = asyncHandler(async (req, res) => {
       assignedBy: userId,
       assignedAt: new Date(),
     });
-  
+
     await ticket.save({ session });
     await resyncTicketMembership(ticket, session);
 
@@ -565,7 +565,7 @@ export const rejectTicket = asyncHandler(async (req, res) => {
   session.startTransaction();
   try {
     const { id: ticketId } = req.params;
-    const { rejectionReason } = req.body;
+    const { rejectionReason, overview } = req.body;
     const userId = req.user._id.toString();
     const isSuperAdmin = req.user.role === "super_admin";
     if (!rejectionReason?.trim())
@@ -600,7 +600,7 @@ export const rejectTicket = asyncHandler(async (req, res) => {
       changedBy: userId,
       changedAt: new Date(),
     });
-
+    applyOverview(ticket, overview, userId);
     await ticket.save({ session });
 
     const [creator, rejector, locationDoc, categoryDoc] = await Promise.all([
@@ -1788,6 +1788,7 @@ export const FetchTickets = asyncHandler(async (req, res) => {
     .limit(limit)
     .populate("category", "name isActive")
     .populate("location", "name managers")
+    .populate("rejectedBy", "firstname lastname")
     .populate("createdBy", "firstname lastname email")
     .populate("assignedTo", "firstname lastname email")
     .populate("approvedBy", "firstname lastname")

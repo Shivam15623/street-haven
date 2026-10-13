@@ -172,12 +172,12 @@ const ticketApi = api.injectEndpoints({
     }),
     rejectTicket: builder.mutation<
       ApiGeneralResponse,
-      { ticketId: string; rejectionReason: string }
+      { ticketId: string; rejectionReason: string;overview?: string }
     >({
-      query: ({ ticketId, rejectionReason }) => ({
+      query: ({ ticketId, rejectionReason, overview }) => ({
         url: `/ticket/${ticketId}/reject`,
         method: "PATCH",
-        body: { rejectionReason },
+        body: { rejectionReason, overview },
       }),
       invalidatesTags: ["Ticket"],
     }),

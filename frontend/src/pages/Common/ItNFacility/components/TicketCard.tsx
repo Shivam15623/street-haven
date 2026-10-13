@@ -102,6 +102,8 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     overview,
     overviewUpdatedBy,
     overviewUpdatedAt,
+    rejectionReason,
+    rejectedBy,
   } = ticket;
 
   const { user: currentUser } = useSelector(selectAuth);
@@ -201,13 +203,53 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
             )}
           </div>
         </div>
-
         {/* Description */}
         <div
           className="parse Te"
           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(description) }}
         />
+        ```tsx
+        {/* Rejection Details */}
+        {status === "Rejected" && (rejectionReason || rejectedBy) && (
+          <div
+            className="radius-8 p-12"
+            style={{
+              backgroundColor: "#fff5f5",
+              border: "1px solid #ffc9c9",
+            }}
+          >
+            {rejectionReason && (
+              <>
+                <div className="d-flex align-items-center gap-2 mb-2">
+                  <Icon
+                    icon="lucide:alert-circle"
+                    className="text-danger w-16-px h-16-px"
+                  />
+                  <span className="fw-semibold text-danger text-sm">
+                    Rejection Reason
+                  </span>
+                </div>
 
+                <p
+                  className="text-xs text-street-dark mb-2"
+                  style={{ whiteSpace: "pre-wrap" }}
+                >
+                  {rejectionReason}
+                </p>
+              </>
+            )}
+
+            {rejectedBy && (
+              <p className="text-xs text-muted mb-0">
+                Rejected by:{" "}
+                <span className="text-street-dark fw-medium">
+                  {personName(rejectedBy)}
+                </span>
+              </p>
+            )}
+          </div>
+        )}
+        ```
         {/* Overview */}
         {overview && (
           <div className="bg-neutral-50 radius-8 p-12">
@@ -228,7 +270,6 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
             )}
           </div>
         )}
-
         {/* Meta info */}
         <div className="text-xs d-flex flex-column flex-md-row gap-1 gap-md-3 fw-normal">
           {meta.map((item, index) => (
@@ -238,9 +279,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
             </span>
           ))}
         </div>
-
         <hr />
-
         {/* Footer Section */}
         <div className="d-flex flex-column flex-md-row gap-3 align-items-md-center justify-content-between">
           <div className="row gy-2 gx-3 w-auto align-items-sm-center">
@@ -404,11 +443,12 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
         show={showReject}
         onHide={() => setShowReject(false)}
         isLoading={rejecting}
-        onReject={async (reason) => {
+        onReject={async (reason, overview) => {
           try {
             const res = await rejectTicket({
               ticketId: ticket._id,
               rejectionReason: reason,
+              overview,
             }).unwrap();
             if (res.success) {
               showSuccess(res.message);

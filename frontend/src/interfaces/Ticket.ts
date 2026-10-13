@@ -30,6 +30,12 @@ export interface TicketData {
     firstname: string;
     lastname: string;
   };
+  rejectedBy?: {
+    _id: string;
+    firstname: string;
+    lastname: string;
+  };
+  rejectionReason?: string;
   overview?: string;
   overviewUpdatedBy?: {
     _id: string;
