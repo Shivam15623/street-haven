@@ -208,7 +208,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
           className="parse Te"
           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(description) }}
         />
-        ```tsx
+     
         {/* Rejection Details */}
         {status === "Rejected" && (rejectionReason || rejectedBy) && (
           <div

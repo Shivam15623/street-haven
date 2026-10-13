@@ -592,7 +592,7 @@ export const rejectTicket = asyncHandler(async (req, res) => {
         "You are not a manager for this ticket's location",
       );
 
-    ticket.status = TICKET_STATUS.CLOSED;
+    ticket.status = TICKET_STATUS.REJECTED;
     ticket.rejectedBy = userId;
     ticket.rejectionReason = rejectionReason.trim();
     ticket.statusHistory.push({
