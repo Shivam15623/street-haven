@@ -1,5 +1,5 @@
 // TicketCard.tsx
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 import { Link } from "react-router-dom";
 import DOMPurify from "dompurify";
@@ -27,6 +27,7 @@ import { getErrorMessage } from "../../../../utills/utills";
 import { personName } from "../../../../utills/userDisplay";
 import { selectAuth } from "../../../../redux/AuthSlice";
 import { getTicketActions } from "../utillity/ticketPermissions";
+import TicketOverviewModal from "./TicketOverviewModal";
 
 interface TicketCardProps {
   ticket: TicketData;
@@ -102,7 +103,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     overview,
     overviewUpdatedBy,
     overviewUpdatedAt,
-    rejectionReason,
+
     rejectedBy,
   } = ticket;
 
@@ -122,7 +123,9 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     useCompleteTicketMutation();
   const [closeTicket, { isLoading: isClosing }] = useCloseTicketMutation();
   const [reopenTicket, { isLoading: isReopening }] = useReopenTicketMutation();
-
+  const [showOverview, setShowOverview] = useState(false);
+  const [isOverviewClamped, setIsOverviewClamped] = useState(false);
+  const overviewRef = useRef<HTMLParagraphElement>(null);
   const actionBusy = starting || completing || isClosing || isReopening;
 
   const actions = useMemo(
@@ -130,6 +133,10 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
     [ticket, currentUser],
   );
 
+  useEffect(() => {
+    const el = overviewRef.current;
+    if (el) setIsOverviewClamped(el.scrollHeight > el.clientHeight + 1);
+  }, [overview]);
   const meta: string[] = [
     `#${displayId}`,
     titleCase(category.name),
@@ -208,60 +215,29 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
           className="parse Te"
           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(description) }}
         />
-     
-        {/* Rejection Details */}
-        {status === "Rejected" && (rejectionReason || rejectedBy) && (
-          <div
-            className="radius-8 p-12"
-            style={{
-              backgroundColor: "#fff5f5",
-              border: "1px solid #ffc9c9",
-            }}
-          >
-            {rejectionReason && (
-              <>
-                <div className="d-flex align-items-center gap-2 mb-2">
-                  <Icon
-                    icon="lucide:alert-circle"
-                    className="text-danger w-16-px h-16-px"
-                  />
-                  <span className="fw-semibold text-danger text-sm">
-                    Rejection Reason
-                  </span>
-                </div>
 
-                <p
-                  className="text-xs text-street-dark mb-2"
-                  style={{ whiteSpace: "pre-wrap" }}
-                >
-                  {rejectionReason}
-                </p>
-              </>
-            )}
-
-            {rejectedBy && (
-              <p className="text-xs text-muted mb-0">
-                Rejected by:{" "}
-                <span className="text-street-dark fw-medium">
-                  {personName(rejectedBy)}
-                </span>
-              </p>
-            )}
-          </div>
-        )}
-     
         {/* Overview */}
         {overview && (
           <div className="bg-neutral-50 radius-8 p-12">
             <p
+              ref={overviewRef}
               className="text-xs text-street-dark mb-4 overview-clamp"
               style={{ whiteSpace: "pre-wrap" }}
             >
               <span className="fw-semibold">Update: </span>
               {overview}
             </p>
+            {isOverviewClamped && (
+              <button
+                type="button"
+                className="btn btn-link p-0 text-xs text-start mb-4"
+                onClick={() => setShowOverview(true)}
+              >
+                Read more
+              </button>
+            )}
             {(overviewUpdatedBy || overviewUpdatedAt) && (
-              <p className="text-xs text-muted mb-0">
+              <p className="text-xs text-street-base mb-0">
                 {overviewUpdatedBy && personName(overviewUpdatedBy)}
                 {overviewUpdatedBy && overviewUpdatedAt && " • "}
                 {overviewUpdatedAt &&
@@ -313,7 +289,14 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
                 </p>
               </div>
             )}
-
+            {rejectedBy && (
+              <p className="text-xs text-muted mb-0">
+                • Rejected by:{" "}
+                <span className="text-street-dark fw-medium">
+                  {personName(rejectedBy)}
+                </span>
+              </p>
+            )}
             {photo && (
               <div className="col-6 col-sm-auto d-flex align-items-center gap-2">
                 <Icon
@@ -443,11 +426,11 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
         show={showReject}
         onHide={() => setShowReject(false)}
         isLoading={rejecting}
-        onReject={async (reason, overview) => {
+        onReject={async (overview) => {
           try {
             const res = await rejectTicket({
               ticketId: ticket._id,
-              rejectionReason: reason,
+
               overview,
             }).unwrap();
             if (res.success) {
@@ -459,7 +442,27 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
           }
         }}
       />
-
+      {overview && (
+        <TicketOverviewModal
+          show={showOverview}
+          onHide={() => setShowOverview(false)}
+          ticketTitle={req_title}
+          overview={overview}
+          updatedBy={overviewUpdatedBy}
+          updatedAt={overviewUpdatedAt}
+          footer={
+            <div className="d-flex justify-content-end w-100">
+              <button
+                type="button"
+                className="btn btn-street-neutral radius-12"
+                onClick={() => setShowOverview(false)}
+              >
+                Close
+              </button>
+            </div>
+          }
+        />
+      )}
       {/* Shared modal: start / complete / close / reopen */}
       {pendingAction && (
         <ModalWrapper

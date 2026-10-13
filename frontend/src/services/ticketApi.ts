@@ -155,9 +155,9 @@ const ticketApi = api.injectEndpoints({
     }),
     approveTicket: builder.mutation<
       ApiGeneralResponse,
-      { ticketId: string; priority: string; }
+      { ticketId: string; priority: string }
     >({
-      query: ({ ticketId, priority}) => ({
+      query: ({ ticketId, priority }) => ({
         url: `/ticket/${ticketId}/approve`,
         method: "PATCH",
         body: { priority },
@@ -172,17 +172,20 @@ const ticketApi = api.injectEndpoints({
     }),
     rejectTicket: builder.mutation<
       ApiGeneralResponse,
-      { ticketId: string; rejectionReason: string;overview?: string }
+      { ticketId: string; overview?: string }
     >({
-      query: ({ ticketId, rejectionReason, overview }) => ({
+      query: ({ ticketId, overview }) => ({
         url: `/ticket/${ticketId}/reject`,
         method: "PATCH",
-        body: { rejectionReason, overview },
+        body: { overview },
       }),
       invalidatesTags: ["Ticket"],
     }),
 
-    startTicket: builder.mutation<ApiGeneralResponse, { ticketId: string; overview?: string }>({
+    startTicket: builder.mutation<
+      ApiGeneralResponse,
+      { ticketId: string; overview?: string }
+    >({
       query: ({ ticketId, overview }) => ({
         url: `/ticket/${ticketId}/start`,
         method: "PATCH",
@@ -191,23 +194,32 @@ const ticketApi = api.injectEndpoints({
       invalidatesTags: ["Ticket"],
     }),
 
-    completeTicket: builder.mutation<ApiGeneralResponse, { ticketId: string; overview?: string }>({
+    completeTicket: builder.mutation<
+      ApiGeneralResponse,
+      { ticketId: string; overview?: string }
+    >({
       query: ({ ticketId, overview }) => ({
         url: `/ticket/${ticketId}/complete`,
         method: "PATCH",
-          body: { overview },
+        body: { overview },
       }),
       invalidatesTags: ["Ticket"],
     }),
-    reopenTicket: builder.mutation<ApiGeneralResponse, { ticketId: string; overview?: string }>({
-     query: ({ ticketId, overview }) => ({
+    reopenTicket: builder.mutation<
+      ApiGeneralResponse,
+      { ticketId: string; overview?: string }
+    >({
+      query: ({ ticketId, overview }) => ({
         url: `/ticket/${ticketId}/reopen`,
         method: "PATCH",
-          body: { overview },
+        body: { overview },
       }),
       invalidatesTags: ["Ticket"],
     }),
-    closeTicket: builder.mutation<ApiGeneralResponse, { ticketId: string; overview?: string }>({
+    closeTicket: builder.mutation<
+      ApiGeneralResponse,
+      { ticketId: string; overview?: string }
+    >({
       query: ({ ticketId, overview }) => ({
         url: `/ticket/${ticketId}/close`,
         method: "PATCH",
@@ -216,7 +228,6 @@ const ticketApi = api.injectEndpoints({
       invalidatesTags: ["Ticket"],
     }),
 
-  
     addTicketComment: builder.mutation<
       ApiGeneralResponse,
       { ticketId: string; formdata: FormData; onProgress?: (p: number) => void }

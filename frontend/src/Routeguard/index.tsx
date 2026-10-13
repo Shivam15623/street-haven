@@ -58,7 +58,10 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
     }
     return <>{children}</>;
   }
-
+  
+  if (isLoggedIn && user?.isFacilityManager && location.pathname === "/users") {
+    return <Navigate to="/unauthorized" replace />;
+  }
   // 🧑‍⚖️ Role-based access (ONLY if logged in)
   if (
     isLoggedIn &&

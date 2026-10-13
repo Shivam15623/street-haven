@@ -5,7 +5,7 @@ import ModalWrapper from "../../../../components/child/ModalWrapper";
 interface RejectTicketModalProps {
   show: boolean;
   onHide: () => void;
-  onReject: (reason: string, overview: string) => Promise<void> | void;
+  onReject: (overview: string) => Promise<void> | void;
   isLoading?: boolean;
 }
 
@@ -15,22 +15,20 @@ const RejectTicketModal: React.FC<RejectTicketModalProps> = ({
   onReject,
   isLoading,
 }) => {
-  const [reason, setReason] = useState("");
   const [overview, setOverview] = useState("");
 
   // Reset the form whenever the modal closes
   useEffect(() => {
     if (!show) {
-      setReason("");
       setOverview("");
     }
   }, [show]);
 
   const handleReject = async () => {
-    if (!reason.trim() || isLoading) return;
+    if (isLoading) return;
 
     // Keep the modal open if rejection fails
-    await onReject(reason.trim(), overview.trim());
+    await onReject(overview.trim());
   };
 
   return (
@@ -43,19 +41,11 @@ const RejectTicketModal: React.FC<RejectTicketModalProps> = ({
       isLoading={isLoading}
       footer={
         <>
-          <Button
-            variant="secondary"
-            onClick={onHide}
-            disabled={isLoading}
-          >
+          <Button variant="secondary" onClick={onHide} disabled={isLoading}>
             Cancel
           </Button>
 
-          <Button
-            variant="danger"
-            onClick={handleReject}
-            disabled={!reason.trim() || isLoading}
-          >
+          <Button variant="danger" onClick={handleReject} disabled={isLoading}>
             {isLoading ? "Rejecting..." : "Reject"}
           </Button>
         </>
@@ -75,8 +65,8 @@ const RejectTicketModal: React.FC<RejectTicketModalProps> = ({
             className="form-control"
             rows={3}
             maxLength={2000}
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
+            value={overview}
+            onChange={(e) => setOverview(e.target.value)}
             placeholder="Explain why this ticket is being rejected..."
             disabled={isLoading}
             required

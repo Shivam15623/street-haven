@@ -89,6 +89,9 @@ const RootLayout = () => {
   const navigation = useNavigation();
   const isLoading = navigation.state === "loading";
   const filteredMenu = menuItems.filter((m) => {
+    if (m.label === "Users" && user?.isFacilityManager) {
+      return false;
+    }
     // Public menu item
     if (m.public) return true;
 

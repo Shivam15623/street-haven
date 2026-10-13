@@ -565,12 +565,10 @@ export const rejectTicket = asyncHandler(async (req, res) => {
   session.startTransaction();
   try {
     const { id: ticketId } = req.params;
-    const { rejectionReason, overview } = req.body;
+    const {  overview } = req.body;
     const userId = req.user._id.toString();
     const isSuperAdmin = req.user.role === "super_admin";
-    if (!rejectionReason?.trim())
-      throw new ApiError(400, "Rejection reason is required");
-
+   
     const ticket = await Ticket.findById(ticketId).session(session);
     if (!ticket) throw new ApiError(404, "No such ticket found");
 
@@ -594,7 +592,7 @@ export const rejectTicket = asyncHandler(async (req, res) => {
 
     ticket.status = TICKET_STATUS.REJECTED;
     ticket.rejectedBy = userId;
-    ticket.rejectionReason = rejectionReason.trim();
+
     ticket.statusHistory.push({
       status: TICKET_STATUS.REJECTED,
       changedBy: userId,
@@ -626,10 +624,10 @@ export const rejectTicket = asyncHandler(async (req, res) => {
       await notifyAndEmit(session, {
         recipients: [{ userId: creator._id.toString() }],
         title: "Ticket Rejected",
-        message: `Your ticket "${ticket.req_title}" was rejected: ${rejectionReason.trim()}`,
+        message: `Your ticket "${ticket.req_title}" was rejected by ${rejectorName}.`,
         link: `/it_facility?tab=track_tickets&status=Closed&item=${ticket.slug}`,
         createdBy: userId,
-        meta: { ticketId: ticket.slug, rejectionReason },
+        meta: { ticketId: ticket.slug},
       });
 
       await notifyTicketEmail({
@@ -641,7 +639,7 @@ export const rejectTicket = asyncHandler(async (req, res) => {
           category: categoryName,
           location: locationName,
           rejectedBy: rejectorName,
-          rejectionReason: rejectionReason.trim(),
+          rejectionReason: overview.trim(),
           link: `${process.env.DOMAIN}/it_facility?tab=track_tickets&status=Closed&item=${ticket.slug}`,
         }),
         session,
