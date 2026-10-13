@@ -55,27 +55,6 @@ const RejectTicketModal: React.FC<RejectTicketModalProps> = ({
         <div>
           <label
             className="fw-semibold text-street-dark mb-2"
-            htmlFor="reject-reason"
-          >
-            Rejection Reason <span className="text-danger">*</span>
-          </label>
-
-          <textarea
-            id="reject-reason"
-            className="form-control"
-            rows={3}
-            maxLength={2000}
-            value={overview}
-            onChange={(e) => setOverview(e.target.value)}
-            placeholder="Explain why this ticket is being rejected..."
-            disabled={isLoading}
-            required
-          />
-        </div>
-
-        <div>
-          <label
-            className="fw-semibold text-street-dark mb-2"
             htmlFor="reject-overview"
           >
             Update / Overview{" "}
