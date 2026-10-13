@@ -27,7 +27,8 @@ import { getErrorMessage } from "../../../../utills/utills";
 import { personName } from "../../../../utills/userDisplay";
 import { selectAuth } from "../../../../redux/AuthSlice";
 import { getTicketActions } from "../utillity/ticketPermissions";
-import TicketOverviewModal from "./TicketOverviewModal";
+
+import TicketDetailDrawer from "./TicketReport/TicketDetailDrawer";
 
 interface TicketCardProps {
   ticket: TicketData;
@@ -442,27 +443,6 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
           }
         }}
       />
-      {overview && (
-        <TicketOverviewModal
-          show={showOverview}
-          onHide={() => setShowOverview(false)}
-          ticketTitle={req_title}
-          overview={overview}
-          updatedBy={overviewUpdatedBy}
-          updatedAt={overviewUpdatedAt}
-          footer={
-            <div className="d-flex justify-content-end w-100">
-              <button
-                type="button"
-                className="btn btn-street-neutral radius-12"
-                onClick={() => setShowOverview(false)}
-              >
-                Close
-              </button>
-            </div>
-          }
-        />
-      )}
       {/* Shared modal: start / complete / close / reopen */}
       {pendingAction && (
         <ModalWrapper
@@ -512,6 +492,11 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
           />
         </ModalWrapper>
       )}
+      <TicketDetailDrawer
+        ticketId={ticket._id}
+        open={showOverview}
+        onClose={() => setShowOverview(false)}
+      />
     </div>
   );
 };
