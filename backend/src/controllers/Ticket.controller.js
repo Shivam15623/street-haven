@@ -387,7 +387,7 @@ export const approveTicket = asyncHandler(async (req, res) => {
   session.startTransaction();
   try {
     const { id: ticketId } = req.params;
-    const { priority, overview } = req.body;
+    const { priority} = req.body;
     const userId = req.user._id.toString();
     const isSuperAdmin = req.user.role === "super_admin";
 
@@ -444,7 +444,7 @@ export const approveTicket = asyncHandler(async (req, res) => {
       assignedBy: userId,
       assignedAt: new Date(),
     });
-    applyOverview(ticket, overview, userId);
+  
     await ticket.save({ session });
     await resyncTicketMembership(ticket, session);
 

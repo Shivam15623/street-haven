@@ -5,7 +5,7 @@ import ModalWrapper from "../../../../components/child/ModalWrapper";
 interface ApproveTicketModalProps {
   show: boolean;
   onHide: () => void;
-  onApprove: (priority: string, overview: string) => Promise<void> | void;
+  onApprove: (priority: string) => Promise<void> | void;
   isLoading?: boolean;
 }
 
@@ -23,20 +23,20 @@ const ApproveTicketModal: React.FC<ApproveTicketModalProps> = ({
   isLoading,
 }) => {
   const [priority, setPriority] = useState<string>("Medium");
-  const [overview, setOverview] = useState("");
+
 
   // Reset the form each time the modal is closed
   useEffect(() => {
     if (!show) {
       setPriority("Medium");
-      setOverview("");
+    
     }
   }, [show]);
 
   const handleApprove = async () => {
     // TicketCard closes the modal on success; on failure it stays open
     // so the user keeps what they typed.
-    await onApprove(priority, overview.trim());
+    await onApprove(priority);
   };
 
   return (
@@ -93,23 +93,7 @@ const ApproveTicketModal: React.FC<ApproveTicketModalProps> = ({
           This sets the ticket's priority and locks it once approved.
         </p>
 
-        <label
-          className="fw-semibold text-street-dark mt-2 mb-1"
-          htmlFor="approve-overview"
-        >
-          Update / Overview{" "}
-          <span className="fw-normal text-muted">(optional)</span>
-        </label>
-        <textarea
-          id="approve-overview"
-          className="form-control"
-          rows={4}
-          maxLength={2000}
-          value={overview}
-          onChange={(e) => setOverview(e.target.value)}
-          placeholder="Add a short update for everyone following this ticket"
-          disabled={isLoading}
-        />
+      
       </div>
     </ModalWrapper>
   );

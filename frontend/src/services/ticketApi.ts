@@ -155,12 +155,12 @@ const ticketApi = api.injectEndpoints({
     }),
     approveTicket: builder.mutation<
       ApiGeneralResponse,
-      { ticketId: string; priority: string; overview?: string }
+      { ticketId: string; priority: string; }
     >({
-      query: ({ ticketId, priority, overview }) => ({
+      query: ({ ticketId, priority}) => ({
         url: `/ticket/${ticketId}/approve`,
         method: "PATCH",
-        body: { priority, overview },
+        body: { priority },
       }),
       invalidatesTags: ["Ticket"],
     }),

@@ -205,7 +205,11 @@ const QuillEditor: React.FC<QuillEditorProps> = ({
   }, [disabled, toolbarId]); // <-- remove mentionableUsers
 
   return (
-    <div className={`w-100 border-1 rounded ${className}`}>
+    <div
+      className={`w-100 border-1 rounded ${className} ${
+        isInvalid ? "border-danger" : "border-sh-base-50"
+      }`}
+    >
       <div
         className={`border-1 rounded bg-white  position-relative ${
           isInvalid ? "border-danger" : "border-sh-base-50"

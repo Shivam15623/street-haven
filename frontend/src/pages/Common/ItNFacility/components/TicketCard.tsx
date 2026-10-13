@@ -384,12 +384,11 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket }) => {
         show={showApprove}
         onHide={() => setShowApprove(false)}
         isLoading={approving}
-        onApprove={async (priority, overview) => {
+        onApprove={async (priority) => {
           try {
             const res = await approveTicket({
               ticketId: ticket._id,
               priority,
-              overview,
             }).unwrap();
             if (res.success) {
               showSuccess(res.message);

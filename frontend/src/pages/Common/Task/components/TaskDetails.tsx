@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import dayjs from "dayjs";
 import { Icon } from "@iconify/react";
 import type { BadgeVariant } from "../../../../components/child/Badge";
 import Badge from "../../../../components/child/Badge";
@@ -16,7 +15,15 @@ interface Props {
   open: boolean;
   onClose: () => void;
 }
-
+const formatDate = (date?: string | Date | null) => {
+  if (!date) return "-";
+  return new Date(date).toLocaleDateString("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "UTC", // dueDate is stored as UTC midnight (date-only)
+  });
+};
 const statusVariant: Record<string, BadgeVariant> = {
   new: "info-soft",
   assigned: "warning-soft",
@@ -137,7 +144,7 @@ const TaskDetailDrawer = ({ taskId, open, onClose }: Props) => {
                 <InfoRow
                   icon="mdi:calendar-outline"
                   label="Created"
-                  value={dayjs(task.createdAt).format("DD MMM YYYY, h:mm A")}
+                  value={formatDate(task.createdAt)}
                 />
               </div>
               <div className="col-6">
@@ -145,9 +152,7 @@ const TaskDetailDrawer = ({ taskId, open, onClose }: Props) => {
                   icon="mdi:calendar-clock-outline"
                   label="Due Date"
                   value={
-                    task.dueDate
-                      ? dayjs(task.dueDate).format("DD MMM YYYY")
-                      : "No due date"
+                    task.dueDate ? formatDate(task.dueDate) : "No due date"
                   }
                 />
               </div>
@@ -155,7 +160,7 @@ const TaskDetailDrawer = ({ taskId, open, onClose }: Props) => {
                 <InfoRow
                   icon="mdi:update"
                   label="Last Updated"
-                  value={dayjs(task.updatedAt).format("DD MMM YYYY, h:mm A")}
+                  value={formatDate(task.updatedAt)}
                 />
               </div>
             </div>
@@ -239,11 +244,8 @@ const TaskDetailDrawer = ({ taskId, open, onClose }: Props) => {
                           {activityLabel(item)}
                         </p>
                         <p className="text-xs text-street-dark mb-0">
-                          {item.userId
-                            ? personName(item.userId)
-                            : "System"}{" "}
-                          ·{" "}
-                          {dayjs(item.createdAt).format("DD MMM YYYY, h:mm A")}
+                          {item.userId ? personName(item.userId) : "System"} ·{" "}
+                          {formatDate(item.createdAt)}
                         </p>
                       </div>
                     </div>

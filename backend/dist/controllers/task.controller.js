@@ -695,7 +695,7 @@ export const getAllTasks = asyncHandler(async (req, res) => {
   const total = filteredCountResult[0]?.count || 0;
 
   const counts = {
-    new: 0,
+    in_progress: 0,
     assigned: 0,
     under_review: 0,
     completed: 0,
@@ -1218,10 +1218,13 @@ const getActualWorkTime = (statusHistory) => {
 /* ---- Format a duration given in ms as "Xd Yh" ---- */
 const formatDurationMs = (ms) => {
   if (!ms || ms <= 0) return "-";
+   const totalMin = Math.floor(ms / 60000);
   const days = Math.floor(ms / (1000 * 60 * 60 * 24));
   const hours = Math.floor((ms / (1000 * 60 * 60)) % 24);
-  return `${days}d ${hours}h`;
+   const m = totalMin % 60;
+  return `${days}d ${hours}h ${m}m`;
 };
+
 /* ---- Latest assignment date from assignmentHistory, not the first ---- */
 const getAssignedDate = (assignmentHistory) => {
   if (!assignmentHistory?.length) return null;
