@@ -24,6 +24,22 @@ const formatDate = (date?: string | Date | null) => {
     timeZone: "UTC", // dueDate is stored as UTC midnight (date-only)
   });
 };
+const formatDateTime = (date?: string | Date | null) => {
+  if (!date) return "-";
+
+  return new Date(date)
+    .toLocaleString("en-CA", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "America/Toronto",
+    })
+    .replace(/\s*a\.m\./i, " AM")
+    .replace(/\s*p\.m\./i, " PM");
+};
 const statusVariant: Record<string, BadgeVariant> = {
   new: "info-soft",
   assigned: "warning-soft",
@@ -144,7 +160,7 @@ const TaskDetailDrawer = ({ taskId, open, onClose }: Props) => {
                 <InfoRow
                   icon="mdi:calendar-outline"
                   label="Created"
-                  value={formatDate(task.createdAt)}
+                  value={formatDateTime(task.createdAt)}
                 />
               </div>
               <div className="col-6">
@@ -160,7 +176,7 @@ const TaskDetailDrawer = ({ taskId, open, onClose }: Props) => {
                 <InfoRow
                   icon="mdi:update"
                   label="Last Updated"
-                  value={formatDate(task.updatedAt)}
+                  value={formatDateTime(task.updatedAt)}
                 />
               </div>
             </div>
@@ -245,7 +261,7 @@ const TaskDetailDrawer = ({ taskId, open, onClose }: Props) => {
                         </p>
                         <p className="text-xs text-street-dark mb-0">
                           {item.userId ? personName(item.userId) : "System"} ·{" "}
-                          {formatDate(item.createdAt)}
+                          {formatDateTime(item.createdAt)}
                         </p>
                       </div>
                     </div>

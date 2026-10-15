@@ -60,19 +60,23 @@ export const useTaskColumns = ({
       accessorKey: "dueDate",
       render: (row) => (
         <div className="d-flex flex-row gap-4">
-          <span >
-            {row.dueDate ? formatDate(row.dueDate) : "-"}
-          </span>
-          {row.dueStatus && row.dueStatus !== "completed" && (
-            <Badge
-              variant={dueStatusVariant[row.dueStatus as DueStatus]}
-              className="text-capitalize w-fit"
-            >
-              {dueStatusLabel[row.dueStatus as DueStatus]}
-            </Badge>
-          )}
+          <span>{row.dueDate ? formatDate(row.dueDate) : "-"}</span>
         </div>
       ),
+    },
+    {
+      title: "",
+      sortable: false,
+      render: (row) =>
+        row.dueStatus &&
+        row.dueStatus !== "completed" && (
+          <Badge
+            variant={dueStatusVariant[row.dueStatus as DueStatus]}
+            className="text-capitalize w-fit"
+          >
+            {dueStatusLabel[row.dueStatus as DueStatus]}
+          </Badge>
+        ),
     },
     {
       title: "Status",

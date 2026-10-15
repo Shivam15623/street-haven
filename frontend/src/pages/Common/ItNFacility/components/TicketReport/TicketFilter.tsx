@@ -209,6 +209,9 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
           {/* Location */}
 
           <div className="col-12 col-md-6 col-lg-3">
+            <label className="form-label text-xs fw-medium text-neutral-700 mb-6">
+              Location
+            </label>
             <MultiSelectDropdown
               options={locationOptions}
               selected={filters.location}
@@ -221,6 +224,9 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
 
           {/* Status */}
           <div className="col-12 col-md-6 col-lg-3">
+            <label className="form-label text-xs fw-medium text-neutral-700 mb-6">
+              Status
+            </label>
             <MultiSelectDropdown
               options={STATUS_OPTIONS}
               selected={filters.status}
