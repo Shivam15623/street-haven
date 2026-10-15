@@ -164,7 +164,7 @@ const TicketDetailDrawer = ({ ticketId, open, onClose }: Props) => {
               <div className="col-6">
                 <InfoRow
                   icon="mdi:timer-check-outline"
-                  label="Turnaround"
+                  label="Turnaround Time"
                   value={
                     ticket.turnaround ??
                     (ticket.resolvedAt ? "—" : "In progress")

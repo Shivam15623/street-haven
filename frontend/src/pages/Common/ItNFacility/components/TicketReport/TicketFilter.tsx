@@ -34,7 +34,6 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
   const { user } = useSelector(selectAuth);
   const { hasPermission } = useHasPermission();
 
-
   const today = new Date();
 
   const canViewAll = hasPermission({ action: PERMISSIONS.TICKET_REPORT_ALL });
@@ -93,8 +92,6 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
 
     return "";
   };
-
-
 
   const updateFilter = <K extends keyof ticketsReportFilters>(
     key: K,
@@ -210,24 +207,28 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
           </div>
 
           {/* Location */}
-          {/* Location */}
-          <MultiSelectDropdown
-            options={locationOptions}
-            selected={filters.location}
-            onChange={(next) => updateFilter("location", next)}
-            allLabel="All Locations"
-            pluralLabel="locations"
-            loading={locationsLoading}
-          />
+
+          <div className="col-12 col-md-6 col-lg-3">
+            <MultiSelectDropdown
+              options={locationOptions}
+              selected={filters.location}
+              onChange={(next) => updateFilter("location", next)}
+              allLabel="All Locations"
+              pluralLabel="locations"
+              loading={locationsLoading}
+            />
+          </div>
 
           {/* Status */}
-          <MultiSelectDropdown
-            options={STATUS_OPTIONS}
-            selected={filters.status}
-            onChange={(next) => updateFilter("status", next)}
-            allLabel="All Status"
-            pluralLabel="statuses"
-          />
+          <div className="col-12 col-md-6 col-lg-3">
+            <MultiSelectDropdown
+              options={STATUS_OPTIONS}
+              selected={filters.status}
+              onChange={(next) => updateFilter("status", next)}
+              allLabel="All Status"
+              pluralLabel="statuses"
+            />
+          </div>
 
           {/* Created By */}
           <div className="col-12 col-md-6 col-lg-3">

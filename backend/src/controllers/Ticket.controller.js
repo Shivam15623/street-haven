@@ -2163,9 +2163,11 @@ export const GetTicketDetail = asyncHandler(async (req, res) => {
   let turnaround = null;
   if (ticket.resolvedAt) {
     const diffMs = ticket.resolvedAt.getTime() - ticket.createdAt.getTime();
+    const totalMin = Math.floor(diffMs / (1000 * 60)); // ← missing line
     const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
-    turnaround = `${days}d ${hours}h`;
+    const m = totalMin % 60;
+    turnaround = `${days}d ${hours}h ${m}m`;
   }
 
   /* ---- Merge statusHistory + assignmentHistory into one chronological timeline ---- */
