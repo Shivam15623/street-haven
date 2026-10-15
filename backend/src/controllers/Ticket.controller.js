@@ -1919,6 +1919,21 @@ export const FetchTicketComments = (req, res) =>
 export const AddTicketComment = (req, res) =>
   addCommentForEntity(req, res, "Ticket");
 
+const parseStatusList = (value) => {
+  if (!value) return [];
+  const raw = (Array.isArray(value) ? value : [value])
+    .flatMap((v) => String(v).split(","))
+    .map((v) => v.trim())
+    .filter((v) => v && v !== "All");
+
+  const unique = [...new Set(raw)];
+  const valid = Object.values(TICKET_STATUS);
+  const invalid = unique.filter((s) => !valid.includes(s));
+  if (invalid.length) {
+    throw new ApiError(400, `Invalid status: ${invalid.join(", ")}`);
+  }
+  return unique;
+};
 const buildReportFilter = async (req) => {
   const {
     startDate,
@@ -2007,8 +2022,9 @@ const buildReportFilter = async (req) => {
   andConditions.push({ createdAt: dateFilter });
 
   /* ---- Status filter ---- */
-  if (status && status !== "All") {
-    andConditions.push({ status });
+  const statuses = parseStatusList(status);
+  if (statuses.length) {
+    andConditions.push({ status: { $in: statuses } });
   }
 
   return andConditions.length ? { $and: andConditions } : {};

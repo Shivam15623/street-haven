@@ -8,12 +8,20 @@ import { useSelector } from "react-redux";
 import { selectAuth } from "../../../../../redux/AuthSlice";
 import useHasPermission from "../../../../../hooks/Auth";
 import { PERMISSIONS } from "../../../../../utills/auth/permissions";
+import MultiSelectDropdown from "../../../../../components/child/MultiSelectDropdown";
 
 interface Props {
   filters: ticketsReportFilters;
   setFilters: React.Dispatch<React.SetStateAction<ticketsReportFilters>>;
 }
-
+const STATUS_OPTIONS = [
+  "Open",
+  "Approved",
+  "Rejected",
+  "In Progress",
+  "Completed",
+  "Closed",
+].map((s) => ({ value: s, label: s }));
 const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
   const [dateError, setDateError] = React.useState("");
   const { data: employeeData, isLoading: isEmployeeLoading } =
@@ -25,7 +33,7 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
     useFetchLocationsQuery({});
   const { user } = useSelector(selectAuth);
   const { hasPermission } = useHasPermission();
-  const [locationOpen, setLocationOpen] = React.useState(false);
+
   const locationRef = React.useRef<HTMLDivElement>(null);
   const today = new Date();
 
@@ -54,6 +62,10 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
       return isFacilityManager || isManager;
     });
   }, [locationsData, isSelfManagedOnly, user?._id]);
+  const locationOptions = React.useMemo(
+    () => visibleLocations.map((l) => ({ value: l._id, label: l.name })),
+    [visibleLocations],
+  );
 
   const formatDate = (date: Date | null) => {
     if (!date) return "";
@@ -81,49 +93,9 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
 
     return "";
   };
-  React.useEffect(() => {
-    const onMouseDown = (e: MouseEvent) => {
-      if (
-        locationRef.current &&
-        !locationRef.current.contains(e.target as Node)
-      ) {
-        setLocationOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onMouseDown);
-    return () => document.removeEventListener("mousedown", onMouseDown);
-  }, []);
 
-  const toggleLocation = (id: string) => {
-    updateFilter(
-      "location",
-      filters.location.includes(id)
-        ? filters.location.filter((l) => l !== id)
-        : [...filters.location, id],
-    );
-  };
 
-  const allLocationsSelected =
-    visibleLocations.length > 0 &&
-    visibleLocations.every((l) => filters.location.includes(l._id));
 
-  const toggleAllLocations = () => {
-    updateFilter(
-      "location",
-      allLocationsSelected ? [] : visibleLocations.map((l) => l._id),
-    );
-  };
-
-  const locationLabel = (() => {
-    if (!filters.location.length) return "All Locations";
-    if (filters.location.length === 1) {
-      return (
-        visibleLocations.find((l) => l._id === filters.location[0])?.name ??
-        "1 selected"
-      );
-    }
-    return `${filters.location.length} locations selected`;
-  })();
   const updateFilter = <K extends keyof ticketsReportFilters>(
     key: K,
     value: ticketsReportFilters[K],
@@ -165,7 +137,7 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
       startDate: "",
       endDate: "",
       location: [],
-      status: "All",
+      status: [],
       createdBy: "",
       assignedTo: "",
       approvedBy: "",
@@ -178,7 +150,7 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
     filters.startDate ||
     filters.endDate ||
     filters.location.length > 0 ||
-    filters.status !== "All" ||
+    filters.status.length > 0 ||
     filters.createdBy ||
     filters.assignedTo ||
     filters.approvedBy;
@@ -239,92 +211,23 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
 
           {/* Location */}
           {/* Location */}
-          <div className="col-12 col-md-6 col-lg-3">
-            <label className="form-label text-xs fw-medium text-neutral-700 mb-6">
-              Location
-            </label>
-            <div className="position-relative" ref={locationRef}>
-              <button
-                type="button"
-                className="form-select text-sm text-start text-truncate"
-                onClick={() => setLocationOpen((o) => !o)}
-                aria-haspopup="listbox"
-                aria-expanded={locationOpen}
-              >
-                {locationLabel}
-              </button>
-
-              {locationOpen && (
-                <div
-                  className="position-absolute w-100 bg-white border radius-8 shadow-4 mt-4 py-8"
-                  style={{ zIndex: 1050, maxHeight: 260, overflowY: "auto" }}
-                  role="listbox"
-                  aria-multiselectable="true"
-                >
-                  {locationsLoading ? (
-                    <div className="px-12 py-6 text-sm text-neutral-500">
-                      Loading...
-                    </div>
-                  ) : visibleLocations.length === 0 ? (
-                    <div className="px-12 py-6 text-sm text-neutral-500">
-                      No locations available
-                    </div>
-                  ) : (
-                    <>
-                      <label className="d-flex align-items-center gap-8 px-12 py-6 text-sm fw-medium cursor-pointer border-bottom">
-                        <input
-                          type="checkbox"
-                          className="form-check-input m-0"
-                          checked={allLocationsSelected}
-                          onChange={toggleAllLocations}
-                        />
-                        Select all
-                      </label>
-                      {visibleLocations.map((l) => (
-                        <label
-                          key={l._id}
-                          className="d-flex align-items-center gap-8 px-12 py-6 text-sm cursor-pointer"
-                        >
-                          <input
-                            type="checkbox"
-                            className="form-check-input m-0"
-                            checked={filters.location.includes(l._id)}
-                            onChange={() => toggleLocation(l._id)}
-                          />
-                          {l.name}
-                        </label>
-                      ))}
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+          <MultiSelectDropdown
+            options={locationOptions}
+            selected={filters.location}
+            onChange={(next) => updateFilter("location", next)}
+            allLabel="All Locations"
+            pluralLabel="locations"
+            loading={locationsLoading}
+          />
 
           {/* Status */}
-          <div className="col-12 col-md-6 col-lg-3">
-            <label className="form-label text-xs fw-medium text-neutral-700 mb-6">
-              Status
-            </label>
-            <select
-              value={filters.status}
-              onChange={(e) =>
-                updateFilter(
-                  "status",
-                  e.target.value as ticketsReportFilters["status"],
-                )
-              }
-              className="form-select text-sm"
-            >
-              <option value="All">All Status</option>
-              <option value="Open">Open</option>
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-              <option value="Closed">Closed</option>
-            </select>
-          </div>
+          <MultiSelectDropdown
+            options={STATUS_OPTIONS}
+            selected={filters.status}
+            onChange={(next) => updateFilter("status", next)}
+            allLabel="All Status"
+            pluralLabel="statuses"
+          />
 
           {/* Created By */}
           <div className="col-12 col-md-6 col-lg-3">

@@ -20,14 +20,7 @@ export interface ticketsReportFilters {
 
   // Ticket filters
   location: string[];
-  status:
-    | "All"
-    | "Open"
-    | "Approved"
-    | "In Progress"
-    | "Completed"
-    | "Rejected"
-    | "Closed";
+  status: TicketStatus[];
 
   // User filters
   createdBy: string;
@@ -44,7 +37,7 @@ const TicketReport = () => {
     startDate: "",
     endDate: "",
     location: [],
-    status: "All",
+    status: [],
     createdBy: "",
     assignedTo: "",
     approvedBy: "",
@@ -138,9 +131,9 @@ const TicketReport = () => {
               variant="open"
               icon="lucide:clock-3"
               onClick={() =>
-                setFilters((p) => ({ ...p, status: "Open", page: 1 }))
+                setFilters((p) => ({ ...p, status: ["Open"], page: 1 }))
               }
-              active={filters.status === "Open"}
+              active={filters.status.includes("Open")}
             />
 
             <TicketCountCard
@@ -149,9 +142,9 @@ const TicketReport = () => {
               variant="approved"
               icon="lucide:badge-check"
               onClick={() =>
-                setFilters((p) => ({ ...p, status: "Approved", page: 1 }))
+                setFilters((p) => ({ ...p, status: ["Approved"], page: 1 }))
               }
-              active={filters.status === "Approved"}
+              active={filters.status.includes("Approved")}
             />
 
             <TicketCountCard
@@ -160,9 +153,9 @@ const TicketReport = () => {
               variant="progress"
               icon="lucide:loader-circle"
               onClick={() =>
-                setFilters((p) => ({ ...p, status: "In Progress", page: 1 }))
+                setFilters((p) => ({ ...p, status: ["In Progress"], page: 1 }))
               }
-              active={filters.status === "In Progress"}
+              active={filters.status.includes("In Progress")}
             />
 
             <TicketCountCard
@@ -171,9 +164,9 @@ const TicketReport = () => {
               variant="completed"
               icon="lucide:circle-check-big"
               onClick={() =>
-                setFilters((p) => ({ ...p, status: "Completed", page: 1 }))
+                setFilters((p) => ({ ...p, status: ["Completed"], page: 1 }))
               }
-              active={filters.status === "Completed"}
+              active={filters.status.includes("Completed")}
             />
 
             <TicketCountCard
@@ -182,9 +175,9 @@ const TicketReport = () => {
               variant="rejected"
               icon="lucide:circle-x"
               onClick={() =>
-                setFilters((p) => ({ ...p, status: "Rejected", page: 1 }))
+                setFilters((p) => ({ ...p, status: ["Rejected"], page: 1 }))
               }
-              active={filters.status === "Rejected"}
+              active={filters.status.includes("Rejected")}
             />
             <TicketCountCard
               count={data?.data.counts.closed ?? 0}
@@ -192,9 +185,9 @@ const TicketReport = () => {
               variant="closed"
               icon="lucide:archive"
               onClick={() =>
-                setFilters((p) => ({ ...p, status: "Closed", page: 1 }))
+                setFilters((p) => ({ ...p, status: ["Closed"], page: 1 }))
               }
-              active={filters.status === "Closed"}
+              active={filters.status.includes("Closed")}
             />
           </>
         )}

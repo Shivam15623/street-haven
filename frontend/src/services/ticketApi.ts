@@ -270,7 +270,7 @@ const ticketApi = api.injectEndpoints({
           startDate,
           endDate,
           location:location.join(",") || undefined,
-          status,
+          status: status.join(",") || undefined,
           page,
           limit,
           createdBy,
@@ -286,7 +286,7 @@ const ticketApi = api.injectEndpoints({
         startDate: string;
         endDate: string;
         location: string[];
-        status: string;
+        status: string[];
         createdBy: string;
         assignedTo: string;
         approvedBy: string;
