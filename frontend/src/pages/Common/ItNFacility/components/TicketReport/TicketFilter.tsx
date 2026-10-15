@@ -34,7 +34,7 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
   const { user } = useSelector(selectAuth);
   const { hasPermission } = useHasPermission();
 
-  const locationRef = React.useRef<HTMLDivElement>(null);
+
   const today = new Date();
 
   const canViewAll = hasPermission({ action: PERMISSIONS.TICKET_REPORT_ALL });

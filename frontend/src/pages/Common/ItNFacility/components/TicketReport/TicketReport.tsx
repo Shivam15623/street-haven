@@ -20,7 +20,7 @@ export interface ticketsReportFilters {
 
   // Ticket filters
   location: string[];
-  status: TicketStatus[];
+  status: string[];
 
   // User filters
   createdBy: string;
