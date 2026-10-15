@@ -19,7 +19,7 @@ export interface ticketsReportFilters {
   endDate: string;
 
   // Ticket filters
-  location: string;
+  location: string[];
   status:
     | "All"
     | "Open"
@@ -43,7 +43,7 @@ const TicketReport = () => {
   const [filters, setFilters] = useState<ticketsReportFilters>({
     startDate: "",
     endDate: "",
-    location: "",
+    location: [],
     status: "All",
     createdBy: "",
     assignedTo: "",

@@ -565,10 +565,10 @@ export const rejectTicket = asyncHandler(async (req, res) => {
   session.startTransaction();
   try {
     const { id: ticketId } = req.params;
-    const {  overview } = req.body;
+    const { overview } = req.body;
     const userId = req.user._id.toString();
     const isSuperAdmin = req.user.role === "super_admin";
-   
+
     const ticket = await Ticket.findById(ticketId).session(session);
     if (!ticket) throw new ApiError(404, "No such ticket found");
 
@@ -627,7 +627,7 @@ export const rejectTicket = asyncHandler(async (req, res) => {
         message: `Your ticket "${ticket.req_title}" was rejected by ${rejectorName}.`,
         link: `/it_facility?tab=track_tickets&status=Closed&item=${ticket.slug}`,
         createdBy: userId,
-        meta: { ticketId: ticket.slug},
+        meta: { ticketId: ticket.slug },
       });
 
       await notifyTicketEmail({
@@ -1932,14 +1932,29 @@ const buildReportFilter = async (req) => {
 
   const andConditions = [];
 
-  /* ---- Location filter ---- */
-  if (location) {
-    if (!mongoose.Types.ObjectId.isValid(location)) {
-      throw new ApiError(400, "Invalid location id");
+  /* ---- Location filter (single or multiple) ---- */
+  const parseIdList = (value, fieldName) => {
+    if (!value) return [];
+
+    // Handles: "a,b,c" | ["a","b"] | ["a,b","c"]
+    const raw = (Array.isArray(value) ? value : [value])
+      .flatMap((v) => String(v).split(","))
+      .map((v) => v.trim())
+      .filter(Boolean);
+
+    const unique = [...new Set(raw)];
+
+    const invalid = unique.filter((id) => !mongoose.Types.ObjectId.isValid(id));
+    if (invalid.length) {
+      throw new ApiError(400, `Invalid ${fieldName} id: ${invalid.join(", ")}`);
     }
-    andConditions.push({
-      location: new mongoose.Types.ObjectId(location),
-    });
+
+    return unique.map((id) => new mongoose.Types.ObjectId(id));
+  };
+
+  const locationIds = parseIdList(location, "location");
+  if (locationIds.length) {
+    andConditions.push({ location: { $in: locationIds } });
   }
 
   /* ---- Created By filter ---- */

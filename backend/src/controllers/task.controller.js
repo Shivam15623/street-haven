@@ -420,7 +420,7 @@ export const getTaskDetails = asyncHandler(async (req, res) => {
     );
 });
 
-const ALLOWED_STATUSES = ["new", "assigned", "under_review", "completed"];
+const ALLOWED_STATUSES = ["new", "assigned","in_progress", "under_review", "completed"];
 const ALLOWED_SORT_FIELDS = [
   "title",
   "status",

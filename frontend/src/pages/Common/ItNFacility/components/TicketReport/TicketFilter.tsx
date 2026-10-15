@@ -9,7 +9,6 @@ import { selectAuth } from "../../../../../redux/AuthSlice";
 import useHasPermission from "../../../../../hooks/Auth";
 import { PERMISSIONS } from "../../../../../utills/auth/permissions";
 
-
 interface Props {
   filters: ticketsReportFilters;
   setFilters: React.Dispatch<React.SetStateAction<ticketsReportFilters>>;
@@ -18,11 +17,16 @@ interface Props {
 const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
   const [dateError, setDateError] = React.useState("");
   const { data: employeeData, isLoading: isEmployeeLoading } =
-    useAllEmployeesQuery({ forDropdown: true ,role:["manager","staff","super_admin"]});
+    useAllEmployeesQuery({
+      forDropdown: true,
+      role: ["manager", "staff", "super_admin"],
+    });
   const { data: locationsData, isLoading: locationsLoading } =
     useFetchLocationsQuery({});
   const { user } = useSelector(selectAuth);
-  const {hasPermission}=useHasPermission()
+  const { hasPermission } = useHasPermission();
+  const [locationOpen, setLocationOpen] = React.useState(false);
+  const locationRef = React.useRef<HTMLDivElement>(null);
   const today = new Date();
 
   const canViewAll = hasPermission({ action: PERMISSIONS.TICKET_REPORT_ALL });
@@ -77,7 +81,49 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
 
     return "";
   };
+  React.useEffect(() => {
+    const onMouseDown = (e: MouseEvent) => {
+      if (
+        locationRef.current &&
+        !locationRef.current.contains(e.target as Node)
+      ) {
+        setLocationOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, []);
 
+  const toggleLocation = (id: string) => {
+    updateFilter(
+      "location",
+      filters.location.includes(id)
+        ? filters.location.filter((l) => l !== id)
+        : [...filters.location, id],
+    );
+  };
+
+  const allLocationsSelected =
+    visibleLocations.length > 0 &&
+    visibleLocations.every((l) => filters.location.includes(l._id));
+
+  const toggleAllLocations = () => {
+    updateFilter(
+      "location",
+      allLocationsSelected ? [] : visibleLocations.map((l) => l._id),
+    );
+  };
+
+  const locationLabel = (() => {
+    if (!filters.location.length) return "All Locations";
+    if (filters.location.length === 1) {
+      return (
+        visibleLocations.find((l) => l._id === filters.location[0])?.name ??
+        "1 selected"
+      );
+    }
+    return `${filters.location.length} locations selected`;
+  })();
   const updateFilter = <K extends keyof ticketsReportFilters>(
     key: K,
     value: ticketsReportFilters[K],
@@ -118,7 +164,7 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
     setFilters({
       startDate: "",
       endDate: "",
-      location: "",
+      location: [],
       status: "All",
       createdBy: "",
       assignedTo: "",
@@ -131,7 +177,7 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
   const hasActiveFilters =
     filters.startDate ||
     filters.endDate ||
-    filters.location ||
+    filters.location.length > 0 ||
     filters.status !== "All" ||
     filters.createdBy ||
     filters.assignedTo ||
@@ -192,26 +238,67 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
           </div>
 
           {/* Location */}
+          {/* Location */}
           <div className="col-12 col-md-6 col-lg-3">
             <label className="form-label text-xs fw-medium text-neutral-700 mb-6">
               Location
             </label>
-            <select
-              value={filters.location}
-              onChange={(e) => updateFilter("location", e.target.value)}
-              className="form-select text-sm"
-            >
-              <option value="">All Locations</option>
-              {locationsLoading ? (
-                <option disabled>Loading...</option>
-              ) : (
-                visibleLocations.map((l) => (
-                  <option key={l._id} value={l._id}>
-                    {l.name}
-                  </option>
-                ))
+            <div className="position-relative" ref={locationRef}>
+              <button
+                type="button"
+                className="form-select text-sm text-start text-truncate"
+                onClick={() => setLocationOpen((o) => !o)}
+                aria-haspopup="listbox"
+                aria-expanded={locationOpen}
+              >
+                {locationLabel}
+              </button>
+
+              {locationOpen && (
+                <div
+                  className="position-absolute w-100 bg-white border radius-8 shadow-4 mt-4 py-8"
+                  style={{ zIndex: 1050, maxHeight: 260, overflowY: "auto" }}
+                  role="listbox"
+                  aria-multiselectable="true"
+                >
+                  {locationsLoading ? (
+                    <div className="px-12 py-6 text-sm text-neutral-500">
+                      Loading...
+                    </div>
+                  ) : visibleLocations.length === 0 ? (
+                    <div className="px-12 py-6 text-sm text-neutral-500">
+                      No locations available
+                    </div>
+                  ) : (
+                    <>
+                      <label className="d-flex align-items-center gap-8 px-12 py-6 text-sm fw-medium cursor-pointer border-bottom">
+                        <input
+                          type="checkbox"
+                          className="form-check-input m-0"
+                          checked={allLocationsSelected}
+                          onChange={toggleAllLocations}
+                        />
+                        Select all
+                      </label>
+                      {visibleLocations.map((l) => (
+                        <label
+                          key={l._id}
+                          className="d-flex align-items-center gap-8 px-12 py-6 text-sm cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            className="form-check-input m-0"
+                            checked={filters.location.includes(l._id)}
+                            onChange={() => toggleLocation(l._id)}
+                          />
+                          {l.name}
+                        </label>
+                      ))}
+                    </>
+                  )}
+                </div>
               )}
-            </select>
+            </div>
           </div>
 
           {/* Status */}
@@ -299,11 +386,13 @@ const TicketFilter: FC<Props> = ({ filters, setFilters }) => {
               {isEmployeeLoading ? (
                 <option disabled>Loading...</option>
               ) : (
-                employeeData?.data.employees.filter((de)=>["super_admin","manager"].includes(de.role)).map((emp) => (
-                  <option key={emp._id} value={emp._id}>
-                    {emp.firstname} {emp.lastname}
-                  </option>
-                ))
+                employeeData?.data.employees
+                  .filter((de) => ["super_admin", "manager"].includes(de.role))
+                  .map((emp) => (
+                    <option key={emp._id} value={emp._id}>
+                      {emp.firstname} {emp.lastname}
+                    </option>
+                  ))
               )}
             </select>
           </div>
