@@ -2399,7 +2399,7 @@ const analyzeTicket = (t) => {
   const approved = lastWhere(hist, (h) => h.status === S.APPROVED);
   const rejected = lastWhere(hist, (h) => h.status === S.REJECTED);
   // an "Open" entry that is not the first entry = a reopen
-  const reopens = hist.filter((h, i) => i > 0 && h.status === S.OPEN);
+  const reopens = hist.filter((h, i) => i > 0 && h.status === S.APPROVED);
 
   /* ---- timeline: status changes + assignments merged ---- */
   const events = [];
