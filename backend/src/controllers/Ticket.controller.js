@@ -2396,10 +2396,11 @@ const analyzeTicket = (t) => {
         ? t.resolvedAt || null // fallback for old tickets with no history entry
         : null;
 
-  const approved = lastWhere(hist, (h) => h.status === S.APPROVED);
+  const approvals = hist.filter((h) => h.status === S.APPROVED);
+  const approved = approvals[approvals.length - 1] || null;
   const rejected = lastWhere(hist, (h) => h.status === S.REJECTED);
-  // an "Open" entry that is not the first entry = a reopen
-  const reopens = hist.filter((h, i) => i > 0 && h.status === S.APPROVED);
+  // first Approved = normal approval; every Approved after that = a reopen
+  const reopens = approvals.slice(1);
 
   /* ---- timeline: status changes + assignments merged ---- */
   const events = [];
