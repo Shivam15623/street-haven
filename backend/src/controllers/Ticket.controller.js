@@ -2661,7 +2661,7 @@ export const ExportTicketsReport = asyncHandler(async (req, res) => {
       assignedTo: fullName(t.assignedTo),
       firstAssignedDate: fmt(firstAssigned),
       lastAssignedDate: fmt(lastAssigned),
-      timesAssigned: a.assigns.length > 1 ? 1 : 0,
+      timesAssigned: a.assigns.length ? 1 : 0,
       timesReassigned: Math.max(0, a.assigns.length - 1),
       timesReopened: a.reopens.length,
       lastReopenedDate: fmt(lastReopen?.changedAt),
